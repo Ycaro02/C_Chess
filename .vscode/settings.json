@@ -1,0 +1,6 @@
+{
+	"files.associations": {
+		"*.def": "source.def",
+		"libft.h": "c"
+	}
+}
