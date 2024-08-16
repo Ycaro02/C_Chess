@@ -1,0 +1,41 @@
+name: Makefile CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
+
+    # ssh setup
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+    
+    - name: Update submodules to latest
+      run: |
+          git pull
+          git submodule update --remote --recursive
+          git config --local user.email "actions@github.com"
+          git config --local user.name "GitHub Actions"
+  
+    - name: Commit submodule changes
+      run: |
+          git diff --quiet || (git commit -am "Update submodules" && git push)
+
+    - name: Run make
+      run: make
+
+    - name: clean
+      run: make fclean
