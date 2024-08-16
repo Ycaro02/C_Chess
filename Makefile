@@ -48,6 +48,12 @@ ifeq ($(shell [ -d ${OBJ_DIR} ] && echo 0 || echo 1), 0)
 	@$(RM)
 endif
 
+clean_deps:
+ifeq ($(shell [ -d "rsc/lib" ] && echo 0 || echo 1), 0)
+	@$(RM) rsc/lib rsc/log
+	@printf "$(RED)Remove rsc/lib rsc/log$(RESET)\n"
+endif
+
 fclean:		clean_lib clean
 	@$(RM) $(NAME)
 	@printf "$(RED)Clean $(NAME)$(RESET)\n"

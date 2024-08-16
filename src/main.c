@@ -9,8 +9,6 @@ int main(void) {
 
 	init_board(&board);
 	display_bitboard(board.occupied, "Occupied");
-	// display_bitboard(board.white_pawns, "White Pawns");
-	// display_bitboard(board.black_pawns, "Black Pawns");
 }
 
 /* Set and clear bit */
