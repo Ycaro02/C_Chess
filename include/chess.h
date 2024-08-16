@@ -40,7 +40,6 @@ enum e_chess_piece {
 	BLACK_PAWN, BLACK_KNIGHT, BLACK_BISHOP, BLACK_ROOK, BLACK_QUEEN, BLACK_KING
 };
 
-
 /* ChessBoard struct */
 struct s_chess_board {
 	/* Board 1 for occupied, 0 for empty */
@@ -66,7 +65,10 @@ struct s_chess_board {
 /* Typedef for ChessBoard struct */
 typedef struct s_chess_board ChessBoard;
 
-
+/* src/chess_board.c */
+void init_board(ChessBoard *board);
+void update_occupied(ChessBoard *board);
+void display_bitboard(Bitboard board, const char *msg);
 
 
 #endif /* CHESS_H */
