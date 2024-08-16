@@ -8,7 +8,7 @@ void update_occupied(ChessBoard *b) {
 						| b->black_rooks | b->black_queens | b->black_king;
 }
 
-void init_b(ChessBoard *b) {
+void init_board(ChessBoard *b) {
 	b->white_pawns = START_WHITE_PAWNS;
 	b->white_knights = START_WHITE_KNIGHTS;
 	b->white_bishops = START_WHITE_BISHOPS;

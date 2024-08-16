@@ -71,4 +71,5 @@ void update_occupied(ChessBoard *board);
 void display_bitboard(Bitboard board, const char *msg);
 
 
+
 #endif /* CHESS_H */

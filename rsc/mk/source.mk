@@ -9,6 +9,7 @@ SRC_DIR 		=	src
 MAIN_MANDATORY 	=	main.c
 
 SRCS			=	chess_board.c\
+					handle_sdl.c\
 
 # SRCS_BONUS		=	main_bonus.c
 

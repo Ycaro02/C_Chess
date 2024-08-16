@@ -4,13 +4,15 @@ include rsc/mk/source.mk
 NAME            =   C_Chess
 CC              =   clang
 
+SDL_LIB			=	-L./rsc/lib/install/lib -rpath ./rsc/lib/install/lib -lSDL2 -lSDL2_ttf
+
 all:        $(NAME)
 
 $(NAME): $(LIBFT) $(LIST) $(OBJ_DIR) $(OBJS)
 	@$(MAKE_LIBFT)
 	@$(MAKE_LIST)
 	@printf "$(CYAN)Compiling ${NAME} ...$(RESET)\n"
-	@$(CC) $(CFLAGS) -o $(NAME) $(OBJS) $(LIBFT) $(LIST) -lm
+	@$(CC) $(CFLAGS) -o $(NAME) $(OBJS) $(LIBFT) $(LIST) $(SDL_LIB)
 	@printf "$(GREEN)Compiling $(NAME) done$(RESET)\n"
 
 $(LIST):
