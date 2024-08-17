@@ -21,7 +21,7 @@ enum e_chess_tile {
 
 
 /* Start white piece position */
-#define START_WHITE_PAWNS 0x00FF000000000000ULL
+#define START_WHITE_PAWNS (1ULL << A2 | 1ULL << B2 | 1ULL << C2 | 1ULL << D2 | 1ULL << E2 | 1ULL << F2 | 1ULL << G2 | 1ULL << H2)
 #define START_WHITE_KNIGHTS (1ULL << B1 | 1ULL << G1)
 #define START_WHITE_BISHOPS (1ULL << C1 | 1ULL << F1)
 #define START_WHITE_ROOKS (1ULL << A1 | 1ULL << H1)
@@ -29,7 +29,7 @@ enum e_chess_tile {
 #define START_WHITE_KING (1ULL << D1)
 
 /* Start black piece position */
-#define START_BLACK_PAWNS 0x000000000000FF00ULL
+#define START_BLACK_PAWNS (1ULL << A7 | 1ULL << B7 | 1ULL << C7 | 1ULL << D7 | 1ULL << E7 | 1ULL << F7 | 1ULL << G7 | 1ULL << H7)
 #define START_BLACK_KNIGHTS (1ULL << B8 | 1ULL << G8)
 #define START_BLACK_BISHOPS (1ULL << C8 | 1ULL << F8)
 #define START_BLACK_ROOKS (1ULL << A8 | 1ULL << H8)
@@ -39,6 +39,10 @@ enum e_chess_tile {
 /* Tile color */
 #define BLACK_TILE ((u32)(RGBA_TO_UINT32(0, 120, 0, 255)))
 #define WHITE_TILE ((u32)(RGBA_TO_UINT32(255, 255, 255, 255)))
+
+/* Mask for A and H columns */
+#define FILE_A (0x0101010101010101ULL)
+#define FILE_H (0x8080808080808080ULL)
 
 /* Enum for chess piece */
 enum e_chess_piece {

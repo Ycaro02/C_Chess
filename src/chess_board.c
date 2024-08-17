@@ -67,6 +67,14 @@ void draw_board(SDLHandle *handle) {
 	}
 }
 
+Bitboard white_pawn_moves(Bitboard white_pawns, Bitboard occupied) {
+    Bitboard one_step = (white_pawns << 8) & ~occupied;
+    Bitboard two_steps = ((one_step & 0x0000000000FF0000ULL) << 8) & ~occupied;
+    Bitboard attacks_left = (white_pawns << 7) & ~FILE_H & occupied;
+    Bitboard attacks_right = (white_pawns << 9) & ~FILE_A & occupied;
+    return (one_step | two_steps | attacks_left | attacks_right);
+}
+
 
 /* Display bitboard for debug */
 void display_bitboard(Bitboard bitboard, const char *msg) {

@@ -76,8 +76,12 @@ void		windowClose(SDL_Window* window, SDL_Renderer *renderer);
 SDL_Texture *loadTexture(SDL_Renderer *renderer, const char* path);
 void unloadTexture(SDL_Texture *texture);
 void drawTextureTile(SDL_Renderer *renderer, SDL_Texture *texture, iVec2 tilePos, iVec2 scale);
-
 void colorTile(SDL_Renderer	*renderer , iVec2 tilePos, iVec2 scale, u32 color);
+
+s32 eventHandler(SDLHandle *handle);
+
 void draw_board(SDLHandle *handle);
+
+
 
 #endif /* HANDLE_SDL_H */

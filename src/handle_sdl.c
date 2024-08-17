@@ -232,6 +232,57 @@ void unloadTexture(SDL_Texture *texture) {
 }
 
 
+static s8 isXRange(s32 x, s32 raw) {
+	return (x >= raw * TILE_SIZE + (raw + 1) * TILE_SPACING
+			&& x <= (raw + 1) * TILE_SIZE + (raw + 1) * TILE_SPACING);
+}
+
+static s8 isYRange(s32 y, s32 column) {
+	return (y >= column * TILE_SIZE + (column + 1) * TILE_SPACING + TOP_BAND_HEIGHT
+			&& y <= (column + 1) * TILE_SIZE + (column + 1) * TILE_SPACING + TOP_BAND_HEIGHT);
+}
+
+/**
+ * @brief Detect click tile on the board
+ * @param handle The SDLHandle pointer
+ * @param x The x position of the mouse
+ * @param y The y position of the mouse
+*/
+ChessTile detectClickTile(s32 x, s32 y) {
+	ChessTile tile = H8;
+	for (s32 column = 0; column < 8; column++) {
+		for (s32 raw = 0; raw < 8; raw++) {
+			if (isXRange(x, raw) && isYRange(y, column)) {
+				ft_printf_fd(1, "Click on tile %d\n", tile);
+				return (tile);
+			}
+			tile++;
+		}
+	}
+	return (tile);
+}
+
+
+/**
+ * @brief Mouse event handler
+*/
+s32 eventHandler(SDLHandle *handle) {
+	SDL_Event event;
+	(void)handle;
+	while (SDL_PollEvent(&event)) {
+		if (event.type == SDL_QUIT \
+			|| (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE)) {
+			return (1);
+		}
+		if (event.type == SDL_MOUSEBUTTONDOWN) {
+			s32 x, y;
+			SDL_GetMouseState(&x, &y);
+			detectClickTile(x, y);
+		}
+	}
+	return (0);
+}
+
 /**
  * @brief Load a font with SDL2
  * @param path The path of the font

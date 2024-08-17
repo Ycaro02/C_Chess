@@ -1,10 +1,6 @@
 #include "../include/chess.h"
 #include "../include/handle_sdl.h"
 
-/* Mask for A and H columns */
-// #define FILE_A = 0x0101010101010101ULL;
-// #define FILE_H = 0x8080808080808080ULL;
-
 void destroy_sdl_handle(SDLHandle *handle) {
 	free(handle->board);
 	for (int i = 0; i < PIECE_MAX; i++) {
@@ -32,16 +28,22 @@ int main(void) {
 		return (1);
 	}
 	while (windowIsOpen(handle->window)) {
-		SDL_Event event;
-		while (SDL_PollEvent(&event)) {
-			if (event.type == SDL_QUIT \
-				|| (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE)) {
-				destroy_sdl_handle(handle);
-				windowClose(handle->window, handle->renderer);
-				free(handle);
-				return (0);
-			}
+		if (eventHandler(handle)) {
+			destroy_sdl_handle(handle);
+			windowClose(handle->window, handle->renderer);
+			free(handle);
+			break ;
 		}
+		// SDL_Event event;
+		// while (SDL_PollEvent(&event)) {
+		// 	if (event.type == SDL_QUIT \
+		// 		|| (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE)) {
+		// 		destroy_sdl_handle(handle);
+		// 		windowClose(handle->window, handle->renderer);
+		// 		free(handle);
+		// 		return (0);
+		// 	}
+		// }
 		windowClear(handle->renderer);
 		draw_board(handle);
 		SDL_RenderPresent(handle->renderer);
