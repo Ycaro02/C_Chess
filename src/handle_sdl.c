@@ -268,19 +268,20 @@ ChessTile detectClickTile(s32 x, s32 y) {
 */
 s32 eventHandler(SDLHandle *handle) {
 	SDL_Event event;
+	ChessTile tile = EMPTY;
+	s32 x = 0, y = 0;
 	(void)handle;
 	while (SDL_PollEvent(&event)) {
 		if (event.type == SDL_QUIT \
 			|| (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE)) {
-			return (1);
+			return (CHESS_QUIT);
 		}
 		if (event.type == SDL_MOUSEBUTTONDOWN) {
-			s32 x, y;
 			SDL_GetMouseState(&x, &y);
-			detectClickTile(x, y);
+			tile = detectClickTile(x, y);
 		}
 	}
-	return (0);
+	return (tile);
 }
 
 /**

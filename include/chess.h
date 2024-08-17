@@ -41,8 +41,10 @@ enum e_chess_tile {
 #define WHITE_TILE ((u32)(RGBA_TO_UINT32(255, 255, 255, 255)))
 
 /* Mask for A and H columns */
-#define FILE_A (0x0101010101010101ULL)
-#define FILE_H (0x8080808080808080ULL)
+#define FILE_A (0x8080808080808080ULL)
+#define FILE_H (0x0101010101010101ULL)
+
+#define CHESS_QUIT -2
 
 /* Enum for chess piece */
 enum e_chess_piece {
@@ -59,6 +61,9 @@ struct s_chess_board {
 
 	/* Board 1 for occupied, 0 for empty */
 	Bitboard occupied;
+	Bitboard white;
+	Bitboard black;
+	Bitboard possible_moves;
 };
 
 /* Typedef for ChessBoard struct */
@@ -70,7 +75,8 @@ typedef enum e_chess_piece ChessPiece;
 void init_board(ChessBoard *board);
 void update_occupied(ChessBoard *board);
 void display_bitboard(Bitboard board, const char *msg);
+ChessPiece get_piece(ChessBoard *b, ChessTile tile);
 
-
+Bitboard single_pawn_moves(Bitboard pawn, Bitboard occupied, Bitboard enemy, s8 is_white);
 
 #endif /* CHESS_H */

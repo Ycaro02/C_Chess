@@ -4,8 +4,15 @@
 /* Update occupied bitboard */
 void update_occupied(ChessBoard *b) {
 	b->occupied = 0;
+	b->white = 0;
+	b->black = 0;
 	for (s32 i = 0; i < PIECE_MAX; i++) {
 		b->occupied |= b->piece[i];
+		if (i < BLACK_PAWN) {
+			b->white |= b->piece[i];
+		} else {
+			b->black |= b->piece[i];
+		}
 	}
 }
 
@@ -43,6 +50,11 @@ ChessPiece get_piece(ChessBoard *b, ChessTile tile) {
 	return (piece);
 }
 
+s8 isPossibleMove(Bitboard possible_moves, ChessTile tile) {
+    return ((possible_moves & (1ULL << tile)) != 0);
+}
+
+
 /* Draw chess board */
 void draw_board(SDLHandle *handle) {
 	iVec2 tilePos;
@@ -58,6 +70,13 @@ void draw_board(SDLHandle *handle) {
 				color = WHITE_TILE;
 			}
 			colorTile(handle->renderer, tilePos, (iVec2){TILE_SIZE, TILE_SIZE}, color);
+			
+			/* Check if tile is possible move */
+			if (isPossibleMove(handle->board->possible_moves, tile)) {
+				color = RGBA_TO_UINT32(0, 0, 200, 100);
+				colorTile(handle->renderer, tilePos, (iVec2){TILE_SIZE, TILE_SIZE}, color);
+			}
+
 			pieceIdx = get_piece(handle->board, tile);
 			if (pieceIdx != EMPTY) {
 				drawTextureTile(handle->renderer, handle->piece_texture[pieceIdx], tilePos, (iVec2){TILE_SIZE, TILE_SIZE});
@@ -67,11 +86,46 @@ void draw_board(SDLHandle *handle) {
 	}
 }
 
-Bitboard white_pawn_moves(Bitboard white_pawns, Bitboard occupied) {
-    Bitboard one_step = (white_pawns << 8) & ~occupied;
-    Bitboard two_steps = ((one_step & 0x0000000000FF0000ULL) << 8) & ~occupied;
-    Bitboard attacks_left = (white_pawns << 7) & ~FILE_H & occupied;
-    Bitboard attacks_right = (white_pawns << 9) & ~FILE_A & occupied;
+// Bitboard single_pawn_moves(Bitboard pawn, Bitboard occupied, Bitboard enemy) {
+    
+// 	/* One step, if pawn is white, it moves up, if black, it moves down */
+// 	Bitboard one_step = (pawn >> 8) & ~occupied;
+// 	s8 one_step_free = ((pawn >> 8) & ~occupied) == (pawn >> 8);
+
+//     Bitboard two_steps = 0;
+	
+// 	if (one_step_free) {
+// 		two_steps = ((pawn & START_WHITE_PAWNS) >> 16) & ~occupied;
+// 	}
+
+// 	/* Compute attacks left and right, and avoid out of bound */
+//     Bitboard attacks_left = (pawn >> 7) & ~FILE_H & enemy;
+//     Bitboard attacks_right = (pawn >> 9) & ~FILE_A & enemy;
+
+//     return (one_step | two_steps | attacks_left | attacks_right);
+// }
+
+
+Bitboard single_pawn_moves(Bitboard pawn, Bitboard occupied, Bitboard enemy, s8 is_white) {
+    Bitboard one_step, two_steps, attacks_left, attacks_right;
+	/* One step, if pawn is white, it moves up, if black, it moves down */
+    s8 direction = is_white ? 8 : -8;
+
+    one_step = (is_white ? (pawn >> direction) : (pawn << -direction)) & ~occupied;
+    
+    s8 one_step_free = one_step != 0;
+
+	/* Compute two steps if pawn is in starting position */
+    if (one_step_free) {
+        two_steps = (is_white ? ((pawn & START_WHITE_PAWNS) >> 2*direction) : ((pawn & START_BLACK_PAWNS) << 2*-direction)) & ~occupied;
+    } else {
+        two_steps = 0;
+    }
+
+	/* Compute attacks left and right, and avoid out of bound */
+    attacks_left = (is_white ? (pawn >> (direction - 1)) : (pawn << -(direction - 1))) & ~FILE_H & enemy;
+    attacks_right = (is_white ? (pawn >> (direction + 1)) : (pawn << -(direction + 1))) & ~FILE_A & enemy;
+
     return (one_step | two_steps | attacks_left | attacks_right);
 }
 
@@ -79,7 +133,7 @@ Bitboard white_pawn_moves(Bitboard white_pawns, Bitboard occupied) {
 /* Display bitboard for debug */
 void display_bitboard(Bitboard bitboard, const char *msg) {
 	ft_printf_fd(1, "%s\n", msg);
-	for (int i = 0; i < 64; i++) {
+	for (int i = 0; i < TILE_MAX; i++) {
 		if (i % 8 == 0) {
 			ft_printf_fd(1, "\n");
 		}
