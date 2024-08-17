@@ -67,7 +67,7 @@ SDLHandle *createSDLHandle(u32 width , u32 height, const char* title) {
  * @param window The window pointers
 */
 void windowClear(SDL_Renderer* renderer) {
-	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+	SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
 	SDL_RenderClear(renderer);
 }
 
@@ -116,7 +116,12 @@ void colorTile(SDL_Renderer	*renderer , iVec2 tilePos, iVec2 scale, u32 color) {
 	UINT32_TO_RGBA(color, r, g, b, a);
 
 	/* Convert tile coordinates to pixel coordinates */
-	pixel_x = tilePos.x; pixel_y = tilePos.y;
+	if (scale.x == TILE_SIZE && scale.y == TILE_SIZE) {
+		TILE_POSITION_TO_PIXEL(tilePos, pixel_x, pixel_y);
+	} else {
+		pixel_x = tilePos.x;
+		pixel_y = tilePos.y;
+	}
 
 	tileRect.x = pixel_x; tileRect.y = pixel_y;
 	tileRect.w = scale.x; tileRect.h = scale.y;

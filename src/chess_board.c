@@ -1,4 +1,5 @@
 #include "../include/chess.h"
+#include "../include/handle_sdl.h"
 
 /* Update occupied bitboard */
 void update_occupied(ChessBoard *b) {
@@ -36,4 +37,19 @@ void display_bitboard(Bitboard bitboard, const char *msg) {
 		ft_printf_fd(1, "%d", (bitboard >> i) & 1);
 	}
 	ft_printf_fd(1, "\n");
+}
+
+/* Draw chess board */
+void draw_empty_chess_board(SDLHandle *handle) {
+	iVec2 tilePos;
+	u32 color;
+	for (int i = 0; i < 64; i++) {
+		tilePos = (iVec2){i % 8, i / 8};
+		if (i % 2 == 0) {
+			color = RGBA_TO_UINT32(255, 255, 255, 255);
+		} else {
+			color = RGBA_TO_UINT32(0, 0, 0, 255);
+		}
+		colorTile(handle->renderer, tilePos, (iVec2){TILE_SIZE, TILE_SIZE}, color);
+	}
 }

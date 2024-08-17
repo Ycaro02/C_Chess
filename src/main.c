@@ -9,18 +9,22 @@ int main(void) {
 	ChessBoard board = {0};
 
 	init_board(&board);
-	display_bitboard(board.occupied, "Occupied");
+	display_bitboard(board.occupied, "Occupied bitboard");
 
 	SDLHandle *handle = NULL;
 
-	handle = createSDLHandle(800, 600, "Chess");
+	s32 w = 8 * TILE_SIZE + 9 * TILE_SPACING;
+	s32 h = 8 * TILE_SIZE + 9 * TILE_SPACING + TOP_BAND_HEIGHT;
+
+	handle = createSDLHandle(w, h, "Chess");
 	if (!handle) {
 		return (1);
 	}
 	while (windowIsOpen(handle->window)) {
 		SDL_Event event;
 		while (SDL_PollEvent(&event)) {
-			if (event.type == SDL_QUIT) {
+			if (event.type == SDL_QUIT \
+				|| (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE)) {
 				SDL_DestroyWindow(handle->window);
 				SDL_Quit();
 				TTF_Quit();
@@ -28,6 +32,7 @@ int main(void) {
 			}
 		}
 		windowClear(handle->renderer);
+		draw_empty_chess_board(handle);
 		SDL_RenderPresent(handle->renderer);
 	}
 }
