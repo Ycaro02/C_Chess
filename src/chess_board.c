@@ -3,40 +3,29 @@
 
 /* Update occupied bitboard */
 void update_occupied(ChessBoard *b) {
-	b->occupied =	b->white_pawns | b->white_knights | b->white_bishops
-						| b->white_rooks | b->white_queens | b->white_king
-						| b->black_pawns | b->black_knights | b->black_bishops
-						| b->black_rooks | b->black_queens | b->black_king;
+	b->occupied = 0;
+	for (s32 i = 0; i < PIECE_MAX; i++) {
+		b->occupied |= b->piece[i];
+	}
 }
 
 void init_board(ChessBoard *b) {
-	b->white_pawns = START_WHITE_PAWNS;
-	b->white_knights = START_WHITE_KNIGHTS;
-	b->white_bishops = START_WHITE_BISHOPS;
-	b->white_rooks = START_WHITE_ROOKS;
-	b->white_queens = START_WHITE_QUEENS;
-	b->white_king = START_WHITE_KING;
-	
-	b->black_pawns = START_BLACK_PAWNS;
-	b->black_knights = START_BLACK_KNIGHTS;
-	b->black_bishops = START_BLACK_BISHOPS;
-	b->black_rooks = START_BLACK_ROOKS;
-	b->black_queens = START_BLACK_QUEENS;
-	b->black_king = START_BLACK_KING;
+	/* Set start for white and black piece */
+	b->piece[WHITE_PAWN] = START_WHITE_PAWNS;
+	b->piece[WHITE_KNIGHT] = START_WHITE_KNIGHTS;
+	b->piece[WHITE_BISHOP] = START_WHITE_BISHOPS;
+	b->piece[WHITE_ROOK] = START_WHITE_ROOKS;
+	b->piece[WHITE_QUEEN] = START_WHITE_QUEENS;
+	b->piece[WHITE_KING] = START_WHITE_KING;
+
+	b->piece[BLACK_PAWN] = START_BLACK_PAWNS;
+	b->piece[BLACK_KNIGHT] = START_BLACK_KNIGHTS;
+	b->piece[BLACK_BISHOP] = START_BLACK_BISHOPS;
+	b->piece[BLACK_ROOK] = START_BLACK_ROOKS;
+	b->piece[BLACK_QUEEN] = START_BLACK_QUEENS;
+	b->piece[BLACK_KING] = START_BLACK_KING;
 
 	update_occupied(b);
-}
-
-/* Display bitboard */
-void display_bitboard(Bitboard bitboard, const char *msg) {
-	ft_printf_fd(1, "%s\n", msg);
-	for (int i = 0; i < 64; i++) {
-		if (i % 8 == 0) {
-			ft_printf_fd(1, "\n");
-		}
-		ft_printf_fd(1, "%d", (bitboard >> i) & 1);
-	}
-	ft_printf_fd(1, "\n");
 }
 
 /* Get piece from tile */
@@ -44,43 +33,21 @@ ChessPiece get_piece(ChessBoard *b, ChessTile tile) {
 	Bitboard mask = 1ULL << tile;
 	ChessPiece piece = EMPTY;
 	if (b->occupied & mask) {
-		if (b->white_pawns & mask) {
-			piece = WHITE_PAWN;
-		} else if (b->white_knights & mask) {
-			piece = WHITE_KNIGHT;
-		} else if (b->white_bishops & mask) {
-			piece = WHITE_BISHOP;
-		} else if (b->white_rooks & mask) {
-			piece = WHITE_ROOK;
-		} else if (b->white_queens & mask) {
-			piece = WHITE_QUEEN;
-		} else if (b->white_king & mask) {
-			piece = WHITE_KING;
-		} else if (b->black_pawns & mask) {
-			piece = BLACK_PAWN;
-		} else if (b->black_knights & mask) {
-			piece = BLACK_KNIGHT;
-		} else if (b->black_bishops & mask) {
-			piece = BLACK_BISHOP;
-		} else if (b->black_rooks & mask) {
-			piece = BLACK_ROOK;
-		} else if (b->black_queens & mask) {
-			piece = BLACK_QUEEN;
-		} else if (b->black_king & mask) {
-			piece = BLACK_KING;
+		for (s32 i = 0; i < PIECE_MAX; i++) {
+			if (b->piece[i] & mask) {
+				piece = i;
+				break;
+			}
 		}
 	}
 	return (piece);
 }
 
-#define BLACK_TILE ((u32)(RGBA_TO_UINT32(0, 120, 0, 255)))
-#define WHITE_TILE ((u32)(RGBA_TO_UINT32(255, 255, 255, 255)))
-
 /* Draw chess board */
 void draw_board(SDLHandle *handle) {
 	iVec2 tilePos;
 	u32 color;
-	ChessTile tile = H8; // start from H8 for white player
+	ChessTile tile = H8; // start from A1 for white player
 	ChessPiece pieceIdx = EMPTY;
 	for (s32 column = 0; column < 8; column++) {
 		for (s32 raw = 0; raw < 8; raw++) {
@@ -95,9 +62,20 @@ void draw_board(SDLHandle *handle) {
 			if (pieceIdx != EMPTY) {
 				drawTextureTile(handle->renderer, handle->piece_texture[pieceIdx], tilePos, (iVec2){TILE_SIZE, TILE_SIZE});
 			}
-			tile--;
+			tile++;
 		}
 	}
 }
 
 
+/* Display bitboard for debug */
+void display_bitboard(Bitboard bitboard, const char *msg) {
+	ft_printf_fd(1, "%s\n", msg);
+	for (int i = 0; i < 64; i++) {
+		if (i % 8 == 0) {
+			ft_printf_fd(1, "\n");
+		}
+		ft_printf_fd(1, "%d", (bitboard >> i) & 1);
+	}
+	ft_printf_fd(1, "\n");
+}
