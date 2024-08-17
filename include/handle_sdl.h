@@ -39,7 +39,7 @@
 
 
 #define		TOP_BAND_HEIGHT		0
-#define		TILE_SIZE			80
+#define		TILE_SIZE			100
 #define		TILE_SPACING		0
 
 /* Macro to convert tile position to pixel */

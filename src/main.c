@@ -40,13 +40,14 @@ int main(void) {
 			break ;
 		}
 
-		s8 piece_type = get_piece(board, selected);
+		s32 piece_type = get_piece(board, selected);
 		if (piece_type == WHITE_PAWN) {
 			board->possible_moves = single_pawn_moves((1ULL << selected), board->occupied, board->black, TRUE);
-			display_bitboard(board->possible_moves, "White pawn moves");
 		} else if (piece_type == BLACK_PAWN) {
 			board->possible_moves = single_pawn_moves((1ULL << selected), board->occupied, board->white, FALSE);
-			display_bitboard(board->possible_moves, "Black pawn moves");
+		} else if (selected != EMPTY) {
+			ft_printf_fd(1, "Piece type not implemented %d\n", piece_type);
+			board->possible_moves = 0;
 		}
 
 		windowClear(handle->renderer);
