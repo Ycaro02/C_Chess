@@ -23,21 +23,23 @@ enum e_chess_tile {
 #define START_WHITE_KNIGHTS (1ULL << B1 | 1ULL << G1)
 #define START_WHITE_BISHOPS (1ULL << C1 | 1ULL << F1)
 #define START_WHITE_ROOKS (1ULL << A1 | 1ULL << H1)
-#define START_WHITE_QUEENS (1ULL << D1)
-#define START_WHITE_KING (1ULL << E1)
+#define START_WHITE_QUEENS (1ULL << E1)
+#define START_WHITE_KING (1ULL << D1)
 
 /* Start black piece position */
 #define START_BLACK_PAWNS 0x00FF000000000000ULL
 #define START_BLACK_KNIGHTS (1ULL << B8 | 1ULL << G8)
 #define START_BLACK_BISHOPS (1ULL << C8 | 1ULL << F8)
 #define START_BLACK_ROOKS (1ULL << A8 | 1ULL << H8)
-#define START_BLACK_QUEENS (1ULL << D8)
-#define START_BLACK_KING (1ULL << E8)
+#define START_BLACK_QUEENS (1ULL << E8)
+#define START_BLACK_KING (1ULL << D8)
 
 /* Enum for chess piece */
 enum e_chess_piece {
+	EMPTY=-1,
 	WHITE_PAWN, WHITE_KNIGHT, WHITE_BISHOP, WHITE_ROOK, WHITE_QUEEN, WHITE_KING,
-	BLACK_PAWN, BLACK_KNIGHT, BLACK_BISHOP, BLACK_ROOK, BLACK_QUEEN, BLACK_KING
+	BLACK_PAWN, BLACK_KNIGHT, BLACK_BISHOP, BLACK_ROOK, BLACK_QUEEN, BLACK_KING,
+	PIECE_MAX
 };
 
 /* ChessBoard struct */
@@ -64,6 +66,8 @@ struct s_chess_board {
 
 /* Typedef for ChessBoard struct */
 typedef struct s_chess_board ChessBoard;
+typedef enum e_chess_tile ChessTile;
+typedef enum e_chess_piece ChessPiece;
 
 /* src/chess_board.c */
 void init_board(ChessBoard *board);

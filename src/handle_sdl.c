@@ -40,7 +40,40 @@ SDL_Window* createWindow(u32 width ,u32 height, const char* title) {
 	return (window);
 }
 
-SDLHandle *createSDLHandle(u32 width , u32 height, const char* title) {
+static SDL_Texture *safeLoadTexture(SDL_Renderer *renderer, const char *path) {
+	SDL_Texture *texture = loadTexture(renderer, path);
+	if (!texture) {
+		ft_printf_fd(2, "Error %s: loadTexture %s failed\n", __func__, path);
+		return (NULL);
+	}
+	return (texture);
+}
+
+static void loadPieceTexture(SDLHandle *handle) {
+	handle->piece_texture = malloc(sizeof(SDL_Texture*) * PIECE_MAX);
+	if (!handle->piece_texture) {
+		ft_printf_fd(2, "Error %s: malloc failed\n", __func__);
+		return ;
+	}
+	
+	/* Load black pieces */
+	handle->piece_texture[BLACK_KING] = safeLoadTexture(handle->renderer, BLACK_KING_TEXTURE);
+	handle->piece_texture[BLACK_QUEEN] = safeLoadTexture(handle->renderer, BLACK_QUEEN_TEXTURE);
+	handle->piece_texture[BLACK_ROOK] = safeLoadTexture(handle->renderer, BLACK_ROOK_TEXTURE);
+	handle->piece_texture[BLACK_BISHOP] = safeLoadTexture(handle->renderer, BLACK_BISHOP_TEXTURE);
+	handle->piece_texture[BLACK_KNIGHT] = safeLoadTexture(handle->renderer, BLACK_KNIGHT_TEXTURE);
+	handle->piece_texture[BLACK_PAWN] = safeLoadTexture(handle->renderer, BLACK_PAWN_TEXTURE);
+
+	/* Load white pieces */
+	handle->piece_texture[WHITE_KING] = safeLoadTexture(handle->renderer, WHITE_KING_TEXTURE);
+	handle->piece_texture[WHITE_QUEEN] = safeLoadTexture(handle->renderer, WHITE_QUEEN_TEXTURE);
+	handle->piece_texture[WHITE_ROOK] = safeLoadTexture(handle->renderer, WHITE_ROOK_TEXTURE);
+	handle->piece_texture[WHITE_BISHOP] = safeLoadTexture(handle->renderer, WHITE_BISHOP_TEXTURE);
+	handle->piece_texture[WHITE_KNIGHT] = safeLoadTexture(handle->renderer, WHITE_KNIGHT_TEXTURE);
+	handle->piece_texture[WHITE_PAWN] = safeLoadTexture(handle->renderer, WHITE_PAWN_TEXTURE);
+}
+
+SDLHandle *createSDLHandle(u32 width , u32 height, const char* title, ChessBoard *board) {
 	SDLHandle *handle = malloc(sizeof(SDLHandle));
 	if (!handle) {
 		ft_printf_fd(2, "Error: malloc failed\n");
@@ -58,6 +91,8 @@ SDLHandle *createSDLHandle(u32 width , u32 height, const char* title) {
 		free(handle);
 		return (NULL);
 	}
+	loadPieceTexture(handle);
+	handle->board = board;
 	windowClear(handle->renderer);
 	return (handle);
 }
@@ -88,17 +123,14 @@ u8 windowIsOpen(SDL_Window* window) {
  * @param window The window pointers
  * @note We need to destroy renderer before destroying the window
  */
-void windowClose(SDL_Window* window) {
-	SDL_Renderer *renderer = NULL;
-	if (window) {
-		renderer = SDL_GetRenderer(window);
-		if (!renderer) {
-			SDL_ERR_FUNC();
-			return;
-		}
-		SDL_DestroyRenderer(renderer);
-		SDL_DestroyWindow(window);
+void windowClose(SDL_Window* window, SDL_Renderer *renderer) {
+	if (!window || !renderer) {
+		return ;
 	}
+	SDL_DestroyRenderer(renderer);
+	SDL_DestroyWindow(window);
+	SDL_Quit();
+	TTF_Quit();
 }
 
 /**
@@ -139,29 +171,27 @@ void colorTile(SDL_Renderer	*renderer , iVec2 tilePos, iVec2 scale, u32 color) {
  * @param scale The scale of the tile
  * @note If the scale is equal to TILE_SIZE, the function will draw the tile at the right position
 */
-// void drawTextureTile(SDL_Window *window, SDL_Texture *texture, iVec2 tilePos, iVec2 scale) {
-// 	SDL_Renderer *renderer = SDL_GetRenderer(window);
-// 	SDL_Rect 	dstRect;
-// 	s32 		pixel_x, pixel_y;
+void drawTextureTile(SDL_Renderer *renderer, SDL_Texture *texture, iVec2 tilePos, iVec2 scale) {
+	SDL_Rect 	dstRect;
+	s32 		pixel_x, pixel_y;
 	
-// 	if (!texture || !renderer) {
-// 		return;
-// 	}
+	if (!texture || !renderer) {
+		return;
+	}
+	/* Convert tile coordinates to pixel coordinates */
+	if (scale.x == TILE_SIZE && scale.y == TILE_SIZE) {
+		TILE_POSITION_TO_PIXEL(tilePos, pixel_x, pixel_y);
+	} else {
+		pixel_x = tilePos.x;
+		pixel_y = tilePos.y;
+	}
 
-// 	/* Convert tile coordinates to pixel coordinates */
-// 	if (scale.x == TILE_SIZE && scale.y == TILE_SIZE) {
-// 		TILE_POSITION_TO_PIXEL(tilePos, pixel_x, pixel_y);
-// 	} else {
-// 		pixel_x = tilePos.x;
-// 		pixel_y = tilePos.y;
-// 	}
-
-// 	dstRect.x = pixel_x;
-// 	dstRect.y = pixel_y;
-// 	dstRect.w = scale.x;
-// 	dstRect.h = scale.y;
-// 	SDL_RenderCopy(renderer, texture, NULL, &dstRect);
-// }
+	dstRect.x = pixel_x;
+	dstRect.y = pixel_y;
+	dstRect.w = scale.x;
+	dstRect.h = scale.y;
+	SDL_RenderCopy(renderer, texture, NULL, &dstRect);
+}
 
 /**
  * @brief Load a texture from a path with SDL2
@@ -169,50 +199,37 @@ void colorTile(SDL_Renderer	*renderer , iVec2 tilePos, iVec2 scale, u32 color) {
  * @param path The path of the texture
  * @return The texture pointer
 */
-// void *loadTexture(SDL_Window* window, const char* path) {
-// 	SDL_Renderer	*renderer = NULL;
-// 	SDL_Texture		*texture = NULL;
-// 	SDL_Surface		*surface = NULL;
+SDL_Texture *loadTexture(SDL_Renderer *renderer, const char* path) {
+	SDL_Texture		*texture = NULL;
+	SDL_Surface		*surface = NULL;
 
-// 	renderer = SDL_GetRenderer(window);
-// 	if (!renderer) {
-// 		return (NULL);
-// 	}
-// 	surface = SDL_LoadBMP(path);
-// 	if (!surface) {
-// 		std::cerr << "SDL_LoadBMP Error: " << SDL_GetError() << std::endl;
-// 		return (NULL);
-// 	}
-// 	texture = SDL_CreateTextureFromSurface(renderer, surface);
-// 	if (!texture) {
-// 		std::cerr << "SDL_CreateTextureFromSurface Error: " << SDL_GetError() << std::endl;
-// 		return (NULL);
-// 	}
-// 	SDL_FreeSurface(surface);
-// 	return (texture);
-// }
+	if (!renderer) {
+		return (NULL);
+	}
+	surface = SDL_LoadBMP(path);
+	if (!surface) {
+		SDL_ERR_FUNC();
+		return (NULL);
+	}
+	texture = SDL_CreateTextureFromSurface(renderer, surface);
+	if (!texture) {
+		SDL_ERR_FUNC();
+		return (NULL);
+	}
+	SDL_FreeSurface(surface);
+	return (texture);
+}
 
 /**
  * @brief Unload a texture with SDL2
  * @param texture The texture pointer
 */
-// void unloadTexture(SDL_Texture *texture) {
-// 	if (!texture) {
-// 		return ;
-// 	}
-// 	SDL_DestroyTexture(texture);
-// }
-
-/**
- * @brief Destructor for the SDL2 library
- * @note This function will quit the SDL2 subsystem
-*/
-// void libDestructor() {
-// 	if (SDL_WasInit(SDL_INIT_VIDEO) != 0) {
-// 		TTF_Quit();
-// 		SDL_Quit();
-// 	}
-// }
+void unloadTexture(SDL_Texture *texture) {
+	if (!texture) {
+		return ;
+	}
+	SDL_DestroyTexture(texture);
+}
 
 
 /**

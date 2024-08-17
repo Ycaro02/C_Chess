@@ -56,6 +56,15 @@
 		"thread": "cpp",
 		"cinttypes": "cpp",
 		"typeinfo": "cpp",
-		"sdl.h": "c"
+		"sdl.h": "c",
+		"charconv": "c",
+		"chrono": "c",
+		"map": "c",
+		"format": "c",
+		"fstream": "c",
+		"iomanip": "c",
+		"span": "c",
+		"sstream": "c",
+		"variant": "c"
 	}
 }

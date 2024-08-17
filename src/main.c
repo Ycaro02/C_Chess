@@ -5,18 +5,29 @@
 // #define FILE_A = 0x0101010101010101ULL;
 // #define FILE_H = 0x8080808080808080ULL;
 
-int main(void) {
-	ChessBoard board = {0};
+void destroy_sdl_handle(SDLHandle *handle) {
+	free(handle->board);
+	for (int i = 0; i < PIECE_MAX; i++) {
+		unloadTexture(handle->piece_texture[i]);
+	}
+	free(handle->piece_texture);
+}
 
-	init_board(&board);
-	display_bitboard(board.occupied, "Occupied bitboard");
+int main(void) {
+	ChessBoard *board = ft_calloc(1, sizeof(ChessBoard));
+	if (!board) {
+		return (1);
+	}
+
+	init_board(board);
+	display_bitboard(board->occupied, "Occupied bitboard");
 
 	SDLHandle *handle = NULL;
 
 	s32 w = 8 * TILE_SIZE + 9 * TILE_SPACING;
 	s32 h = 8 * TILE_SIZE + 9 * TILE_SPACING + TOP_BAND_HEIGHT;
 
-	handle = createSDLHandle(w, h, "Chess");
+	handle = createSDLHandle(w, h, "Chess", board);
 	if (!handle) {
 		return (1);
 	}
@@ -25,16 +36,17 @@ int main(void) {
 		while (SDL_PollEvent(&event)) {
 			if (event.type == SDL_QUIT \
 				|| (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE)) {
-				SDL_DestroyWindow(handle->window);
-				SDL_Quit();
-				TTF_Quit();
+				destroy_sdl_handle(handle);
+				windowClose(handle->window, handle->renderer);
+				free(handle);
 				return (0);
 			}
 		}
 		windowClear(handle->renderer);
-		draw_empty_chess_board(handle);
+		draw_board(handle);
 		SDL_RenderPresent(handle->renderer);
 	}
+	return (0);
 }
 
 /* Set and clear bit */
