@@ -35,7 +35,7 @@ jobs:
           git diff --quiet || (git commit -am "Update submodules" && git push)
 
     - name: Run make
-      run: make
+      run: sh -c rsc/install/load_lib.sh -q && make
 
     - name: clean
       run: make fclean
