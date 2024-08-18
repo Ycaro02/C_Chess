@@ -25,7 +25,8 @@ void init_board(ChessBoard *b) {
 	b->piece[WHITE_QUEEN] = START_WHITE_QUEENS;
 	b->piece[WHITE_KING] = START_WHITE_KING;
 
-	// b->piece[WHITE_BISHOP] |= (1ULL << E4);
+	b->piece[WHITE_BISHOP] |= (1ULL << E4);
+	b->piece[WHITE_ROOK] |= (1ULL << E5);
 
 
 
@@ -113,41 +114,23 @@ Bitboard single_pawn_moves(Bitboard pawn, Bitboard occupied, Bitboard enemy, s8 
 }
 
 
-// Bitboard single_bishop_moves(Bitboard bishop, Bitboard occupied, Bitboard enemy) {
-//     Bitboard attacks = 0, move = 0;
-//     s8 directions[4] = {7, 9, -7, -9}; /* all directions for bishop moves */
-// 	s8 dir;
-//     for (s8 i = 0; i < 4; i++) {
-//         dir = directions[i];
-//         move = bishop;
-//         while (1) {
-//             /* Shift the bishop in the current direction */
-//             move = (dir > 0) ? (move << dir) : (move >> -dir);
-// 			/* Check if the move is blocked by an occupied square */
-//             if (move & occupied) {
-// 				if (move & enemy) {
-// 					attacks |= move;
-// 				}
-//                 break;
-//             }
-//             /* Add the move to the attacks */
-//             attacks |= move;
-//             /* Check for out of bounds or no move possible */
-//             if ((move & FILE_A && (dir == 7 || dir == -9)) || 
-//                 (move & FILE_H && (dir == 9 || dir == -7)) ||
-//                 (move & RANK_1 && dir < 0) ||
-//                 (move & RANK_8 && dir > 0) || move == 0) {
-//                 break;
-//             }
-//         }
-//     }
-//     return (attacks);
-// }
-
-#define NOT_FILE_A (~FILE_A)
-#define NOT_FILE_H (~FILE_H)
-#define NOT_RANK_1 (~RANK_1)
-#define NOT_RANK_8 (~RANK_8)
+/*	@brief	Check if the move is blocked by an occupied square
+	*		If the move captures an enemy piece, include it in the attacks
+	*		Stop travel in this direction 
+	*	@param	move		Bitboard of the move
+	*	@param	occupied	Bitboard of the occupied squares
+	*	@param	enemy		Bitboard of the enemy pieces
+	*	@param	attacks		Pointer to the attacks bitboard
+*/
+static inline s8 handle_occupied_tile(Bitboard move, Bitboard occupied ,Bitboard enemy, Bitboard *attacks) {
+	if (move & occupied) {
+		if (move & enemy) {
+			*attacks |= move;
+		}
+		return (TRUE);
+	}
+	return (FALSE);
+}
 
 Bitboard single_bishop_moves(Bitboard bishop, Bitboard occupied, Bitboard enemy) {
     /* All directions for bishop moves */
@@ -176,21 +159,45 @@ Bitboard single_bishop_moves(Bitboard bishop, Bitboard occupied, Bitboard enemy)
             /* If the move is zero, break the loop to avoid infinite loop */
             if (move == 0) { break ; }
 
-            /*	Check if the move is blocked by an occupied square
-            	If the move captures an enemy piece, include it in the attacks
-				Stop travel in this direction 
-			*/
-			if (move & occupied) {
-                if (move & enemy) {
-                    attacks |= move;
-                }
-                break;
-            }
+			/* Check if the move is blocked by an occupied square */
+			if (handle_occupied_tile(move, occupied, enemy, &attacks)) { break ; }
+			
             /* Add the move to the attacks */
             attacks |= move;
         }
     }
     return attacks;
+}
+
+Bitboard single_rook_move(Bitboard rook, Bitboard occupied, Bitboard enemy) {
+	Bitboard attacks = 0, move = 0, mask = 0;
+	s8 directions[4] = {8, -8, 1, -1}; /* all directions for rook moves */
+	Bitboard all_mask[4] = {NOT_RANK_8, NOT_RANK_1, NOT_FILE_H, NOT_FILE_A};
+	s8 dir;
+	
+	for (s8 i = 0; i < 4; i++) {
+		dir = directions[i];
+		mask = all_mask[i];
+		move = rook;
+		while (1) {
+			/* Apply the mask to check for out of bounds before moving */
+			if ((move & mask) == 0) { break ; }
+
+			/* Shift the rook in the current direction */
+			move = (dir > 0) ? (move << dir) : (move >> -dir);
+
+			/* If the move is zero, break the loop to avoid infinite loop */
+			if (move == 0) { break ; }
+
+			/* Check if the move is blocked by an occupied square */
+
+			if (handle_occupied_tile(move, occupied, enemy, &attacks)) { break ; }
+			
+			/* Add the move to the attacks */
+			attacks |= move;
+		}
+	}
+	return (attacks);
 }
 
 /* Display bitboard for debug */

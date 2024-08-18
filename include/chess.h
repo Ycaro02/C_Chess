@@ -63,7 +63,13 @@ enum e_chess_tile {
 #define RANK_1 (1ULL << A1 | 1ULL << B1 | 1ULL << C1 | 1ULL << D1 | 1ULL << E1 | 1ULL << F1 | 1ULL << G1 | 1ULL << H1)
 #define RANK_8 (1ULL << A8 | 1ULL << B8 | 1ULL << C8 | 1ULL << D8 | 1ULL << E8 | 1ULL << F8 | 1ULL << G8 | 1ULL << H8)
 
+/* Mask for not A and H columns, same for ran 1 and 8 */
+#define NOT_FILE_A (~FILE_A)
+#define NOT_FILE_H (~FILE_H)
+#define NOT_RANK_1 (~RANK_1)
+#define NOT_RANK_8 (~RANK_8)
 
+/* Chess quit */
 #define CHESS_QUIT -2
 
 /* Enum for chess piece */
@@ -99,5 +105,7 @@ ChessPiece get_piece(ChessBoard *b, ChessTile tile);
 
 Bitboard single_pawn_moves(Bitboard pawn, Bitboard occupied, Bitboard enemy, s8 is_black);
 Bitboard single_bishop_moves(Bitboard bishop, Bitboard occupied, Bitboard enemy);
+Bitboard single_rook_move(Bitboard rook, Bitboard occupied, Bitboard enemy);
+
 
 #endif /* CHESS_H */
