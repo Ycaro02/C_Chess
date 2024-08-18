@@ -5,6 +5,17 @@
 void update_piece_control(ChessBoard *b) {
 	b->white_control = get_piece_color_control(b, IS_WHITE);
 	b->black_control = get_piece_color_control(b, IS_BLACK);
+
+	/* Check for king in check */
+	b->white_check = (b->black_control & b->piece[WHITE_KING]) != 0;
+	b->black_check = (b->white_control & b->piece[BLACK_KING]) != 0;
+
+	if (b->white_check) {
+		ft_printf_fd(1, "White King in check\n");
+	}
+	if (b->black_check) {
+		ft_printf_fd(1, "Black King in check\n");
+	}
 }
 
 /* Update occupied bitboard */
@@ -37,6 +48,9 @@ void init_board(ChessBoard *b) {
 	b->piece[WHITE_ROOK] = START_WHITE_ROOKS;
 	b->piece[WHITE_QUEEN] = START_WHITE_QUEENS;
 	b->piece[WHITE_KING] = START_WHITE_KING;
+
+	// b->piece[WHITE_QUEEN] = START_WHITE_KING;
+
 
 	b->piece[BLACK_PAWN] = START_BLACK_PAWNS;
 	b->piece[BLACK_KNIGHT] = START_BLACK_KNIGHTS;
@@ -74,7 +88,7 @@ ChessPiece get_piece_from_tile(ChessBoard *b, ChessTile tile) {
 	return (piece);
 }
 
-s8 isPossibleMove(Bitboard possible_moves, ChessTile tile) {
+s8 is_selected_possible_move(Bitboard possible_moves, ChessTile tile) {
     return ((possible_moves & (1ULL << tile)) != 0);
 }
 
@@ -94,7 +108,7 @@ void draw_board(SDLHandle *handle) {
 			colorTile(handle->renderer, tilePos, (iVec2){TILE_SIZE, TILE_SIZE}, color);
 			
 			/* Check if tile is current selected possible move */
-			if (isPossibleMove(handle->board->possible_moves, tile)) {
+			if (is_selected_possible_move(handle->board->possible_moves, tile)) {
 				color = RGBA_TO_UINT32(0, 0, 200, 100);
 				colorTile(handle->renderer, tilePos, (iVec2){TILE_SIZE, TILE_SIZE}, color);
 			}
@@ -110,7 +124,7 @@ void draw_board(SDLHandle *handle) {
 
 /* Display bitboard for debug */
 void display_bitboard(Bitboard bitboard, const char *msg) {
-	ft_printf_fd(1, "%s\n", msg);
+	ft_printf_fd(1, "%s", msg);
 	for (int i = 0; i < TILE_MAX; i++) {
 		if (i % 8 == 0) {
 			ft_printf_fd(1, "\n");

@@ -60,10 +60,8 @@ int main(void) {
 	display_bitboard(board->black_control, "Black Control");
 	
 
-	// Bitboard enemy = 0, piece = 0;
 	ChessTile tile_selected = INVALID_TILE;
-	ChessPiece piece_type = EMPTY; 
-
+	ChessPiece piece_type = EMPTY;
 
 	while (windowIsOpen(handle->window)) {
 		tile_selected = eventHandler();
@@ -74,9 +72,17 @@ int main(void) {
 			break ;
 		}
 		if (tile_selected != INVALID_TILE) {
-			piece_type = get_piece_from_tile(board, tile_selected);
-			ft_printf_fd(1, YELLOW"%s\n"RESET, chess_piece_to_string(piece_type));
-			board->possible_moves = get_piece_move(board, (1ULL << tile_selected), piece_type);
+			/* If a piece is selected and the tile selected is a possible move */
+			if (is_selected_possible_move(board->possible_moves, tile_selected)) {
+				ft_printf_fd(1, YELLOW"Move piece from [%s] TO [%s]\n"RESET, TILE_TO_STRING(board->selected_tile), TILE_TO_STRING(tile_selected));
+				move_piece(board, board->selected_tile, tile_selected, piece_type);
+				board->possible_moves = 0;
+			} else {
+				piece_type = get_piece_from_tile(board, tile_selected);
+				board->selected_tile = tile_selected;
+				ft_printf_fd(1, GREEN"Select piece in [%s]"RESET" -> "ORANGE"%s\n"RESET, TILE_TO_STRING(tile_selected), chess_piece_to_string(piece_type));
+				board->possible_moves = get_piece_move(board, (1ULL << board->selected_tile), piece_type);
+			}
 		}
 
 		windowClear(handle->renderer);

@@ -43,7 +43,7 @@ Bitboard get_pawn_moves(Bitboard pawn, Bitboard occupied, Bitboard enemy, s8 is_
 	*	@param	enemy		Bitboard of the enemy pieces
 	*	@param	attacks		Pointer to the attacks bitboard
 */
-static inline s8 handle_occupied_tile(Bitboard move, Bitboard occupied ,Bitboard enemy, Bitboard *attacks) {
+static inline s8 handle_occupied_tile(Bitboard move, Bitboard occupied, Bitboard enemy, Bitboard *attacks) {
 	if (move & occupied) {
 		if (move & enemy) {
 			*attacks |= move;
@@ -240,11 +240,12 @@ Bitboard get_piece_move(ChessBoard *board, Bitboard piece, ChessPiece piece_type
  	
 	static PieceMove	piece_move[PIECE_MOVE_ARRAY_SIZE] = PIECE_MOVE_ARRAY;
 	GetMoveFunc 		get_move = NULL;
-	Bitboard			enemy = (piece_type >= BLACK_PAWN) ? board->white : board->black;
+	s8					is_black = (piece_type >= BLACK_PAWN);
+	Bitboard			enemy = is_black ? board->white : board->black;
 	
 	/* If the piece is a pawn, get only the pawn moves */
 	if (piece_type == WHITE_PAWN || piece_type == BLACK_PAWN) {
-		return (get_pawn_moves(piece, board->occupied, enemy, piece_type == BLACK_PAWN, FALSE));
+		return (get_pawn_moves(piece, board->occupied, enemy, is_black, FALSE));
 	}
 	
 	/* Get the piece move function */
@@ -255,4 +256,19 @@ Bitboard get_piece_move(ChessBoard *board, Bitboard piece, ChessPiece piece_type
 		return (0);
 	}
 	return (get_move(piece, board->occupied, enemy));
+}
+
+void move_piece(ChessBoard *board, ChessTile tile_from, ChessTile tile_to, ChessPiece type) {
+
+	Bitboard mask_from = 1ULL << tile_from;
+	Bitboard mask_to = 1ULL << tile_to;
+
+	/* Remove the piece from the from tile */
+	board->piece[type] &= ~mask_from;
+	
+	/* Add the piece to the to tile */
+	board->piece[type] |= mask_to;
+	
+	/* Update the piece state */
+	update_piece_state(board);
 }
