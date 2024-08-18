@@ -9,31 +9,25 @@ void destroy_sdl_handle(SDLHandle *handle) {
 	free(handle->piece_texture);
 }
 
+#define WINDOW_WIDTH (8 * TILE_SIZE + 9 * TILE_SPACING)
+#define WINDOW_HEIGHT (8 * TILE_SIZE + 9 * TILE_SPACING + TOP_BAND_HEIGHT)
+
 int main(void) {
 	ChessBoard *board = ft_calloc(1, sizeof(ChessBoard));
+	SDLHandle	*handle = NULL;
 	if (!board) {
 		return (1);
 	}
 
 	init_board(board);
-	display_bitboard(board->occupied, "Occupied bitboard");
-	display_bitboard(board->white, "White bitboard");
-	display_bitboard(board->black, "Black bitboard");
-
-	SDLHandle *handle = NULL;
-
-	s32 w = 8 * TILE_SIZE + 9 * TILE_SPACING;
-	s32 h = 8 * TILE_SIZE + 9 * TILE_SPACING + TOP_BAND_HEIGHT;
-
-	ChessTile tile_selected = INVALID_TILE;
-	ChessPiece piece_type = EMPTY; 
-
-	handle = createSDLHandle(w, h, "Chess", board);
+	handle = createSDLHandle(WINDOW_WIDTH, WINDOW_HEIGHT, "Chess", board);
 	if (!handle) {
 		return (1);
 	}
 
 	Bitboard enemy = 0;
+	ChessTile tile_selected = INVALID_TILE;
+	ChessPiece piece_type = EMPTY; 
 
 	while (windowIsOpen(handle->window)) {
 		tile_selected = eventHandler(handle);
@@ -45,12 +39,10 @@ int main(void) {
 		}
 		if (tile_selected != INVALID_TILE) {
 			piece_type = get_piece(board, tile_selected);
-			if (piece_type == WHITE_PAWN) {
-				board->possible_moves = single_pawn_moves((1ULL << tile_selected), board->occupied, board->black, FALSE);
-				display_bitboard(board->possible_moves, "Possible moves");
-			} else if (piece_type == BLACK_PAWN) {
-				board->possible_moves = single_pawn_moves((1ULL << tile_selected), board->occupied, board->white, TRUE);
-			}
+			if (piece_type == WHITE_PAWN || piece_type == BLACK_PAWN) {
+				enemy = (piece_type == BLACK_PAWN) ? board->white : board->black;
+				board->possible_moves = single_pawn_moves((1ULL << tile_selected), board->occupied, enemy, piece_type == BLACK_PAWN);
+			} 
 			else if (piece_type == BLACK_BISHOP || piece_type == WHITE_BISHOP) {
 				enemy = (piece_type == BLACK_BISHOP) ? board->white : board->black;
 				board->possible_moves = single_bishop_moves((1ULL << tile_selected), board->occupied, enemy);
@@ -70,13 +62,3 @@ int main(void) {
 	}
 	return (0);
 }
-
-/* Set and clear bit */
-// void set_bit(Bitboard *board, int index) {
-// 	*board |= 1ULL << index;
-// }
-
-// void clear_bit(Bitboard *board, int index) {
-// 	*board &= ~(1ULL << index);
-// }
-
