@@ -20,11 +20,12 @@ void init_board(ChessBoard *b) {
 	/* Set start for white and black piece */
 	b->piece[WHITE_PAWN] = START_WHITE_PAWNS;
 	b->piece[WHITE_KNIGHT] = START_WHITE_KNIGHTS;
-	b->piece[WHITE_BISHOP] = START_WHITE_BISHOPS | (1ULL << E4);
-	// b->piece[WHITE_BISHOP] = START_WHITE_BISHOPS;
+	b->piece[WHITE_BISHOP] = START_WHITE_BISHOPS;
 	b->piece[WHITE_ROOK] = START_WHITE_ROOKS;
 	b->piece[WHITE_QUEEN] = START_WHITE_QUEENS;
 	b->piece[WHITE_KING] = START_WHITE_KING;
+
+	// b->piece[WHITE_BISHOP] |= (1ULL << E4);
 
 
 
@@ -89,27 +90,6 @@ void draw_board(SDLHandle *handle) {
 	}
 }
 
-// Bitboard single_pawn_moves(Bitboard pawn, Bitboard occupied, Bitboard enemy, s8 is_white) {
-    
-// 	(void)is_white;
-// 	/* One step, if pawn is white, it moves up, if black, it moves down */
-// 	Bitboard one_step = (pawn >> 8) & ~occupied;
-// 	s8 one_step_free = ((pawn >> 8) & ~occupied) == (pawn >> 8);
-
-//     Bitboard two_steps = 0;
-	
-// 	if (one_step_free) {
-// 		two_steps = ((pawn & START_WHITE_PAWNS) >> 16) & ~occupied;
-// 	}
-
-// 	/* Compute attacks left and right, and avoid out of bound */
-//     Bitboard attacks_left = (pawn >> 7) & ~FILE_H & enemy;
-//     Bitboard attacks_right = (pawn >> 9) & ~FILE_A & enemy;
-
-//     return (one_step | two_steps | attacks_left | attacks_right);
-// }
-
-
 Bitboard single_pawn_moves(Bitboard pawn, Bitboard occupied, Bitboard enemy, s8 is_black) {
     Bitboard one_step, two_steps, attacks_left, attacks_right;
 	/* One step, if pawn is white, it moves up, if black, it moves down */
@@ -133,35 +113,84 @@ Bitboard single_pawn_moves(Bitboard pawn, Bitboard occupied, Bitboard enemy, s8 
 }
 
 
+// Bitboard single_bishop_moves(Bitboard bishop, Bitboard occupied, Bitboard enemy) {
+//     Bitboard attacks = 0, move = 0;
+//     s8 directions[4] = {7, 9, -7, -9}; /* all directions for bishop moves */
+// 	s8 dir;
+//     for (s8 i = 0; i < 4; i++) {
+//         dir = directions[i];
+//         move = bishop;
+//         while (1) {
+//             /* Shift the bishop in the current direction */
+//             move = (dir > 0) ? (move << dir) : (move >> -dir);
+// 			/* Check if the move is blocked by an occupied square */
+//             if (move & occupied) {
+// 				if (move & enemy) {
+// 					attacks |= move;
+// 				}
+//                 break;
+//             }
+//             /* Add the move to the attacks */
+//             attacks |= move;
+//             /* Check for out of bounds or no move possible */
+//             if ((move & FILE_A && (dir == 7 || dir == -9)) || 
+//                 (move & FILE_H && (dir == 9 || dir == -7)) ||
+//                 (move & RANK_1 && dir < 0) ||
+//                 (move & RANK_8 && dir > 0) || move == 0) {
+//                 break;
+//             }
+//         }
+//     }
+//     return (attacks);
+// }
+
+#define NOT_FILE_A (~FILE_A)
+#define NOT_FILE_H (~FILE_H)
+#define NOT_RANK_1 (~RANK_1)
+#define NOT_RANK_8 (~RANK_8)
+
 Bitboard single_bishop_moves(Bitboard bishop, Bitboard occupied, Bitboard enemy) {
-    Bitboard attacks = 0, move = 0;
-    s8 directions[4] = {7, 9, -7, -9}; /* all directions for bishop moves */
-	s8 dir;
+    /* All directions for bishop moves */
+	s8 direction[4] = {7, 9, -7, -9};
+	/* Mask for out of bound */
+    Bitboard oob_mask[4] = {
+		NOT_FILE_A & NOT_RANK_8, 
+		NOT_FILE_H & NOT_RANK_8,
+		NOT_FILE_A & NOT_RANK_1,
+		NOT_FILE_H & NOT_RANK_1 
+	};
+    Bitboard attacks = 0, mask = 0, move = 0;
+	s8 dir = 0;
+
     for (s8 i = 0; i < 4; i++) {
-        dir = directions[i];
+        dir = direction[i];
+        mask = oob_mask[i];
         move = bishop;
         while (1) {
-            /* Shift the bishop in the current direction */
+            /* Apply the mask to check for out of bounds before moving */
+			if ((move & mask) == 0) { break ; }
+            
+			/* Shift the bishop in the current dir */
             move = (dir > 0) ? (move << dir) : (move >> -dir);
-			/* Check if the move is blocked by an occupied square */
-            if (move & occupied) {
-				if (move & enemy) {
-					attacks |= move;
-				}
+
+            /* If the move is zero, break the loop to avoid infinite loop */
+            if (move == 0) { break ; }
+
+            /*	Check if the move is blocked by an occupied square
+            	If the move captures an enemy piece, include it in the attacks
+				Stop travel in this direction 
+			*/
+			if (move & occupied) {
+                if (move & enemy) {
+                    attacks |= move;
+                }
                 break;
             }
             /* Add the move to the attacks */
             attacks |= move;
-            /* Check for out of bounds or no move possible */
-            if ((move & FILE_A && (dir == 7 || dir == -9)) || 
-                (move & FILE_H && (dir == 9 || dir == -7)) ||
-                (move & RANK_1 && dir < 0) ||
-                (move & RANK_8 && dir > 0) || move == 0) {
-                break;
-            }
         }
     }
-    return (attacks);
+    return attacks;
 }
 
 /* Display bitboard for debug */
