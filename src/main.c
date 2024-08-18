@@ -48,11 +48,11 @@ int main(void) {
 			} else if (piece_type == BLACK_PAWN) {
 				board->possible_moves = single_pawn_moves((1ULL << tile_selected), board->occupied, board->white, TRUE);
 			}
-			//  else if (piece_type == BLACK_BISHOP || piece_type == WHITE_BISHOP) {
-			// 	Bitboard enemy = (piece_type == BLACK_BISHOP) ? board->white : board->black;
-			// 	board->possible_moves = single_bishop_moves((1ULL << tile_selected), board->occupied, enemy);
-			// 	display_bitboard(board->possible_moves, "Bishop moves");
-			// } 
+			 else if (piece_type == BLACK_BISHOP || piece_type == WHITE_BISHOP) {
+				Bitboard enemy = (piece_type == BLACK_BISHOP) ? board->white : board->black;
+				board->possible_moves = single_bishop_moves((1ULL << tile_selected), board->occupied, enemy);
+				display_bitboard(board->possible_moves, "Bishop moves");
+			} 
 			else {
 				board->possible_moves = 0;
 			}

@@ -20,10 +20,13 @@ void init_board(ChessBoard *b) {
 	/* Set start for white and black piece */
 	b->piece[WHITE_PAWN] = START_WHITE_PAWNS;
 	b->piece[WHITE_KNIGHT] = START_WHITE_KNIGHTS;
-	b->piece[WHITE_BISHOP] = START_WHITE_BISHOPS;
+	b->piece[WHITE_BISHOP] = START_WHITE_BISHOPS | (1ULL << E4);
+	// b->piece[WHITE_BISHOP] = START_WHITE_BISHOPS;
 	b->piece[WHITE_ROOK] = START_WHITE_ROOKS;
 	b->piece[WHITE_QUEEN] = START_WHITE_QUEENS;
 	b->piece[WHITE_KING] = START_WHITE_KING;
+
+
 
 	b->piece[BLACK_PAWN] = START_BLACK_PAWNS;
 	b->piece[BLACK_KNIGHT] = START_BLACK_KNIGHTS;
@@ -124,39 +127,42 @@ Bitboard single_pawn_moves(Bitboard pawn, Bitboard occupied, Bitboard enemy, s8 
     }
 
 	/* Compute attacks left and right, and avoid out of bound */
-    attacks_left = (is_black ? (pawn >> (direction - 1)) : (pawn << -(direction - 1))) & ~FILE_H & enemy;
-    attacks_right = (is_black ? (pawn >> (direction + 1)) : (pawn << -(direction + 1))) & ~FILE_A & enemy;
-
+    attacks_right = (is_black ? (pawn >> (direction - 1)) : (pawn << -(direction - 1))) & ~FILE_A & enemy;
+    attacks_left = (is_black ? (pawn >> (direction + 1)) : (pawn << -(direction + 1))) & ~FILE_H & enemy;
     return (one_step | two_steps | attacks_left | attacks_right);
 }
 
 
-// Bitboard single_bishop_moves(Bitboard bishop, Bitboard occupied, Bitboard enemy) {
-//     Bitboard attacks = 0, oob_column, oob_raw, move;
-//     s32 bishop_dir[4] = {7, 9, -7, -9};
-//     for (s32 i = 0; i < 4; i++) {
-//         s32 direction = bishop_dir[i];
-//         for (s32 j = 1; j < 8; j++) {
-//             oob_column = (direction == 7 || direction == -9) ? FILE_H : FILE_A;
-//             oob_raw = (direction == 7 || direction == 9) ? RANK_8 : RANK_1;
-//             s32 dir_shift = direction * j;
-//             if (dir_shift < -63 || dir_shift > 63) {
-//                 // fprintf(stderr, "Out of bound %d\n", dir_shift);
-//                 break;
-//             }
-//             move = (bishop >> dir_shift) & ~occupied & ~oob_column & ~oob_raw;
-//             if (move == 0) {
-//                 break;
-//             }
-//             attacks |= move;
-//             if (move & enemy) {
-//                 break;
-//             }
-// 			ft_printf_fd(1, "Bishop move %d\n", j);
-//         }
-//     }
-//     return attacks;
-// }
+Bitboard single_bishop_moves(Bitboard bishop, Bitboard occupied, Bitboard enemy) {
+    Bitboard attacks = 0, move = 0;
+    s8 directions[4] = {7, 9, -7, -9}; /* all directions for bishop moves */
+	s8 dir;
+    for (s8 i = 0; i < 4; i++) {
+        dir = directions[i];
+        move = bishop;
+        while (1) {
+            /* Shift the bishop in the current direction */
+            move = (dir > 0) ? (move << dir) : (move >> -dir);
+			/* Check if the move is blocked by an occupied square */
+            if (move & occupied) {
+				if (move & enemy) {
+					attacks |= move;
+				}
+                break;
+            }
+            /* Add the move to the attacks */
+            attacks |= move;
+            /* Check for out of bounds or no move possible */
+            if ((move & FILE_A && (dir == 7 || dir == -9)) || 
+                (move & FILE_H && (dir == 9 || dir == -7)) ||
+                (move & RANK_1 && dir < 0) ||
+                (move & RANK_8 && dir > 0) || move == 0) {
+                break;
+            }
+        }
+    }
+    return (attacks);
+}
 
 /* Display bitboard for debug */
 void display_bitboard(Bitboard bitboard, const char *msg) {
