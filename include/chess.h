@@ -95,7 +95,7 @@ void update_occupied(ChessBoard *board);
 void display_bitboard(Bitboard board, const char *msg);
 ChessPiece get_piece(ChessBoard *b, ChessTile tile);
 
-/* src/chess_get_moves.c */
+/* src/chess_piece_moves.c */
 Bitboard get_pawn_moves(Bitboard pawn, Bitboard occupied, Bitboard enemy, s8 is_black);
 Bitboard get_bishop_moves(Bitboard bishop, Bitboard occupied, Bitboard enemy);
 Bitboard get_rook_moves(Bitboard rook, Bitboard occupied, Bitboard enemy);
