@@ -73,6 +73,7 @@ int main(void) {
 		}
 		if (tile_selected != INVALID_TILE) {
 			piece_type = get_piece_from_tile(board, tile_selected);
+			ft_printf_fd(1, YELLOW"%s\n"RESET, chess_piece_to_string(piece_type));
 			board->possible_moves = get_piece_move(board, (1ULL << tile_selected), piece_type);
 		}
 

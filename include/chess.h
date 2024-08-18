@@ -6,6 +6,7 @@
 /* Typedef for Bitboard type just unsigned long long (64 bits) */
 typedef u64 Bitboard;
 
+/* Define for white and black boolean for different function using 'is_black' argument */
 #define IS_WHITE 0
 #define IS_BLACK 1
 
@@ -23,6 +24,7 @@ enum e_chess_tile {
 	TILE_MAX
 };
 
+/* Macro to convert tile to string */
 #define TILE_TO_STRING(t) (char[3]){'A' + (t) % 8, '1' + (t) / 8, '\0'}
 
 /* Start white piece position */
@@ -77,6 +79,9 @@ enum e_chess_piece {
 	PIECE_MAX
 };
 
+
+
+
 /* ChessBoard struct */
 struct s_chess_board {
 	/* Bitboard for each piece */
@@ -128,6 +133,18 @@ typedef struct s_piece_move PieceMove;
 
 /* Piece Move Array size */
 #define PIECE_MOVE_ARRAY_SIZE 5
+
+/* Inline function to convert ChessPiece to string */
+FT_INLINE const char *chess_piece_to_string(ChessPiece piece) {
+	static const char *piece_str[PIECE_MAX] = {
+		"WHITE_PAWN", "WHITE_KNIGHT", "WHITE_BISHOP", "WHITE_ROOK", "WHITE_QUEEN", "WHITE_KING",
+		"BLACK_PAWN", "BLACK_KNIGHT", "BLACK_BISHOP", "BLACK_ROOK", "BLACK_QUEEN", "BLACK_KING"
+	};
+	if (piece < 0 || piece >= PIECE_MAX) {
+		return ("EMPTY");
+	}
+	return (piece_str[piece]);
+}
 
 // main
 Bitboard get_piece_color_control(ChessBoard *b, s8 is_black);

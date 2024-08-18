@@ -253,7 +253,7 @@ ChessTile detectClickTile(s32 x, s32 y) {
 	for (s32 column = 0; column < 8; column++) {
 		for (s32 raw = 0; raw < 8; raw++) {
 			if (isXRange(x, raw) && isYRange(y, column)) {
-				ft_printf_fd(1, "Click on "ORANGE"[%s]"RESET" -> "PINK"|%d|\n"RESET, TILE_TO_STRING(tile), tile);
+				ft_printf_fd(1, "Click on "ORANGE"[%s]"RESET" -> "PINK"|%d|"RESET" -> ", TILE_TO_STRING(tile), tile);
 				return (tile);
 			}
 			tile++;
