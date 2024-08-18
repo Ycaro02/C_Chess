@@ -59,7 +59,7 @@ s8 isPossibleMove(Bitboard possible_moves, ChessTile tile) {
 void draw_board(SDLHandle *handle) {
 	iVec2 tilePos;
 	u32 color;
-	ChessTile tile = H8; // start from A1 for white player
+	ChessTile tile = A1; // start from A1 for white player
 	ChessPiece pieceIdx = EMPTY;
 	for (s32 column = 0; column < 8; column++) {
 		for (s32 raw = 0; raw < 8; raw++) {
@@ -86,8 +86,9 @@ void draw_board(SDLHandle *handle) {
 	}
 }
 
-// Bitboard single_pawn_moves(Bitboard pawn, Bitboard occupied, Bitboard enemy) {
+// Bitboard single_pawn_moves(Bitboard pawn, Bitboard occupied, Bitboard enemy, s8 is_white) {
     
+// 	(void)is_white;
 // 	/* One step, if pawn is white, it moves up, if black, it moves down */
 // 	Bitboard one_step = (pawn >> 8) & ~occupied;
 // 	s8 one_step_free = ((pawn >> 8) & ~occupied) == (pawn >> 8);
@@ -106,29 +107,56 @@ void draw_board(SDLHandle *handle) {
 // }
 
 
-Bitboard single_pawn_moves(Bitboard pawn, Bitboard occupied, Bitboard enemy, s8 is_white) {
+Bitboard single_pawn_moves(Bitboard pawn, Bitboard occupied, Bitboard enemy, s8 is_black) {
     Bitboard one_step, two_steps, attacks_left, attacks_right;
 	/* One step, if pawn is white, it moves up, if black, it moves down */
-    s8 direction = is_white ? 8 : -8;
+    s8 direction = is_black ? 8 : -8;
 
-    one_step = (is_white ? (pawn >> direction) : (pawn << -direction)) & ~occupied;
+    one_step = (is_black ? (pawn >> direction) : (pawn << -direction)) & ~occupied;
     
     s8 one_step_free = one_step != 0;
 
 	/* Compute two steps if pawn is in starting position */
     if (one_step_free) {
-        two_steps = (is_white ? ((pawn & START_WHITE_PAWNS) >> 2*direction) : ((pawn & START_BLACK_PAWNS) << 2*-direction)) & ~occupied;
+        two_steps = (is_black ? ((pawn & START_BLACK_PAWNS) >> 2*direction) : ((pawn & START_WHITE_PAWNS) << 2*-direction)) & ~occupied;
     } else {
         two_steps = 0;
     }
 
 	/* Compute attacks left and right, and avoid out of bound */
-    attacks_left = (is_white ? (pawn >> (direction - 1)) : (pawn << -(direction - 1))) & ~FILE_H & enemy;
-    attacks_right = (is_white ? (pawn >> (direction + 1)) : (pawn << -(direction + 1))) & ~FILE_A & enemy;
+    attacks_left = (is_black ? (pawn >> (direction - 1)) : (pawn << -(direction - 1))) & ~FILE_H & enemy;
+    attacks_right = (is_black ? (pawn >> (direction + 1)) : (pawn << -(direction + 1))) & ~FILE_A & enemy;
 
     return (one_step | two_steps | attacks_left | attacks_right);
 }
 
+
+// Bitboard single_bishop_moves(Bitboard bishop, Bitboard occupied, Bitboard enemy) {
+//     Bitboard attacks = 0, oob_column, oob_raw, move;
+//     s32 bishop_dir[4] = {7, 9, -7, -9};
+//     for (s32 i = 0; i < 4; i++) {
+//         s32 direction = bishop_dir[i];
+//         for (s32 j = 1; j < 8; j++) {
+//             oob_column = (direction == 7 || direction == -9) ? FILE_H : FILE_A;
+//             oob_raw = (direction == 7 || direction == 9) ? RANK_8 : RANK_1;
+//             s32 dir_shift = direction * j;
+//             if (dir_shift < -63 || dir_shift > 63) {
+//                 // fprintf(stderr, "Out of bound %d\n", dir_shift);
+//                 break;
+//             }
+//             move = (bishop >> dir_shift) & ~occupied & ~oob_column & ~oob_raw;
+//             if (move == 0) {
+//                 break;
+//             }
+//             attacks |= move;
+//             if (move & enemy) {
+//                 break;
+//             }
+// 			ft_printf_fd(1, "Bishop move %d\n", j);
+//         }
+//     }
+//     return attacks;
+// }
 
 /* Display bitboard for debug */
 void display_bitboard(Bitboard bitboard, const char *msg) {

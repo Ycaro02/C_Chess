@@ -65,6 +65,7 @@
 		"iomanip": "c",
 		"span": "c",
 		"sstream": "c",
-		"variant": "c"
+		"variant": "c",
+		"timesize.h": "c"
 	}
 }

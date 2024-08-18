@@ -249,7 +249,7 @@ static s8 isYRange(s32 y, s32 column) {
  * @param y The y position of the mouse
 */
 ChessTile detectClickTile(s32 x, s32 y) {
-	ChessTile tile = H8;
+	ChessTile tile = A1;
 	for (s32 column = 0; column < 8; column++) {
 		for (s32 raw = 0; raw < 8; raw++) {
 			if (isXRange(x, raw) && isYRange(y, column)) {
@@ -268,7 +268,7 @@ ChessTile detectClickTile(s32 x, s32 y) {
 */
 s32 eventHandler(SDLHandle *handle) {
 	SDL_Event event;
-	ChessTile tile = EMPTY;
+	ChessTile tile = INVALID_TILE;
 	s32 x = 0, y = 0;
 	(void)handle;
 	while (SDL_PollEvent(&event)) {

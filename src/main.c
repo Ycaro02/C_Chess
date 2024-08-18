@@ -25,29 +25,37 @@ int main(void) {
 	s32 w = 8 * TILE_SIZE + 9 * TILE_SPACING;
 	s32 h = 8 * TILE_SIZE + 9 * TILE_SPACING + TOP_BAND_HEIGHT;
 
-	s32 selected = EMPTY; 
+	ChessTile tile_selected = INVALID_TILE;
+	ChessPiece piece_type = EMPTY; 
 
 	handle = createSDLHandle(w, h, "Chess", board);
 	if (!handle) {
 		return (1);
 	}
 	while (windowIsOpen(handle->window)) {
-		selected = eventHandler(handle);
-		if (selected == CHESS_QUIT) {
+		tile_selected = eventHandler(handle);
+		if (tile_selected == CHESS_QUIT) {
 			destroy_sdl_handle(handle);
 			windowClose(handle->window, handle->renderer);
 			free(handle);
 			break ;
 		}
-
-		s32 piece_type = get_piece(board, selected);
-		if (piece_type == WHITE_PAWN) {
-			board->possible_moves = single_pawn_moves((1ULL << selected), board->occupied, board->black, TRUE);
-		} else if (piece_type == BLACK_PAWN) {
-			board->possible_moves = single_pawn_moves((1ULL << selected), board->occupied, board->white, FALSE);
-		} else if (selected != EMPTY) {
-			ft_printf_fd(1, "Piece type not implemented %d\n", piece_type);
-			board->possible_moves = 0;
+		if (tile_selected != INVALID_TILE) {
+			piece_type = get_piece(board, tile_selected);
+			if (piece_type == WHITE_PAWN) {
+				board->possible_moves = single_pawn_moves((1ULL << tile_selected), board->occupied, board->black, FALSE);
+				display_bitboard(board->possible_moves, "Possible moves");
+			} else if (piece_type == BLACK_PAWN) {
+				board->possible_moves = single_pawn_moves((1ULL << tile_selected), board->occupied, board->white, TRUE);
+			}
+			//  else if (piece_type == BLACK_BISHOP || piece_type == WHITE_BISHOP) {
+			// 	Bitboard enemy = (piece_type == BLACK_BISHOP) ? board->white : board->black;
+			// 	board->possible_moves = single_bishop_moves((1ULL << tile_selected), board->occupied, enemy);
+			// 	display_bitboard(board->possible_moves, "Bishop moves");
+			// } 
+			else {
+				board->possible_moves = 0;
+			}
 		}
 
 		windowClear(handle->renderer);
