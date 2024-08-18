@@ -10,7 +10,7 @@
 */
 Bitboard get_pawn_moves(Bitboard pawn, Bitboard occupied, Bitboard enemy, s8 is_black, s8 only_attacks) {
     Bitboard one_step = 0, two_steps = 0, attacks_left = 0, attacks_right = 0;
-	/* One step, if pawn is white, it moves up, if black, it moves down */
+	/* One step, if pawn is black, it moves up, otherwise it moves down */
     s8 direction = is_black ? 8 : -8;
 
     one_step = (is_black ? (pawn >> direction) : (pawn << -direction)) & ~occupied;
