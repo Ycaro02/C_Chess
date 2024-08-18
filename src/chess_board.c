@@ -26,9 +26,8 @@ void init_board(ChessBoard *b) {
 	b->piece[WHITE_KING] = START_WHITE_KING;
 
 	b->piece[WHITE_BISHOP] |= (1ULL << E4);
-	b->piece[WHITE_ROOK] |= (1ULL << E5);
-
-
+	b->piece[WHITE_QUEEN] |= (1ULL << E5);
+	b->piece[WHITE_KING] |= (1ULL << E6);
 
 	b->piece[BLACK_PAWN] = START_BLACK_PAWNS;
 	b->piece[BLACK_KNIGHT] = START_BLACK_KNIGHTS;
@@ -91,7 +90,7 @@ void draw_board(SDLHandle *handle) {
 	}
 }
 
-Bitboard single_pawn_moves(Bitboard pawn, Bitboard occupied, Bitboard enemy, s8 is_black) {
+Bitboard get_pawn_moves(Bitboard pawn, Bitboard occupied, Bitboard enemy, s8 is_black) {
     Bitboard one_step, two_steps, attacks_left, attacks_right;
 	/* One step, if pawn is white, it moves up, if black, it moves down */
     s8 direction = is_black ? 8 : -8;
@@ -132,7 +131,7 @@ static inline s8 handle_occupied_tile(Bitboard move, Bitboard occupied ,Bitboard
 	return (FALSE);
 }
 
-Bitboard single_bishop_moves(Bitboard bishop, Bitboard occupied, Bitboard enemy) {
+Bitboard get_bishop_moves(Bitboard bishop, Bitboard occupied, Bitboard enemy) {
     /* All directions for bishop moves */
 	s8 direction[4] = {7, 9, -7, -9};
 	/* Mask for out of bound */
@@ -169,7 +168,7 @@ Bitboard single_bishop_moves(Bitboard bishop, Bitboard occupied, Bitboard enemy)
     return attacks;
 }
 
-Bitboard single_rook_move(Bitboard rook, Bitboard occupied, Bitboard enemy) {
+Bitboard get_rook_moves(Bitboard rook, Bitboard occupied, Bitboard enemy) {
 	Bitboard attacks = 0, move = 0, mask = 0;
 	s8 directions[4] = {8, -8, 1, -1}; /* all directions for rook moves */
 	Bitboard all_mask[4] = {NOT_RANK_8, NOT_RANK_1, NOT_FILE_H, NOT_FILE_A};
@@ -199,6 +198,36 @@ Bitboard single_rook_move(Bitboard rook, Bitboard occupied, Bitboard enemy) {
 	}
 	return (attacks);
 }
+
+Bitboard get_queen_moves(Bitboard queen, Bitboard occupied, Bitboard enemy) {
+	Bitboard attacks = 0;
+	attacks |= get_bishop_moves(queen, occupied, enemy);
+	attacks |= get_rook_moves(queen, occupied, enemy);
+	return (attacks);
+}
+
+Bitboard get_king_moves(Bitboard king, Bitboard occupied, Bitboard enemy) {
+	Bitboard attacks = 0;
+	Bitboard mask = 0;
+	s8 directions[8] = {8, -8, 1, -1, 7, 9, -7, -9};
+	Bitboard all_mask[8] = {NOT_RANK_8, NOT_RANK_1, NOT_FILE_H, NOT_FILE_A, NOT_FILE_A & NOT_RANK_8, NOT_FILE_H & NOT_RANK_8, NOT_FILE_A & NOT_RANK_1, NOT_FILE_H & NOT_RANK_1};
+	Bitboard move = 0;
+	s8 dir = 0;
+
+	for (s8 i = 0; i < 8; i++) {
+		dir = directions[i];
+		mask = all_mask[i];
+		move = king;
+		if ((move & mask) == 0) { continue ; }
+		move = (dir > 0) ? (move << dir) : (move >> -dir);
+		if (move == 0) { continue ; }
+		if (handle_occupied_tile(move, occupied, enemy, &attacks)) { continue ; }
+		attacks |= move;
+	}
+	return (attacks);
+}
+
+
 
 /* Display bitboard for debug */
 void display_bitboard(Bitboard bitboard, const char *msg) {

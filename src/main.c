@@ -12,6 +12,14 @@ void destroy_sdl_handle(SDLHandle *handle) {
 #define WINDOW_WIDTH (8 * TILE_SIZE + 9 * TILE_SPACING)
 #define WINDOW_HEIGHT (8 * TILE_SIZE + 9 * TILE_SPACING + TOP_BAND_HEIGHT)
 
+
+typedef Bitboard (*GetMoveFunc)(Bitboard, Bitboard, Bitboard);
+
+Bitboard get_possible_move(ChessBoard *board, Bitboard piece, ChessPiece piece_type, GetMoveFunc get_move) {
+	Bitboard enemy = (piece_type >= BLACK_PAWN) ? board->white : board->black;
+	return (get_move(piece, board->occupied, enemy));
+}
+
 int main(void) {
 	ChessBoard *board = ft_calloc(1, sizeof(ChessBoard));
 	SDLHandle	*handle = NULL;
@@ -25,7 +33,7 @@ int main(void) {
 		return (1);
 	}
 
-	Bitboard enemy = 0;
+	Bitboard enemy = 0, piece = 0;
 	ChessTile tile_selected = INVALID_TILE;
 	ChessPiece piece_type = EMPTY; 
 
@@ -39,17 +47,22 @@ int main(void) {
 		}
 		if (tile_selected != INVALID_TILE) {
 			piece_type = get_piece(board, tile_selected);
+			piece = 1ULL << tile_selected;
 			if (piece_type == WHITE_PAWN || piece_type == BLACK_PAWN) {
 				enemy = (piece_type == BLACK_PAWN) ? board->white : board->black;
-				board->possible_moves = single_pawn_moves((1ULL << tile_selected), board->occupied, enemy, piece_type == BLACK_PAWN);
+				board->possible_moves = get_pawn_moves(piece, board->occupied, enemy, piece_type == BLACK_PAWN);
 			} 
 			else if (piece_type == BLACK_BISHOP || piece_type == WHITE_BISHOP) {
-				enemy = (piece_type == BLACK_BISHOP) ? board->white : board->black;
-				board->possible_moves = single_bishop_moves((1ULL << tile_selected), board->occupied, enemy);
+				board->possible_moves = get_possible_move(board, piece, piece_type, get_bishop_moves);
 			} 
 			else if (piece_type == BLACK_ROOK || piece_type == WHITE_ROOK) {
-				enemy = (piece_type == BLACK_ROOK) ? board->white : board->black;
-				board->possible_moves = single_rook_move((1ULL << tile_selected), board->occupied, enemy);
+				board->possible_moves = get_possible_move(board, piece, piece_type, get_rook_moves);
+			}
+			else if (piece_type == BLACK_QUEEN || piece_type == WHITE_QUEEN) {
+				board->possible_moves = get_possible_move(board, piece, piece_type, get_queen_moves);
+			}
+			else if (piece_type == BLACK_KING || piece_type == WHITE_KING) {
+				board->possible_moves = get_possible_move(board, piece, piece_type, get_king_moves);
 			}
 			else {
 				board->possible_moves = 0;
