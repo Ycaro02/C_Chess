@@ -32,12 +32,11 @@ void init_board(ChessBoard *b) {
 	b->piece[BLACK_QUEEN] = START_BLACK_QUEENS;
 	b->piece[BLACK_KING] = START_BLACK_KING;
 
-	// b->piece[WHITE_BISHOP] |= (1ULL << E4);
-	// b->piece[WHITE_QUEEN] |= (1ULL << E5);
-	// b->piece[WHITE_KING] |= (1ULL << E6);
-	// b->piece[WHITE_KNIGHT] = START_WHITE_KNIGHTS | START_WHITE_PAWNS;
-	// b->piece[BLACK_KNIGHT] = START_BLACK_KNIGHTS | START_BLACK_PAWNS;
-	// b->piece[WHITE_KNIGHT] |= (1ULL << E5);
+	b->piece[WHITE_BISHOP] |= (1ULL << E4);
+	b->piece[WHITE_QUEEN] |= (1ULL << E5);
+	b->piece[WHITE_KING] |= (1ULL << E6);
+	b->piece[WHITE_KNIGHT] = START_WHITE_KNIGHTS | START_WHITE_PAWNS;
+	b->piece[BLACK_KNIGHT] = START_BLACK_KNIGHTS | START_BLACK_PAWNS;
 
 	update_occupied(b);
 }
