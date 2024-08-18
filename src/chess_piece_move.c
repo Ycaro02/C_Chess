@@ -1,7 +1,5 @@
 #include "../include/chess.h"
 
-/* Get possible moves for pawn */
-
 /*	@brief	Get possible moves for pawn
 	*	@param	pawn		Bitboard of the selected pawn
 	*	@param	occupied	Bitboard of the occupied squares
@@ -9,7 +7,7 @@
 	*	@param	is_black	Flag to check if the pawn is black
 	*	@return	Bitboard of the possible moves
 */
-Bitboard get_pawn_moves(Bitboard pawn, Bitboard occupied, Bitboard enemy, s8 is_black) {
+Bitboard get_pawn_moves(Bitboard pawn, Bitboard occupied, Bitboard enemy, s8 is_black, s8 only_attacks) {
     Bitboard one_step, two_steps, attacks_left, attacks_right;
 	/* One step, if pawn is white, it moves up, if black, it moves down */
     s8 direction = is_black ? 8 : -8;
@@ -25,10 +23,18 @@ Bitboard get_pawn_moves(Bitboard pawn, Bitboard occupied, Bitboard enemy, s8 is_
         two_steps = 0;
     }
 
+	/* If only_attacks is set, return only the attacks/control tile*/
+	if (only_attacks) {
+		one_step = 0;
+		two_steps = 0;
+		enemy = UINT64_MAX;
+	}
+
 	/* Compute attacks left and right, and avoid out of bound */
     attacks_right = (is_black ? (pawn >> (direction - 1)) : (pawn << -(direction - 1))) & ~FILE_A & enemy;
     attacks_left = (is_black ? (pawn >> (direction + 1)) : (pawn << -(direction + 1))) & ~FILE_H & enemy;
-    return (one_step | two_steps | attacks_left | attacks_right);
+    
+	return (one_step | two_steps | attacks_left | attacks_right);
 }
 
 
@@ -140,6 +146,7 @@ Bitboard get_rook_moves(Bitboard rook, Bitboard occupied, Bitboard enemy) {
 */
 Bitboard get_queen_moves(Bitboard queen, Bitboard occupied, Bitboard enemy) {
 	Bitboard attacks = 0;
+
 	attacks |= get_bishop_moves(queen, occupied, enemy);
 	attacks |= get_rook_moves(queen, occupied, enemy);
 	return (attacks);
@@ -210,4 +217,45 @@ Bitboard get_knight_moves(Bitboard knight, Bitboard occupied, Bitboard enemy) {
         attacks |= move;
     }
     return (attacks);
+}
+
+/* @brief	Get piece move function
+ * @param	piece_move	Array of PieceMove struct
+ * @param	piece_type	ChessPiece enum
+ * @return	GetMoveFunc function pointer
+*/
+static GetMoveFunc get_piece_move_func(PieceMove *piece_move, ChessPiece piece_type) {
+	for (int i = 0; i < PIECE_MOVE_ARRAY_SIZE; i++) {
+		if (piece_move[i].white_piece_type == piece_type || piece_move[i].black_piece_type == piece_type) {
+			return (piece_move[i].get_move_func);
+		}
+	}
+	return (NULL);
+}
+
+/* @brief	Get piece move generic function
+ * @param	board		ChessBoard struct
+ * @param	piece		Bitboard of the selected piece
+ * @param	piece_type	ChessPiece enum
+ * @return	Bitboard of the possible moves
+ */
+Bitboard get_piece_move(ChessBoard *board, Bitboard piece, ChessPiece piece_type) {
+ 	
+	static PieceMove	piece_move[PIECE_MOVE_ARRAY_SIZE] = PIECE_MOVE_ARRAY;
+	GetMoveFunc 		get_move = NULL;
+	Bitboard			enemy = (piece_type >= BLACK_PAWN) ? board->white : board->black;
+	
+	/* If the piece is a pawn, get only the pawn moves */
+	if (piece_type == WHITE_PAWN || piece_type == BLACK_PAWN) {
+		return (get_pawn_moves(piece, board->occupied, enemy, piece_type == BLACK_PAWN, FALSE));
+	}
+	
+	/* Get the piece move function */
+	get_move = get_piece_move_func(piece_move, piece_type);
+	
+	/* If not get move function found, empty tile is selected reset the possible move variable */
+	if (!get_move) {
+		return (0);
+	}
+	return (get_move(piece, board->occupied, enemy));
 }

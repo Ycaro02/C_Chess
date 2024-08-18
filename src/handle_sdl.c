@@ -253,7 +253,7 @@ ChessTile detectClickTile(s32 x, s32 y) {
 	for (s32 column = 0; column < 8; column++) {
 		for (s32 raw = 0; raw < 8; raw++) {
 			if (isXRange(x, raw) && isYRange(y, column)) {
-				ft_printf_fd(1, "Click on tile %d\n", tile);
+				ft_printf_fd(1, "Click on "ORANGE"[%s]"RESET" -> "PINK"|%d|\n"RESET, TILE_TO_STRING(tile), tile);
 				return (tile);
 			}
 			tile++;
@@ -264,13 +264,14 @@ ChessTile detectClickTile(s32 x, s32 y) {
 
 
 /**
- * @brief Mouse event handler
+ * @brief Chess event handler
+ * @return The tile clicked, or CHESS_QUIT if the user want to quit
+ * @note Return INVALID_TILE if no tile is clicked
 */
-s32 eventHandler(SDLHandle *handle) {
+s32 eventHandler() {
 	SDL_Event event;
 	ChessTile tile = INVALID_TILE;
 	s32 x = 0, y = 0;
-	(void)handle;
 	while (SDL_PollEvent(&event)) {
 		if (event.type == SDL_QUIT \
 			|| (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE)) {

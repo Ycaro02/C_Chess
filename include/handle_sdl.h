@@ -11,6 +11,7 @@
 /* TTF include */
 #include "../rsc/lib/install/include/SDL2/SDL_ttf.h"
 
+/* Texture path */
 #define BLACK_KING_TEXTURE "rsc/texture/piece/black_king.bmp"
 #define BLACK_QUEEN_TEXTURE "rsc/texture/piece/black_queen.bmp"
 #define BLACK_ROOK_TEXTURE "rsc/texture/piece/black_rook.bmp"
@@ -38,9 +39,14 @@
 	} while (0)
 
 
+/* Element size in pixel */
 #define		TOP_BAND_HEIGHT		0
 #define		TILE_SIZE			100
 #define		TILE_SPACING		0
+
+/* Window size */
+#define WINDOW_WIDTH (8 * TILE_SIZE + 9 * TILE_SPACING)
+#define WINDOW_HEIGHT (8 * TILE_SIZE + 9 * TILE_SPACING + TOP_BAND_HEIGHT)
 
 /* Macro to convert tile position to pixel */
 #define TILE_POSITION_TO_PIXEL(p, px, py) \
@@ -78,7 +84,7 @@ void unloadTexture(SDL_Texture *texture);
 void drawTextureTile(SDL_Renderer *renderer, SDL_Texture *texture, iVec2 tilePos, iVec2 scale);
 void colorTile(SDL_Renderer	*renderer , iVec2 tilePos, iVec2 scale, u32 color);
 
-s32 eventHandler(SDLHandle *handle);
+s32 eventHandler();
 
 void draw_board(SDLHandle *handle);
 

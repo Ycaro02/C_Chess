@@ -6,6 +6,9 @@
 /* Typedef for Bitboard type just unsigned long long (64 bits) */
 typedef u64 Bitboard;
 
+#define IS_WHITE 0
+#define IS_BLACK 1
+
 /* Enum for chess tile */
 enum e_chess_tile {
 	INVALID_TILE=-1,
@@ -19,6 +22,8 @@ enum e_chess_tile {
 	A8, B8, C8, D8, E8, F8, G8, H8,
 	TILE_MAX
 };
+
+#define TILE_TO_STRING(t) (char[3]){'A' + (t) % 8, '1' + (t) / 8, '\0'}
 
 /* Start white piece position */
 #define START_WHITE_PAWNS (1ULL << A2 | 1ULL << B2 | 1ULL << C2 | 1ULL << D2 | 1ULL << E2 | 1ULL << F2 | 1ULL << G2 | 1ULL << H2)
@@ -79,28 +84,67 @@ struct s_chess_board {
 
 	/* Board 1 for occupied, 0 for empty */
 	Bitboard occupied;
+
+	/* Bitboard for white and black pieces, for eassy access to enemy pieces */
 	Bitboard white;
 	Bitboard black;
+
+	/* Bitboard for selected piece possible moves */
 	Bitboard possible_moves;
+
+	/* Bitboard for white and black control */
+	Bitboard white_control;
+	Bitboard black_control;
 };
 
-/* Typedef for ChessBoard struct */
+
+
+/* Typedef for ChessBoard struct and enum */
 typedef struct s_chess_board ChessBoard;
 typedef enum e_chess_tile ChessTile;
 typedef enum e_chess_piece ChessPiece;
+
+/* Function pointer for get move functions */
+typedef Bitboard (*GetMoveFunc)(Bitboard, Bitboard, Bitboard);
+
+/* Struct for piece move */
+struct s_piece_move {
+	ChessPiece	white_piece_type;
+	ChessPiece	black_piece_type;
+	GetMoveFunc get_move_func;
+};
+
+/* Typedef for piece move */
+typedef struct s_piece_move PieceMove;
+
+/* Array of piece move struct */
+#define PIECE_MOVE_ARRAY { \
+	{WHITE_KNIGHT, BLACK_KNIGHT, get_knight_moves}, \
+	{WHITE_BISHOP, BLACK_BISHOP, get_bishop_moves}, \
+	{WHITE_ROOK, BLACK_ROOK, get_rook_moves}, \
+	{WHITE_QUEEN, BLACK_QUEEN, get_queen_moves}, \
+	{WHITE_KING, BLACK_KING, get_king_moves}, \
+} 
+
+/* Piece Move Array size */
+#define PIECE_MOVE_ARRAY_SIZE 5
+
+// main
+Bitboard get_piece_color_control(ChessBoard *b, s8 is_black);
 
 /* src/chess_board.c */
 void init_board(ChessBoard *board);
 void update_occupied(ChessBoard *board);
 void display_bitboard(Bitboard board, const char *msg);
-ChessPiece get_piece(ChessBoard *b, ChessTile tile);
+ChessPiece get_piece_from_tile(ChessBoard *b, ChessTile tile);
 
 /* src/chess_piece_moves.c */
-Bitboard get_pawn_moves(Bitboard pawn, Bitboard occupied, Bitboard enemy, s8 is_black);
+Bitboard get_pawn_moves(Bitboard pawn, Bitboard occupied, Bitboard enemy, s8 is_black, s8 only_attacks);
 Bitboard get_bishop_moves(Bitboard bishop, Bitboard occupied, Bitboard enemy);
 Bitboard get_rook_moves(Bitboard rook, Bitboard occupied, Bitboard enemy);
 Bitboard get_queen_moves(Bitboard queen, Bitboard occupied, Bitboard enemy);
 Bitboard get_king_moves(Bitboard king, Bitboard occupied, Bitboard enemy);
 Bitboard get_knight_moves(Bitboard knight, Bitboard occupied, Bitboard enemy);
+Bitboard get_piece_move(ChessBoard *board, Bitboard piece, ChessPiece piece_type);
 
 #endif /* CHESS_H */

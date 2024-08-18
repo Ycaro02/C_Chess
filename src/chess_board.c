@@ -1,8 +1,14 @@
 #include "../include/chess.h"
 #include "../include/handle_sdl.h"
 
+/* Update control bitboard */
+void update_piece_control(ChessBoard *b) {
+	b->white_control = get_piece_color_control(b, IS_WHITE);
+	b->black_control = get_piece_color_control(b, IS_BLACK);
+}
+
 /* Update occupied bitboard */
-void update_occupied(ChessBoard *b) {
+void update_piece_state(ChessBoard *b) {
 	b->occupied = 0;
 	b->white = 0;
 	b->black = 0;
@@ -14,9 +20,16 @@ void update_occupied(ChessBoard *b) {
 			b->black |= b->piece[i];
 		}
 	}
+
+	/* Update control bitboard */
+	update_piece_control(b);
 }
 
 void init_board(ChessBoard *b) {
+
+	/* Set all pieces to 0 */
+	ft_bzero(b, sizeof(ChessBoard));
+
 	/* Set start for white and black piece */
 	b->piece[WHITE_PAWN] = START_WHITE_PAWNS;
 	b->piece[WHITE_KNIGHT] = START_WHITE_KNIGHTS;
@@ -32,17 +45,22 @@ void init_board(ChessBoard *b) {
 	b->piece[BLACK_QUEEN] = START_BLACK_QUEENS;
 	b->piece[BLACK_KING] = START_BLACK_KING;
 
-	b->piece[WHITE_BISHOP] |= (1ULL << E4);
-	b->piece[WHITE_QUEEN] |= (1ULL << E5);
-	b->piece[WHITE_KING] |= (1ULL << E6);
-	b->piece[WHITE_KNIGHT] = START_WHITE_KNIGHTS | START_WHITE_PAWNS;
-	b->piece[BLACK_KNIGHT] = START_BLACK_KNIGHTS | START_BLACK_PAWNS;
+	// b->piece[WHITE_BISHOP] |= (1ULL << E4);
+	// b->piece[WHITE_QUEEN] |= (1ULL << E5);
+	// b->piece[WHITE_KING] |= (1ULL << E6);
+	// b->piece[WHITE_KNIGHT] = START_WHITE_KNIGHTS | START_WHITE_PAWNS;
+	// b->piece[BLACK_KNIGHT] = START_BLACK_KNIGHTS | START_BLACK_PAWNS;
+	// b->piece[BLACK_PAWN] |= (1ULL << B3);
 
-	update_occupied(b);
+	update_piece_state(b);
 }
 
-/* Get piece from tile */
-ChessPiece get_piece(ChessBoard *b, ChessTile tile) {
+/* @brief Get piece from tile
+ * @param b		ChessBoard struct
+ * @param tile	ChessTile enum
+ * @return ChessPiece enum
+ */
+ChessPiece get_piece_from_tile(ChessBoard *b, ChessTile tile) {
 	Bitboard mask = 1ULL << tile;
 	ChessPiece piece = EMPTY;
 	if (b->occupied & mask) {
@@ -70,20 +88,18 @@ void draw_board(SDLHandle *handle) {
 	for (s32 column = 0; column < 8; column++) {
 		for (s32 raw = 0; raw < 8; raw++) {
 			tilePos = (iVec2){raw, column};
-			if (((column + raw) & 1)) {
-				color = BLACK_TILE;
-			} else {
-				color = WHITE_TILE;
-			}
+			
+			color = (column + raw) & 1 ? BLACK_TILE : WHITE_TILE;
+			
 			colorTile(handle->renderer, tilePos, (iVec2){TILE_SIZE, TILE_SIZE}, color);
 			
-			/* Check if tile is possible move */
+			/* Check if tile is current selected possible move */
 			if (isPossibleMove(handle->board->possible_moves, tile)) {
 				color = RGBA_TO_UINT32(0, 0, 200, 100);
 				colorTile(handle->renderer, tilePos, (iVec2){TILE_SIZE, TILE_SIZE}, color);
 			}
 
-			pieceIdx = get_piece(handle->board, tile);
+			pieceIdx = get_piece_from_tile(handle->board, tile);
 			if (pieceIdx != EMPTY) {
 				drawTextureTile(handle->renderer, handle->piece_texture[pieceIdx], tilePos, (iVec2){TILE_SIZE, TILE_SIZE});
 			}
