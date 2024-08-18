@@ -1,11 +1,11 @@
 #include "../include/chess.h"
 #include "../include/handle_sdl.h"
 
-void update_tmp_piece(ChessBoard *b) {
-	for (s32 i = 0; i < PIECE_MAX; i++) {
-		b->tmp_piece[i] = b->piece[i];
-	}
-}
+// void update_tmp_piece(ChessBoard *b) {
+// 	for (s32 i = 0; i < PIECE_MAX; i++) {
+// 		b->tmp_piece[i] = b->piece[i];
+// 	}
+// }
 
 /* Update control bitboard */
 void update_piece_control(ChessBoard *b) {
@@ -17,10 +17,10 @@ void update_piece_control(ChessBoard *b) {
 	b->black_check = (b->white_control & b->piece[BLACK_KING]) != 0;
 
 	if (b->white_check) {
-		ft_printf_fd(1, "White King in check\n");
+		ft_printf_fd(1, CYAN"White King in check\n"RESET);
 	}
 	if (b->black_check) {
-		ft_printf_fd(1, "Black King in check\n");
+		ft_printf_fd(1, ORANGE"Black King in check\n"RESET);
 	}
 }
 
@@ -38,7 +38,7 @@ void update_piece_state(ChessBoard *b) {
 		}
 	}
 
-	update_tmp_piece(b);
+	// update_tmp_piece(b);
 
 	/* Update control bitboard */
 	update_piece_control(b);
@@ -57,15 +57,12 @@ void init_board(ChessBoard *b) {
 	b->piece[WHITE_QUEEN] = START_WHITE_QUEENS;
 	b->piece[WHITE_KING] = START_WHITE_KING;
 
-	// b->piece[WHITE_QUEEN] = START_WHITE_KING;
-
-
-	// b->piece[BLACK_PAWN] = START_BLACK_PAWNS;
-	// b->piece[BLACK_KNIGHT] = START_BLACK_KNIGHTS;
-	// b->piece[BLACK_BISHOP] = START_BLACK_BISHOPS;
-	// b->piece[BLACK_ROOK] = START_BLACK_ROOKS;
-	// b->piece[BLACK_QUEEN] = START_BLACK_QUEENS;
-	// b->piece[BLACK_KING] = START_BLACK_KING;
+	b->piece[BLACK_PAWN] = START_BLACK_PAWNS;
+	b->piece[BLACK_KNIGHT] = START_BLACK_KNIGHTS;
+	b->piece[BLACK_BISHOP] = START_BLACK_BISHOPS;
+	b->piece[BLACK_ROOK] = START_BLACK_ROOKS;
+	b->piece[BLACK_QUEEN] = START_BLACK_QUEENS;
+	b->piece[BLACK_KING] = START_BLACK_KING;
 
 	// b->piece[WHITE_BISHOP] |= (1ULL << E4);
 	// b->piece[WHITE_QUEEN] |= (1ULL << E5);

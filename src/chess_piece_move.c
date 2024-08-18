@@ -26,25 +26,34 @@ Bitboard get_pawn_moves(ChessBoard *b, Bitboard pawn, s8 is_black, s8 only_attac
 	 * If the new enemy control bitboard has the king position, the move is not valid
 	 */
 
-	/* Remove last pawn position*/
-	/* Add the new position */
-	/* Compute new control bitboard */
-	
-	// if (one_step != 0 && !only_attacks) {
-	// 	ChessPiece pawn_idx = is_black ? BLACK_PAWN : WHITE_PAWN;
-	// 	// ft_printf_fd(1, "Pawn idx: %d\n", pawn_idx);
-	// 	display_bitboard(b->tmp_piece[pawn_idx], "Before remove");
-	// 	b->tmp_piece[pawn_idx] &= ~pawn;
-	// 	display_bitboard(b->tmp_piece[pawn_idx], "After remove");
-	// 	b->tmp_piece[pawn_idx] |= one_step;
-	// 	display_bitboard(b->tmp_piece[pawn_idx], "After replace");
-	// 	Bitboard tmp_control = get_piece_color_control(b, is_black ? IS_WHITE : IS_BLACK);
-	// 	display_bitboard(tmp_control, "Tmp control");
-	// 	ChessPiece king = is_black ? BLACK_KING : WHITE_KING;
-	// 	if ((tmp_control & b->piece[king]) != 0) {
-	// 		one_step = 0;
-	// 	}
-	// }
+	/* This block need to be encapsulate and refactor but the logic is working */
+
+	/* @note need the !only_attacks to not be infinite recurcise */
+	if (one_step != 0 && !only_attacks) {
+		ChessPiece pawn_idx = is_black ? BLACK_PAWN : WHITE_PAWN;
+		Bitboard one_step_save = one_step;
+
+		/* Update the occupied bitboard and control */
+		b->piece[pawn_idx] &= ~pawn;
+		b->piece[pawn_idx] |= one_step;
+		update_piece_state(b);
+
+		if (is_black) {
+			if (b->white_control & b->piece[BLACK_KING]) {
+				one_step = 0;
+			}
+		} else {
+			if (b->black_control & b->piece[WHITE_KING]) {
+				one_step = 0;
+			}
+		}
+
+		/* Reset the pawn position */
+		b->piece[pawn_idx] &= ~one_step_save;
+		b->piece[pawn_idx] |= pawn;
+		update_piece_state(b);
+		// display_bitboard(b->piece[pawn_idx], "PAWN");
+	}
 
 
 

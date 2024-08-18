@@ -88,7 +88,7 @@ struct s_chess_board {
 	Bitboard	piece[PIECE_MAX];
 
 	/* Tmp bitboard for each piece for compute king check in move */
-	Bitboard	tmp_piece[PIECE_MAX];
+	// Bitboard	tmp_piece[PIECE_MAX];
 
 	/* Board 1 for occupied, 0 for empty */
 	Bitboard	occupied;
