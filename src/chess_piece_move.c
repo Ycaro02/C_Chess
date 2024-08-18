@@ -1,26 +1,23 @@
 #include "../include/chess.h"
 
 /*	@brief	Get possible moves for pawn
-	*	@param	pawn		Bitboard of the selected pawn
-	*	@param	occupied	Bitboard of the occupied squares
-	*	@param	enemy		Bitboard of the enemy pieces
-	*	@param	is_black	Flag to check if the pawn is black
+	*	@param	pawn			Bitboard of the selected pawn
+	*	@param	occupied		Bitboard of the occupied squares
+	*	@param	enemy			Bitboard of the enemy pieces
+	*	@param	is_black		Flag to check if the pawn is black
+	*	@param	only_attacks	Flag to check if only attacks are needed
 	*	@return	Bitboard of the possible moves
 */
 Bitboard get_pawn_moves(Bitboard pawn, Bitboard occupied, Bitboard enemy, s8 is_black, s8 only_attacks) {
-    Bitboard one_step, two_steps, attacks_left, attacks_right;
+    Bitboard one_step = 0, two_steps = 0, attacks_left = 0, attacks_right = 0;
 	/* One step, if pawn is white, it moves up, if black, it moves down */
     s8 direction = is_black ? 8 : -8;
 
     one_step = (is_black ? (pawn >> direction) : (pawn << -direction)) & ~occupied;
     
-    s8 one_step_free = one_step != 0;
-
-	/* Compute two steps if pawn is in starting position */
-    if (one_step_free) {
+	/* Compute two steps if pawn is in starting position and first step is ok */
+    if (one_step != 0) {
         two_steps = (is_black ? ((pawn & START_BLACK_PAWNS) >> 2*direction) : ((pawn & START_WHITE_PAWNS) << 2*-direction)) & ~occupied;
-    } else {
-        two_steps = 0;
     }
 
 	/* If only_attacks is set, return only the attacks/control tile*/

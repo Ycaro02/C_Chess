@@ -11,18 +11,20 @@ void destroy_sdl_handle(SDLHandle *handle) {
 
 
 Bitboard get_piece_color_control(ChessBoard *b, s8 is_black) {
+	Bitboard control = 0, possible_moves = 0, enemy_pieces = 0, piece = 0;
     ChessPiece enemy_piece_start = is_black ? BLACK_PAWN : WHITE_PAWN;
     ChessPiece enemy_piece_end = is_black ? PIECE_MAX : BLACK_PAWN;
-	Bitboard control = 0, possible_moves = 0;
 
     for (ChessPiece type = enemy_piece_start; type < enemy_piece_end; type++) {
-        Bitboard enemy_pieces = b->piece[type];
+        enemy_pieces = b->piece[type];
 
 		/* For each enemy piece */
         while (enemy_pieces) {
-			/* Get the first piece */
-            Bitboard piece = enemy_pieces & -enemy_pieces; /* Get the first bit set */
-            enemy_pieces &= enemy_pieces - 1;  /* Clear the first bit set */
+			/* Get the first bit set */
+            piece = enemy_pieces & -enemy_pieces;
+            
+			/* Clear the first bit set */
+			enemy_pieces &= enemy_pieces - 1;
 
 			/* Get the possible moves */
             if (type == enemy_piece_start) {
