@@ -8,13 +8,46 @@
 	*	@param	only_attacks	Flag to check if only attacks are needed
 	*	@return	Bitboard of the possible moves
 */
-Bitboard get_pawn_moves(Bitboard pawn, Bitboard occupied, Bitboard enemy, s8 is_black, s8 only_attacks) {
+// Bitboard get_pawn_moves(Bitboard pawn, Bitboard occupied, Bitboard enemy, s8 is_black, s8 only_attacks) {
+Bitboard get_pawn_moves(ChessBoard *b, Bitboard pawn, s8 is_black, s8 only_attacks) {
     Bitboard one_step = 0, two_steps = 0, attacks_left = 0, attacks_right = 0;
+	Bitboard enemy = is_black ? b->white : b->black;
+	Bitboard occupied = b->occupied;
+
+
 	/* One step, if pawn is black, it moves up, otherwise it moves down */
     s8 direction = is_black ? 8 : -8;
 
     one_step = (is_black ? (pawn >> direction) : (pawn << -direction)) & ~occupied;
-    
+
+	/**
+	 * To check for king check we need to replace pawn position with the new position (one step)
+	 * Compute the new enemy bitboard control with this new position
+	 * If the new enemy control bitboard has the king position, the move is not valid
+	 */
+
+	/* Remove last pawn position*/
+	/* Add the new position */
+	/* Compute new control bitboard */
+	
+	// if (one_step != 0 && !only_attacks) {
+	// 	ChessPiece pawn_idx = is_black ? BLACK_PAWN : WHITE_PAWN;
+	// 	// ft_printf_fd(1, "Pawn idx: %d\n", pawn_idx);
+	// 	display_bitboard(b->tmp_piece[pawn_idx], "Before remove");
+	// 	b->tmp_piece[pawn_idx] &= ~pawn;
+	// 	display_bitboard(b->tmp_piece[pawn_idx], "After remove");
+	// 	b->tmp_piece[pawn_idx] |= one_step;
+	// 	display_bitboard(b->tmp_piece[pawn_idx], "After replace");
+	// 	Bitboard tmp_control = get_piece_color_control(b, is_black ? IS_WHITE : IS_BLACK);
+	// 	display_bitboard(tmp_control, "Tmp control");
+	// 	ChessPiece king = is_black ? BLACK_KING : WHITE_KING;
+	// 	if ((tmp_control & b->piece[king]) != 0) {
+	// 		one_step = 0;
+	// 	}
+	// }
+
+
+
 	/* Compute two steps if pawn is in starting position and first step is ok */
     if (one_step != 0) {
         two_steps = (is_black ? ((pawn & START_BLACK_PAWNS) >> 2*direction) : ((pawn & START_WHITE_PAWNS) << 2*-direction)) & ~occupied;
@@ -67,8 +100,8 @@ Bitboard get_bishop_moves(Bitboard bishop, Bitboard occupied, Bitboard enemy) {
     static const Bitboard oob_mask[4] = {
 		NOT_FILE_A & NOT_RANK_8, // 7
 		NOT_FILE_H & NOT_RANK_8, // 9
-		NOT_FILE_A & NOT_RANK_1, // -7
-		NOT_FILE_H & NOT_RANK_1, // -9
+		NOT_FILE_H & NOT_RANK_1, // -7
+		NOT_FILE_A & NOT_RANK_1, // -9
 	};
     Bitboard attacks = 0, mask = 0, move = 0;
 	s8 dir = 0;
@@ -245,7 +278,8 @@ Bitboard get_piece_move(ChessBoard *board, Bitboard piece, ChessPiece piece_type
 	
 	/* If the piece is a pawn, get only the pawn moves */
 	if (piece_type == WHITE_PAWN || piece_type == BLACK_PAWN) {
-		return (get_pawn_moves(piece, board->occupied, enemy, is_black, FALSE));
+		// return (get_pawn_moves(piece, board->occupied, enemy, is_black, FALSE));
+		return (get_pawn_moves(board, piece, is_black, FALSE));
 	}
 	
 	/* Get the piece move function */

@@ -29,7 +29,8 @@ Bitboard get_piece_color_control(ChessBoard *b, s8 is_black) {
 			/* Get the possible moves */
             if (type == enemy_piece_start) {
 				/* If the piece is a pawn, get only the pawn attacks moves */
-				possible_moves = get_pawn_moves(piece, b->occupied, enemy_pieces, type == BLACK_PAWN, TRUE);
+				// possible_moves = get_pawn_moves(piece, b->occupied, enemy_pieces, type == BLACK_PAWN, TRUE);
+				possible_moves = get_pawn_moves(b, piece, type == BLACK_PAWN, TRUE);
 			} else {
 				possible_moves = get_piece_move(b, piece, type);
 			}
@@ -54,12 +55,11 @@ int main(void) {
 		return (1);
 	}
 
-	display_bitboard(board->white, "White");
-	display_bitboard(board->black, "Black");
-	display_bitboard(board->white_control, "White Control");
-	display_bitboard(board->black_control, "Black Control");
+	// display_bitboard(board->white, "White");
+	// display_bitboard(board->black, "Black");
+	// display_bitboard(board->white_control, "White Control");
+	// display_bitboard(board->black_control, "Black Control");
 	
-
 	ChessTile tile_selected = INVALID_TILE;
 	ChessPiece piece_type = EMPTY;
 
@@ -74,7 +74,7 @@ int main(void) {
 		if (tile_selected != INVALID_TILE) {
 			/* If a piece is selected and the tile selected is a possible move */
 			if (is_selected_possible_move(board->possible_moves, tile_selected)) {
-				ft_printf_fd(1, YELLOW"Move piece from [%s] TO [%s]\n"RESET, TILE_TO_STRING(board->selected_tile), TILE_TO_STRING(tile_selected));
+				ft_printf_fd(1, YELLOW"Move piece from [%s](%d) TO [%s](%d)\n"RESET, TILE_TO_STRING(board->selected_tile), board->selected_tile, TILE_TO_STRING(tile_selected), tile_selected);
 				move_piece(board, board->selected_tile, tile_selected, piece_type);
 				board->possible_moves = 0;
 			} else {

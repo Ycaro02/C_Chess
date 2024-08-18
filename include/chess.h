@@ -87,6 +87,9 @@ struct s_chess_board {
 	/* Bitboard for each piece */
 	Bitboard	piece[PIECE_MAX];
 
+	/* Tmp bitboard for each piece for compute king check in move */
+	Bitboard	tmp_piece[PIECE_MAX];
+
 	/* Board 1 for occupied, 0 for empty */
 	Bitboard	occupied;
 
@@ -161,7 +164,8 @@ s8 is_selected_possible_move(Bitboard possible_moves, ChessTile tile);
 ChessPiece get_piece_from_tile(ChessBoard *b, ChessTile tile);
 
 /* src/chess_piece_moves.c */
-Bitboard 	get_pawn_moves(Bitboard pawn, Bitboard occupied, Bitboard enemy, s8 is_black, s8 only_attacks);
+// Bitboard 	get_pawn_moves(Bitboard pawn, Bitboard occupied, Bitboard enemy, s8 is_black, s8 only_attacks);
+Bitboard	get_pawn_moves(ChessBoard *b, Bitboard pawn, s8 is_black, s8 only_attacks);
 Bitboard 	get_bishop_moves(Bitboard bishop, Bitboard occupied, Bitboard enemy);
 Bitboard 	get_rook_moves(Bitboard rook, Bitboard occupied, Bitboard enemy);
 Bitboard 	get_queen_moves(Bitboard queen, Bitboard occupied, Bitboard enemy);
