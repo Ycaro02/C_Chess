@@ -57,16 +57,27 @@ enum e_chess_tile {
 
 /* Mask for A and H columns */
 #define FILE_A (0x0101010101010101ULL)
+#define FILE_B (0x0202020202020202ULL)
+#define FILE_G (0x4040404040404040ULL)
 #define FILE_H (0x8080808080808080ULL)
+
 
 /* Mask for 1 and 8 rows */
 #define RANK_1 (1ULL << A1 | 1ULL << B1 | 1ULL << C1 | 1ULL << D1 | 1ULL << E1 | 1ULL << F1 | 1ULL << G1 | 1ULL << H1)
+#define RANK_2 (1ULL << A2 | 1ULL << B2 | 1ULL << C2 | 1ULL << D2 | 1ULL << E2 | 1ULL << F2 | 1ULL << G2 | 1ULL << H2)
+#define RANK_7 (1ULL << A7 | 1ULL << B7 | 1ULL << C7 | 1ULL << D7 | 1ULL << E7 | 1ULL << F7 | 1ULL << G7 | 1ULL << H7)
 #define RANK_8 (1ULL << A8 | 1ULL << B8 | 1ULL << C8 | 1ULL << D8 | 1ULL << E8 | 1ULL << F8 | 1ULL << G8 | 1ULL << H8)
+
 
 /* Mask for not A and H columns, same for ran 1 and 8 */
 #define NOT_FILE_A (~FILE_A)
+#define NOT_FILE_B (~FILE_B)
+#define NOT_FILE_G (~FILE_G)
 #define NOT_FILE_H (~FILE_H)
+
 #define NOT_RANK_1 (~RANK_1)
+#define NOT_RANK_2 (~RANK_2)
+#define NOT_RANK_7 (~RANK_7)
 #define NOT_RANK_8 (~RANK_8)
 
 /* Chess quit */
@@ -103,11 +114,12 @@ void update_occupied(ChessBoard *board);
 void display_bitboard(Bitboard board, const char *msg);
 ChessPiece get_piece(ChessBoard *b, ChessTile tile);
 
+/* src/chess_get_moves.c */
 Bitboard get_pawn_moves(Bitboard pawn, Bitboard occupied, Bitboard enemy, s8 is_black);
 Bitboard get_bishop_moves(Bitboard bishop, Bitboard occupied, Bitboard enemy);
 Bitboard get_rook_moves(Bitboard rook, Bitboard occupied, Bitboard enemy);
 Bitboard get_queen_moves(Bitboard queen, Bitboard occupied, Bitboard enemy);
 Bitboard get_king_moves(Bitboard king, Bitboard occupied, Bitboard enemy);
-
+Bitboard get_knight_moves(Bitboard knight, Bitboard occupied, Bitboard enemy);
 
 #endif /* CHESS_H */

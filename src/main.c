@@ -64,6 +64,9 @@ int main(void) {
 			else if (piece_type == BLACK_KING || piece_type == WHITE_KING) {
 				board->possible_moves = get_possible_move(board, piece, piece_type, get_king_moves);
 			}
+			else if (piece_type == BLACK_KNIGHT || piece_type == WHITE_KNIGHT) {
+				board->possible_moves = get_possible_move(board, piece, piece_type, get_knight_moves);
+			}
 			else {
 				board->possible_moves = 0;
 			}
