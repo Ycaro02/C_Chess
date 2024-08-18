@@ -9,10 +9,11 @@ void destroy_sdl_handle(SDLHandle *handle) {
 	free(handle->piece_texture);
 }
 
+/* Window size */
 #define WINDOW_WIDTH (8 * TILE_SIZE + 9 * TILE_SPACING)
 #define WINDOW_HEIGHT (8 * TILE_SIZE + 9 * TILE_SPACING + TOP_BAND_HEIGHT)
 
-
+/* Function pointer for get move */
 typedef Bitboard (*GetMoveFunc)(Bitboard, Bitboard, Bitboard);
 
 Bitboard get_possible_move(ChessBoard *board, Bitboard piece, ChessPiece piece_type, GetMoveFunc get_move) {

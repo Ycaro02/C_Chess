@@ -66,7 +66,7 @@ s8 isPossibleMove(Bitboard possible_moves, ChessTile tile) {
 void draw_board(SDLHandle *handle) {
 	iVec2 tilePos;
 	u32 color;
-	ChessTile tile = A1; // start from A1 for white player
+	ChessTile tile = A1; // start from A1 for white player corner top left
 	ChessPiece pieceIdx = EMPTY;
 	for (s32 column = 0; column < 8; column++) {
 		for (s32 raw = 0; raw < 8; raw++) {
@@ -152,9 +152,9 @@ static inline s8 handle_occupied_tile(Bitboard move, Bitboard occupied ,Bitboard
 */
 Bitboard get_bishop_moves(Bitboard bishop, Bitboard occupied, Bitboard enemy) {
     /* All directions for bishop moves */
-	s8 direction[4] = {7, 9, -7, -9};
+	static const s8 direction[4] = {7, 9, -7, -9};
 	/* Mask for out of bound */
-    Bitboard oob_mask[4] = {
+    static const Bitboard oob_mask[4] = {
 		NOT_FILE_A & NOT_RANK_8, // 7
 		NOT_FILE_H & NOT_RANK_8, // 9
 		NOT_FILE_A & NOT_RANK_1, // -7
@@ -194,10 +194,10 @@ Bitboard get_bishop_moves(Bitboard bishop, Bitboard occupied, Bitboard enemy) {
 	*	@return	Bitboard of the possible moves
 */
 Bitboard get_rook_moves(Bitboard rook, Bitboard occupied, Bitboard enemy) {
+	static const s8 directions[4] = {8, -8, 1, -1}; /* all directions for rook moves */
+	static const Bitboard all_mask[4] = {NOT_RANK_8, NOT_RANK_1, NOT_FILE_H, NOT_FILE_A};
 	Bitboard attacks = 0, move = 0, mask = 0;
-	s8 directions[4] = {8, -8, 1, -1}; /* all directions for rook moves */
-	Bitboard all_mask[4] = {NOT_RANK_8, NOT_RANK_1, NOT_FILE_H, NOT_FILE_A};
-	s8 dir;
+	s8 dir = 0;
 	
 	for (s8 i = 0; i < 4; i++) {
 		dir = directions[i];
@@ -246,10 +246,8 @@ Bitboard get_queen_moves(Bitboard queen, Bitboard occupied, Bitboard enemy) {
 	*	@return	Bitboard of the possible moves
 */
 Bitboard get_king_moves(Bitboard king, Bitboard occupied, Bitboard enemy) {
-	Bitboard attacks = 0;
-	Bitboard mask = 0;
-	s8 directions[8] = {8, -8, 1, -1, 7, 9, -7, -9};
-	Bitboard all_mask[8] = {
+	static const s8 directions[8] = {8, -8, 1, -1, 7, 9, -7, -9};
+	static const Bitboard all_mask[8] = {
 		NOT_RANK_8, NOT_RANK_1,  // 8 , -8
 		NOT_FILE_H, NOT_FILE_A,  // 1, -1
 		NOT_FILE_A & NOT_RANK_8, // 7 
@@ -257,7 +255,7 @@ Bitboard get_king_moves(Bitboard king, Bitboard occupied, Bitboard enemy) {
 		NOT_FILE_A & NOT_RANK_1, // -7
 		NOT_FILE_H & NOT_RANK_1, // -9
 	};
-	Bitboard move = 0;
+	Bitboard attacks = 0, mask = 0, move = 0;
 	s8 dir = 0;
 
 	for (s8 i = 0; i < 8; i++) {
@@ -280,8 +278,8 @@ Bitboard get_king_moves(Bitboard king, Bitboard occupied, Bitboard enemy) {
 	*	@return	Bitboard of the possible moves
 */
 Bitboard get_knight_moves(Bitboard knight, Bitboard occupied, Bitboard enemy) {
-    s8 directions[8] = {6, 10, 15, 17, -6, -10, -15, -17};
-    Bitboard all_mask[8] = {
+    static const s8 directions[8] = {6, 10, 15, 17, -6, -10, -15, -17};
+    static const Bitboard all_mask[8] = {
         NOT_FILE_A & NOT_FILE_B & NOT_RANK_8, // 6
         NOT_FILE_G & NOT_FILE_H & NOT_RANK_8, // 10
         NOT_FILE_A & NOT_RANK_7 & NOT_RANK_8, // 15

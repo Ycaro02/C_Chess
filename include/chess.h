@@ -7,20 +7,6 @@
 typedef u64 Bitboard;
 
 /* Enum for chess tile */
-// enum e_chess_tile {
-// 	INVALID_TILE=-1,
-// 	H8, G8, F8, E8, D8, C8, B8, A8,
-// 	H7, G7, F7, E7, D7, C7, B7, A7,
-// 	H6, G6, F6, E6, D6, C6, B6, A6,
-// 	H5, G5, F5, E5, D5, C5, B5, A5,
-// 	H4, G4, F4, E4, D4, C4, B4, A4,
-// 	H3, G3, F3, E3, D3, C3, B3, A3,
-// 	H2, G2, F2, E2, D2, C2, B2, A2,
-// 	H1, G1, F1, E1, D1, C1, B1, A1,
-// 	TILE_MAX
-// };
-
-
 enum e_chess_tile {
 	INVALID_TILE=-1,
 	A1, B1, C1, D1, E1, F1, G1, H1,
@@ -33,7 +19,6 @@ enum e_chess_tile {
 	A8, B8, C8, D8, E8, F8, G8, H8,
 	TILE_MAX
 };
-
 
 /* Start white piece position */
 #define START_WHITE_PAWNS (1ULL << A2 | 1ULL << B2 | 1ULL << C2 | 1ULL << D2 | 1ULL << E2 | 1ULL << F2 | 1ULL << G2 | 1ULL << H2)
@@ -55,26 +40,22 @@ enum e_chess_tile {
 #define BLACK_TILE ((u32)(RGBA_TO_UINT32(0, 120, 0, 255)))
 #define WHITE_TILE ((u32)(RGBA_TO_UINT32(255, 255, 255, 255)))
 
-/* Mask for A and H columns */
-#define FILE_A (0x0101010101010101ULL)
-#define FILE_B (0x0202020202020202ULL)
-#define FILE_G (0x4040404040404040ULL)
-#define FILE_H (0x8080808080808080ULL)
-
-
-/* Mask for 1 and 8 rows */
-#define RANK_1 (1ULL << A1 | 1ULL << B1 | 1ULL << C1 | 1ULL << D1 | 1ULL << E1 | 1ULL << F1 | 1ULL << G1 | 1ULL << H1)
-#define RANK_2 (1ULL << A2 | 1ULL << B2 | 1ULL << C2 | 1ULL << D2 | 1ULL << E2 | 1ULL << F2 | 1ULL << G2 | 1ULL << H2)
-#define RANK_7 (1ULL << A7 | 1ULL << B7 | 1ULL << C7 | 1ULL << D7 | 1ULL << E7 | 1ULL << F7 | 1ULL << G7 | 1ULL << H7)
-#define RANK_8 (1ULL << A8 | 1ULL << B8 | 1ULL << C8 | 1ULL << D8 | 1ULL << E8 | 1ULL << F8 | 1ULL << G8 | 1ULL << H8)
-
-
-/* Mask for not A and H columns, same for ran 1 and 8 */
+/* Mask for A, B, G and H columns */
+#define FILE_A (1ULL << A1 | 1ULL << A2 | 1ULL << A3 | 1ULL << A4 | 1ULL << A5 | 1ULL << A6 | 1ULL << A7 | 1ULL << A8) 
+#define FILE_B (1ULL << B1 | 1ULL << B2 | 1ULL << B3 | 1ULL << B4 | 1ULL << B5 | 1ULL << B6 | 1ULL << B7 | 1ULL << B8)
+#define FILE_G (1ULL << G1 | 1ULL << G2 | 1ULL << G3 | 1ULL << G4 | 1ULL << G5 | 1ULL << G6 | 1ULL << G7 | 1ULL << G8)
+#define FILE_H (1ULL << H1 | 1ULL << H2 | 1ULL << H3 | 1ULL << H4 | 1ULL << H5 | 1ULL << H6 | 1ULL << H7 | 1ULL << H8)
 #define NOT_FILE_A (~FILE_A)
 #define NOT_FILE_B (~FILE_B)
 #define NOT_FILE_G (~FILE_G)
 #define NOT_FILE_H (~FILE_H)
 
+
+/* Mask for 1, 2, 3 and 8 rows */
+#define RANK_1 (1ULL << A1 | 1ULL << B1 | 1ULL << C1 | 1ULL << D1 | 1ULL << E1 | 1ULL << F1 | 1ULL << G1 | 1ULL << H1)
+#define RANK_2 (1ULL << A2 | 1ULL << B2 | 1ULL << C2 | 1ULL << D2 | 1ULL << E2 | 1ULL << F2 | 1ULL << G2 | 1ULL << H2)
+#define RANK_7 (1ULL << A7 | 1ULL << B7 | 1ULL << C7 | 1ULL << D7 | 1ULL << E7 | 1ULL << F7 | 1ULL << G7 | 1ULL << H7)
+#define RANK_8 (1ULL << A8 | 1ULL << B8 | 1ULL << C8 | 1ULL << D8 | 1ULL << E8 | 1ULL << F8 | 1ULL << G8 | 1ULL << H8)
 #define NOT_RANK_1 (~RANK_1)
 #define NOT_RANK_2 (~RANK_2)
 #define NOT_RANK_7 (~RANK_7)
