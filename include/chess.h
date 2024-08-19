@@ -112,7 +112,7 @@ typedef struct s_chess_board ChessBoard;
 
 
 /* Function pointer for get move functions */
-typedef Bitboard (*GetMoveFunc)(Bitboard, Bitboard, Bitboard);
+typedef Bitboard (*GetMoveFunc)(ChessBoard*, Bitboard, s8, s8);
 
 /* Struct for piece move */
 struct s_piece_move {
@@ -126,6 +126,7 @@ typedef struct s_piece_move PieceMove;
 
 /* Array of piece move struct */
 #define PIECE_MOVE_ARRAY { \
+	{WHITE_PAWN, BLACK_PAWN, get_pawn_moves}, \
 	{WHITE_KNIGHT, BLACK_KNIGHT, get_knight_moves}, \
 	{WHITE_BISHOP, BLACK_BISHOP, get_bishop_moves}, \
 	{WHITE_ROOK, BLACK_ROOK, get_rook_moves}, \
@@ -134,7 +135,7 @@ typedef struct s_piece_move PieceMove;
 } 
 
 /* Piece Move Array size */
-#define PIECE_MOVE_ARRAY_SIZE 5
+#define PIECE_MOVE_ARRAY_SIZE 6
 
 /* Inline function to convert ChessPiece to string */
 FT_INLINE const char *chess_piece_to_string(ChessPiece piece) {
@@ -162,14 +163,15 @@ ChessPiece get_piece_from_mask(ChessBoard *b, Bitboard mask);
 
 /* src/chess_piece_moves.c */
 Bitboard	get_piece_color_control(ChessBoard *b, s8 is_black);
-Bitboard	get_pawn_moves(ChessBoard *b, Bitboard pawn, s8 is_black, s8 only_attacks);
-Bitboard 	get_bishop_moves(Bitboard bishop, Bitboard occupied, Bitboard enemy);
-Bitboard 	get_rook_moves(Bitboard rook, Bitboard occupied, Bitboard enemy);
-Bitboard 	get_queen_moves(Bitboard queen, Bitboard occupied, Bitboard enemy);
-Bitboard 	get_king_moves(Bitboard king, Bitboard occupied, Bitboard enemy);
-Bitboard 	get_knight_moves(Bitboard knight, Bitboard occupied, Bitboard enemy);
-Bitboard 	get_piece_move(ChessBoard *board, Bitboard piece, ChessPiece piece_type);
+Bitboard	get_pawn_moves(ChessBoard *b, Bitboard pawn, s8 is_black, s8 check_legal);
 
+Bitboard get_bishop_moves(ChessBoard *b, Bitboard bishop, s8 is_black, s8 check_legal);
+Bitboard get_rook_moves(ChessBoard *b, Bitboard rook, s8 is_black, s8 check_legal);
+Bitboard get_queen_moves(ChessBoard *b, Bitboard queen, s8 is_black, s8 check_legal);
+Bitboard get_king_moves(ChessBoard *b, Bitboard king, s8 is_black, s8 check_legal);
+Bitboard get_knight_moves(ChessBoard *b, Bitboard knight, s8 is_black, s8 check_legal);
+
+Bitboard 	get_piece_move(ChessBoard *board, Bitboard piece, ChessPiece piece_type, s8 check_legal);
 void		move_piece(ChessBoard *board, ChessTile tile_from, ChessTile tile_to, ChessPiece type);
 
 #endif /* CHESS_H */

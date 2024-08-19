@@ -50,7 +50,7 @@ s8 verify_legal_move(ChessBoard *b, ChessPiece type, Bitboard from, Bitboard to,
 	*	@param	only_attacks	Flag to check if only attacks are needed
 	*	@return	Bitboard of the possible moves
 */
-Bitboard get_pawn_moves(ChessBoard *b, Bitboard pawn, s8 is_black, s8 only_attacks) {
+Bitboard get_pawn_moves(ChessBoard *b, Bitboard pawn, s8 is_black, s8 check_legal) {
     Bitboard	one_step = 0, two_steps = 0, attacks_left = 0, attacks_right = 0;
 	Bitboard	occupied = b->occupied;
 	Bitboard	enemy = is_black ? b->white : b->black;
@@ -61,8 +61,8 @@ Bitboard get_pawn_moves(ChessBoard *b, Bitboard pawn, s8 is_black, s8 only_attac
 
     one_step = (is_black ? (pawn >> direction) : (pawn << -direction)) & ~occupied;
 
-	/* @note need the !only_attacks to not be infinite recurcise */
-	if (one_step != 0 && !only_attacks) {
+	/* @note need the !check_legal to not be infinite recurcise */
+	if (one_step != 0 && check_legal) {
 		if (verify_legal_move(b, pawn_idx, pawn, one_step, is_black) == FALSE) {
 			one_step = 0;
 		}
@@ -74,7 +74,7 @@ Bitboard get_pawn_moves(ChessBoard *b, Bitboard pawn, s8 is_black, s8 only_attac
     }
 
 	/* If only_attacks is set, return only the attacks/control tile*/
-	if (only_attacks) {
+	if (!check_legal) {
 		one_step = 0;
 		two_steps = 0;
 		enemy = UINT64_MAX;
@@ -85,7 +85,7 @@ Bitboard get_pawn_moves(ChessBoard *b, Bitboard pawn, s8 is_black, s8 only_attac
     attacks_left = (is_black ? (pawn >> (direction + 1)) : (pawn << -(direction + 1))) & ~FILE_H & enemy;
     
 	/* Check if the attacks are legal */
-	if (!only_attacks) {
+	if (check_legal) {
 		if (verify_legal_move(b, pawn_idx, pawn, attacks_right, is_black) == FALSE) {
 			attacks_right = 0;
 		}
@@ -124,7 +124,7 @@ static inline s8 handle_occupied_tile(Bitboard move, Bitboard occupied, Bitboard
 	*	@param	enemy		Bitboard of the enemy pieces
 	*	@return	Bitboard of the possible moves
 */
-Bitboard get_bishop_moves(Bitboard bishop, Bitboard occupied, Bitboard enemy) {
+Bitboard get_bishop_moves(ChessBoard *b, Bitboard bishop, s8 is_black, s8 check_legal) {
     /* All directions for bishop moves */
 	static const s8 direction[4] = {7, 9, -7, -9};
 	/* Mask for out of bound */
@@ -135,6 +135,10 @@ Bitboard get_bishop_moves(Bitboard bishop, Bitboard occupied, Bitboard enemy) {
 		NOT_FILE_A & NOT_RANK_1, // -9
 	};
     Bitboard attacks = 0, mask = 0, move = 0;
+	Bitboard occupied = b->occupied;
+	Bitboard enemy = is_black ? b->white : b->black;
+	// ChessPiece bishop_idx = is_black ? BLACK_BISHOP : WHITE_BISHOP;
+	(void)check_legal;
 	s8 dir = 0;
 
     for (s8 i = 0; i < 4; i++) {
@@ -150,6 +154,11 @@ Bitboard get_bishop_moves(Bitboard bishop, Bitboard occupied, Bitboard enemy) {
 
             /* If the move is zero, break the loop to avoid infinite loop */
             if (move == 0) { break ; }
+
+			/* Check if is a legal move */
+			// if (verify_legal_move(b, bishop_idx, bishop, move, is_black) == FALSE) {
+			// 	continue ;
+			// }
 
 			/* Check if the move is blocked by an occupied square */
 			if (handle_occupied_tile(move, occupied, enemy, &attacks)) { break ; }
@@ -167,11 +176,17 @@ Bitboard get_bishop_moves(Bitboard bishop, Bitboard occupied, Bitboard enemy) {
 	*	@param	enemy		Bitboard of the enemy pieces
 	*	@return	Bitboard of the possible moves
 */
-Bitboard get_rook_moves(Bitboard rook, Bitboard occupied, Bitboard enemy) {
+Bitboard get_rook_moves(ChessBoard *b, Bitboard rook, s8 is_black, s8 check_legal) {
 	static const s8 directions[4] = {8, -8, 1, -1}; /* all directions for rook moves */
 	static const Bitboard all_mask[4] = {NOT_RANK_8, NOT_RANK_1, NOT_FILE_H, NOT_FILE_A};
 	Bitboard attacks = 0, move = 0, mask = 0;
+	Bitboard occupied = b->occupied;
+	Bitboard enemy = is_black ? b->white : b->black;
+	// ChessPiece rook_idx = is_black ? BLACK_ROOK : WHITE_ROOK;
+	(void)check_legal;
 	s8 dir = 0;
+
+	// to implement check king check and rook move
 	
 	for (s8 i = 0; i < 4; i++) {
 		dir = directions[i];
@@ -205,11 +220,14 @@ Bitboard get_rook_moves(Bitboard rook, Bitboard occupied, Bitboard enemy) {
 	*	@param	enemy		Bitboard of the enemy pieces
 	*	@return	Bitboard of the possible moves
 */
-Bitboard get_queen_moves(Bitboard queen, Bitboard occupied, Bitboard enemy) {
+Bitboard get_queen_moves(ChessBoard *b, Bitboard queen, s8 is_black, s8 check_legal) {
 	Bitboard attacks = 0;
+	// Bitboard occupied = b->occupied;
+	// Bitboard enemy = is_black ? b->white : b->black;
+	// ChessPiece queen_idx = is_black ? BLACK_QUEEN : WHITE_QUEEN;
 
-	attacks |= get_bishop_moves(queen, occupied, enemy);
-	attacks |= get_rook_moves(queen, occupied, enemy);
+	attacks |= get_bishop_moves(b, queen, is_black, check_legal);
+	attacks |= get_rook_moves(b, queen, is_black, check_legal);
 	return (attacks);
 }
 
@@ -220,7 +238,7 @@ Bitboard get_queen_moves(Bitboard queen, Bitboard occupied, Bitboard enemy) {
 	*	@param	enemy		Bitboard of the enemy pieces
 	*	@return	Bitboard of the possible moves
 */
-Bitboard get_king_moves(Bitboard king, Bitboard occupied, Bitboard enemy) {
+Bitboard get_king_moves(ChessBoard *b, Bitboard king, s8 is_black, s8 check_legal) {
 	static const s8 directions[8] = {8, -8, 1, -1, 7, 9, -7, -9};
 	static const Bitboard all_mask[8] = {
 		NOT_RANK_8, NOT_RANK_1,  // 8 , -8
@@ -231,6 +249,10 @@ Bitboard get_king_moves(Bitboard king, Bitboard occupied, Bitboard enemy) {
 		NOT_FILE_H & NOT_RANK_1, // -9
 	};
 	Bitboard attacks = 0, mask = 0, move = 0;
+	Bitboard occupied = b->occupied;
+	Bitboard enemy = is_black ? b->white : b->black;
+	// ChessPiece king_idx = is_black ? BLACK_KING : WHITE_KING;
+	(void)check_legal;
 	s8 dir = 0;
 
 	for (s8 i = 0; i < 8; i++) {
@@ -252,7 +274,7 @@ Bitboard get_king_moves(Bitboard king, Bitboard occupied, Bitboard enemy) {
 	*	@param	enemy		Bitboard of the enemy pieces
 	*	@return	Bitboard of the possible moves
 */
-Bitboard get_knight_moves(Bitboard knight, Bitboard occupied, Bitboard enemy) {
+Bitboard get_knight_moves(ChessBoard *b, Bitboard knight, s8 is_black, s8 check_legal) {
     static const s8 directions[8] = {6, 10, 15, 17, -6, -10, -15, -17};
     static const Bitboard all_mask[8] = {
         NOT_FILE_A & NOT_FILE_B & NOT_RANK_8, // 6
@@ -265,6 +287,10 @@ Bitboard get_knight_moves(Bitboard knight, Bitboard occupied, Bitboard enemy) {
         NOT_FILE_A & NOT_RANK_1 & NOT_RANK_2  // -17
     };
     Bitboard attacks = 0, mask = 0, move = 0;
+	Bitboard occupied = b->occupied;
+	Bitboard enemy = is_black ? b->white : b->black;
+	// ChessPiece knight_idx = is_black ? BLACK_KNIGHT : WHITE_KNIGHT;
+	(void)check_legal;
     s8 dir = 0;
 
     for (s8 i = 0; i < 8; i++) {
@@ -300,26 +326,26 @@ static GetMoveFunc get_piece_move_func(PieceMove *piece_move, ChessPiece piece_t
  * @param	piece_type	ChessPiece enum
  * @return	Bitboard of the possible moves
  */
-Bitboard get_piece_move(ChessBoard *board, Bitboard piece, ChessPiece piece_type) {
+Bitboard get_piece_move(ChessBoard *board, Bitboard piece, ChessPiece piece_type, s8 check_legal) {
  	
 	static PieceMove	piece_move[PIECE_MOVE_ARRAY_SIZE] = PIECE_MOVE_ARRAY;
-	GetMoveFunc 		get_move = NULL;
+	GetMoveFunc 		get_move_func = NULL;
 	s8					is_black = (piece_type >= BLACK_PAWN);
-	Bitboard			enemy = is_black ? board->white : board->black;
 	
 	/* If the piece is a pawn, get only the pawn moves */
-	if (piece_type == WHITE_PAWN || piece_type == BLACK_PAWN) {
-		return (get_pawn_moves(board, piece, is_black, FALSE));
-	}
-	
+	// if (piece_type == WHITE_PAWN || piece_type == BLACK_PAWN) {
+	// 	return (get_pawn_moves(board, piece, is_black, TRUE));
+	// }
+	// No need anymore special case for pawn, the get_piece_move_func handle it
+
 	/* Get the piece move function */
-	get_move = get_piece_move_func(piece_move, piece_type);
+	get_move_func = get_piece_move_func(piece_move, piece_type);
 	
 	/* If not get move function found, empty tile is selected reset the possible move variable */
-	if (!get_move) {
+	if (!get_move_func) {
 		return (0);
 	}
-	return (get_move(piece, board->occupied, enemy));
+	return (get_move_func(board, piece, is_black, check_legal));
 }
 
 void move_piece(ChessBoard *board, ChessTile tile_from, ChessTile tile_to, ChessPiece type) {
@@ -367,12 +393,16 @@ Bitboard get_piece_color_control(ChessBoard *b, s8 is_black) {
 			enemy_pieces &= enemy_pieces - 1;
 
 			/* Get the possible moves */
-            if (type == enemy_piece_start) {
-				/* If the piece is a pawn, get only the pawn attacks moves */
-				possible_moves = get_pawn_moves(b, piece, type == BLACK_PAWN, TRUE);
-			} else {
-				possible_moves = get_piece_move(b, piece, type);
-			}
+            // if (type == enemy_piece_start) {
+			// 	/* If the piece is a pawn, get only the pawn attacks moves */
+			// 	possible_moves = get_pawn_moves(b, piece, type == BLACK_PAWN, FALSE);
+			// } else {
+			// 	possible_moves = get_piece_move(b, piece, type, FALSE);
+			// }
+
+			/* Get the possible moves */
+			possible_moves = get_piece_move(b, piece, type, FALSE);
+			
 			/* Add the possible moves to the control bitboard */
 			control |= possible_moves;
         }

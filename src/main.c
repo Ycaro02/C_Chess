@@ -51,7 +51,7 @@ int main(void) {
 				piece_type = get_piece_from_tile(board, tile_selected);
 				board->selected_tile = tile_selected;
 				ft_printf_fd(1, GREEN"Select piece in [%s]"RESET" -> "ORANGE"%s\n"RESET, TILE_TO_STRING(tile_selected), chess_piece_to_string(piece_type));
-				board->possible_moves = get_piece_move(board, (1ULL << board->selected_tile), piece_type);
+				board->possible_moves = get_piece_move(board, (1ULL << board->selected_tile), piece_type, TRUE);
 			}
 		}
 
