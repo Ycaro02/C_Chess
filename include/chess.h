@@ -27,21 +27,36 @@ enum e_chess_tile {
 /* Typedef for chess tile enum */
 typedef enum e_chess_tile ChessTile;
 
+/* White and Black castle constant */
+#define WHITE_KING_START_POS E1
+#define WHITE_KING_ROOK_START_POS H1
+#define WHITE_QUEEN_ROOK_START_POS A1
+#define WHITE_KING_CASTLE_PATH ((1ULL << F1) | (1ULL << G1))
+#define WHITE_QUEEN_CASTLE_PATH ((1ULL << B1) | (1ULL << C1) | (1ULL << D1))
+
+#define BLACK_KING_START_POS E8
+#define BLACK_KING_ROOK_START_POS H8
+#define BLACK_QUEEN_ROOK_START_POS A8
+#define BLACK_KING_CASTLE_PATH ((1ULL << F8) | (1ULL << G8))
+#define BLACK_QUEEN_CASTLE_PATH ((1ULL << B8) | (1ULL << C8) | (1ULL << D8))
+
+
 /* Start white piece position */
 #define START_WHITE_PAWNS (1ULL << A2 | 1ULL << B2 | 1ULL << C2 | 1ULL << D2 | 1ULL << E2 | 1ULL << F2 | 1ULL << G2 | 1ULL << H2)
 #define START_WHITE_KNIGHTS (1ULL << B1 | 1ULL << G1)
 #define START_WHITE_BISHOPS (1ULL << C1 | 1ULL << F1)
 #define START_WHITE_ROOKS (1ULL << A1 | 1ULL << H1)
-#define START_WHITE_QUEENS (1ULL << E1)
-#define START_WHITE_KING (1ULL << D1)
+#define START_WHITE_QUEENS (1ULL << D1)
+#define START_WHITE_KING (1ULL << WHITE_KING_START_POS)
 
 /* Start black piece position */
 #define START_BLACK_PAWNS (1ULL << A7 | 1ULL << B7 | 1ULL << C7 | 1ULL << D7 | 1ULL << E7 | 1ULL << F7 | 1ULL << G7 | 1ULL << H7)
 #define START_BLACK_KNIGHTS (1ULL << B8 | 1ULL << G8)
 #define START_BLACK_BISHOPS (1ULL << C8 | 1ULL << F8)
 #define START_BLACK_ROOKS (1ULL << A8 | 1ULL << H8)
-#define START_BLACK_QUEENS (1ULL << E8)
-#define START_BLACK_KING (1ULL << D8)
+#define START_BLACK_QUEENS (1ULL << D8)
+#define START_BLACK_KING (1ULL << BLACK_KING_START_POS)
+
 
 /* Mask for A, B, G and H columns */
 #define FILE_A (1ULL << A1 | 1ULL << A2 | 1ULL << A3 | 1ULL << A4 | 1ULL << A5 | 1ULL << A6 | 1ULL << A7 | 1ULL << A8) 

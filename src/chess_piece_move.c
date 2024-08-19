@@ -228,6 +228,49 @@ Bitboard get_queen_moves(ChessBoard *b, Bitboard queen, ChessPiece type, s8 is_b
 }
 
 
+static inline s8 is_safe_path(Bitboard enemy_control, Bitboard path) {
+	return ((enemy_control & path) == 0);
+}
+
+static inline s8 is_empty_path(Bitboard occupied, Bitboard path) {
+	return ((occupied & path) == 0);
+}
+
+static Bitboard verify_castle_move(ChessBoard *b, Bitboard king, s8 is_black){
+	Bitboard path = 0, move = 0;
+	Bitboard enemy_control = is_black ? b->white_control : b->black_control;
+
+	/* Check if the king has ever moved */
+	if (u8ValueGet(b->info, is_black ? BLACK_KING_MOVED : WHITE_KING_MOVED)) {
+		return (0);
+	}
+
+	/* Check if the king is in check */
+	if (is_black && u8ValueGet(b->info, BLACK_CHECK)) {
+		return (0);
+	} else if (!is_black && u8ValueGet(b->info, WHITE_CHECK)) {
+		return (0);
+	}
+
+
+	/* Check if the king rook has ever moved */
+	if (!u8ValueGet(b->info, is_black ? BLACK_KING_ROOK_MOVED : WHITE_KING_ROOK_MOVED)) {
+		path = is_black ? BLACK_KING_CASTLE_PATH : WHITE_KING_CASTLE_PATH;
+		if (is_empty_path(b->occupied, path) && is_safe_path(enemy_control, path)) {
+			move |= (king << 2);
+		}
+	}
+
+	/* Check if the queen rook has ever moved */
+	if (!u8ValueGet(b->info, is_black ? BLACK_QUEEN_ROOK_MOVED : WHITE_QUEEN_ROOK_MOVED)) {
+		path = is_black ? BLACK_QUEEN_CASTLE_PATH : WHITE_QUEEN_CASTLE_PATH;
+		if (is_empty_path(b->occupied, path) && is_safe_path(enemy_control, path)) {
+			move |= (king >> 2);
+		}
+	}
+	return (move);
+}
+
 /*	@brief	Get possible moves for king
 	*	@param	king		Bitboard of the selected king
 	*	@param	occupied	Bitboard of the occupied squares
@@ -249,22 +292,37 @@ Bitboard get_king_moves(ChessBoard *b, Bitboard king, ChessPiece type, s8 is_bla
 	Bitboard enemy = is_black ? b->white : b->black;
 	s8 dir = 0;
 
-	// to implement rook move save for rook
-
 	for (s8 i = 0; i < 8; i++) {
 		dir = directions[i];
 		mask = all_mask[i];
 		move = king;
+
+		/* Apply the mask to check for out of bounds before moving */
 		if ((move & mask) == 0) { continue ; }
+
+		/* Shift the king in the current direction */
 		move = (dir > 0) ? (move << dir) : (move >> -dir);
+
+		/* If the move is zero, continue to the next direction */
 		if (move == 0) { continue ; }
+
 		/* Check if is a legal move */
 		if (check_legal && verify_legal_move(b, type, king, move, is_black) == FALSE) {
 				continue ;
 		}
+
+		/* Check if the move is blocked by an occupied square */
 		if (handle_occupied_tile(move, occupied, enemy, &attacks)) { continue ; }
+		
+		/* Add the move to the attacks */
 		attacks |= move;
 	}
+
+	/* Get castle move */
+	if (check_legal) {
+		attacks |= verify_castle_move(b, king, is_black);
+	}
+
 	return (attacks);
 }
 
@@ -295,15 +353,26 @@ Bitboard get_knight_moves(ChessBoard *b, Bitboard knight, ChessPiece type, s8 is
         dir = directions[i];
         mask = all_mask[i];
         move = knight;
+
+		/* Apply the mask to check for out of bounds before moving */
         if ((move & mask) == 0) { continue ; }
+
+		/* Shift the knight in the current direction */
         move = (dir > 0) ? (move << dir) : (move >> -dir);
+
+		/* If the move is zero, continue to the next direction */
         if (move == 0) { continue ; }
+
 		/* Check if is a legal move */
 		if (check_legal && verify_legal_move(b, type, knight, move, is_black) == FALSE) {
 				continue ;
 		}
-        if (handle_occupied_tile(move, occupied, enemy, &attacks)) { continue ; }
-        attacks |= move;
+        
+		/* Check if the move is blocked by an occupied square */
+		if (handle_occupied_tile(move, occupied, enemy, &attacks)) { continue ; }
+        
+		/* Add the move to the attacks */
+		attacks |= move;
     }
     return (attacks);
 }
@@ -351,7 +420,11 @@ Bitboard get_piece_move(ChessBoard *board, Bitboard piece, ChessPiece piece_type
 	return (get_move_func(board, piece, piece_type, is_black, check_legal));
 }
 
-
+/* @brief Verify if the king is check and mat or PAT
+ * @param b			ChessBoard struct
+ * @param is_black	Flag to check if the piece is black
+ * @return TRUE if the game is end, FALSE otherwise
+*/
 s8 verify_check_and_mat(ChessBoard *b, s8 is_black) {
 
 	Bitboard	enemy_pieces, piece, possible_moves;
@@ -364,11 +437,18 @@ s8 verify_check_and_mat(ChessBoard *b, s8 is_black) {
 	if ((is_black && u8ValueGet(b->info, BLACK_CHECK)) || (!is_black && u8ValueGet(b->info, WHITE_CHECK))) {
 		check = TRUE;
 	}
+	
 	for (ChessPiece type = enemy_piece_start; type < enemy_piece_end; type++) {
 		enemy_pieces = b->piece[type];
 		while (enemy_pieces) {
+
+			/* Get the first bit set */
 			piece = enemy_pieces & -enemy_pieces;
+
+			/* Clear the first bit set */
 			enemy_pieces &= enemy_pieces - 1;
+
+			/* Get the possible moves */
 			possible_moves = get_piece_move(b, piece, type, TRUE);
 			if (possible_moves != 0) {
 				// ft_printf_fd(1, "Piece %s on [%s] has possible moves\n", chess_piece_to_string(type), TILE_TO_STRING(piece));
@@ -377,6 +457,7 @@ s8 verify_check_and_mat(ChessBoard *b, s8 is_black) {
 			}
 		}
 	}
+
 	if (check && mat) {
 		ft_printf_fd(1, YELLOW"Checkmate detected for %s\n"RESET, color);
 		return (TRUE);
@@ -387,15 +468,21 @@ s8 verify_check_and_mat(ChessBoard *b, s8 is_black) {
 	return (FALSE);
 }
 
+
+/* @brief Update special info byte for the king and rook
+ * @param b		ChessBoard struct
+ * @param type	ChessPiece enum
+ * @param tile_from	ChessTile enum
+*/
 void board_special_info_handler(ChessBoard *b, ChessPiece type, ChessTile tile_from) {
 	
 	static const SpecialInfo special_info[SPECIAL_INFO_SIZE] = {
-		{WHITE_KING, WHITE_KING_MOVED, D1},
-		{WHITE_ROOK, WHITE_KING_ROOK_MOVED, A1},
-		{WHITE_ROOK, WHITE_QUEEN_ROOK_MOVED, H1},
-		{BLACK_KING, BLACK_KING_MOVED, D8},
-		{BLACK_ROOK, BLACK_KING_ROOK_MOVED, A8},
-		{BLACK_ROOK, BLACK_QUEEN_ROOK_MOVED, H8},
+		{WHITE_KING, WHITE_KING_MOVED, WHITE_KING_START_POS},
+		{WHITE_ROOK, WHITE_KING_ROOK_MOVED, WHITE_KING_ROOK_START_POS},
+		{WHITE_ROOK, WHITE_QUEEN_ROOK_MOVED, WHITE_QUEEN_ROOK_START_POS},
+		{BLACK_KING, BLACK_KING_MOVED, BLACK_KING_START_POS},
+		{BLACK_ROOK, BLACK_KING_ROOK_MOVED, BLACK_KING_ROOK_START_POS},
+		{BLACK_ROOK, BLACK_QUEEN_ROOK_MOVED, BLACK_QUEEN_ROOK_START_POS},
 	};
 
 	for (s32 i = 0; i < SPECIAL_INFO_SIZE; i++) {
@@ -407,8 +494,40 @@ void board_special_info_handler(ChessBoard *b, ChessPiece type, ChessTile tile_f
 	}
 }
 
-void move_piece(ChessBoard *board, ChessTile tile_from, ChessTile tile_to, ChessPiece type) {
+/* @brief Handle castle move (move rook if needed)
+ * @param b		ChessBoard struct
+ * @param type	ChessPiece enum
+ * @param tile_from	ChessTile enum
+ * @param tile_to	ChessTile enum
+*/
+void handle_castle_move(ChessBoard *b, ChessPiece type, ChessTile tile_from, ChessTile tile_to) {
+	ChessTile rook_from = 0, rook_to = 0;
+	ChessPiece rook_type = EMPTY;
+	if (type == BLACK_KING || type == WHITE_KING) {
+		/* Check if the king is moving 2 tiles (Castle move) */
+		if (INT_ABS_DIFF(tile_from, tile_to) == 2) {
+			/* Check if the king is moving to the right or left */
+			if (tile_to == tile_from + 2) {
+				rook_from = tile_from + 3;
+				rook_to = tile_from + 1;
+			} else if (tile_to == tile_from - 2) {
+				rook_from = tile_from - 4;
+				rook_to = tile_from - 1;
+			}
+			rook_type = (type == BLACK_KING) ? BLACK_ROOK : WHITE_ROOK;
+			move_piece(b, rook_from, rook_to, rook_type);
+		}
+	}
+}
 
+
+/* @brief Move a piece from a tile to another and update the board state
+ * @param board		ChessBoard struct
+ * @param tile_from	ChessTile enum
+ * @param tile_to	ChessTile enum
+ * @param type		ChessPiece enum
+*/
+void move_piece(ChessBoard *board, ChessTile tile_from, ChessTile tile_to, ChessPiece type) {
 	Bitboard	mask_from = 1ULL << tile_from;
 	Bitboard	mask_to = 1ULL << tile_to;
 	ChessPiece	enemy_piece = get_piece_from_mask(board, mask_to);
@@ -419,6 +538,9 @@ void move_piece(ChessBoard *board, ChessTile tile_from, ChessTile tile_to, Chess
 			chess_piece_to_string(enemy_piece), TILE_TO_STRING(tile_to));
 		board->piece[enemy_piece] &= ~mask_to;
 	}
+
+	/* Check if the move is a castle move and move rook if needed */
+	handle_castle_move(board, type, tile_from, tile_to);
 
 	/* Remove the piece from the from tile */
 	board->piece[type] &= ~mask_from;
@@ -434,8 +556,6 @@ void move_piece(ChessBoard *board, ChessTile tile_from, ChessTile tile_to, Chess
 
 	/* Set special info for the king and rook */
 	board_special_info_handler(board, type, tile_from);
-
-
 }
 
 /* @brief Get the piece color control
