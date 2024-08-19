@@ -7,15 +7,8 @@ void update_piece_control(ChessBoard *b) {
 	b->black_control = get_piece_color_control(b, IS_BLACK);
 
 	/* Check for king in check */
-	b->white_check = (b->black_control & b->piece[WHITE_KING]) != 0;
-	b->black_check = (b->white_control & b->piece[BLACK_KING]) != 0;
-
-	// if (b->white_check) {
-	// 	ft_printf_fd(1, CYAN"White King in check\n"RESET);
-	// }
-	// if (b->black_check) {
-	// 	ft_printf_fd(1, ORANGE"Black King in check\n"RESET);
-	// }
+	b->info = u8ValueSet(b->info, WHITE_CHECK, (b->black_control & b->piece[WHITE_KING]) != 0);
+	b->info = u8ValueSet(b->info, BLACK_CHECK, (b->white_control & b->piece[BLACK_KING]) != 0);
 }
 
 /* Update occupied bitboard */

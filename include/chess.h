@@ -79,6 +79,17 @@ enum e_chess_piece {
 typedef enum e_chess_tile ChessTile;
 typedef enum e_chess_piece ChessPiece;
 
+enum chess_bool_info {
+	WHITE_CHECK = 0,
+	BLACK_CHECK,
+	WHITE_KING_MOVED,
+	WHITE_KING_ROOK_MOVED,
+	WHITE_QUEEN_ROOK_MOVED,
+	BLACK_KING_MOVED,
+	BLACK_KING_ROOK_MOVED,
+	BLACK_QUEEN_ROOK_MOVED,
+};
+
 /* ChessBoard struct */
 struct s_chess_board {
 	/* Bitboard for each piece */
@@ -99,9 +110,17 @@ struct s_chess_board {
 	Bitboard	white_control;
 	Bitboard	black_control;
 
-	/* Boolean for white and black king check */
-	s8			white_check;
-	s8			black_check;
+	/* u8 used as 8 boolean info used as follow
+	 * 0: white check
+	 * 1: black check
+	 * 2: white king moved
+	 * 3: white king rook moved
+	 * 4: white queen rook moved
+	 * 5: black king moved
+	 * 6: black king rook moved
+	 * 7: black queen rook moved
+	*/
+	u8			info;
 };
 
 /* Typedef for ChessBoard struct and enum */

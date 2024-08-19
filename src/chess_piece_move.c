@@ -23,9 +23,9 @@ s8 verify_legal_move(ChessBoard *b, ChessPiece type, Bitboard from, Bitboard to,
 	update_piece_state(b);
 
 	/* Check if the king is in check */
-	if (is_black && b->black_check) {
+	if (is_black && u8ValueGet(b->info, BLACK_CHECK)) {
 		legal = FALSE;
-	} else if (!is_black && b->white_check) {
+	} else if (!is_black && u8ValueGet(b->info, WHITE_CHECK)) {
 		legal = FALSE;
 	}
 
@@ -361,10 +361,9 @@ s8 verify_check_and_mat(ChessBoard *b, s8 is_black) {
 	s8 			check = FALSE, mat = TRUE;
 
 	/* Check if the king is in check */
-	if ((is_black && b->black_check) || (!is_black && b->white_check)) {
+	if ((is_black && u8ValueGet(b->info, BLACK_CHECK)) || (!is_black && u8ValueGet(b->info, WHITE_CHECK))) {
 		check = TRUE;
 	}
-
 	for (ChessPiece type = enemy_piece_start; type < enemy_piece_end; type++) {
 		enemy_pieces = b->piece[type];
 		while (enemy_pieces) {
@@ -378,8 +377,6 @@ s8 verify_check_and_mat(ChessBoard *b, s8 is_black) {
 			}
 		}
 	}
-
-
 	if (check && mat) {
 		ft_printf_fd(1, YELLOW"Checkmate detected for %s\n"RESET, color);
 		return (TRUE);
@@ -414,8 +411,6 @@ void move_piece(ChessBoard *board, ChessTile tile_from, ChessTile tile_to, Chess
 
 	/* Check if the enemy king is check and mat or PAT */
 	verify_check_and_mat(board, !(type >= BLACK_PAWN));
-	// display_bitboard(board->white_control, "White control");
-	// display_bitboard(board->black_control, "Black control");
 }
 
 /* @brief Get the piece color control
