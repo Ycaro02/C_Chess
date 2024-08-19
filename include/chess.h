@@ -24,9 +24,6 @@ enum e_chess_tile {
 	TILE_MAX
 };
 
-/* Macro to convert tile to string */
-#define TILE_TO_STRING(t) (char[3]){'A' + (t) % 8, '1' + (t) / 8, '\0'}
-
 /* Start white piece position */
 #define START_WHITE_PAWNS (1ULL << A2 | 1ULL << B2 | 1ULL << C2 | 1ULL << D2 | 1ULL << E2 | 1ULL << F2 | 1ULL << G2 | 1ULL << H2)
 #define START_WHITE_KNIGHTS (1ULL << B1 | 1ULL << G1)
@@ -124,16 +121,6 @@ struct s_piece_move {
 /* Typedef for piece move */
 typedef struct s_piece_move PieceMove;
 
-/* Array of piece move struct */
-#define PIECE_MOVE_ARRAY { \
-	{WHITE_PAWN, BLACK_PAWN, get_pawn_moves}, \
-	{WHITE_KNIGHT, BLACK_KNIGHT, get_knight_moves}, \
-	{WHITE_BISHOP, BLACK_BISHOP, get_bishop_moves}, \
-	{WHITE_ROOK, BLACK_ROOK, get_rook_moves}, \
-	{WHITE_QUEEN, BLACK_QUEEN, get_queen_moves}, \
-	{WHITE_KING, BLACK_KING, get_king_moves}, \
-} 
-
 /* Piece Move Array size */
 #define PIECE_MOVE_ARRAY_SIZE 6
 
@@ -149,7 +136,8 @@ FT_INLINE const char *chess_piece_to_string(ChessPiece piece) {
 	return (piece_str[piece]);
 }
 
-// main
+/* Macro to convert tile to string */
+#define TILE_TO_STRING(t) (char[3]){'A' + (t) % 8, '1' + (t) / 8, '\0'}
 
 /* src/chess_board.c */
 void init_board(ChessBoard *board);

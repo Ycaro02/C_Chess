@@ -331,7 +331,14 @@ static GetMoveFunc get_piece_move_func(PieceMove *piece_move, ChessPiece piece_t
  */
 Bitboard get_piece_move(ChessBoard *board, Bitboard piece, ChessPiece piece_type, s8 check_legal) {
  	
-	static PieceMove	piece_move_array[PIECE_MOVE_ARRAY_SIZE] = PIECE_MOVE_ARRAY;
+	static PieceMove	piece_move_array[PIECE_MOVE_ARRAY_SIZE] = {
+		{WHITE_PAWN, BLACK_PAWN, get_pawn_moves},
+		{WHITE_KNIGHT, BLACK_KNIGHT, get_knight_moves},
+		{WHITE_BISHOP, BLACK_BISHOP, get_bishop_moves},
+		{WHITE_ROOK, BLACK_ROOK, get_rook_moves},
+		{WHITE_QUEEN, BLACK_QUEEN, get_queen_moves},
+		{WHITE_KING, BLACK_KING, get_king_moves},
+	}; 
 	GetMoveFunc 		get_move_func = NULL;
 	s8					is_black = (piece_type >= BLACK_PAWN);
 
