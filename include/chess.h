@@ -140,24 +140,25 @@ FT_INLINE const char *chess_piece_to_string(ChessPiece piece) {
 #define TILE_TO_STRING(t) (char[3]){'A' + (t) % 8, '1' + (t) / 8, '\0'}
 
 /* src/chess_board.c */
-void init_board(ChessBoard *board);
-void update_piece_state(ChessBoard *b);
-void display_bitboard(Bitboard board, const char *msg);
-s8 is_selected_possible_move(Bitboard possible_moves, ChessTile tile);
-ChessPiece get_piece_from_tile(ChessBoard *b, ChessTile tile);
-ChessPiece get_piece_from_mask(ChessBoard *b, Bitboard mask);
+
+void		init_board(ChessBoard *board);
+void		update_piece_state(ChessBoard *b);
+void		display_bitboard(Bitboard board, const char *msg);
+s8			is_selected_possible_move(Bitboard possible_moves, ChessTile tile);
+ChessPiece	get_piece_from_tile(ChessBoard *b, ChessTile tile);
+ChessPiece	get_piece_from_mask(ChessBoard *b, Bitboard mask);
 
 /* src/chess_piece_moves.c */
-Bitboard	get_piece_color_control(ChessBoard *b, s8 is_black);
-Bitboard	get_pawn_moves(ChessBoard *b, Bitboard pawn, ChessPiece type, s8 is_black, s8 check_legal);
 
+Bitboard	get_pawn_moves(ChessBoard *b, Bitboard pawn, ChessPiece type, s8 is_black, s8 check_legal);
 Bitboard	get_bishop_moves(ChessBoard *b, Bitboard bishop, ChessPiece type, s8 is_black, s8 check_legal);
 Bitboard	get_rook_moves(ChessBoard *b, Bitboard rook, ChessPiece type, s8 is_black, s8 check_legal);
 Bitboard	get_queen_moves(ChessBoard *b, Bitboard queen, ChessPiece type, s8 is_black, s8 check_legal);
 Bitboard	get_king_moves(ChessBoard *b, Bitboard king, ChessPiece type, s8 is_black, s8 check_legal);
 Bitboard	get_knight_moves(ChessBoard *b, Bitboard knight, ChessPiece type, s8 is_black, s8 check_legal);
-
 Bitboard 	get_piece_move(ChessBoard *board, Bitboard piece, ChessPiece piece_type, s8 check_legal);
 void		move_piece(ChessBoard *board, ChessTile tile_from, ChessTile tile_to, ChessPiece type);
+
+Bitboard	get_piece_color_control(ChessBoard *b, s8 is_black);
 
 #endif /* CHESS_H */

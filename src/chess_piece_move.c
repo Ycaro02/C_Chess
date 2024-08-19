@@ -54,7 +54,6 @@ Bitboard get_pawn_moves(ChessBoard *b, Bitboard pawn, ChessPiece type, s8 is_bla
     Bitboard	one_step = 0, two_steps = 0, attacks_left = 0, attacks_right = 0;
 	Bitboard	occupied = b->occupied;
 	Bitboard	enemy = is_black ? b->white : b->black;
-	// ChessPiece	pawn_idx = is_black ? BLACK_PAWN : WHITE_PAWN;
 
 	/* One step, if pawn is black, it moves up, otherwise it moves down */
     s8 direction = is_black ? 8 : -8;
@@ -352,6 +351,45 @@ Bitboard get_piece_move(ChessBoard *board, Bitboard piece, ChessPiece piece_type
 	return (get_move_func(board, piece, piece_type, is_black, check_legal));
 }
 
+
+s8 verify_check_and_mat(ChessBoard *b, s8 is_black) {
+
+	Bitboard	enemy_pieces, piece, possible_moves;
+	ChessPiece	enemy_piece_start = is_black ? BLACK_PAWN : WHITE_PAWN;
+    ChessPiece	enemy_piece_end = is_black ? PIECE_MAX : BLACK_PAWN;
+	char		*color = is_black ? "Black" : "White";
+	s8 			check = FALSE, mat = TRUE;
+
+	/* Check if the king is in check */
+	if ((is_black && b->black_check) || (!is_black && b->white_check)) {
+		check = TRUE;
+	}
+
+	for (ChessPiece type = enemy_piece_start; type < enemy_piece_end; type++) {
+		enemy_pieces = b->piece[type];
+		while (enemy_pieces) {
+			piece = enemy_pieces & -enemy_pieces;
+			enemy_pieces &= enemy_pieces - 1;
+			possible_moves = get_piece_move(b, piece, type, TRUE);
+			if (possible_moves != 0) {
+				// ft_printf_fd(1, "Piece %s on [%s] has possible moves\n", chess_piece_to_string(type), TILE_TO_STRING(piece));
+				mat = FALSE;
+				break ;
+			}
+		}
+	}
+
+
+	if (check && mat) {
+		ft_printf_fd(1, YELLOW"Checkmate detected for %s\n"RESET, color);
+		return (TRUE);
+	} else if (!check && mat) {
+		ft_printf_fd(1, PURPLE"PAT detected Egality for %s\n"RESET, color);
+		return (TRUE);	
+	}
+	return (FALSE);
+}
+
 void move_piece(ChessBoard *board, ChessTile tile_from, ChessTile tile_to, ChessPiece type) {
 
 	Bitboard	mask_from = 1ULL << tile_from;
@@ -373,6 +411,11 @@ void move_piece(ChessBoard *board, ChessTile tile_from, ChessTile tile_to, Chess
 
 	/* Update the piece state */
 	update_piece_state(board);
+
+	/* Check if the enemy king is check and mat or PAT */
+	verify_check_and_mat(board, !(type >= BLACK_PAWN));
+	// display_bitboard(board->white_control, "White control");
+	// display_bitboard(board->black_control, "Black control");
 }
 
 /* @brief Get the piece color control
