@@ -10,36 +10,6 @@ void destroy_sdl_handle(SDLHandle *handle) {
 }
 
 
-Bitboard get_piece_color_control(ChessBoard *b, s8 is_black) {
-	Bitboard control = 0, possible_moves = 0, enemy_pieces = 0, piece = 0;
-    ChessPiece enemy_piece_start = is_black ? BLACK_PAWN : WHITE_PAWN;
-    ChessPiece enemy_piece_end = is_black ? PIECE_MAX : BLACK_PAWN;
-
-    for (ChessPiece type = enemy_piece_start; type < enemy_piece_end; type++) {
-        enemy_pieces = b->piece[type];
-
-		/* For each enemy piece */
-        while (enemy_pieces) {
-			/* Get the first bit set */
-            piece = enemy_pieces & -enemy_pieces;
-            
-			/* Clear the first bit set */
-			enemy_pieces &= enemy_pieces - 1;
-
-			/* Get the possible moves */
-            if (type == enemy_piece_start) {
-				/* If the piece is a pawn, get only the pawn attacks moves */
-				// possible_moves = get_pawn_moves(piece, b->occupied, enemy_pieces, type == BLACK_PAWN, TRUE);
-				possible_moves = get_pawn_moves(b, piece, type == BLACK_PAWN, TRUE);
-			} else {
-				possible_moves = get_piece_move(b, piece, type);
-			}
-			/* Add the possible moves to the control bitboard */
-			control |= possible_moves;
-        }
-    }
-	return (control);
-}
 
 
 int main(void) {

@@ -93,6 +93,19 @@ ChessPiece get_piece_from_tile(ChessBoard *b, ChessTile tile) {
 	return (piece);
 }
 
+ChessPiece get_piece_from_mask(ChessBoard *b, Bitboard mask) {
+	ChessPiece piece = EMPTY;
+	if (b->occupied & mask) {
+		for (s32 i = 0; i < PIECE_MAX; i++) {
+			if (b->piece[i] & mask) {
+				piece = i;
+				break;
+			}
+		}
+	}
+	return (piece);
+}
+
 s8 is_selected_possible_move(Bitboard possible_moves, ChessTile tile) {
     return ((possible_moves & (1ULL << tile)) != 0);
 }

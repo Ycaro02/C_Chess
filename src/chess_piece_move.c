@@ -1,7 +1,21 @@
 #include "../include/chess.h"
 
+/*	@brief	Verify if the move is legal
+	*	@param	b			ChessBoard struct
+	*	@param	type		ChessPiece enum
+	*	@param	from		Bitboard of the piece position
+	*	@param	to			Bitboard of the destination position
+	*	@param	is_black	Flag to check if the piece is black
+	*	@return	TRUE if the move is legal, FALSE otherwise
+*/
 s8 verify_legal_move(ChessBoard *b, ChessPiece type, Bitboard from, Bitboard to, s8 is_black) {
 	s8 legal = TRUE;
+	
+	/* Remove the enemy piece from the from tile is needed */
+	ChessPiece enemy_piece = get_piece_from_mask(b, to);
+	if (enemy_piece != EMPTY) {
+		b->piece[enemy_piece] &= ~to;
+	}
 
 	/* Move the piece */
 	b->piece[type] &= ~from;
@@ -18,6 +32,12 @@ s8 verify_legal_move(ChessBoard *b, ChessPiece type, Bitboard from, Bitboard to,
 	/* Reset the piece position */
 	b->piece[type] &= ~to;
 	b->piece[type] |= from;
+	
+	/* Restore enemy piece if needed */
+	if (enemy_piece != EMPTY) {
+		b->piece[enemy_piece] |= to;
+	}
+
 	update_piece_state(b);
 	return (legal);
 }
@@ -30,7 +50,6 @@ s8 verify_legal_move(ChessBoard *b, ChessPiece type, Bitboard from, Bitboard to,
 	*	@param	only_attacks	Flag to check if only attacks are needed
 	*	@return	Bitboard of the possible moves
 */
-// Bitboard get_pawn_moves(Bitboard pawn, Bitboard occupied, Bitboard enemy, s8 is_black, s8 only_attacks) {
 Bitboard get_pawn_moves(ChessBoard *b, Bitboard pawn, s8 is_black, s8 only_attacks) {
     Bitboard	one_step = 0, two_steps = 0, attacks_left = 0, attacks_right = 0;
 	Bitboard	occupied = b->occupied;
@@ -290,7 +309,6 @@ Bitboard get_piece_move(ChessBoard *board, Bitboard piece, ChessPiece piece_type
 	
 	/* If the piece is a pawn, get only the pawn moves */
 	if (piece_type == WHITE_PAWN || piece_type == BLACK_PAWN) {
-		// return (get_pawn_moves(piece, board->occupied, enemy, is_black, FALSE));
 		return (get_pawn_moves(board, piece, is_black, FALSE));
 	}
 	
@@ -306,11 +324,11 @@ Bitboard get_piece_move(ChessBoard *board, Bitboard piece, ChessPiece piece_type
 
 void move_piece(ChessBoard *board, ChessTile tile_from, ChessTile tile_to, ChessPiece type) {
 
-	Bitboard mask_from = 1ULL << tile_from;
-	Bitboard mask_to = 1ULL << tile_to;
-
-
-	ChessPiece enemy_piece = get_piece_from_tile(board, tile_to);
+	Bitboard	mask_from = 1ULL << tile_from;
+	Bitboard	mask_to = 1ULL << tile_to;
+	ChessPiece	enemy_piece = get_piece_from_mask(board, mask_to);
+	
+	/* Check if the enemy piece need to be kill/remove */
 	if (enemy_piece != EMPTY) {
 		ft_printf_fd(1, RED"Kill %s on [%s]\n"RESET, \
 			chess_piece_to_string(enemy_piece), TILE_TO_STRING(tile_to));
@@ -322,10 +340,42 @@ void move_piece(ChessBoard *board, ChessTile tile_from, ChessTile tile_to, Chess
 	
 	/* Add the piece to the to tile */
 	board->piece[type] |= mask_to;
-	
-
-
 
 	/* Update the piece state */
 	update_piece_state(board);
+}
+
+/* @brief Get the piece color control
+ * @param b			ChessBoard struct
+ * @param is_black	Flag to check if the piece is black
+ * @return Bitboard of the controled tiles
+ */
+Bitboard get_piece_color_control(ChessBoard *b, s8 is_black) {
+	Bitboard control = 0, possible_moves = 0, enemy_pieces = 0, piece = 0;
+    ChessPiece enemy_piece_start = is_black ? BLACK_PAWN : WHITE_PAWN;
+    ChessPiece enemy_piece_end = is_black ? PIECE_MAX : BLACK_PAWN;
+
+    for (ChessPiece type = enemy_piece_start; type < enemy_piece_end; type++) {
+        enemy_pieces = b->piece[type];
+
+		/* For each enemy piece */
+        while (enemy_pieces) {
+			/* Get the first bit set */
+            piece = enemy_pieces & -enemy_pieces;
+            
+			/* Clear the first bit set */
+			enemy_pieces &= enemy_pieces - 1;
+
+			/* Get the possible moves */
+            if (type == enemy_piece_start) {
+				/* If the piece is a pawn, get only the pawn attacks moves */
+				possible_moves = get_pawn_moves(b, piece, type == BLACK_PAWN, TRUE);
+			} else {
+				possible_moves = get_piece_move(b, piece, type);
+			}
+			/* Add the possible moves to the control bitboard */
+			control |= possible_moves;
+        }
+    }
+	return (control);
 }
