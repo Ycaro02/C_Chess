@@ -387,6 +387,26 @@ s8 verify_check_and_mat(ChessBoard *b, s8 is_black) {
 	return (FALSE);
 }
 
+void board_special_info_handler(ChessBoard *b, ChessPiece type, ChessTile tile_from) {
+	
+	static const SpecialInfo special_info[SPECIAL_INFO_SIZE] = {
+		{WHITE_KING, WHITE_KING_MOVED, D1},
+		{WHITE_ROOK, WHITE_KING_ROOK_MOVED, A1},
+		{WHITE_ROOK, WHITE_QUEEN_ROOK_MOVED, H1},
+		{BLACK_KING, BLACK_KING_MOVED, D8},
+		{BLACK_ROOK, BLACK_KING_ROOK_MOVED, A8},
+		{BLACK_ROOK, BLACK_QUEEN_ROOK_MOVED, H8},
+	};
+
+	for (s32 i = 0; i < SPECIAL_INFO_SIZE; i++) {
+		s32 idx = special_info[i].info_idx;
+		if (special_info[i].type == type && special_info[i].tile_from == tile_from && u8ValueGet(b->info, idx) == FALSE) {
+			b->info = u8ValueSet(b->info, idx, TRUE);
+			ft_printf_fd(1, PURPLE"Special info set to TRUE for %s on %s\n"RESET, chess_piece_to_string(type), TILE_TO_STRING(tile_from));
+		}
+	}
+}
+
 void move_piece(ChessBoard *board, ChessTile tile_from, ChessTile tile_to, ChessPiece type) {
 
 	Bitboard	mask_from = 1ULL << tile_from;
@@ -411,6 +431,11 @@ void move_piece(ChessBoard *board, ChessTile tile_from, ChessTile tile_to, Chess
 
 	/* Check if the enemy king is check and mat or PAT */
 	verify_check_and_mat(board, !(type >= BLACK_PAWN));
+
+	/* Set special info for the king and rook */
+	board_special_info_handler(board, type, tile_from);
+
+
 }
 
 /* @brief Get the piece color control

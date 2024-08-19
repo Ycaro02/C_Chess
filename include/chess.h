@@ -24,6 +24,9 @@ enum e_chess_tile {
 	TILE_MAX
 };
 
+/* Typedef for chess tile enum */
+typedef enum e_chess_tile ChessTile;
+
 /* Start white piece position */
 #define START_WHITE_PAWNS (1ULL << A2 | 1ULL << B2 | 1ULL << C2 | 1ULL << D2 | 1ULL << E2 | 1ULL << F2 | 1ULL << G2 | 1ULL << H2)
 #define START_WHITE_KNIGHTS (1ULL << B1 | 1ULL << G1)
@@ -39,10 +42,6 @@ enum e_chess_tile {
 #define START_BLACK_ROOKS (1ULL << A8 | 1ULL << H8)
 #define START_BLACK_QUEENS (1ULL << E8)
 #define START_BLACK_KING (1ULL << D8)
-
-/* Tile color */
-#define BLACK_TILE ((u32)(RGBA_TO_UINT32(0, 120, 0, 255)))
-#define WHITE_TILE ((u32)(RGBA_TO_UINT32(255, 255, 255, 255)))
 
 /* Mask for A, B, G and H columns */
 #define FILE_A (1ULL << A1 | 1ULL << A2 | 1ULL << A3 | 1ULL << A4 | 1ULL << A5 | 1ULL << A6 | 1ULL << A7 | 1ULL << A8) 
@@ -76,9 +75,10 @@ enum e_chess_piece {
 	PIECE_MAX
 };
 
-typedef enum e_chess_tile ChessTile;
+/* Typedef for chess piece enum */
 typedef enum e_chess_piece ChessPiece;
 
+/* Enum for chess boolean info */
 enum chess_bool_info {
 	WHITE_CHECK = 0,
 	BLACK_CHECK,
@@ -89,6 +89,22 @@ enum chess_bool_info {
 	BLACK_KING_ROOK_MOVED,
 	BLACK_QUEEN_ROOK_MOVED,
 };
+
+/* Typedef for chess boolean info enum */
+typedef enum chess_bool_info ChessBoolInfo;
+
+/* Struct for special info handling */
+struct s_special_info {
+	ChessPiece		type;
+	ChessBoolInfo	info_idx;
+	ChessTile		tile_from;
+};
+
+/* Typedef for special info struct */
+typedef struct s_special_info SpecialInfo;
+
+/* Special info array size */
+#define SPECIAL_INFO_SIZE 6
 
 /* ChessBoard struct */
 struct s_chess_board {
@@ -127,7 +143,14 @@ struct s_chess_board {
 typedef struct s_chess_board ChessBoard;
 
 
-/* Function pointer for get move functions */
+/* @brief Function pointer typedef for get move functions 
+ * @param b		ChessBoard struct pointer
+ * @param piece	Bitboard of piece position to get move (1 bit set)
+ * @param type	ChessPiece enum
+ * @param is_black	1 for black piece, 0 for white piece
+ * @param check_legal	1 for check legal move, 0 for not check legal move
+ * @return Bitboard of possible moves
+ */
 typedef Bitboard (*GetMoveFunc)(ChessBoard*, Bitboard, ChessPiece, s8, s8);
 
 /* Struct for piece move */
@@ -137,7 +160,7 @@ struct s_piece_move {
 	GetMoveFunc get_move_func;
 };
 
-/* Typedef for piece move */
+/* Typedef for piece move structure */
 typedef struct s_piece_move PieceMove;
 
 /* Piece Move Array size */
@@ -157,6 +180,10 @@ FT_INLINE const char *chess_piece_to_string(ChessPiece piece) {
 
 /* Macro to convert tile to string */
 #define TILE_TO_STRING(t) (char[3]){'A' + (t) % 8, '1' + (t) / 8, '\0'}
+
+/* Tile color */
+#define BLACK_TILE ((u32)(RGBA_TO_UINT32(0, 120, 0, 255)))
+#define WHITE_TILE ((u32)(RGBA_TO_UINT32(255, 255, 255, 255)))
 
 /* src/chess_board.c */
 
