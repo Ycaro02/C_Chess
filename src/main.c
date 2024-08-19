@@ -25,11 +25,6 @@ int main(void) {
 		return (1);
 	}
 
-	// display_bitboard(board->white, "White");
-	// display_bitboard(board->black, "Black");
-	// display_bitboard(board->white_control, "White Control");
-	// display_bitboard(board->black_control, "Black Control");
-	
 	ChessTile tile_selected = INVALID_TILE;
 	ChessPiece piece_type = EMPTY;
 
