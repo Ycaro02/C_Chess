@@ -4,7 +4,8 @@ include rsc/mk/source.mk
 NAME            =   C_Chess
 CC              =   clang
 
-SDL_LIB			=	-L./rsc/lib/install/lib -rpath ./rsc/lib/install/lib -lSDL2 -lSDL2_ttf
+# SDL_LIB			=	-L./rsc/lib/install/lib -rpath ./rsc/lib/install/lib -lSDL2 -lSDL2_ttf
+SDL_LIB			=	-L./rsc/lib/install/lib -rpath ./rsc/lib/install/lib -lSDL2
 
 all:        $(NAME)
 

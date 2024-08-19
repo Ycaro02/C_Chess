@@ -18,11 +18,11 @@ SDL_Window* createWindow(u32 width ,u32 height, const char* title) {
 		SDL_ERR_FUNC();
 		return (NULL);
 	}
-	if (TTF_Init() != 0) {
-		TTF_ERR_FUNC();
-		SDL_Quit();
-		return (NULL);
-	}
+	// if (TTF_Init() != 0) {
+	// 	TTF_ERR_FUNC();
+	// 	SDL_Quit();
+	// 	return (NULL);
+	// }
 	window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_SHOWN);
 	if (!window) {
 		SDL_ERR_FUNC();
@@ -84,6 +84,15 @@ static s8 load_piece_texture(SDLHandle *handle) {
 	return (TRUE);
 }
 
+
+/**
+ * @brief Create a SDLHandle
+ * @param width The width of the window
+ * @param height The height of the window
+ * @param title The title of the window
+ * @param board The chess board
+ * @return The SDLHandle pointer
+*/
 SDLHandle *create_sdl_handle(u32 width , u32 height, const char* title, ChessBoard *board) {
 	SDLHandle *handle = malloc(sizeof(SDLHandle));
 	if (!handle) {
@@ -146,7 +155,7 @@ void window_close(SDL_Window* window, SDL_Renderer *renderer) {
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
 	SDL_Quit();
-	TTF_Quit();
+	// TTF_Quit();
 }
 
 /**

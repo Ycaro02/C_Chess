@@ -10,8 +10,10 @@ void destroy_sdl_handle(SDLHandle *handle) {
 }
 
 int main(void) {
-	ChessBoard *board = ft_calloc(1, sizeof(ChessBoard));
 	SDLHandle	*handle = NULL;
+	ChessBoard	*board = ft_calloc(1, sizeof(ChessBoard));
+	ChessTile	tile_selected = INVALID_TILE;
+	ChessPiece	piece_type = EMPTY;
 	if (!board) {
 		return (1);
 	}
@@ -22,8 +24,6 @@ int main(void) {
 		return (1);
 	}
 
-	ChessTile tile_selected = INVALID_TILE;
-	ChessPiece piece_type = EMPTY;
 
 	while (window_is_open(handle->window)) {
 		tile_selected = event_handler();

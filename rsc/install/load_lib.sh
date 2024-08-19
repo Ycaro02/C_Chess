@@ -8,29 +8,32 @@ function setup_deb_packages {
 	TMP_LIB_DIR=${PWD}/tmp_lib
 	TMP_INCLUDE_DIR=${PWD}/tmp_include
 
+	local os_release=$(source /etc/os-release; echo ${ID})
+	echo "OS release: ${os_release}"
+
 	# Load missing deb packages function
 	# Need to declare PWD and TMP_LIB_DIR/TMP_INCLUDE_DIR before loading the script
 	source ${PWD}/rsc/install/install_missing_deb.sh
-
-	# Load and install deb packages
-	load_missing_deb_package
-
-	# Go back to the original directory
-	cd ${pwd_save}
 
 	# Create directories
 	display_color_msg ${YELLOW} "Create directories ${DEPS_DIR} and ${INSTALL_DIR}."
 	mkdir -p ${DEPS_DIR} ${INSTALL_DIR}/lib/pkgconfig ${INSTALL_DIR}/include
 
-	if [ ! -d ${TMP_LIB_DIR} ]; then
-		display_color_msg ${RED} "TMP_LIB_DIR not found."
-		exit 1
-	fi
+	# Load and install deb packages
+	if [ "${os_release}" == "ubuntu" ]; then
+		load_missing_deb_package
+		cd ${pwd_save}
+		# Copy lib and include files to tmp directories
+		if [ ! -d ${TMP_LIB_DIR} ]; then
+			display_color_msg ${RED} "TMP_LIB_DIR not found."
+			exit 1
+		fi
 
-	if [ ! -d ${TMP_INCLUDE_DIR} ]; then
-		display_color_msg ${RED} "TMP_INCLUDE_DIR not found."
-		exit 1
-	fi
+		if [ ! -d ${TMP_INCLUDE_DIR} ]; then
+			display_color_msg ${RED} "TMP_INCLUDE_DIR not found."
+			exit 1
+		fi
+	fi # end if os_release
 
 	# Copy lib and include files to install directory
 	display_color_msg ${MAGENTA} "Copy TMP lib and include files to install directory."

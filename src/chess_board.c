@@ -1,12 +1,6 @@
 #include "../include/chess.h"
 #include "../include/handle_sdl.h"
 
-// void update_tmp_piece(ChessBoard *b) {
-// 	for (s32 i = 0; i < PIECE_MAX; i++) {
-// 		b->tmp_piece[i] = b->piece[i];
-// 	}
-// }
-
 /* Update control bitboard */
 void update_piece_control(ChessBoard *b) {
 	b->white_control = get_piece_color_control(b, IS_WHITE);
@@ -38,8 +32,6 @@ void update_piece_state(ChessBoard *b) {
 		}
 	}
 
-	// update_tmp_piece(b);
-
 	/* Update control bitboard */
 	update_piece_control(b);
 }
@@ -64,13 +56,7 @@ void init_board(ChessBoard *b) {
 	b->piece[BLACK_QUEEN] = START_BLACK_QUEENS;
 	b->piece[BLACK_KING] = START_BLACK_KING;
 
-	// b->piece[WHITE_BISHOP] |= (1ULL << E4);
-	// b->piece[WHITE_QUEEN] |= (1ULL << E5);
-	// b->piece[WHITE_KING] |= (1ULL << E6);
-	// b->piece[WHITE_KNIGHT] = START_WHITE_KNIGHTS | START_WHITE_PAWNS;
-	// b->piece[BLACK_KNIGHT] = START_BLACK_KNIGHTS | START_BLACK_PAWNS;
-	// b->piece[BLACK_PAWN] |= (1ULL << B3);
-
+	/* Update occupied and control bitboard */
 	update_piece_state(b);
 }
 
@@ -93,6 +79,11 @@ ChessPiece get_piece_from_tile(ChessBoard *b, ChessTile tile) {
 	return (piece);
 }
 
+/* @brief Get piece from mask
+ * @param b		ChessBoard struct
+ * @param mask	Bitboard mask (1ULL << tile), tile is the position of the piece
+ * @return ChessPiece enum
+ */
 ChessPiece get_piece_from_mask(ChessBoard *b, Bitboard mask) {
 	ChessPiece piece = EMPTY;
 	if (b->occupied & mask) {
@@ -106,6 +97,11 @@ ChessPiece get_piece_from_mask(ChessBoard *b, Bitboard mask) {
 	return (piece);
 }
 
+/* @brief Is selected possible move
+ * @param possible_moves	Bitboard of possible moves
+ * @param tile				ChessTile enum
+ * @return 1 if selected possible move, 0 otherwise
+ */
 s8 is_selected_possible_move(Bitboard possible_moves, ChessTile tile) {
     return ((possible_moves & (1ULL << tile)) != 0);
 }
@@ -121,6 +117,7 @@ void draw_board(SDLHandle *handle) {
 		for (s32 raw = 0; raw < 8; raw++) {
 			tilePos = (iVec2){raw, column};
 			
+			/* Set color of tile */
 			color = (column + raw) & 1 ? BLACK_TILE : WHITE_TILE;
 			
 			draw_color_tile(handle->renderer, tilePos, (iVec2){TILE_SIZE, TILE_SIZE}, color);

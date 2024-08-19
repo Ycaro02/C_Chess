@@ -9,7 +9,7 @@
 #include "../rsc/lib/install/include/SDL2/SDL_render.h"
 
 /* TTF include */
-#include "../rsc/lib/install/include/SDL2/SDL_ttf.h"
+// #include "../rsc/lib/install/include/SDL2/SDL_ttf.h"
 
 /* Texture path */
 #define BLACK_KING_TEXTURE "rsc/texture/piece/black_king.bmp"
@@ -58,7 +58,7 @@
 
 
 #define SDL_ERR_FUNC() ft_printf_fd(2, "SDL Error %s: %s\n", __func__, SDL_GetError())
-#define TTF_ERR_FUNC() ft_printf_fd(2, "TTF Error %s: %s\n", __func__, TTF_GetError())
+// #define TTF_ERR_FUNC() ft_printf_fd(2, "TTF Error %s: %s\n", __func__, TTF_GetError())
 
 typedef struct s_iVec2 {
 	s32 x;

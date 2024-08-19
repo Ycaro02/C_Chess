@@ -143,9 +143,7 @@ FT_INLINE const char *chess_piece_to_string(ChessPiece piece) {
 void init_board(ChessBoard *board);
 void update_piece_state(ChessBoard *b);
 void display_bitboard(Bitboard board, const char *msg);
-
 s8 is_selected_possible_move(Bitboard possible_moves, ChessTile tile);
-
 ChessPiece get_piece_from_tile(ChessBoard *b, ChessTile tile);
 ChessPiece get_piece_from_mask(ChessBoard *b, Bitboard mask);
 
