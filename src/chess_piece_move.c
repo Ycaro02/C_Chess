@@ -309,12 +309,23 @@ void move_piece(ChessBoard *board, ChessTile tile_from, ChessTile tile_to, Chess
 	Bitboard mask_from = 1ULL << tile_from;
 	Bitboard mask_to = 1ULL << tile_to;
 
+
+	ChessPiece enemy_piece = get_piece_from_tile(board, tile_to);
+	if (enemy_piece != EMPTY) {
+		ft_printf_fd(1, RED"Kill %s on [%s]\n"RESET, \
+			chess_piece_to_string(enemy_piece), TILE_TO_STRING(tile_to));
+		board->piece[enemy_piece] &= ~mask_to;
+	}
+
 	/* Remove the piece from the from tile */
 	board->piece[type] &= ~mask_from;
 	
 	/* Add the piece to the to tile */
 	board->piece[type] |= mask_to;
 	
+
+
+
 	/* Update the piece state */
 	update_piece_state(board);
 }
