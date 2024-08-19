@@ -1,5 +1,27 @@
 #include "../include/chess.h"
 
+s8 verify_legal_move(ChessBoard *b, ChessPiece type, Bitboard from, Bitboard to, s8 is_black) {
+	s8 legal = TRUE;
+
+	/* Move the piece */
+	b->piece[type] &= ~from;
+	b->piece[type] |= to;
+	update_piece_state(b);
+
+	/* Check if the king is in check */
+	if (is_black && b->black_check) {
+		legal = FALSE;
+	} else if (!is_black && b->white_check) {
+		legal = FALSE;
+	}
+
+	/* Reset the piece position */
+	b->piece[type] &= ~to;
+	b->piece[type] |= from;
+	update_piece_state(b);
+	return (legal);
+}
+
 /*	@brief	Get possible moves for pawn
 	*	@param	pawn			Bitboard of the selected pawn
 	*	@param	occupied		Bitboard of the occupied squares
@@ -10,52 +32,22 @@
 */
 // Bitboard get_pawn_moves(Bitboard pawn, Bitboard occupied, Bitboard enemy, s8 is_black, s8 only_attacks) {
 Bitboard get_pawn_moves(ChessBoard *b, Bitboard pawn, s8 is_black, s8 only_attacks) {
-    Bitboard one_step = 0, two_steps = 0, attacks_left = 0, attacks_right = 0;
-	Bitboard enemy = is_black ? b->white : b->black;
-	Bitboard occupied = b->occupied;
-
+    Bitboard	one_step = 0, two_steps = 0, attacks_left = 0, attacks_right = 0;
+	Bitboard	occupied = b->occupied;
+	Bitboard	enemy = is_black ? b->white : b->black;
+	ChessPiece	pawn_idx = is_black ? BLACK_PAWN : WHITE_PAWN;
 
 	/* One step, if pawn is black, it moves up, otherwise it moves down */
     s8 direction = is_black ? 8 : -8;
 
     one_step = (is_black ? (pawn >> direction) : (pawn << -direction)) & ~occupied;
 
-	/**
-	 * To check for king check we need to replace pawn position with the new position (one step)
-	 * Compute the new enemy bitboard control with this new position
-	 * If the new enemy control bitboard has the king position, the move is not valid
-	 */
-
-	/* This block need to be encapsulate and refactor but the logic is working */
-
 	/* @note need the !only_attacks to not be infinite recurcise */
 	if (one_step != 0 && !only_attacks) {
-		ChessPiece pawn_idx = is_black ? BLACK_PAWN : WHITE_PAWN;
-		Bitboard one_step_save = one_step;
-
-		/* Update the occupied bitboard and control */
-		b->piece[pawn_idx] &= ~pawn;
-		b->piece[pawn_idx] |= one_step;
-		update_piece_state(b);
-
-		if (is_black) {
-			if (b->white_control & b->piece[BLACK_KING]) {
-				one_step = 0;
-			}
-		} else {
-			if (b->black_control & b->piece[WHITE_KING]) {
-				one_step = 0;
-			}
+		if (verify_legal_move(b, pawn_idx, pawn, one_step, is_black) == FALSE) {
+			one_step = 0;
 		}
-
-		/* Reset the pawn position */
-		b->piece[pawn_idx] &= ~one_step_save;
-		b->piece[pawn_idx] |= pawn;
-		update_piece_state(b);
-		// display_bitboard(b->piece[pawn_idx], "PAWN");
 	}
-
-
 
 	/* Compute two steps if pawn is in starting position and first step is ok */
     if (one_step != 0) {
@@ -73,6 +65,17 @@ Bitboard get_pawn_moves(ChessBoard *b, Bitboard pawn, s8 is_black, s8 only_attac
     attacks_right = (is_black ? (pawn >> (direction - 1)) : (pawn << -(direction - 1))) & ~FILE_A & enemy;
     attacks_left = (is_black ? (pawn >> (direction + 1)) : (pawn << -(direction + 1))) & ~FILE_H & enemy;
     
+	/* Check if the attacks are legal */
+	if (!only_attacks) {
+		if (verify_legal_move(b, pawn_idx, pawn, attacks_right, is_black) == FALSE) {
+			attacks_right = 0;
+		}
+		if (verify_legal_move(b, pawn_idx, pawn, attacks_left, is_black) == FALSE) {
+			attacks_left = 0;
+		}
+	}
+
+
 	return (one_step | two_steps | attacks_left | attacks_right);
 }
 
