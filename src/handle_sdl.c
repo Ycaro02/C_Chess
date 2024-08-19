@@ -40,40 +40,51 @@ SDL_Window* createWindow(u32 width ,u32 height, const char* title) {
 	return (window);
 }
 
-static SDL_Texture *safeLoadTexture(SDL_Renderer *renderer, const char *path) {
-	SDL_Texture *texture = loadTexture(renderer, path);
+static SDL_Texture *safe_load_texture(SDL_Renderer *renderer, const char *path) {
+	SDL_Texture *texture = load_texture(renderer, path);
 	if (!texture) {
-		ft_printf_fd(2, "Error %s: loadTexture %s failed\n", __func__, path);
+		ft_printf_fd(2, "Error %s: load_texture %s failed\n", __func__, path);
 		return (NULL);
 	}
 	return (texture);
 }
 
-static void loadPieceTexture(SDLHandle *handle) {
+static s8 load_piece_texture(SDLHandle *handle) {
 	handle->piece_texture = malloc(sizeof(SDL_Texture*) * PIECE_MAX);
 	if (!handle->piece_texture) {
 		ft_printf_fd(2, "Error %s: malloc failed\n", __func__);
-		return ;
+		return (FALSE);
 	}
 	
 	/* Load black pieces */
-	handle->piece_texture[BLACK_KING] = safeLoadTexture(handle->renderer, BLACK_KING_TEXTURE);
-	handle->piece_texture[BLACK_QUEEN] = safeLoadTexture(handle->renderer, BLACK_QUEEN_TEXTURE);
-	handle->piece_texture[BLACK_ROOK] = safeLoadTexture(handle->renderer, BLACK_ROOK_TEXTURE);
-	handle->piece_texture[BLACK_BISHOP] = safeLoadTexture(handle->renderer, BLACK_BISHOP_TEXTURE);
-	handle->piece_texture[BLACK_KNIGHT] = safeLoadTexture(handle->renderer, BLACK_KNIGHT_TEXTURE);
-	handle->piece_texture[BLACK_PAWN] = safeLoadTexture(handle->renderer, BLACK_PAWN_TEXTURE);
+	handle->piece_texture[BLACK_KING] = safe_load_texture(handle->renderer, BLACK_KING_TEXTURE);
+	handle->piece_texture[BLACK_QUEEN] = safe_load_texture(handle->renderer, BLACK_QUEEN_TEXTURE);
+	handle->piece_texture[BLACK_ROOK] = safe_load_texture(handle->renderer, BLACK_ROOK_TEXTURE);
+	handle->piece_texture[BLACK_BISHOP] = safe_load_texture(handle->renderer, BLACK_BISHOP_TEXTURE);
+	handle->piece_texture[BLACK_KNIGHT] = safe_load_texture(handle->renderer, BLACK_KNIGHT_TEXTURE);
+	handle->piece_texture[BLACK_PAWN] = safe_load_texture(handle->renderer, BLACK_PAWN_TEXTURE);
 
 	/* Load white pieces */
-	handle->piece_texture[WHITE_KING] = safeLoadTexture(handle->renderer, WHITE_KING_TEXTURE);
-	handle->piece_texture[WHITE_QUEEN] = safeLoadTexture(handle->renderer, WHITE_QUEEN_TEXTURE);
-	handle->piece_texture[WHITE_ROOK] = safeLoadTexture(handle->renderer, WHITE_ROOK_TEXTURE);
-	handle->piece_texture[WHITE_BISHOP] = safeLoadTexture(handle->renderer, WHITE_BISHOP_TEXTURE);
-	handle->piece_texture[WHITE_KNIGHT] = safeLoadTexture(handle->renderer, WHITE_KNIGHT_TEXTURE);
-	handle->piece_texture[WHITE_PAWN] = safeLoadTexture(handle->renderer, WHITE_PAWN_TEXTURE);
+	handle->piece_texture[WHITE_KING] = safe_load_texture(handle->renderer, WHITE_KING_TEXTURE);
+	handle->piece_texture[WHITE_QUEEN] = safe_load_texture(handle->renderer, WHITE_QUEEN_TEXTURE);
+	handle->piece_texture[WHITE_ROOK] = safe_load_texture(handle->renderer, WHITE_ROOK_TEXTURE);
+	handle->piece_texture[WHITE_BISHOP] = safe_load_texture(handle->renderer, WHITE_BISHOP_TEXTURE);
+	handle->piece_texture[WHITE_KNIGHT] = safe_load_texture(handle->renderer, WHITE_KNIGHT_TEXTURE);
+	handle->piece_texture[WHITE_PAWN] = safe_load_texture(handle->renderer, WHITE_PAWN_TEXTURE);
+
+	for (s32 i = 0; i < PIECE_MAX; i++) {
+		if (!handle->piece_texture[i]) {
+			ft_printf_fd(2, "Error %s: load_texture failed\n", __func__);
+			for (s32 j = 0; j < i; j++) {
+				unload_texture(handle->piece_texture[j]);
+			}
+			return (FALSE);
+		}
+	}
+	return (TRUE);
 }
 
-SDLHandle *createSDLHandle(u32 width , u32 height, const char* title, ChessBoard *board) {
+SDLHandle *create_sdl_handle(u32 width , u32 height, const char* title, ChessBoard *board) {
 	SDLHandle *handle = malloc(sizeof(SDLHandle));
 	if (!handle) {
 		ft_printf_fd(2, "Error: malloc failed\n");
@@ -91,9 +102,14 @@ SDLHandle *createSDLHandle(u32 width , u32 height, const char* title, ChessBoard
 		free(handle);
 		return (NULL);
 	}
-	loadPieceTexture(handle);
+	if (!load_piece_texture(handle)) {
+		SDL_DestroyRenderer(handle->renderer);
+		SDL_DestroyWindow(handle->window);
+		free(handle);
+		return (NULL);
+	}
 	handle->board = board;
-	windowClear(handle->renderer);
+	window_clear(handle->renderer);
 	return (handle);
 }
 
@@ -101,7 +117,7 @@ SDLHandle *createSDLHandle(u32 width , u32 height, const char* title, ChessBoard
  * @brief Clear the window with SDL2
  * @param window The window pointers
 */
-void windowClear(SDL_Renderer* renderer) {
+void window_clear(SDL_Renderer* renderer) {
 	SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
 	SDL_RenderClear(renderer);
 }
@@ -114,7 +130,7 @@ void windowClear(SDL_Renderer* renderer) {
  * 	- SDL2 doesn't have a function to check if the window is open
  * 	- So we will check if the window ptr is not null
 */
-u8 windowIsOpen(SDL_Window* window) {
+u8 window_is_open(SDL_Window* window) {
 	return (window != NULL);
 }
 
@@ -123,7 +139,7 @@ u8 windowIsOpen(SDL_Window* window) {
  * @param window The window pointers
  * @note We need to destroy renderer before destroying the window
  */
-void windowClose(SDL_Window* window, SDL_Renderer *renderer) {
+void window_close(SDL_Window* window, SDL_Renderer *renderer) {
 	if (!window || !renderer) {
 		return ;
 	}
@@ -140,7 +156,7 @@ void windowClose(SDL_Window* window, SDL_Renderer *renderer) {
  * @param scale The scale of the tile
  * @note If scale.x/y are equal to TILE_SIZE, we use TILE_SPACING to space the tiles
 */
-void colorTile(SDL_Renderer	*renderer , iVec2 tilePos, iVec2 scale, u32 color) {
+void draw_color_tile(SDL_Renderer	*renderer , iVec2 tilePos, iVec2 scale, u32 color) {
 	SDL_Rect		tileRect = {0,0,0,0};
 	s32				pixel_x = 0, pixel_y = 0;
 	u8 				r, g, b, a;
@@ -171,7 +187,7 @@ void colorTile(SDL_Renderer	*renderer , iVec2 tilePos, iVec2 scale, u32 color) {
  * @param scale The scale of the tile
  * @note If the scale is equal to TILE_SIZE, the function will draw the tile at the right position
 */
-void drawTextureTile(SDL_Renderer *renderer, SDL_Texture *texture, iVec2 tilePos, iVec2 scale) {
+void draw_texture_tile(SDL_Renderer *renderer, SDL_Texture *texture, iVec2 tilePos, iVec2 scale) {
 	SDL_Rect 	dstRect;
 	s32 		pixel_x, pixel_y;
 	
@@ -199,7 +215,7 @@ void drawTextureTile(SDL_Renderer *renderer, SDL_Texture *texture, iVec2 tilePos
  * @param path The path of the texture
  * @return The texture pointer
 */
-SDL_Texture *loadTexture(SDL_Renderer *renderer, const char* path) {
+SDL_Texture *load_texture(SDL_Renderer *renderer, const char* path) {
 	SDL_Texture		*texture = NULL;
 	SDL_Surface		*surface = NULL;
 
@@ -224,7 +240,7 @@ SDL_Texture *loadTexture(SDL_Renderer *renderer, const char* path) {
  * @brief Unload a texture with SDL2
  * @param texture The texture pointer
 */
-void unloadTexture(SDL_Texture *texture) {
+void unload_texture(SDL_Texture *texture) {
 	if (!texture) {
 		return ;
 	}
@@ -232,12 +248,12 @@ void unloadTexture(SDL_Texture *texture) {
 }
 
 
-static s8 isXRange(s32 x, s32 raw) {
+static s8 is_in_x_range(s32 x, s32 raw) {
 	return (x >= raw * TILE_SIZE + (raw + 1) * TILE_SPACING
 			&& x <= (raw + 1) * TILE_SIZE + (raw + 1) * TILE_SPACING);
 }
 
-static s8 isYRange(s32 y, s32 column) {
+static s8 is_in_y_range(s32 y, s32 column) {
 	return (y >= column * TILE_SIZE + (column + 1) * TILE_SPACING + TOP_BAND_HEIGHT
 			&& y <= (column + 1) * TILE_SIZE + (column + 1) * TILE_SPACING + TOP_BAND_HEIGHT);
 }
@@ -248,11 +264,11 @@ static s8 isYRange(s32 y, s32 column) {
  * @param x The x position of the mouse
  * @param y The y position of the mouse
 */
-ChessTile detectClickTile(s32 x, s32 y) {
+ChessTile detect_tile_click(s32 x, s32 y) {
 	ChessTile tile = A1;
 	for (s32 column = 0; column < 8; column++) {
 		for (s32 raw = 0; raw < 8; raw++) {
-			if (isXRange(x, raw) && isYRange(y, column)) {
+			if (is_in_x_range(x, raw) && is_in_y_range(y, column)) {
 				// ft_printf_fd(1, "Click on "ORANGE"[%s]"RESET" -> "PINK"|%d|\n"RESET, TILE_TO_STRING(tile), tile);
 				return (tile);
 			}
@@ -268,7 +284,7 @@ ChessTile detectClickTile(s32 x, s32 y) {
  * @return The tile clicked, or CHESS_QUIT if the user want to quit
  * @note Return INVALID_TILE if no tile is clicked
 */
-s32 eventHandler() {
+s32 event_handler() {
 	SDL_Event event;
 	ChessTile tile = INVALID_TILE;
 	s32 x = 0, y = 0;
@@ -279,7 +295,7 @@ s32 eventHandler() {
 		}
 		if (event.type == SDL_MOUSEBUTTONDOWN) {
 			SDL_GetMouseState(&x, &y);
-			tile = detectClickTile(x, y);
+			tile = detect_tile_click(x, y);
 		}
 	}
 	return (tile);

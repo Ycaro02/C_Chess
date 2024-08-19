@@ -4,13 +4,10 @@
 void destroy_sdl_handle(SDLHandle *handle) {
 	free(handle->board);
 	for (int i = 0; i < PIECE_MAX; i++) {
-		unloadTexture(handle->piece_texture[i]);
+		unload_texture(handle->piece_texture[i]);
 	}
 	free(handle->piece_texture);
 }
-
-
-
 
 int main(void) {
 	ChessBoard *board = ft_calloc(1, sizeof(ChessBoard));
@@ -20,7 +17,7 @@ int main(void) {
 	}
 
 	init_board(board);
-	handle = createSDLHandle(WINDOW_WIDTH, WINDOW_HEIGHT, "Chess", board);
+	handle = create_sdl_handle(WINDOW_WIDTH, WINDOW_HEIGHT, "Chess", board);
 	if (!handle) {
 		return (1);
 	}
@@ -28,11 +25,11 @@ int main(void) {
 	ChessTile tile_selected = INVALID_TILE;
 	ChessPiece piece_type = EMPTY;
 
-	while (windowIsOpen(handle->window)) {
-		tile_selected = eventHandler();
+	while (window_is_open(handle->window)) {
+		tile_selected = event_handler();
 		if (tile_selected == CHESS_QUIT) {
 			destroy_sdl_handle(handle);
-			windowClose(handle->window, handle->renderer);
+			window_close(handle->window, handle->renderer);
 			free(handle);
 			break ;
 		}
@@ -50,7 +47,7 @@ int main(void) {
 			}
 		}
 
-		windowClear(handle->renderer);
+		window_clear(handle->renderer);
 		draw_board(handle);
 		SDL_RenderPresent(handle->renderer);
 	}

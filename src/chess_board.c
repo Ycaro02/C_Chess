@@ -123,17 +123,17 @@ void draw_board(SDLHandle *handle) {
 			
 			color = (column + raw) & 1 ? BLACK_TILE : WHITE_TILE;
 			
-			colorTile(handle->renderer, tilePos, (iVec2){TILE_SIZE, TILE_SIZE}, color);
+			draw_color_tile(handle->renderer, tilePos, (iVec2){TILE_SIZE, TILE_SIZE}, color);
 			
 			/* Check if tile is current selected possible move */
 			if (is_selected_possible_move(handle->board->possible_moves, tile)) {
 				color = RGBA_TO_UINT32(0, 0, 200, 100);
-				colorTile(handle->renderer, tilePos, (iVec2){TILE_SIZE, TILE_SIZE}, color);
+				draw_color_tile(handle->renderer, tilePos, (iVec2){TILE_SIZE, TILE_SIZE}, color);
 			}
 
 			pieceIdx = get_piece_from_tile(handle->board, tile);
 			if (pieceIdx != EMPTY) {
-				drawTextureTile(handle->renderer, handle->piece_texture[pieceIdx], tilePos, (iVec2){TILE_SIZE, TILE_SIZE});
+				draw_texture_tile(handle->renderer, handle->piece_texture[pieceIdx], tilePos, (iVec2){TILE_SIZE, TILE_SIZE});
 			}
 			tile++;
 		}

@@ -74,17 +74,17 @@ typedef struct s_sdl_handle {
 } SDLHandle;
 
 /* src/sdl_handle */
-SDLHandle	*createSDLHandle(u32 width , u32 height, const char* title, ChessBoard *board);
-u8 			windowIsOpen(SDL_Window* window);
-void		windowClear(SDL_Renderer* renderer);
-void		windowClose(SDL_Window* window, SDL_Renderer *renderer);
+SDLHandle	*create_sdl_handle(u32 width , u32 height, const char* title, ChessBoard *board);
+u8 			window_is_open(SDL_Window* window);
+void		window_clear(SDL_Renderer* renderer);
+void		window_close(SDL_Window* window, SDL_Renderer *renderer);
 
-SDL_Texture *loadTexture(SDL_Renderer *renderer, const char* path);
-void unloadTexture(SDL_Texture *texture);
-void drawTextureTile(SDL_Renderer *renderer, SDL_Texture *texture, iVec2 tilePos, iVec2 scale);
-void colorTile(SDL_Renderer	*renderer , iVec2 tilePos, iVec2 scale, u32 color);
+SDL_Texture *load_texture(SDL_Renderer *renderer, const char* path);
+void unload_texture(SDL_Texture *texture);
+void draw_texture_tile(SDL_Renderer *renderer, SDL_Texture *texture, iVec2 tilePos, iVec2 scale);
+void draw_color_tile(SDL_Renderer	*renderer , iVec2 tilePos, iVec2 scale, u32 color);
 
-s32 eventHandler();
+s32 event_handler();
 
 void draw_board(SDLHandle *handle);
 
