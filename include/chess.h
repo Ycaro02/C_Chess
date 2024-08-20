@@ -203,15 +203,22 @@ FT_INLINE const char *chess_piece_to_string(ChessPiece piece) {
 
 /* Player info struct */
 struct s_player_info {
-	s8 color;
-	s8 turn;
+	char	*dest_ip;		/* destination ip, NULL if we are the listener */
+	u16		running_port;	/* running port */
+	s8		color;			/* player color */
+	s8		turn;			/* player turn */
 };
 
 /* Typedef for player info struct */
 typedef struct s_player_info PlayerInfo;
 
 
-// typedef struct t_flag_context ChessFlagContext;
+#include <time.h>
+
+FT_INLINE s8 random_player_color() {
+	srand(time(NULL));
+	return (rand() % 2 == 0 ? IS_WHITE : IS_BLACK);
+}
 
 /* src/chess_board.c */
 void		init_board(ChessBoard *board);
