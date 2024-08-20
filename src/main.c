@@ -24,9 +24,13 @@ int main(void) {
 		return (1);
 	}
 
+	handle->player_info.color = IS_WHITE;
+	handle->player_info.turn = IS_WHITE;
 
 	while (window_is_open(handle->window)) {
-		tile_selected = event_handler(handle->player_color);
+		tile_selected = event_handler(handle->player_info.color);
+		
+		/* If the quit button is pressed */
 		if (tile_selected == CHESS_QUIT) {
 			destroy_sdl_handle(handle);
 			window_close(handle->window, handle->renderer);
@@ -48,7 +52,7 @@ int main(void) {
 		}
 
 		window_clear(handle->renderer);
-		draw_board(handle, handle->player_color);
+		draw_board(handle, handle->player_info.color);
 		SDL_RenderPresent(handle->renderer);
 	}
 	return (0);

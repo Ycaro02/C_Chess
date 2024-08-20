@@ -71,7 +71,7 @@ typedef struct s_sdl_handle {
 	SDL_Renderer	*renderer;
 	SDL_Texture		**piece_texture;
 	ChessBoard		*board;
-	s8				player_color;
+	PlayerInfo		player_info;
 } SDLHandle;
 
 /* src/sdl_handle */

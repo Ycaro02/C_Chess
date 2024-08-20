@@ -200,8 +200,18 @@ FT_INLINE const char *chess_piece_to_string(ChessPiece piece) {
 #define BLACK_TILE ((u32)(RGBA_TO_UINT32(0, 120, 0, 255)))
 #define WHITE_TILE ((u32)(RGBA_TO_UINT32(255, 255, 255, 255)))
 
-/* src/chess_board.c */
 
+/* Player info struct */
+struct s_player_info {
+	s8 color;
+	s8 turn;
+};
+
+/* Typedef for player info struct */
+typedef struct s_player_info PlayerInfo;
+
+
+/* src/chess_board.c */
 void		init_board(ChessBoard *board);
 void		update_piece_state(ChessBoard *b);
 void		display_bitboard(Bitboard board, const char *msg);

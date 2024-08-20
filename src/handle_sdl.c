@@ -119,9 +119,6 @@ SDLHandle *create_sdl_handle(u32 width , u32 height, const char* title, ChessBoa
 	}
 	handle->board = board;
 	window_clear(handle->renderer);
-	handle->player_color = IS_WHITE;
-	// handle->player_color = IS_BLACK;
-	ft_printf_fd(1, "Player color: %s\n", handle->player_color == IS_WHITE ? "WHITE" : "BLACK");
 	return (handle);
 }
 
