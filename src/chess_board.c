@@ -106,7 +106,7 @@ void draw_board(SDLHandle *handle) {
 	u32 color;
 	ChessTile tile = A1; // start from A1 for white player corner top left
 	ChessPiece pieceIdx = EMPTY;
-	for (s32 column = 0; column < 8; column++) {
+	for (s32 column = 7; column >= 0; column--) {
 		for (s32 raw = 0; raw < 8; raw++) {
 			tilePos = (iVec2){raw, column};
 			

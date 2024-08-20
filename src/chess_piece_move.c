@@ -284,8 +284,8 @@ Bitboard get_king_moves(ChessBoard *b, Bitboard king, ChessPiece type, s8 is_bla
 		NOT_FILE_H, NOT_FILE_A,  // 1, -1
 		NOT_FILE_A & NOT_RANK_8, // 7 
 		NOT_FILE_H & NOT_RANK_8, // 9
-		NOT_FILE_A & NOT_RANK_1, // -7
-		NOT_FILE_H & NOT_RANK_1, // -9
+		NOT_FILE_H & NOT_RANK_1, // -7
+		NOT_FILE_A & NOT_RANK_1, // -9
 	};
 	Bitboard attacks = 0, mask = 0, move = 0;
 	Bitboard occupied = b->occupied;

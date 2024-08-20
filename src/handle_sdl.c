@@ -275,7 +275,7 @@ static s8 is_in_y_range(s32 y, s32 column) {
 */
 ChessTile detect_tile_click(s32 x, s32 y) {
 	ChessTile tile = A1;
-	for (s32 column = 0; column < 8; column++) {
+	for (s32 column = 7; column >= 0; column--) {
 		for (s32 raw = 0; raw < 8; raw++) {
 			if (is_in_x_range(x, raw) && is_in_y_range(y, column)) {
 				// ft_printf_fd(1, "Click on "ORANGE"[%s]"RESET" -> "PINK"|%d|\n"RESET, TILE_TO_STRING(tile), tile);
