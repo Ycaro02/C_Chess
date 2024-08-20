@@ -64,10 +64,72 @@ void chess_routine(SDLHandle *handle){
 	free(handle);
 }
 
+
+
+#include "../libft/parse_flag/parse_flag.h"
+
+typedef t_flag_context ChessFlagContext;
+
+#define LISTEN_OPT_CHAR	'l'
+#define JOIN_OPT_CHAR	'j'
+#define PORT_OPT_CHAR	'p'
+
+enum chess_flag_value {
+	FLAG_LISTEN=1<<0,
+	FLAG_JOIN=1<<1,
+	FLAG_PORT=1<<2,
+};
+
+#define LISTEN_STR		"listen"
+#define JOIN_STR		"join"
+#define PORT_STR		"port"
+#define DEFAULT_PORT 	8080
+#define MAX_PORT		65535
+
+/*
+	@Brief Parser flag to handle listen and join mode
+	- Listen mode: Wait for connection
+		* -l --listen, wait for connection, default port 8080
+		* -p <port>, default port 8080
+		* example ./C_chess -l 8081
+	- Join mode: Connect to a server
+		* -j --join <ip> 
+		* -p <port>, default port 8080
+		* example ./C_chess -j 192.168.1.1 -p 8081
+*/
+u32 handle_chess_flag(int argc, char **argv) {
+	ChessFlagContext	flag_ctx;
+	u32					flag_value = 0;
+	s8					error = 0;
+
+	ft_bzero(&flag_ctx, sizeof(ChessFlagContext));
+
+	add_flag_option(&flag_ctx, LISTEN_OPT_CHAR, FLAG_LISTEN, OPT_NO_VALUE, OPT_NO_VALUE, LISTEN_STR);
+	add_flag_option(&flag_ctx, JOIN_OPT_CHAR, FLAG_JOIN, 15, CHAR_VALUE, JOIN_STR);
+	add_flag_option(&flag_ctx, PORT_OPT_CHAR, FLAG_PORT, 65535, DECIMAL_VALUE, PORT_STR);
+	flag_value = parse_flag(argc, argv, &flag_ctx, &error);
+	if (error == -1) {
+		ft_printf_fd(2, "Error: Flag parser%s\n");
+		display_option_list(flag_ctx);
+		return (-1);
+	}
+
+	if (has_flag(flag_value, FLAG_LISTEN) && has_flag(flag_value, FLAG_JOIN)) {
+		ft_printf_fd(2, "Error: Can't have listen and join flag at the same time\n");
+		display_option_list(flag_ctx);
+		return (-1);
+	}
+
+	display_option_list(flag_ctx);
+	return (flag_value);
+}
+
+
 int main(int argc, char **argv) {
 	SDLHandle	*handle = NULL;
 
-	(void)argc, (void)argv;
+	handle_chess_flag(argc, argv);
+
 	handle = init_game();
 	if (!handle) {
 		return (1);

@@ -211,6 +211,8 @@ struct s_player_info {
 typedef struct s_player_info PlayerInfo;
 
 
+// typedef struct t_flag_context ChessFlagContext;
+
 /* src/chess_board.c */
 void		init_board(ChessBoard *board);
 void		update_piece_state(ChessBoard *b);

@@ -67,6 +67,7 @@
 		"sstream": "c",
 		"variant": "c",
 		"timesize.h": "c",
-		"handle_sdl.h": "c"
+		"handle_sdl.h": "c",
+		"parse_flag.h": "c"
 	}
 }
