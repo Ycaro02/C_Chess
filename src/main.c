@@ -26,7 +26,7 @@ int main(void) {
 
 
 	while (window_is_open(handle->window)) {
-		tile_selected = event_handler();
+		tile_selected = event_handler(handle->player_color);
 		if (tile_selected == CHESS_QUIT) {
 			destroy_sdl_handle(handle);
 			window_close(handle->window, handle->renderer);
@@ -48,7 +48,7 @@ int main(void) {
 		}
 
 		window_clear(handle->renderer);
-		draw_board(handle);
+		draw_board(handle, handle->player_color);
 		SDL_RenderPresent(handle->renderer);
 	}
 	return (0);

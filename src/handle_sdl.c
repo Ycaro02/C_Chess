@@ -119,6 +119,9 @@ SDLHandle *create_sdl_handle(u32 width , u32 height, const char* title, ChessBoa
 	}
 	handle->board = board;
 	window_clear(handle->renderer);
+	handle->player_color = IS_WHITE;
+	// handle->player_color = IS_BLACK;
+	ft_printf_fd(1, "Player color: %s\n", handle->player_color == IS_WHITE ? "WHITE" : "BLACK");
 	return (handle);
 }
 
@@ -254,60 +257,6 @@ void unload_texture(SDL_Texture *texture) {
 		return ;
 	}
 	SDL_DestroyTexture(texture);
-}
-
-
-static s8 is_in_x_range(s32 x, s32 raw) {
-	return (x >= raw * TILE_SIZE + (raw + 1) * TILE_SPACING
-			&& x <= (raw + 1) * TILE_SIZE + (raw + 1) * TILE_SPACING);
-}
-
-static s8 is_in_y_range(s32 y, s32 column) {
-	return (y >= column * TILE_SIZE + (column + 1) * TILE_SPACING + TOP_BAND_HEIGHT
-			&& y <= (column + 1) * TILE_SIZE + (column + 1) * TILE_SPACING + TOP_BAND_HEIGHT);
-}
-
-/**
- * @brief Detect click tile on the board
- * @param handle The SDLHandle pointer
- * @param x The x position of the mouse
- * @param y The y position of the mouse
-*/
-ChessTile detect_tile_click(s32 x, s32 y) {
-	ChessTile tile = A1;
-	for (s32 column = 7; column >= 0; column--) {
-		for (s32 raw = 0; raw < 8; raw++) {
-			if (is_in_x_range(x, raw) && is_in_y_range(y, column)) {
-				// ft_printf_fd(1, "Click on "ORANGE"[%s]"RESET" -> "PINK"|%d|\n"RESET, TILE_TO_STRING(tile), tile);
-				return (tile);
-			}
-			tile++;
-		}
-	}
-	return (tile);
-}
-
-
-/**
- * @brief Chess event handler
- * @return The tile clicked, or CHESS_QUIT if the user want to quit
- * @note Return INVALID_TILE if no tile is clicked
-*/
-s32 event_handler() {
-	SDL_Event event;
-	ChessTile tile = INVALID_TILE;
-	s32 x = 0, y = 0;
-	while (SDL_PollEvent(&event)) {
-		if (event.type == SDL_QUIT \
-			|| (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE)) {
-			return (CHESS_QUIT);
-		}
-		if (event.type == SDL_MOUSEBUTTONDOWN) {
-			SDL_GetMouseState(&x, &y);
-			tile = detect_tile_click(x, y);
-		}
-	}
-	return (tile);
 }
 
 /**
