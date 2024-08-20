@@ -93,7 +93,7 @@ static s8 load_piece_texture(SDLHandle *handle) {
  * @param board The chess board
  * @return The SDLHandle pointer
 */
-SDLHandle *create_sdl_handle(u32 width , u32 height, const char* title, ChessBoard *board) {
+SDLHandle *create_sdl_handle(u32 width , u32 height, const char* title) {
 	SDLHandle *handle = malloc(sizeof(SDLHandle));
 	if (!handle) {
 		ft_printf_fd(2, "Error: malloc failed\n");
@@ -117,7 +117,6 @@ SDLHandle *create_sdl_handle(u32 width , u32 height, const char* title, ChessBoa
 		free(handle);
 		return (NULL);
 	}
-	handle->board = board;
 	window_clear(handle->renderer);
 	return (handle);
 }

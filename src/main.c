@@ -9,51 +9,73 @@ void destroy_sdl_handle(SDLHandle *handle) {
 	free(handle->piece_texture);
 }
 
-int main(void) {
+SDLHandle *init_game() {
 	SDLHandle	*handle = NULL;
-	ChessBoard	*board = ft_calloc(1, sizeof(ChessBoard));
-	ChessTile	tile_selected = INVALID_TILE;
-	ChessPiece	piece_type = EMPTY;
-	if (!board) {
-		return (1);
-	}
 
-	init_board(board);
-	handle = create_sdl_handle(WINDOW_WIDTH, WINDOW_HEIGHT, "Chess", board);
+	handle = create_sdl_handle(WINDOW_WIDTH, WINDOW_HEIGHT, "Chess");
 	if (!handle) {
-		return (1);
+		ft_printf_fd(2, "Error: create_sdl_handle failed\n");
+		return (NULL);
 	}
-
+	handle->board = ft_calloc(1, sizeof(ChessBoard));
+	if (!handle->board) {
+		ft_printf_fd(2, "Error: malloc failed\n");
+		free(handle);
+		return (NULL);
+	}
+	init_board(handle->board);
 	handle->player_info.color = IS_WHITE;
 	handle->player_info.turn = IS_WHITE;
+	return (handle);
+}
 
-	while (window_is_open(handle->window)) {
+void chess_routine(SDLHandle *handle){
+	ChessTile	tile_selected = INVALID_TILE;
+	ChessPiece	piece_type = EMPTY;
+	ChessBoard	*b = handle->board;
+	
+	while (1) {
 		tile_selected = event_handler(handle->player_info.color);
-		
 		/* If the quit button is pressed */
-		if (tile_selected == CHESS_QUIT) {
-			destroy_sdl_handle(handle);
-			window_close(handle->window, handle->renderer);
-			free(handle);
-			break ;
-		}
+		if (tile_selected == CHESS_QUIT) { break ; }
+		
+		/* If tile is selected */
 		if (tile_selected != INVALID_TILE) {
 			/* If a piece is selected and the tile selected is a possible move */
-			if (is_selected_possible_move(board->possible_moves, tile_selected)) {
-				ft_printf_fd(1, YELLOW"Move piece from [%s](%d) TO [%s](%d)\n"RESET, TILE_TO_STRING(board->selected_tile), board->selected_tile, TILE_TO_STRING(tile_selected), tile_selected);
-				move_piece(board, board->selected_tile, tile_selected, piece_type);
-				board->possible_moves = 0;
-			} else {
-				piece_type = get_piece_from_tile(board, tile_selected);
-				board->selected_tile = tile_selected;
-				ft_printf_fd(1, GREEN"Select piece in [%s]"RESET" -> "ORANGE"%s\n"RESET, TILE_TO_STRING(tile_selected), chess_piece_to_string(piece_type));
-				board->possible_moves = get_piece_move(board, (1ULL << board->selected_tile), piece_type, TRUE);
+			if (is_selected_possible_move(b->possible_moves, tile_selected)) {
+				move_piece(b, b->selected_tile, tile_selected, piece_type);
+				b->possible_moves = 0;
+			} else { /* Update piece possible move and selected tile */
+				piece_type = get_piece_from_tile(b, tile_selected);
+				b->selected_tile = tile_selected;
+				b->possible_moves = get_piece_move(b, (1ULL << b->selected_tile), piece_type, TRUE);
 			}
 		}
 
+		/* Draw logic */
 		window_clear(handle->renderer);
 		draw_board(handle, handle->player_info.color);
 		SDL_RenderPresent(handle->renderer);
 	}
+
+	/* Free memory */
+	destroy_sdl_handle(handle);
+	window_close(handle->window, handle->renderer);
+	free(handle);
+}
+
+int main(int argc, char **argv) {
+	SDLHandle	*handle = NULL;
+
+	(void)argc, (void)argv;
+	handle = init_game();
+	if (!handle) {
+		return (1);
+	}
+	chess_routine(handle);
 	return (0);
 }
+
+
+// ft_printf_fd(1, YELLOW"Move piece from [%s](%d) TO [%s](%d)\n"RESET, TILE_TO_STRING(b->selected_tile), b->selected_tile, TILE_TO_STRING(tile_selected), tile_selected);
+// ft_printf_fd(1, GREEN"Select piece in [%s]"RESET" -> "ORANGE"%s\n"RESET, TILE_TO_STRING(tile_selected), chess_piece_to_string(piece_type));

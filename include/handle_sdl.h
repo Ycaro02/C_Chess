@@ -75,7 +75,7 @@ typedef struct s_sdl_handle {
 } SDLHandle;
 
 /* src/sdl_handle */
-SDLHandle	*create_sdl_handle(u32 width , u32 height, const char* title, ChessBoard *board);
+SDLHandle	*create_sdl_handle(u32 width , u32 height, const char* title);
 u8 			window_is_open(SDL_Window* window);
 void		window_clear(SDL_Renderer* renderer);
 void		window_close(SDL_Window* window, SDL_Renderer *renderer);
