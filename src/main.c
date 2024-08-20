@@ -172,13 +172,15 @@ int main(int argc, char **argv) {
 		return (1);
 	}
 	if (has_flag(flag, FLAG_LISTEN)) {
-		player_info.color = random_player_color();
+		// player_info.color = random_player_color();
+		player_info.color = IS_WHITE;
 		ft_printf_fd(1, "Player color: %s\n", player_info.color == IS_WHITE ? "WHITE" : "BLACK");
 		ft_printf_fd(1, "Running port: %d\n", player_info.running_port);
 		ft_printf_fd(1, "Waiting for connection...\n");
 	} else {
 		/* Need to receive color from first player here */
-		player_info.color = random_player_color();
+		// player_info.color = random_player_color();
+		player_info.color = IS_BLACK;
 		ft_printf_fd(1, "Ip adress dest %s\n", player_info.dest_ip);
 		ft_printf_fd(1, "Running port: %d\n", player_info.running_port);
 	}

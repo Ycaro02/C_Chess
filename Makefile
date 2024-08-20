@@ -67,7 +67,7 @@ clean_lib:
 	@printf "$(RED)Clean libft, list$(RESET)\n"
 
 test: $(NAME)
-	@./$(NAME)
+	@./$(NAME) -l
 
 # @ulimit -c unlimited
 leak thread debug: clean $(NAME)

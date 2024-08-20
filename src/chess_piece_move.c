@@ -60,17 +60,22 @@ Bitboard get_pawn_moves(ChessBoard *b, Bitboard pawn, ChessPiece type, s8 is_bla
 
     one_step = (is_black ? (pawn >> direction) : (pawn << -direction)) & ~occupied;
 
+	/* Compute two steps if pawn is in starting position and first step is ok */
+    if (one_step != 0) {
+        two_steps = (is_black ? ((pawn & START_BLACK_PAWNS) >> 2*direction) : ((pawn & START_WHITE_PAWNS) << 2*-direction)) & ~occupied;
+		if (two_steps != 0 && check_legal) {
+			if (verify_legal_move(b, type, pawn, two_steps, is_black) == FALSE) {
+				two_steps = 0;
+			}
+		}
+	}
+
 	/* @note need the !check_legal to not be infinite recurcise */
 	if (one_step != 0 && check_legal) {
 		if (verify_legal_move(b, type, pawn, one_step, is_black) == FALSE) {
 			one_step = 0;
 		}
 	}
-
-	/* Compute two steps if pawn is in starting position and first step is ok */
-    if (one_step != 0) {
-        two_steps = (is_black ? ((pawn & START_BLACK_PAWNS) >> 2*direction) : ((pawn & START_WHITE_PAWNS) << 2*-direction)) & ~occupied;
-    }
 
 	/* If only_attacks is set, return only the attacks/control tile*/
 	if (!check_legal) {
@@ -137,6 +142,7 @@ Bitboard get_bishop_moves(ChessBoard *b, Bitboard bishop, ChessPiece type, s8 is
 	Bitboard occupied = b->occupied;
 	Bitboard enemy = is_black ? b->white : b->black;
 	s8 dir = 0;
+	s8 legal_move = TRUE;
 
     for (s8 i = 0; i < 4; i++) {
         dir = direction[i];
@@ -154,12 +160,14 @@ Bitboard get_bishop_moves(ChessBoard *b, Bitboard bishop, ChessPiece type, s8 is
 
 			/* Check if is a legal move */
 			if (check_legal && verify_legal_move(b, type, bishop, move, is_black) == FALSE) {
-				continue ;
+				legal_move = FALSE;
 			}
 
 			/* Check if the move is blocked by an occupied square */
 			if (handle_occupied_tile(move, occupied, enemy, &attacks)) { break ; }
 			
+			if (!legal_move) {continue;}
+
             /* Add the move to the attacks */
             attacks |= move;
         }
@@ -180,6 +188,7 @@ Bitboard get_rook_moves(ChessBoard *b, Bitboard rook, ChessPiece type, s8 is_bla
 	Bitboard occupied = b->occupied;
 	Bitboard enemy = is_black ? b->white : b->black;
 	s8 dir = 0;
+	s8 legal_move = TRUE;
 
 	// to implement rook move save for king
 	
@@ -199,12 +208,13 @@ Bitboard get_rook_moves(ChessBoard *b, Bitboard rook, ChessPiece type, s8 is_bla
 
 			/* Check if is a legal move */
 			if (check_legal && verify_legal_move(b, type, rook, move, is_black) == FALSE) {
-				continue ;
+				legal_move = FALSE;
 			}
 
 			/* Check if the move is blocked by an occupied square */
 			if (handle_occupied_tile(move, occupied, enemy, &attacks)) { break ; }
 			
+			if (!legal_move) {continue;}
 			/* Add the move to the attacks */
 			attacks |= move;
 		}
@@ -365,7 +375,7 @@ Bitboard get_knight_moves(ChessBoard *b, Bitboard knight, ChessPiece type, s8 is
 
 		/* Check if is a legal move */
 		if (check_legal && verify_legal_move(b, type, knight, move, is_black) == FALSE) {
-				continue ;
+			continue ;
 		}
         
 		/* Check if the move is blocked by an occupied square */
