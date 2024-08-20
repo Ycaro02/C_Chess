@@ -151,7 +151,7 @@ Bitboard get_bishop_moves(ChessBoard *b, Bitboard bishop, ChessPiece type, s8 is
 			/* Check if the move is blocked by an occupied square */
 			if (handle_occupied_tile(move, occupied, enemy, &attacks)) { break ; }
 			
-			if (!legal_move) {continue;}
+			if (!legal_move) { move = 0; continue;}
 
             /* Add the move to the attacks */
             attacks |= move;
@@ -199,7 +199,7 @@ Bitboard get_rook_moves(ChessBoard *b, Bitboard rook, ChessPiece type, s8 is_bla
 			/* Check if the move is blocked by an occupied square */
 			if (handle_occupied_tile(move, occupied, enemy, &attacks)) { break ; }
 			
-			if (!legal_move) {continue;}
+			if (!legal_move) { move = 0; continue;}
 			/* Add the move to the attacks */
 			attacks |= move;
 		}
