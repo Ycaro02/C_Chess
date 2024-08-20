@@ -9,10 +9,10 @@
 	*	@return	TRUE if the move is legal, FALSE otherwise
 */
 s8 verify_legal_move(ChessBoard *b, ChessPiece type, Bitboard from, Bitboard to, s8 is_black) {
-	s8 legal = TRUE;
+	ChessPiece	enemy_piece = get_piece_from_mask(b, to);
+	s8			legal = TRUE;
 	
 	/* Remove the enemy piece from the from tile is needed */
-	ChessPiece enemy_piece = get_piece_from_mask(b, to);
 	if (enemy_piece != EMPTY) {
 		b->piece[enemy_piece] &= ~to;
 	}
@@ -37,7 +37,6 @@ s8 verify_legal_move(ChessBoard *b, ChessPiece type, Bitboard from, Bitboard to,
 	if (enemy_piece != EMPTY) {
 		b->piece[enemy_piece] |= to;
 	}
-
 	update_piece_state(b);
 	return (legal);
 }
@@ -63,24 +62,15 @@ Bitboard get_pawn_moves(ChessBoard *b, Bitboard pawn, ChessPiece type, s8 is_bla
 	/* Compute two steps if pawn is in starting position and first step is ok */
     if (one_step != 0) {
         two_steps = (is_black ? ((pawn & START_BLACK_PAWNS) >> 2*direction) : ((pawn & START_WHITE_PAWNS) << 2*-direction)) & ~occupied;
-		if (two_steps != 0 && check_legal) {
-			if (verify_legal_move(b, type, pawn, two_steps, is_black) == FALSE) {
-				two_steps = 0;
-			}
-		}
+		if (two_steps != 0 && check_legal && verify_legal_move(b, type, pawn, two_steps, is_black) == FALSE) { two_steps = 0 ; }
 	}
 
 	/* @note need the !check_legal to not be infinite recurcise */
-	if (one_step != 0 && check_legal) {
-		if (verify_legal_move(b, type, pawn, one_step, is_black) == FALSE) {
-			one_step = 0;
-		}
-	}
+	if (one_step != 0 && check_legal && verify_legal_move(b, type, pawn, one_step, is_black) == FALSE) { one_step = 0 ; }
 
 	/* If only_attacks is set, return only the attacks/control tile*/
 	if (!check_legal) {
-		one_step = 0;
-		two_steps = 0;
+		one_step = 0; two_steps = 0;
 		enemy = UINT64_MAX;
 	}
 
@@ -90,14 +80,9 @@ Bitboard get_pawn_moves(ChessBoard *b, Bitboard pawn, ChessPiece type, s8 is_bla
     
 	/* Check if the attacks are legal */
 	if (check_legal) {
-		if (verify_legal_move(b, type, pawn, attacks_right, is_black) == FALSE) {
-			attacks_right = 0;
-		}
-		if (verify_legal_move(b, type, pawn, attacks_left, is_black) == FALSE) {
-			attacks_left = 0;
-		}
+		if (verify_legal_move(b, type, pawn, attacks_right, is_black) == FALSE) { attacks_right = 0 ; }
+		if (verify_legal_move(b, type, pawn, attacks_left, is_black) == FALSE) { attacks_left = 0 ; }
 	}
-
 
 	return (one_step | two_steps | attacks_left | attacks_right);
 }
