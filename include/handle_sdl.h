@@ -44,11 +44,15 @@
 #define		TILE_SIZE			100
 #define		TILE_SPACING		0
 
+/* Circle size */
+#define		CIRCLE_RADIUS ((TILE_SIZE >> 3) + (TILE_SIZE >> 5))
+#define		OUTLINE_CIRCLE_RADIUS (TILE_SIZE >> 1)
+
 /* Window size */
 #define WINDOW_WIDTH (8 * TILE_SIZE + 9 * TILE_SPACING)
 #define WINDOW_HEIGHT (8 * TILE_SIZE + 9 * TILE_SPACING + TOP_BAND_HEIGHT)
 
-/* Macro to convert tile position to pixel */
+/* Macro to convert tile position to pixel position */
 #define TILE_POSITION_TO_PIXEL(p, px, py) \
     do { \
         (px) = (p).x * TILE_SIZE + ((p).x + 1) * TILE_SPACING; \
@@ -83,9 +87,6 @@ SDL_Texture	*load_texture(SDL_Renderer *renderer, const char* path);
 void		unload_texture(SDL_Texture *texture);
 void		draw_texture_tile(SDL_Renderer *renderer, SDL_Texture *texture, iVec2 tilePos, iVec2 scale);
 void		draw_color_tile(SDL_Renderer	*renderer , iVec2 tilePos, iVec2 scale, u32 color);
-
-
-
 
 
 #endif /* HANDLE_SDL_H */
