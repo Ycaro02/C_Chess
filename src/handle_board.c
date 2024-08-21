@@ -54,9 +54,27 @@ static void draw_circle_outline(SDL_Renderer *renderer, int x, int y, int radius
     }
 }
 
+void draw_possible_move(SDLHandle *handle, iVec2 tile_pos, ChessTile tile) {
+	iVec2 center = {0, 0};
+	/* Check if tile is current selected possible move */
+	if (is_selected_possible_move(handle->board->possible_moves, tile)) {
+		center.x = tile_pos.x * TILE_SIZE + (TILE_SIZE >> 1);
+		center.y = tile_pos.y * TILE_SIZE + (TILE_SIZE >> 1);
+		/* Check if tile is not empty (kill move), if so, draw a red circle arround the piece */
+		if (is_en_passant_move(handle->board, tile) || get_piece_from_tile(handle->board, tile) != EMPTY) {
+			SDL_SetRenderDrawColor(handle->renderer, 200, 0, 0, 255); // Red color
+			draw_circle_outline(handle->renderer, center.x, center.y, OUTLINE_CIRCLE_RADIUS);
+		} else {
+			/* Draw a small black circle in the center of the tile */
+			SDL_SetRenderDrawColor(handle->renderer, 0, 0, 0, 150); // Black color
+			draw_filled_circle(handle->renderer, center.x, center.y, CIRCLE_RADIUS);
+		}
+	}
+}
+
 /* Draw chess board */
 void draw_board(SDLHandle *handle, s8 player_color) {
-	iVec2		tilePos = {0, 0}, center = {0, 0};
+	iVec2		tile_pos = {0, 0};
 	u32			color = 0;
 	s32 		column = 7;
 	ChessPiece	pieceIdx = EMPTY;
@@ -64,41 +82,20 @@ void draw_board(SDLHandle *handle, s8 player_color) {
 
 	while (column >= 0) {
 		for (s32 raw = 0; raw < 8; raw++) {
-			tilePos = (iVec2){raw, column};
+			tile_pos = (iVec2){raw, column};
 			
 			/* Set color of tile */
 			color = (column + raw) & 1 ? BLACK_TILE : WHITE_TILE;
 			
-			draw_color_tile(handle->renderer, tilePos, (iVec2){TILE_SIZE, TILE_SIZE}, color);
-			
+			draw_color_tile(handle->renderer, tile_pos, (iVec2){TILE_SIZE, TILE_SIZE}, color);
 
+			/* Draw possible move */
+			draw_possible_move(handle, tile_pos, tile);
 
-
-            /* Check if tile is current selected possible move */
-            if (is_selected_possible_move(handle->board->possible_moves, tile)) {
-				center.x = tilePos.x * TILE_SIZE + (TILE_SIZE >> 1);
-				center.y = tilePos.y * TILE_SIZE + (TILE_SIZE >> 1);
-                
-				if (is_en_passant_move(handle->board, tile)) {
-					center.x = tilePos.x * TILE_SIZE + (TILE_SIZE >> 1);
-					center.y = tilePos.y * TILE_SIZE + (TILE_SIZE >> 1);
-					SDL_SetRenderDrawColor(handle->renderer, 0, 200, 0, 255); // Green color
-					draw_filled_circle(handle->renderer, center.x, center.y, CIRCLE_RADIUS);
-				}
-				/* Check if tile is not empty (kill move), if so, draw a red circle arround the piece */
-                if (get_piece_from_tile(handle->board, tile) != EMPTY) {
-                    SDL_SetRenderDrawColor(handle->renderer, 200, 0, 0, 255); // Red color
-                    draw_circle_outline(handle->renderer, center.x, center.y, OUTLINE_CIRCLE_RADIUS);
-                } else {
-					/* Draw a small black circle in the center of the tile */
-					SDL_SetRenderDrawColor(handle->renderer, 0, 0, 0, 150); // Black color
-					draw_filled_circle(handle->renderer, center.x, center.y, CIRCLE_RADIUS);
-				}
-            }
 			/* Draw piece */
 			pieceIdx = get_piece_from_tile(handle->board, tile);
 			if (pieceIdx != EMPTY) {
-				draw_texture_tile(handle->renderer, handle->piece_texture[pieceIdx], tilePos, (iVec2){TILE_SIZE, TILE_SIZE});
+				draw_texture_tile(handle->renderer, handle->piece_texture[pieceIdx], tile_pos, (iVec2){TILE_SIZE, TILE_SIZE});
 			}
 
 			/* Increment or decrement tile */

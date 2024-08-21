@@ -125,27 +125,27 @@ typedef struct s_special_info SpecialInfo;
 
 /* ChessBoard struct */
 struct s_chess_board {
-	/* Bitboard for each piece */
+	/* 64 bitboard for each piece */
 	Bitboard	piece[PIECE_MAX];
 
-	/* Board 1 for occupied, 0 for empty */
+	/* Bitboard for occupied tile */
 	Bitboard	occupied;
 
 	/* Bitboard for white and black pieces, for eassy access to enemy pieces */
 	Bitboard	white;
 	Bitboard	black;
 
-	/* Bitboard for selected piece possible moves */
-	ChessTile	selected_tile;
-	Bitboard	possible_moves;
+	/* Selected tile handling */
+	ChessTile	selected_tile;		/* Selected tile by last click */
+	Bitboard	possible_moves;		/* Possible moves for selected piece (on selected tile) */
 
 	/* Special Bitboard for 'en passant' rule */
 	Bitboard	en_passant;			/* Bitboard for en passant possible moves */
 	ChessTile	en_passant_tile;	/* Tile of the pawn can be atatcked by en passant move */
 
 	/* Bitboard for white and black control */
-	Bitboard	white_control;
-	Bitboard	black_control;
+	Bitboard	white_control;		/* Bitboard for white control tile */
+	Bitboard	black_control;		/* Bitboard for black control tile */
 
 	/* u8 used as 8 boolean info used as follow
 	 * 0: white check
@@ -201,6 +201,15 @@ FT_INLINE const char *chess_piece_to_string(ChessPiece piece) {
 
 /* Macro to convert tile to string */
 #define TILE_TO_STRING(t) (char[3]){'A' + (t) % 8, '1' + (t) / 8, '\0'}
+
+/* @brief Display kill info
+ * @param enemy_piece	ChessPiece enum
+ * @param tile_to		ChessTile enum
+*/
+FT_INLINE void display_kill_info(ChessPiece enemy_piece, ChessTile tile_to) {
+	ft_printf_fd(1, RED"Kill %s on [%s]\n"RESET, \
+		chess_piece_to_string(enemy_piece), TILE_TO_STRING(tile_to));
+}
 
 /* Tile color */
 #define BLACK_TILE ((u32)(RGBA_TO_UINT32(0, 120, 0, 255)))

@@ -518,11 +518,22 @@ void handle_castle_move(ChessBoard *b, ChessPiece type, ChessTile tile_from, Che
 	}
 }
 
-
+/* @brief Verify if the move is a double step move for a pawn
+ * @param type		ChessPiece enum
+ * @param tile_from	ChessTile enum
+ * @param tile_to	ChessTile enum
+ * @return TRUE if the move is a double step move, FALSE otherwise
+*/
 static s8 is_pawn_double_step_move(ChessPiece type, ChessTile tile_from, ChessTile tile_to) {
 	return ((type == WHITE_PAWN || type == BLACK_PAWN) && INT_ABS_DIFF(tile_from, tile_to) == 16);
 }
 
+/* @brief Update 'en passant' Bitboard if needed
+ * @param b			ChessBoard struct
+ * @param type		ChessPiece enum
+ * @param tile_from	ChessTile enum
+ * @param tile_to	ChessTile enum
+*/
 static void update_en_passant_bitboard(ChessBoard *b, ChessPiece type, ChessTile tile_from, ChessTile tile_to) {
 	b->en_passant = 0;
 	b->en_passant_tile = INVALID_TILE;
@@ -532,11 +543,12 @@ static void update_en_passant_bitboard(ChessBoard *b, ChessPiece type, ChessTile
 	}
 }
 
-static inline void display_kill_info(ChessPiece enemy_piece, ChessTile tile_to) {
-	ft_printf_fd(1, RED"Kill %s on [%s]\n"RESET, \
-		chess_piece_to_string(enemy_piece), TILE_TO_STRING(tile_to));
-}
-
+/* @brief Handle enemy piece kill
+ * @param b			ChessBoard struct
+ * @param type		ChessPiece enum
+ * @param tile_to	ChessTile enum
+ * @param mask_to	Bitboard of the destination tile
+*/
 static void handle_enemy_piece_kill(ChessBoard *b, ChessPiece type, ChessTile tile_to, Bitboard mask_to) {
 	ChessPiece	enemy_piece = get_piece_from_mask(b, mask_to);
 	
