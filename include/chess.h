@@ -2,6 +2,8 @@
 #define CHESS_H
 
 #include "../libft/libft.h"
+#include "../libft/parse_flag/parse_flag.h"
+
 
 /* Typedef for Bitboard type just unsigned long long (64 bits) */
 typedef u64 Bitboard;
@@ -219,6 +221,27 @@ FT_INLINE s8 random_player_color() {
 	srand(time(NULL));
 	return (rand() % 2 == 0 ? IS_WHITE : IS_BLACK);
 }
+
+typedef t_flag_context ChessFlagContext;
+
+#define LISTEN_OPT_CHAR	'l'
+#define JOIN_OPT_CHAR	'j'
+#define PORT_OPT_CHAR	'p'
+
+enum chess_flag_value {
+	FLAG_LISTEN=1<<0,
+	FLAG_JOIN=1<<1,
+	FLAG_PORT=1<<2,
+};
+
+#define LISTEN_STR		"listen"
+#define JOIN_STR		"join"
+#define PORT_STR		"port"
+#define DEFAULT_PORT 	24242
+#define MAX_PORT		65535
+
+/* src/chess_flag.c */
+u32 handle_chess_flag(int argc, char **argv, s8 *error, PlayerInfo *player_info);
 
 /* src/chess_board.c */
 void		init_board(ChessBoard *board);
