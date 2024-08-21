@@ -10,6 +10,10 @@ s8 is_selected_possible_move(Bitboard possible_moves, ChessTile tile) {
     return ((possible_moves & (1ULL << tile)) != 0);
 }
 
+s8 is_en_passant_move(ChessBoard *b, ChessTile tile) {
+	return ((b->en_passant & (1ULL << tile)) != 0);
+}
+
 /**
  * @brief Handle tile incrementation/decrementation
  * @param tile The tile to handle
@@ -67,11 +71,21 @@ void draw_board(SDLHandle *handle, s8 player_color) {
 			
 			draw_color_tile(handle->renderer, tilePos, (iVec2){TILE_SIZE, TILE_SIZE}, color);
 			
+
+
+
             /* Check if tile is current selected possible move */
             if (is_selected_possible_move(handle->board->possible_moves, tile)) {
 				center.x = tilePos.x * TILE_SIZE + (TILE_SIZE >> 1);
 				center.y = tilePos.y * TILE_SIZE + (TILE_SIZE >> 1);
-                /* Check if tile is not empty (kill move), if so, draw a red circle arround the piece */
+                
+				if (is_en_passant_move(handle->board, tile)) {
+					center.x = tilePos.x * TILE_SIZE + (TILE_SIZE >> 1);
+					center.y = tilePos.y * TILE_SIZE + (TILE_SIZE >> 1);
+					SDL_SetRenderDrawColor(handle->renderer, 0, 200, 0, 255); // Green color
+					draw_filled_circle(handle->renderer, center.x, center.y, CIRCLE_RADIUS);
+				}
+				/* Check if tile is not empty (kill move), if so, draw a red circle arround the piece */
                 if (get_piece_from_tile(handle->board, tile) != EMPTY) {
                     SDL_SetRenderDrawColor(handle->renderer, 200, 0, 0, 255); // Red color
                     draw_circle_outline(handle->renderer, center.x, center.y, OUTLINE_CIRCLE_RADIUS);

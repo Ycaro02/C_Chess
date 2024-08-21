@@ -50,13 +50,12 @@ s8 verify_legal_move(ChessBoard *b, ChessPiece type, Bitboard from, Bitboard to,
 	*	@return	Bitboard of the possible moves
 */
 Bitboard get_pawn_moves(ChessBoard *b, Bitboard pawn, ChessPiece type, s8 is_black, s8 check_legal) {
-    Bitboard	one_step = 0, two_steps = 0, attacks_left = 0, attacks_right = 0;
-	Bitboard	occupied = b->occupied;
-	Bitboard	enemy = is_black ? b->white : b->black;
-
-	/* One step, if pawn is black, it moves up, otherwise it moves down */
+    Bitboard	one_step = 0, two_steps = 0, attacks_left = 0, attacks_right = 0, atk_right_mask = 0, atk_left_mask = 0;
+	Bitboard	occupied = b->occupied, enemy = is_black ? b->white : b->black;
+	/* If pawn is black, it moves up, otherwise it moves down */
     s8 direction = is_black ? 8 : -8;
 
+	/* Compute one step */
     one_step = (is_black ? (pawn >> direction) : (pawn << -direction)) & ~occupied;
 
 	/* Compute two steps if pawn is in starting position and first step is ok */
@@ -65,7 +64,7 @@ Bitboard get_pawn_moves(ChessBoard *b, Bitboard pawn, ChessPiece type, s8 is_bla
 		if (two_steps != 0 && check_legal && verify_legal_move(b, type, pawn, two_steps, is_black) == FALSE) { two_steps = 0 ; }
 	}
 
-	/* @note need the !check_legal to not be infinite recurcise */
+	/* @note need the check_legal to not be infinite recurcise */
 	if (one_step != 0 && check_legal && verify_legal_move(b, type, pawn, one_step, is_black) == FALSE) { one_step = 0 ; }
 
 	/* If only_attacks is set, return only the attacks/control tile*/
@@ -74,10 +73,18 @@ Bitboard get_pawn_moves(ChessBoard *b, Bitboard pawn, ChessPiece type, s8 is_bla
 		enemy = UINT64_MAX;
 	}
 
+	atk_right_mask = is_black ? (pawn >> (direction - 1)) : (pawn << -(direction - 1));
+	atk_left_mask = is_black ? (pawn >> (direction + 1)) : (pawn << -(direction + 1));
+
 	/* Compute attacks left and right, and avoid out of bound */
-    attacks_right = (is_black ? (pawn >> (direction - 1)) : (pawn << -(direction - 1))) & ~FILE_A & enemy;
-    attacks_left = (is_black ? (pawn >> (direction + 1)) : (pawn << -(direction + 1))) & ~FILE_H & enemy;
+    attacks_right = atk_right_mask & ~FILE_A & enemy;
+    attacks_left = atk_left_mask & ~FILE_H & enemy;
     
+	/* Check if the attack en passant is possible */
+	if (attacks_right == 0) { attacks_right = atk_right_mask & b->en_passant ; }
+	if (attacks_left == 0) { attacks_left = atk_left_mask & b->en_passant ; }
+
+
 	/* Check if the attacks are legal */
 	if (check_legal) {
 		if (verify_legal_move(b, type, pawn, attacks_right, is_black) == FALSE) { attacks_right = 0 ; }
@@ -512,6 +519,38 @@ void handle_castle_move(ChessBoard *b, ChessPiece type, ChessTile tile_from, Che
 }
 
 
+static s8 is_pawn_double_step_move(ChessPiece type, ChessTile tile_from, ChessTile tile_to) {
+	return ((type == WHITE_PAWN || type == BLACK_PAWN) && INT_ABS_DIFF(tile_from, tile_to) == 16);
+}
+
+static void update_en_passant_bitboard(ChessBoard *b, ChessPiece type, ChessTile tile_from, ChessTile tile_to) {
+	b->en_passant = 0;
+	b->en_passant_tile = INVALID_TILE;
+	if (is_pawn_double_step_move(type, tile_from, tile_to)) {
+		b->en_passant = (1ULL << (tile_from + tile_to) / 2);
+		b->en_passant_tile = tile_to;
+	}
+}
+
+static inline void display_kill_info(ChessPiece enemy_piece, ChessTile tile_to) {
+	ft_printf_fd(1, RED"Kill %s on [%s]\n"RESET, \
+		chess_piece_to_string(enemy_piece), TILE_TO_STRING(tile_to));
+}
+
+static void handle_enemy_piece_kill(ChessBoard *b, ChessPiece type, ChessTile tile_to, Bitboard mask_to) {
+	ChessPiece	enemy_piece = get_piece_from_mask(b, mask_to);
+	
+	if (enemy_piece != EMPTY) {
+		display_kill_info(enemy_piece, tile_to);
+		b->piece[enemy_piece] &= ~(1ULL << tile_to);
+	} else if ((type == WHITE_PAWN || type == BLACK_PAWN) && mask_to == b->en_passant) {
+		mask_to = (1ULL << b->en_passant_tile);
+		enemy_piece = (type == WHITE_PAWN) ? BLACK_PAWN : WHITE_PAWN;
+		display_kill_info(enemy_piece, b->en_passant_tile);
+		b->piece[enemy_piece] &= ~mask_to;
+	}
+}
+
 /* @brief Move a piece from a tile to another and update the board state
  * @param board		ChessBoard struct
  * @param tile_from	ChessTile enum
@@ -521,14 +560,9 @@ void handle_castle_move(ChessBoard *b, ChessPiece type, ChessTile tile_from, Che
 void move_piece(ChessBoard *board, ChessTile tile_from, ChessTile tile_to, ChessPiece type) {
 	Bitboard	mask_from = 1ULL << tile_from;
 	Bitboard	mask_to = 1ULL << tile_to;
-	ChessPiece	enemy_piece = get_piece_from_mask(board, mask_to);
 	
-	/* Check if the enemy piece need to be kill/remove */
-	if (enemy_piece != EMPTY) {
-		ft_printf_fd(1, RED"Kill %s on [%s]\n"RESET, \
-			chess_piece_to_string(enemy_piece), TILE_TO_STRING(tile_to));
-		board->piece[enemy_piece] &= ~mask_to;
-	}
+	/* Check if the enemy piece need to be kill, handle 'en passant' kill too */
+	handle_enemy_piece_kill(board, type, tile_to, mask_to);
 
 	/* Check if the move is a castle move and move rook if needed */
 	handle_castle_move(board, type, tile_from, tile_to);
@@ -547,6 +581,9 @@ void move_piece(ChessBoard *board, ChessTile tile_from, ChessTile tile_to, Chess
 
 	/* Set special info for the king and rook */
 	board_special_info_handler(board, type, tile_from);
+
+	/* Update 'en passant' Bitboard if needed */
+	update_en_passant_bitboard(board, type, tile_from, tile_to);
 }
 
 /* @brief Get the piece color control

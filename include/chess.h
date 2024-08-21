@@ -139,6 +139,10 @@ struct s_chess_board {
 	ChessTile	selected_tile;
 	Bitboard	possible_moves;
 
+	/* Special Bitboard for 'en passant' rule */
+	Bitboard	en_passant;			/* Bitboard for en passant possible moves */
+	ChessTile	en_passant_tile;	/* Tile of the pawn can be atatcked by en passant move */
+
 	/* Bitboard for white and black control */
 	Bitboard	white_control;
 	Bitboard	black_control;
@@ -248,6 +252,7 @@ void		init_board(ChessBoard *board);
 void		update_piece_state(ChessBoard *b);
 void		display_bitboard(Bitboard board, const char *msg);
 s8			is_selected_possible_move(Bitboard possible_moves, ChessTile tile);
+s8			is_en_passant_move(ChessBoard *b, ChessTile tile);
 ChessPiece	get_piece_from_tile(ChessBoard *b, ChessTile tile);
 ChessPiece	get_piece_from_mask(ChessBoard *b, Bitboard mask);
 
@@ -261,6 +266,8 @@ Bitboard	get_knight_moves(ChessBoard *b, Bitboard knight, ChessPiece type, s8 is
 Bitboard 	get_piece_move(ChessBoard *board, Bitboard piece, ChessPiece piece_type, s8 check_legal);
 void		move_piece(ChessBoard *board, ChessTile tile_from, ChessTile tile_to, ChessPiece type);
 Bitboard	get_piece_color_control(ChessBoard *b, s8 is_black);
+
+
 
 /* Declarion for SDLHandle struct */
 typedef struct s_sdl_handle SDLHandle;
