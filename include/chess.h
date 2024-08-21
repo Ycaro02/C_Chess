@@ -272,19 +272,19 @@ Bitboard	get_rook_moves(ChessBoard *b, Bitboard rook, ChessPiece type, s8 is_bla
 Bitboard	get_queen_moves(ChessBoard *b, Bitboard queen, ChessPiece type, s8 is_black, s8 check_legal);
 Bitboard	get_king_moves(ChessBoard *b, Bitboard king, ChessPiece type, s8 is_black, s8 check_legal);
 Bitboard	get_knight_moves(ChessBoard *b, Bitboard knight, ChessPiece type, s8 is_black, s8 check_legal);
+
+/* src/generic_piece_move.c */
 Bitboard 	get_piece_move(ChessBoard *board, Bitboard piece, ChessPiece piece_type, s8 check_legal);
 void		move_piece(ChessBoard *board, ChessTile tile_from, ChessTile tile_to, ChessPiece type);
-Bitboard	get_piece_color_control(ChessBoard *b, s8 is_black);
-
-
 
 /* Declarion for SDLHandle struct */
 typedef struct s_sdl_handle SDLHandle;
 
 /* src/handle_board.c */
-void draw_board(SDLHandle *handle, s8 player_color);
-s32 event_handler(s8 player_color);
-
+void		draw_board(SDLHandle *handle, s8 player_color);
+s32			event_handler(s8 player_color);
+s8			verify_check_and_mat(ChessBoard *b, s8 is_black);
+Bitboard	get_piece_color_control(ChessBoard *b, s8 is_black);
 
 
 #endif /* CHESS_H */
