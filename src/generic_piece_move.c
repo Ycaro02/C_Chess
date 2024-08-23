@@ -147,8 +147,19 @@ s32 check_pawn_promotion(SDLHandle *handle, ChessPiece type, ChessTile tile_to) 
 	s32 ret = TRUE;
 	s8 is_pawn = (type == WHITE_PAWN || type == BLACK_PAWN);
 	s8 is_black = (type >= BLACK_PAWN);
+	s8 is_white = !is_black;
 
-	if ((is_pawn && !is_black && tile_to >= A8 && tile_to <= H8)
+
+	/* Check if is the player control pawn or opponent */
+	if (handle->player_info.color == IS_WHITE && is_black) {
+		return (ret);
+	} else if (handle->player_info.color == IS_BLACK && is_white) {
+		return (ret);
+	}
+
+
+	/* Check if the pawn need to be promoted */
+	if ((is_pawn && is_white && tile_to >= A8 && tile_to <= H8)
 		|| (is_pawn && is_black && tile_to >= A1 && tile_to <= H1)) {
 		ret = display_promotion_selection(handle, tile_to);
 	}
