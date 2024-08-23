@@ -73,9 +73,20 @@ int main(int argc, char **argv) {
         if (recv_len > 0) {
             buffer[recv_len] = '\0';
             printf("Réponse du pair : %s nb %d\n", buffer, i);
-            // break;
         }
     }
+
+	sendto(sockfd, "Bye", strlen("Bye"), 0, (struct sockaddr *)&peeraddr, addr_len);
+	while (1) {
+		int len = recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&peeraddr, &addr_len);
+		if (len > 0) {
+			buffer[len] = '\0';
+			printf("Réponse du pair : %s\n", buffer);
+			if (strcmp(buffer, "Bye") == 0) {
+				break;
+			}
+		}
+	}
 
 	/* Sleep for 5 seconds */
 	sleep(5);
