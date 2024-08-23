@@ -34,7 +34,7 @@ int safe_udp_msg(int sockfd, struct sockaddr_in peeraddr, socklen_t addr_len, ch
 			}
 		} 
 		attempts++;
-		sleep(1);
+		sleep(5);
 	}
 	if (!ack_received) {
 		printf("No ACK received give up msg %s\n", msg);
