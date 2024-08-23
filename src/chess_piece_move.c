@@ -112,7 +112,6 @@ Bitboard get_pawn_moves(ChessBoard *b, Bitboard pawn, ChessPiece type, s8 is_bla
 	return (one_step | two_steps | attacks_left | attacks_right);
 }
 
-
 /*	@brief	Check if the move is blocked by an occupied square
 	*		If the move captures an enemy piece, include it in the attacks
 	*		Stop travel in this direction 
@@ -121,14 +120,14 @@ Bitboard get_pawn_moves(ChessBoard *b, Bitboard pawn, ChessPiece type, s8 is_bla
 	*	@param	enemy		Bitboard of the enemy pieces
 	*	@param	attacks		Pointer to the attacks bitboard
 */
-static inline s8 handle_occupied_tile(Bitboard move, Bitboard occupied, Bitboard enemy, Bitboard *attacks) {
+static inline s8 handle_occupied_tile(Bitboard move, Bitboard occupied, Bitboard enemy) {
 	if (move & occupied) {
 		if (move & enemy) {
-			*attacks |= move;
+			return (ENEMY_TILE);
 		}
-		return (TRUE);
+		return (ALLY_TILE);
 	}
-	return (FALSE);
+	return (EMPTY_TILE);
 }
 
 
@@ -151,7 +150,7 @@ Bitboard get_bishop_moves(ChessBoard *b, Bitboard bishop, ChessPiece type, s8 is
     Bitboard attacks = 0, mask = 0, move = 0;
 	Bitboard occupied = b->occupied;
 	Bitboard enemy = is_black ? b->white : b->black;
-	s8 dir = 0;
+	s8 dir = 0, occupied_tile = EMPTY_TILE;
 
     for (s8 i = 0; i < 4; i++) {
         dir = direction[i];
@@ -167,15 +166,18 @@ Bitboard get_bishop_moves(ChessBoard *b, Bitboard bishop, ChessPiece type, s8 is
             /* If the move is zero, break the loop to avoid infinite loop */
             if (move == 0) { break ; }
 
-			/* Check if the move is blocked by an occupied square */
-			if (handle_occupied_tile(move, occupied, enemy, &attacks)) { break ; }
+			/* Check if the move is blocked by an occupied square, if is ally break now */
+			occupied_tile = handle_occupied_tile(move, occupied, enemy);
+			if (occupied_tile == ALLY_TILE) { break ; }
 
 			/* Check if is a legal move */
 			if (check_legal && verify_legal_move(b, type, bishop, move, is_black) == FALSE) { continue ; }
 
-
             /* Add the move to the attacks */
             attacks |= move;
+
+			/* If the move is blocked by an enemy piece, stop the travel in this direction */
+			if (occupied_tile == ENEMY_TILE) { break ; }
         }
     }
     return attacks;
@@ -193,7 +195,7 @@ Bitboard get_rook_moves(ChessBoard *b, Bitboard rook, ChessPiece type, s8 is_bla
 	Bitboard attacks = 0, move = 0, mask = 0;
 	Bitboard occupied = b->occupied;
 	Bitboard enemy = is_black ? b->white : b->black;
-	s8 dir = 0;
+	s8 dir = 0, occupied_tile = EMPTY_TILE;
 
 	for (s8 i = 0; i < 4; i++) {
 		dir = directions[i];
@@ -209,14 +211,18 @@ Bitboard get_rook_moves(ChessBoard *b, Bitboard rook, ChessPiece type, s8 is_bla
 			/* If the move is zero, break the loop to avoid infinite loop */
 			if (move == 0) { break ; }
 
-			/* Check if the move is blocked by an occupied square */
-			if (handle_occupied_tile(move, occupied, enemy, &attacks)) { break ; }
-			
+			/* Check if the move is blocked by an occupied square, if is ally break now */
+			occupied_tile = handle_occupied_tile(move, occupied, enemy);
+			if (occupied_tile == ALLY_TILE) { break ; }
+
 			/* Check if is a legal move */
 			if (check_legal && verify_legal_move(b, type, rook, move, is_black) == FALSE) { continue ; }
 
 			/* Add the move to the attacks */
 			attacks |= move;
+
+			/* If the move is blocked by an enemy piece, stop the travel in this direction */
+			if (occupied_tile == ENEMY_TILE) { break ; }
 		}
 	}
 	return (attacks);
@@ -320,8 +326,8 @@ Bitboard get_king_moves(ChessBoard *b, Bitboard king, ChessPiece type, s8 is_bla
 		if (check_legal && verify_legal_move(b, type, king, move, is_black) == FALSE) { continue ; }
 
 		/* Check if the move is blocked by an occupied square */
-		if (handle_occupied_tile(move, occupied, enemy, &attacks)) { continue ; }
-		
+		if (handle_occupied_tile(move, occupied, enemy) == ALLY_TILE) { continue ; }
+
 		/* Add the move to the attacks */
 		attacks |= move;
 	}
@@ -375,8 +381,8 @@ Bitboard get_knight_moves(ChessBoard *b, Bitboard knight, ChessPiece type, s8 is
 		if (check_legal && verify_legal_move(b, type, knight, move, is_black) == FALSE) { continue ; }
         
 		/* Check if the move is blocked by an occupied square */
-		if (handle_occupied_tile(move, occupied, enemy, &attacks)) { continue ; }
-        
+		if (handle_occupied_tile(move, occupied, enemy) == ALLY_TILE) { continue ; }
+
 		/* Add the move to the attacks */
 		attacks |= move;
     }

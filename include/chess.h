@@ -202,6 +202,14 @@ FT_INLINE const char *chess_piece_to_string(ChessPiece piece) {
 /* Macro to convert tile to string */
 #define TILE_TO_STRING(t) (char[3]){'A' + (t) % 8, '1' + (t) / 8, '\0'}
 
+
+/* Enum for tile type, use in handle_occupied_tile */
+enum tile_type {
+	EMPTY_TILE = 0,
+	ALLY_TILE,
+	ENEMY_TILE
+};
+
 /* @brief Display kill info
  * @param enemy_piece	ChessPiece enum
  * @param tile_to		ChessTile enum
