@@ -139,10 +139,11 @@ NetworkInfo *setup_client(int argc, char **argv) {
 	if (setsockopt(info->sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
 		perror("Error setting socket timeout");
 	}
-
-
-
 	return (info);
+}
+
+void send_disconnect_to_server(int sockfd, struct sockaddr_in servaddr) {
+	sendto(sockfd, "DISCONNECT", strlen("DISCONNECT"), 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
 }
 
 int main(int argc, char **argv) {
@@ -176,6 +177,7 @@ int main(int argc, char **argv) {
 	} else {
 		safe_udp_receive(ctx->sockfd, ctx->peeraddr, ctx->addr_len);
 	}
+	send_disconnect_to_server(ctx->sockfd, ctx->servaddr);
     close(ctx->sockfd);
     return 0;
 }
