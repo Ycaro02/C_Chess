@@ -28,7 +28,7 @@ int safe_udp_msg(int sockfd, struct sockaddr_in peeraddr, socklen_t addr_len, ch
 			if (strcmp(buffer, "ACK") == 0) {
 				printf("ACK receive for: |%s|\n", msg);
 				ack_received = 1;
-			} else { // Other msg send ACK
+			} else { // Other msg send ACK for it
 				sendto(sockfd, "ACK", strlen("ACK"), 0, (struct sockaddr *)&peeraddr, addr_len);
 				printf("Msg receive : |%s| -> Send ACK\n", buffer);
 			}
@@ -41,13 +41,23 @@ int safe_udp_msg(int sockfd, struct sockaddr_in peeraddr, socklen_t addr_len, ch
 	}
 }
 
-int main(int argc, char **argv) {
-    struct sockaddr_in servaddr, localaddr, peeraddr;
-    int sockfd;
+typedef struct {
+	struct sockaddr_in	localaddr;
+	struct sockaddr_in	servaddr;
+	struct sockaddr_in	peeraddr;
+	socklen_t			addr_len;
+	int					sockfd;
+} NetworkInfo;
+
+NetworkInfo *setup_client(int argc, char **argv) {
+    NetworkInfo *info = calloc(sizeof(NetworkInfo),1);
+	char server_ip[16];
     char buffer[1024];
-    socklen_t addr_len = sizeof(peeraddr);
     int local_port = atoi(argv[1]);
-    char server_ip[16];
+
+	if (!info) {
+		return (NULL);
+	}
 
     bzero(server_ip, 16);
     bzero(buffer, 1024);
@@ -55,61 +65,75 @@ int main(int argc, char **argv) {
         strcpy(server_ip, argv[2]);
     } else {
         printf("Usage: %s <local_port> <server_ip>\n", argv[0]);
-        return 1;
-    } 
-
-    /* Create UDP socket */
-    if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-        perror("Socket creation failed");
-        exit(EXIT_FAILURE);
+		free(info);
+		return (NULL);
     }
 
-    printf("Server IP: %s, Local port : %d\n", server_ip, local_port);
+	if ((info->sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+		perror("Socket creation failed");
+		free(info);
+		return (NULL);
+	}
 
-    /* Bind the socket */
-    memset(&localaddr, 0, sizeof(localaddr));
-    localaddr.sin_family = AF_INET;
-    localaddr.sin_addr.s_addr = INADDR_ANY;
-    localaddr.sin_port = htons(local_port);
-    if (bind(sockfd, (struct sockaddr *)&localaddr, sizeof(localaddr)) < 0) {
-        perror("Bind failed");
-        close(sockfd);
-        exit(EXIT_FAILURE);
-    }
+	printf("Server IP: %s, Local port : %d\n", server_ip, local_port);
 
-    /* Server addr configuration */
-    memset(&servaddr, 0, sizeof(servaddr));
-    servaddr.sin_family = AF_INET;
-    servaddr.sin_port = htons(SERVER_PORT);
-    servaddr.sin_addr.s_addr = inet_addr(server_ip);
+	/* Bind the socket */
+	memset(&info->localaddr, 0, sizeof(info->localaddr));
+	info->localaddr.sin_family = AF_INET;
+	info->localaddr.sin_addr.s_addr = INADDR_ANY;
+	info->localaddr.sin_port = htons(local_port);
+	if (bind(info->sockfd, (struct sockaddr *)&info->localaddr, sizeof(info->localaddr)) < 0) {
+		perror("Bind failed");
+		close(info->sockfd);
+		free(info);
+		return (NULL);
+	}
 
-    /* Send a message to the server */
-    sendto(sockfd, "Hello", strlen("Hello"), 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
+	/* Server addr configuration */
+	memset(&info->servaddr, 0, sizeof(info->servaddr));
+	info->servaddr.sin_family = AF_INET;
+	info->servaddr.sin_port = htons(SERVER_PORT);
+	info->servaddr.sin_addr.s_addr = inet_addr(server_ip);
 
-    /* Receive the peer information */
-    recvfrom(sockfd, &peeraddr, sizeof(peeraddr), 0, (struct sockaddr *)&servaddr, &addr_len);
-    printf("Informations du pair reçues : %s:%d\n", inet_ntoa(peeraddr.sin_addr), ntohs(peeraddr.sin_port));
+	/* Send a message to the server */
+	sendto(info->sockfd, "Hello", strlen("Hello"), 0, (struct sockaddr *)&info->servaddr, sizeof(info->servaddr));
 
-    /* Configure timeout for socket */
-    struct timeval timeout;
-    timeout.tv_sec = TIMEOUT_SEC;
-    timeout.tv_usec = 0;
+	/* Receive the peer information */
+	recvfrom(info->sockfd, &info->peeraddr, sizeof(info->peeraddr), 0, (struct sockaddr *)&info->servaddr, &info->addr_len);
+	printf("Peer info : %s:%d\n", inet_ntoa(info->peeraddr.sin_addr), ntohs(info->peeraddr.sin_port));
 
-    if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
-        perror("Error setting socket timeout");
-    }
+	/* Configure timeout for socket */
+	struct timeval timeout;
+	timeout.tv_sec = TIMEOUT_SEC;
+	timeout.tv_usec = 0;
+
+	if (setsockopt(info->sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
+		perror("Error setting socket timeout");
+	}
+
+	return (info);
+}
+
+int main(int argc, char **argv) {
+	NetworkInfo *ctx = setup_client(argc, argv);
+	char msg[16];
+
+	bzero(msg, 16);
+	if (!ctx) {
+		printf("Error setting up client\n");
+		return (1);
+	}
 
     /* Send a few messages to the peer with sequence numbers */
     for (int i = 0; i < TEST_MSG_NB; i++) {
-        char msg[16];
         sprintf(msg, "Ping %d", i);
-		safe_udp_msg(sockfd, peeraddr, addr_len, msg);
+		safe_udp_msg(ctx->sockfd, ctx->peeraddr, ctx->addr_len, msg);
         sleep(1);
     }
 
     /* Wait for Bye */
-	safe_udp_msg(sockfd, peeraddr, addr_len, "Bye");
+	safe_udp_msg(ctx->sockfd, ctx->peeraddr, ctx->addr_len, "Bye");
 
-    close(sockfd);
+    close(ctx->sockfd);
     return 0;
 }
