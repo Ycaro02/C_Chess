@@ -59,7 +59,10 @@ int main(int argc, char **argv) {
 
 	/* Send a few messages to the peer */
     for (int i = 0; i < TEST_MSG_NB; i++) {
-        sendto(sockfd, "Ping", strlen("Ping"), 0, (struct sockaddr *)&peeraddr, addr_len);
+        char msg[16];
+		bzero(msg, 16);
+		sprintf(msg, "Ping %d", i);
+		sendto(sockfd, "Ping", strlen(msg), 0, (struct sockaddr *)&peeraddr, addr_len);
         printf("Message Ping envoyé au pair, tentative %d\n", i + 1);
         sleep(1);
     }
@@ -70,7 +73,7 @@ int main(int argc, char **argv) {
         if (recv_len > 0) {
             buffer[recv_len] = '\0';
             printf("Réponse du pair : %s nb %d\n", buffer, i);
-            // break;
+            break;
         }
     }
 
