@@ -206,22 +206,24 @@ void display_message(char *msg) {
 
 
 	if (msg_type == MSG_TYPE_COLOR) {
-		ft_printf_fd(1, "Message received brut data: |%d||%d|\n", msg[0], msg[1]);
-		ft_printf_fd(1, "Color received: %s\n", msg[1] == IS_WHITE ? "WHITE" : "BLACK");
+		ft_printf_fd(1, "Message color brut data: |%d||%d|\n", msg[0], msg[1]);
+		ft_printf_fd(1, "Color: %s\n", msg[1] == IS_WHITE ? "WHITE" : "BLACK");
 	} else if (msg_type == MSG_TYPE_MOVE) {
 		tile_from = msg[1];
 		tile_to = msg[2];
 		piece_type = msg[3];
-		ft_printf_fd(1, "Message received brut data: |%d||%d||%d||%d|\n", msg[0], msg[1], msg[2], msg[3]);
+		ft_printf_fd(1, "Message move brut data: |%d||%d||%d||%d|\n", msg[0], msg[1], msg[2], msg[3]);
 		ft_printf_fd(1, "Move from %s to %s with piece %s\n", TILE_TO_STRING(tile_from), TILE_TO_STRING(tile_to), chess_piece_to_string(piece_type));
 	} else if (msg_type == MSG_TYPE_PROMOTION) {
 		tile_from = msg[1];
 		tile_to = msg[2];
 		piece_type = msg[3];
-		ft_printf_fd(1, "Message received brut data: |%d||%d||%d||%d|\n", msg[0], msg[1], msg[2], msg[3]);
+		ft_printf_fd(1, "Message promotion brut data: |%d||%d||%d||%d|\n", msg[0], msg[1], msg[2], msg[3]);
 		ft_printf_fd(1, "Promotion from %s to %s with piece %s\n", TILE_TO_STRING(tile_from), TILE_TO_STRING(tile_to), chess_piece_to_string(piece_type));
 	} else if (msg_type == MSG_TYPE_QUIT) {
 		ft_printf_fd(1, "Opponent quit the game, msg type %d\n", msg[0]);
+	} else {
+		ft_printf_fd(1, "Unknown message type\n");
 	}
 }
 
