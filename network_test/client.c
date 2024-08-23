@@ -7,8 +7,39 @@
 
 #define SERVER_PORT 24242
 #define TEST_MSG_NB 3
-#define MAX_ATTEMPTS 5
+#define MAX_ATTEMPTS 10
 #define TIMEOUT_SEC 2
+
+
+int safe_udp_msg(int sockfd, struct sockaddr_in peeraddr, socklen_t addr_len, char *msg) {
+	int attempts = 0;
+	int ack_received = 0;
+	char buffer[1024];
+
+	bzero(buffer, 1024);
+	
+	while (attempts < MAX_ATTEMPTS && !ack_received) {
+		sendto(sockfd, msg, strlen(msg), 0, (struct sockaddr *)&peeraddr, addr_len);
+		// printf("Try to send : %s, nb %d\n", msg, attempts + 1);
+		// Wait for ACK
+		int recv_len = recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&peeraddr, &addr_len);
+		if (recv_len > 0) {
+			buffer[recv_len] = '\0';
+			if (strcmp(buffer, "ACK") == 0) {
+				printf("ACK receive for: |%s|\n", msg);
+				ack_received = 1;
+			} else { // Other msg send ACK
+				sendto(sockfd, "ACK", strlen("ACK"), 0, (struct sockaddr *)&peeraddr, addr_len);
+				printf("Msg receive : |%s| -> Send ACK\n", buffer);
+			}
+		} 
+		attempts++;
+		sleep(1);
+	}
+	if (!ack_received) {
+		printf("No ACK received give up msg %s\n", msg);
+	}
+}
 
 int main(int argc, char **argv) {
     struct sockaddr_in servaddr, localaddr, peeraddr;
@@ -70,51 +101,14 @@ int main(int argc, char **argv) {
 
     /* Send a few messages to the peer with sequence numbers */
     for (int i = 0; i < TEST_MSG_NB; i++) {
-        int attempts = 0;
-        int ack_received = 0;
         char msg[16];
         sprintf(msg, "Ping %d", i);
-
-        while (attempts < MAX_ATTEMPTS && !ack_received) {
-            sendto(sockfd, msg, strlen(msg), 0, (struct sockaddr *)&peeraddr, addr_len);
-            printf("Message envoyé au pair : %s, tentative %d\n", msg, attempts + 1);
-
-            // Wait for ACK
-            int recv_len = recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&peeraddr, &addr_len);
-            if (recv_len > 0) {
-                buffer[recv_len] = '\0';
-                if (strcmp(buffer, "ACK") == 0) {
-                    printf("ACK reçu pour message : %s\n", msg);
-                    ack_received = 1;
-                } else { // Other msg send ACK
-					sendto(sockfd, "ACK", strlen("ACK"), 0, (struct sockaddr *)&peeraddr, addr_len);
-					printf("Message reçu : %s -> Send ACK\n", buffer);
-				}
-            } else {
-                printf("Pas d'ACK reçu, nouvelle tentative...\n");
-            }
-            attempts++;
-			sleep(1);
-		}
-
-        if (!ack_received) {
-            printf("Échec après %d tentatives pour le message : %s\n", MAX_ATTEMPTS, msg);
-        }
-
+		safe_udp_msg(sockfd, peeraddr, addr_len, msg);
         sleep(1);
     }
 
     /* Wait for Bye */
-    // sendto(sockfd, "Bye", strlen("Bye"), 0, (struct sockaddr *)&peeraddr, addr_len);
-    // while (1) {
-    //     int len = recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&peeraddr, &addr_len);
-    //     if (len > 0) {
-    //         buffer[len] = '\0';
-    //         if (strcmp(buffer, "Bye") == 0) {
-    //             break;
-    //         }
-    //     }
-    // }
+	safe_udp_msg(sockfd, peeraddr, addr_len, "Bye");
 
     close(sockfd);
     return 0;
