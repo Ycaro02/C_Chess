@@ -73,9 +73,12 @@ int main(int argc, char **argv) {
         if (recv_len > 0) {
             buffer[recv_len] = '\0';
             printf("Réponse du pair : %s nb %d\n", buffer, i);
-            break;
+            // break;
         }
     }
+
+	/* Sleep for 5 seconds */
+	sleep(5);
 
     close(sockfd);
     return 0;
