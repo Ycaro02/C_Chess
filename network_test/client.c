@@ -125,11 +125,11 @@ int main(int argc, char **argv) {
 	}
 
     /* Send a few messages to the peer with sequence numbers */
-    for (int i = 0; i < TEST_MSG_NB; i++) {
-        sprintf(msg, "Ping %d", i);
-		safe_udp_msg(ctx->sockfd, ctx->peeraddr, ctx->addr_len, msg);
-        sleep(1);
-    }
+    // for (int i = 0; i < TEST_MSG_NB; i++) {
+	sprintf(msg, "Ping %d", 0);
+	safe_udp_msg(ctx->sockfd, ctx->peeraddr, ctx->addr_len, msg);
+	sleep(1);
+    // }
 
     /* Wait for Bye */
 	safe_udp_msg(ctx->sockfd, ctx->peeraddr, ctx->addr_len, "Bye");
