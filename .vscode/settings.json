@@ -70,6 +70,9 @@
 		"handle_sdl.h": "c",
 		"parse_flag.h": "c",
 		"chess.h": "c",
-		"sdl_video.h": "c"
+		"sdl_video.h": "c",
+		"inet.h": "c",
+		"stdlib.h": "c",
+		"time.h": "c"
 	}
 }

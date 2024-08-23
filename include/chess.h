@@ -224,12 +224,15 @@ FT_INLINE void display_kill_info(ChessPiece enemy_piece, ChessTile tile_to) {
 #define WHITE_TILE ((u32)(RGBA_TO_UINT32(255, 255, 255, 255)))
 
 
+typedef struct s_network_info NetworkInfo;
+
 /* Player info struct */
 struct s_player_info {
-	char	*dest_ip;		/* destination ip, NULL if we are the listener */
-	u16		running_port;	/* running port */
-	s8		color;			/* player color */
-	s8		turn;			/* player turn */
+	NetworkInfo *nt_info;	/* Network info */
+	char		*dest_ip;		/* destination ip, NULL if we are the listener */
+	u16			running_port;	/* running port */
+	s8			color;			/* player color */
+	s8			turn;			/* player turn */
 };
 
 /* Typedef for player info struct */

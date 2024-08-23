@@ -1,5 +1,6 @@
 #include "../include/chess.h"
 #include "../include/handle_sdl.h"
+#include "../include/network.h"
 
 void destroy_sdl_handle(SDLHandle *handle) {
 	free(handle->board);
@@ -134,22 +135,29 @@ int main(int argc, char **argv) {
 	if (error == -1) {
 		return (1);
 	}
+
+	// struct timeval timeout = {0, TIMEOUT_SEC};
+	// dest_ip is now the address of the server, mandatory for all client
+	// maybe we can provide the server port
+	// running port is the local port of the client, mandatory for all client
+	// player_info.nt_info = init_network(player_info.dest_ip, player_info.running_port, TIMEOUT_SEC);
+
 	if (has_flag(flag, FLAG_LISTEN)) {
 		player_info.color = IS_WHITE;
 		ft_printf_fd(1, "Player color: %s\n", player_info.color == IS_WHITE ? "WHITE" : "BLACK");
 		ft_printf_fd(1, "Running port: %d\n", player_info.running_port);
 		ft_printf_fd(1, "Waiting for connection...\n");
 		/**
-		 * player_info.color = random_player_color(); 
-		 * safe_udp_send(); // Send color to the other player !player_info.color
+		 * player_info.color = random_player_color();
+		 * char *color_msg = build_message(2, MSG_TYPE_COLOR, !player_info.color, 0, 0); 
+		 * chess_msg_send(...,color_msg); // Send color to the other player !player_info.color
 		*/
-		
 	} else {
 		/* Need to receive color from first player here */
 		player_info.color = IS_BLACK;
 		ft_printf_fd(1, "Ip adress dest %s\n", player_info.dest_ip);
 		ft_printf_fd(1, "Running port: %d\n", player_info.running_port);
-		 player_info.color = safe_udp_receive(); // Receive color from the other player
+		// player_info.color = chess_msg_receive(); // Receive color from the other player
 	}
 
 
@@ -172,29 +180,7 @@ int main(int argc, char **argv) {
 	return (0);
 }
 
-typedef enum msg_type {
-	MSG_TYPE_COLOR,
-	MSG_TYPE_MOVE,
-	MSG_TYPE_PROMOTION,
-	MSG_TYPE_QUIT,
-} MsgType;
 
-/**
- * Packet format 4 char
- * -	1: msg_type
- * if (msg_type == MSG_TYPE_MOVE)
- * - 	2: tile_from
- * - 	3: tile_to
- * - 	4: piece_type
- * if (msg_type == MSG_TYPE_COLOR)
- * -	2: color
- * if (msg_type == MSG_TYPE_PROMOTION)
- * -	2: tile_from
- * -	3: tile_to
- * -	4: NEW_piece_type (QUEEN, ROOK, BISHOP, KNIGHT)
- * -	@note The piece type is the new piece type, not the pawn type (WHITE_PAWN, BLACK_PAWN)
- * 
- */
 
 void process_message_receive(SDLHandle *handle, char *msg) {
 	MsgType 	msg_type = msg[0];

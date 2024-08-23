@@ -13,6 +13,7 @@ SRCS			=	chess_board.c\
 					chess_piece_move.c\
 					generic_piece_move.c\
 					handle_board.c\
+					chess_client.c\
 					handle_sdl.c\
 
 # SRCS_BONUS		=	main_bonus.c
