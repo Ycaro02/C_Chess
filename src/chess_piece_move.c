@@ -41,6 +41,25 @@ s8 verify_legal_move(ChessBoard *b, ChessPiece type, Bitboard from, Bitboard to,
 	return (legal);
 }
 
+/*	@brief	Get the en passant attack
+	*	@param	b			ChessBoard struct
+	*	@param	current_type	ChessPiece enum
+	*	@param	mask		Bitboard mask
+	*	@return	Bitboard of the en passant attack
+*/
+Bitboard get_en_passant_atk(ChessBoard *b, ChessPiece current_type, Bitboard mask) {
+	ChessPiece wanted_type = current_type == WHITE_PAWN ? BLACK_PAWN : WHITE_PAWN;
+	ChessPiece enemy = EMPTY;
+
+	/* Check if the en passant piece is opponent pawn */
+	enemy = get_piece_from_tile(b, b->en_passant_tile);
+	if (enemy != wanted_type) {
+		return (0);
+	}
+	/* Check if the en passant attack is possible */
+	return (b->en_passant & mask);
+}
+
 /*	@brief	Get possible moves for pawn
 	*	@param	pawn			Bitboard of the selected pawn
 	*	@param	occupied		Bitboard of the occupied squares
@@ -80,13 +99,9 @@ Bitboard get_pawn_moves(ChessBoard *b, Bitboard pawn, ChessPiece type, s8 is_bla
     attacks_right = atk_right_mask & ~FILE_A & enemy;
     attacks_left = atk_left_mask & ~FILE_H & enemy;
     
-	// @todo need to fix bug with en passant, need to store color of the pawn that can be attacked
-	// to avoid the attack if the pawn is the same color
-
 	/* Check if the attack en passant is possible */
-	if (attacks_right == 0) { attacks_right = atk_right_mask & b->en_passant ; }
-	if (attacks_left == 0) { attacks_left = atk_left_mask & b->en_passant ; }
-
+	if (attacks_right == 0) { attacks_right = get_en_passant_atk(b, type, atk_right_mask) ; }
+	if (attacks_left == 0) { attacks_left = get_en_passant_atk(b, type, atk_left_mask) ; }
 
 	/* Check if the attacks are legal */
 	if (check_legal) {
@@ -156,10 +171,7 @@ Bitboard get_bishop_moves(ChessBoard *b, Bitboard bishop, ChessPiece type, s8 is
 			if (handle_occupied_tile(move, occupied, enemy, &attacks)) { break ; }
 
 			/* Check if is a legal move */
-			if (check_legal && verify_legal_move(b, type, bishop, move, is_black) == FALSE) {
-				// move = 0;
-				continue;
-			}
+			if (check_legal && verify_legal_move(b, type, bishop, move, is_black) == FALSE) { continue ; }
 
 
             /* Add the move to the attacks */
@@ -201,10 +213,7 @@ Bitboard get_rook_moves(ChessBoard *b, Bitboard rook, ChessPiece type, s8 is_bla
 			if (handle_occupied_tile(move, occupied, enemy, &attacks)) { break ; }
 			
 			/* Check if is a legal move */
-			if (check_legal && verify_legal_move(b, type, rook, move, is_black) == FALSE) {
-				// move = 0;
-				continue;
-			}
+			if (check_legal && verify_legal_move(b, type, rook, move, is_black) == FALSE) { continue ; }
 
 			/* Add the move to the attacks */
 			attacks |= move;
@@ -308,9 +317,7 @@ Bitboard get_king_moves(ChessBoard *b, Bitboard king, ChessPiece type, s8 is_bla
 		if (move == 0) { continue ; }
 
 		/* Check if is a legal move */
-		if (check_legal && verify_legal_move(b, type, king, move, is_black) == FALSE) {
-			continue ;
-		}
+		if (check_legal && verify_legal_move(b, type, king, move, is_black) == FALSE) { continue ; }
 
 		/* Check if the move is blocked by an occupied square */
 		if (handle_occupied_tile(move, occupied, enemy, &attacks)) { continue ; }
@@ -365,9 +372,7 @@ Bitboard get_knight_moves(ChessBoard *b, Bitboard knight, ChessPiece type, s8 is
         if (move == 0) { continue ; }
 
 		/* Check if is a legal move */
-		if (check_legal && verify_legal_move(b, type, knight, move, is_black) == FALSE) {
-			continue ;
-		}
+		if (check_legal && verify_legal_move(b, type, knight, move, is_black) == FALSE) { continue ; }
         
 		/* Check if the move is blocked by an occupied square */
 		if (handle_occupied_tile(move, occupied, enemy, &attacks)) { continue ; }

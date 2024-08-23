@@ -55,13 +55,19 @@ static void draw_circle_outline(SDL_Renderer *renderer, int x, int y, int radius
 }
 
 void draw_possible_move(SDLHandle *handle, iVec2 tile_pos, ChessTile tile) {
-	iVec2 center = {0, 0};
+	ChessPiece	tile_piece = EMPTY, selected_piece = EMPTY;
+	iVec2		center = {0, 0};
+	s8			is_pawn = FALSE;
 	/* Check if tile is current selected possible move */
 	if (is_selected_possible_move(handle->board->possible_moves, tile)) {
+		tile_piece = get_piece_from_tile(handle->board, tile);
+		selected_piece = get_piece_from_tile(handle->board, handle->board->selected_tile);
+		is_pawn = (selected_piece == WHITE_PAWN || selected_piece == BLACK_PAWN);
+		/* Get the center of the tile */
 		center.x = tile_pos.x * TILE_SIZE + (TILE_SIZE >> 1);
 		center.y = tile_pos.y * TILE_SIZE + (TILE_SIZE >> 1);
-		/* Check if tile is not empty (kill move), if so, draw a red circle arround the piece */
-		if (is_en_passant_move(handle->board, tile) || get_piece_from_tile(handle->board, tile) != EMPTY) {
+		/*	Check if tile is not empty (kill move) or en passant move (only for pawn) */
+		if ((is_pawn && is_en_passant_move(handle->board, tile)) || tile_piece != EMPTY) {
 			SDL_SetRenderDrawColor(handle->renderer, 200, 0, 0, 255); // Red color
 			draw_circle_outline(handle->renderer, center.x, center.y, OUTLINE_CIRCLE_RADIUS);
 		} else {

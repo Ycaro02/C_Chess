@@ -139,6 +139,25 @@ Bitboard get_piece_move(ChessBoard *board, Bitboard piece, ChessPiece piece_type
 	return (get_move_func(board, piece, piece_type, is_black, check_legal));
 }
 
+void promote_pawn(ChessBoard *board, ChessTile tile, ChessPiece new_piece, ChessPiece pawn_type) {
+	Bitboard mask = 1ULL << tile;
+	/* Remove the pawn */
+	board->piece[pawn_type] &= ~mask;
+	/* Add the new piece */
+	board->piece[new_piece] |= mask;
+	/* Update the piece state */
+	update_piece_state(board);
+}
+
+void check_pawn_promotion(ChessBoard *board, ChessPiece type, ChessTile tile) {
+	ChessPiece queen = (type == WHITE_PAWN) ? WHITE_QUEEN : BLACK_QUEEN;
+
+	if ((type == WHITE_PAWN && tile >= A8 && tile <= H8)
+		|| (type == BLACK_PAWN && tile >= A1 && tile <= H1)) {
+		promote_pawn(board, tile, queen, type);
+	}
+}
+
 /* @brief Move a piece from a tile to another and update the board state
  * @param board		ChessBoard struct
  * @param tile_from	ChessTile enum
@@ -163,6 +182,9 @@ void move_piece(ChessBoard *board, ChessTile tile_from, ChessTile tile_to, Chess
 
 	/* Update the piece state */
 	update_piece_state(board);
+
+	/* Check if the pawn need to be promoted */
+	check_pawn_promotion(board, type, tile_to);
 
 	/* Check if the enemy king is check and mat or PAT */
 	verify_check_and_mat(board, !(type >= BLACK_PAWN));
