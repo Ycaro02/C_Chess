@@ -5,25 +5,18 @@
 #include <arpa/inet.h>
 
 #define SERVER_PORT 24242
+#define TEST_MSG_NB 3
 
 int main(int argc, char **argv) {
-    int sockfd;
     struct sockaddr_in servaddr, localaddr, peeraddr;
-    char buffer[1024];
-    socklen_t addr_len = sizeof(peeraddr);
-
-    // Création du socket UDP
-    if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-        perror("Socket creation failed");
-        exit(EXIT_FAILURE);
-    }
-
-    int local_port = atoi(argv[1]);
-
-	char server_ip[16] = {};
+    int			sockfd;
+    char		buffer[1024];
+    socklen_t	addr_len = sizeof(peeraddr);
+    int			local_port = atoi(argv[1]);
+	char		server_ip[16];
 
 	bzero(server_ip, 16);
-
+	bzero(buffer, 1024);
 	if (argc == 3) {
 		strcpy(server_ip, argv[2]);
 	} else {
@@ -31,9 +24,16 @@ int main(int argc, char **argv) {
 		return 1;
 	} 
 
+    /* Create UDP socket */
+    if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+        perror("Socket creation failed");
+        exit(EXIT_FAILURE);
+    }
+
+
     printf("Server IP: %s, Local port : %d\n", server_ip, local_port);
 
-    // Bind du socket à un port local
+    /* Bind the socket */
     memset(&localaddr, 0, sizeof(localaddr));
     localaddr.sin_family = AF_INET;
     localaddr.sin_addr.s_addr = INADDR_ANY;
@@ -44,33 +44,33 @@ int main(int argc, char **argv) {
         exit(EXIT_FAILURE);
     }
 
-    // Configuration de l'adresse du serveur
+	/* Server addr configuration */
     memset(&servaddr, 0, sizeof(servaddr));
     servaddr.sin_family = AF_INET;
     servaddr.sin_port = htons(SERVER_PORT);
     servaddr.sin_addr.s_addr = inet_addr(server_ip);
 
-    // Envoi d'un message au serveur pour s'identifier
+    /* Send a message to the server */
     sendto(sockfd, "Hello", strlen("Hello"), 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
 
-    // Attente des informations du pair
+	/* Receive the peer information */
     recvfrom(sockfd, &peeraddr, sizeof(peeraddr), 0, (struct sockaddr *)&servaddr, &addr_len);
     printf("Informations du pair reçues : %s:%d\n", inet_ntoa(peeraddr.sin_addr), ntohs(peeraddr.sin_port));
 
-    // Tentative de Hole Punching en envoyant plusieurs paquets au pair
-    for (int i = 0; i < 5; i++) {
+	/* Send a few messages to the peer */
+    for (int i = 0; i < TEST_MSG_NB; i++) {
         sendto(sockfd, "Ping", strlen("Ping"), 0, (struct sockaddr *)&peeraddr, addr_len);
         printf("Message Ping envoyé au pair, tentative %d\n", i + 1);
-        sleep(1); // Petite pause pour permettre la réception
+        sleep(1);
     }
 
-    // Attente de la réponse du pair
-    for (int i = 0; i < 5; i++) {
+	/* Receive the peer's response */
+    for (int i = 0; i < TEST_MSG_NB; i++) {
         int recv_len = recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&peeraddr, &addr_len);
         if (recv_len > 0) {
             buffer[recv_len] = '\0';
-            printf("Réponse du pair : %s\n", buffer);
-            break; // Sortir de la boucle dès qu'une réponse est reçue
+            printf("Réponse du pair : %s nb %d\n", buffer, i);
+            // break;
         }
     }
 
