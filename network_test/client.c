@@ -15,6 +15,9 @@
 #define SENDER 1
 #define RECEIVER 0
 
+#define DISCONNECT_MSG "DISCONNECT"
+
+
 int safe_udp_send(int sockfd, struct sockaddr_in peeraddr, socklen_t addr_len, char *msg) {
 	int attempts = 0;
 	int ack_received = 0;
@@ -143,7 +146,7 @@ NetworkInfo *setup_client(int argc, char **argv) {
 }
 
 void send_disconnect_to_server(int sockfd, struct sockaddr_in servaddr) {
-	sendto(sockfd, "DISCONNECT", strlen("DISCONNECT"), 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
+	sendto(sockfd, DISCONNECT_MSG, strlen(DISCONNECT_MSG), 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
 }
 
 int main(int argc, char **argv) {
