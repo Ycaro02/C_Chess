@@ -157,7 +157,7 @@ Bitboard get_bishop_moves(ChessBoard *b, Bitboard bishop, ChessPiece type, s8 is
 
 			/* Check if is a legal move */
 			if (check_legal && verify_legal_move(b, type, bishop, move, is_black) == FALSE) {
-				move = 0;
+				// move = 0;
 				continue;
 			}
 
@@ -202,7 +202,7 @@ Bitboard get_rook_moves(ChessBoard *b, Bitboard rook, ChessPiece type, s8 is_bla
 			
 			/* Check if is a legal move */
 			if (check_legal && verify_legal_move(b, type, rook, move, is_black) == FALSE) {
-				move = 0;
+				// move = 0;
 				continue;
 			}
 
