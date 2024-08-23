@@ -7,15 +7,66 @@
 
 #include "../include/chess.h"
 
-#define SERVER_PORT 24242
+/* For testing */
 #define TEST_MSG_NB 3
-#define MAX_ATTEMPTS 10
 #define TIMEOUT_SEC 2
-
 #define SENDER 1
 #define RECEIVER 0
 
+/* Contant server port and nb attemps max */
+#define SERVER_PORT 24242
+#define MAX_ATTEMPTS 10
+
+/* Message disconect */
 #define DISCONNECT_MSG "DISCONNECT"
+
+char *chess_msg_receive(int sockfd, struct sockaddr_in peeraddr, socklen_t addr_len) {
+	int attempts = 0, len = 0;
+	char buffer[1024];
+	char *msg = NULL;
+
+	bzero(buffer, 1024);
+	
+	len = recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&peeraddr, &addr_len);
+	if (len > 0) {
+		buffer[len] = '\0';
+		sendto(sockfd, "ACK", strlen("ACK"), 0, (struct sockaddr *)&peeraddr, addr_len);
+		printf(YELLOW"Chess Msg receive : |%s| -> Send ACK\n"RESET, buffer);
+		msg = malloc(sizeof(char) * (len + 1));
+		strcpy(msg, buffer);
+	} 
+	attempts++;
+	return (msg);
+}
+
+int chess_msg_send(int sockfd, struct sockaddr_in peeraddr, socklen_t addr_len, char *msg) {
+	int attempts = 0;
+	int ack_received = 0;
+	char buffer[1024];
+	int ret = TRUE;
+
+	bzero(buffer, 1024);
+	
+	while (attempts < MAX_ATTEMPTS && !ack_received) {
+		sendto(sockfd, msg, strlen(msg), 0, (struct sockaddr *)&peeraddr, addr_len);
+		int recv_len = recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&peeraddr, &addr_len);
+		if (recv_len > 0) {
+			buffer[recv_len] = '\0';
+			if (strcmp(buffer, "ACK") == 0) {
+				printf(GREEN"ACK receive for msg: |%s|\n"RESET, msg);
+				ack_received = 1;
+			} 
+		} 
+		attempts++;
+		sleep(1);
+	}
+	if (!ack_received) {
+		printf("No ACK received after 10 try give up msg %s\nVerify your network connection\n", msg);
+		ret = FALSE;
+	}
+	free(msg);
+	return (ret);
+}
 
 
 int safe_udp_send(int sockfd, struct sockaddr_in peeraddr, socklen_t addr_len, char *msg) {
@@ -78,7 +129,7 @@ typedef struct {
 	int					sockfd;
 } NetworkInfo;
 
-NetworkInfo *setup_client(int argc, char **argv) {
+NetworkInfo *setup_client(int argc, char **argv, struct timeval timeout) {
     NetworkInfo *info = calloc(sizeof(NetworkInfo),1);
 	char server_ip[16];
     char buffer[1024];
@@ -132,9 +183,8 @@ NetworkInfo *setup_client(int argc, char **argv) {
 	printf("Peer info : %s:%d\n", inet_ntoa(info->peeraddr.sin_addr), ntohs(info->peeraddr.sin_port));
 
 	/* Configure timeout for socket */
-	struct timeval timeout;
-	timeout.tv_sec = TIMEOUT_SEC;
-	timeout.tv_usec = 0;
+	// timeout.tv_sec = TIMEOUT_SEC;
+	// timeout.tv_usec = 0;
 
 	/* Send a first message to the peer (handshake) */
 	sendto(info->sockfd, "Hello", strlen("Hello"), 0, (struct sockaddr *)&info->peeraddr, info->addr_len);
@@ -150,11 +200,13 @@ void send_disconnect_to_server(int sockfd, struct sockaddr_in servaddr) {
 }
 
 int main(int argc, char **argv) {
-	NetworkInfo *ctx = setup_client(argc, argv);
+	NetworkInfo *c = setup_client(argc, argv);
 	char msg[1024];
 	int role = 0;
+	struct timeval timeout = { .tv_sec = TIMEOUT_SEC, .tv_usec = 0 };
+
 	bzero(msg, 1024);
-	if (!ctx) {
+	if (!c) {
 		printf("Error setting up client\n");
 		return (1);
 	}
@@ -165,22 +217,22 @@ int main(int argc, char **argv) {
 	for (int i = 0; i < TEST_MSG_NB; i++) {
 		if (role == SENDER) {
 			sprintf(msg, "Hello from sender %d", i);
-			safe_udp_send(ctx->sockfd, ctx->peeraddr, ctx->addr_len, msg);
-			safe_udp_receive(ctx->sockfd, ctx->peeraddr, ctx->addr_len); // Wait for reply
+			safe_udp_send(c->sockfd, c->peeraddr, c->addr_len, msg);
+			safe_udp_receive(c->sockfd, c->peeraddr, c->addr_len); // Wait for reply
 		} else {
 			sprintf(msg, "Hello from receiver %d", i);
-			safe_udp_receive(ctx->sockfd, ctx->peeraddr, ctx->addr_len);
-			safe_udp_send(ctx->sockfd, ctx->peeraddr, ctx->addr_len, msg);
+			safe_udp_receive(c->sockfd, c->peeraddr, c->addr_len);
+			safe_udp_send(c->sockfd, c->peeraddr, c->addr_len, msg);
 		}
 	}
 
 	if (role == SENDER) {
 		sprintf(msg, "Bye from sender");
-		safe_udp_send(ctx->sockfd, ctx->peeraddr, ctx->addr_len, msg);
+		safe_udp_send(c->sockfd, c->peeraddr, c->addr_len, msg);
 	} else {
-		safe_udp_receive(ctx->sockfd, ctx->peeraddr, ctx->addr_len);
+		safe_udp_receive(c->sockfd, c->peeraddr, c->addr_len);
 	}
-	send_disconnect_to_server(ctx->sockfd, ctx->servaddr);
-    close(ctx->sockfd);
+	send_disconnect_to_server(c->sockfd, c->servaddr);
+    close(c->sockfd);
     return 0;
 }

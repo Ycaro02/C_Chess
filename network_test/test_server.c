@@ -71,7 +71,7 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    printf("Server waiting on port %d...\n", PORT);
+    printf(ORANGE"Server waiting on port %d...\n"RESET, PORT);
 
     // struct sockaddr_in clientA, clientB;
 
