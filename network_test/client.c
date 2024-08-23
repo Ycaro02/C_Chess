@@ -5,11 +5,71 @@
 #include <arpa/inet.h>
 #include <sys/time.h>
 
+#include "../include/chess.h"
+
 #define SERVER_PORT 24242
 #define TEST_MSG_NB 3
 #define MAX_ATTEMPTS 10
 #define TIMEOUT_SEC 2
 
+
+#define FALSE 0
+#define TRUE 1
+
+#define SENDER 1
+#define RECEIVER 0
+
+int safe_udp_send(int sockfd, struct sockaddr_in peeraddr, socklen_t addr_len, char *msg) {
+	int attempts = 0;
+	int ack_received = 0;
+	char buffer[1024];
+
+	bzero(buffer, 1024);
+	
+	while (attempts < MAX_ATTEMPTS && !ack_received) {
+		sendto(sockfd, msg, strlen(msg), 0, (struct sockaddr *)&peeraddr, addr_len);
+		int recv_len = recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&peeraddr, &addr_len);
+		if (recv_len > 0) {
+			buffer[recv_len] = '\0';
+			if (strcmp(buffer, "ACK") == 0) {
+				printf(GREEN"ACK receive for: |%s|\n"RESET, msg);
+				ack_received = 1;
+			} 
+		} 
+		attempts++;
+		sleep(1);
+	}
+	if (!ack_received) {
+		printf("No ACK received after 20sec give up msg %s\n", msg);
+		return (FALSE);
+	}
+	return (TRUE);
+}
+
+int safe_udp_receive(int sockfd, struct sockaddr_in peeraddr, socklen_t addr_len) {
+	int attempts = 0;
+	int msg_reveive = 0;
+	char buffer[1024];
+
+	bzero(buffer, 1024);
+	
+	while (attempts < MAX_ATTEMPTS && !msg_reveive) {
+		int recv_len = recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&peeraddr, &addr_len);
+		if (recv_len > 0) {
+			buffer[recv_len] = '\0';
+			sendto(sockfd, "ACK", strlen("ACK"), 0, (struct sockaddr *)&peeraddr, addr_len);
+			printf(YELLOW"Msg receive : |%s| -> Send ACK\n"RESET, buffer);
+			msg_reveive = 1;
+		} 
+		attempts++;
+		sleep(1);
+	}
+	if (!msg_reveive) {
+		printf("No msg received after 20sec give up\n");
+		return (FALSE);
+	}
+	return (TRUE);
+}
 
 int safe_udp_msg(int sockfd, struct sockaddr_in peeraddr, socklen_t addr_len, char *msg) {
 	int attempts = 0;
@@ -61,7 +121,7 @@ NetworkInfo *setup_client(int argc, char **argv) {
 
     bzero(server_ip, 16);
     bzero(buffer, 1024);
-    if (argc == 3) {
+    if (argc >= 3) {
         strcpy(server_ip, argv[2]);
     } else {
         printf("Usage: %s <local_port> <server_ip>\n", argv[0]);
@@ -116,24 +176,35 @@ NetworkInfo *setup_client(int argc, char **argv) {
 
 int main(int argc, char **argv) {
 	NetworkInfo *ctx = setup_client(argc, argv);
-	char msg[16];
-
-	bzero(msg, 16);
+	char msg[1024];
+	int role = 0;
+	bzero(msg, 1024);
 	if (!ctx) {
 		printf("Error setting up client\n");
 		return (1);
 	}
 
+	role = atoi(argv[3]);
+
     /* Send a few messages to the peer with sequence numbers */
-    // for (int i = 0; i < TEST_MSG_NB; i++) {
-	sprintf(msg, "Ping %d", 0);
-	safe_udp_msg(ctx->sockfd, ctx->peeraddr, ctx->addr_len, msg);
-	sleep(1);
-    // }
+	for (int i = 0; i < TEST_MSG_NB; i++) {
+		if (role == SENDER) {
+			sprintf(msg, "Hello from sender %d", i);
+			safe_udp_send(ctx->sockfd, ctx->peeraddr, ctx->addr_len, msg);
+			safe_udp_receive(ctx->sockfd, ctx->peeraddr, ctx->addr_len); // Wait for reply
+		} else {
+			sprintf(msg, "Hello from receiver %d", i);
+			safe_udp_receive(ctx->sockfd, ctx->peeraddr, ctx->addr_len);
+			safe_udp_send(ctx->sockfd, ctx->peeraddr, ctx->addr_len, msg);
+		}
+	}
 
-    /* Wait for Bye */
-	safe_udp_msg(ctx->sockfd, ctx->peeraddr, ctx->addr_len, "Bye");
-
+	if (role == SENDER) {
+		sprintf(msg, "Bye from sender");
+		safe_udp_send(ctx->sockfd, ctx->peeraddr, ctx->addr_len, msg);
+	} else {
+		safe_udp_receive(ctx->sockfd, ctx->peeraddr, ctx->addr_len);
+	}
     close(ctx->sockfd);
     return 0;
 }
