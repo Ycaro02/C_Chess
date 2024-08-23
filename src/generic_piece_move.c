@@ -1,4 +1,5 @@
 #include "../include/chess.h"
+#include "../include/handle_sdl.h"
 
 /* @brief Update special info byte for the king and rook
  * @param b		ChessBoard struct
@@ -31,7 +32,7 @@ void board_special_info_handler(ChessBoard *b, ChessPiece type, ChessTile tile_f
  * @param tile_from	ChessTile enum
  * @param tile_to	ChessTile enum
 */
-void handle_castle_move(ChessBoard *b, ChessPiece type, ChessTile tile_from, ChessTile tile_to) {
+void handle_castle_move(SDLHandle *handle, ChessPiece type, ChessTile tile_from, ChessTile tile_to) {
 	ChessTile rook_from = 0, rook_to = 0;
 	ChessPiece rook_type = EMPTY;
 	if (type == BLACK_KING || type == WHITE_KING) {
@@ -46,7 +47,7 @@ void handle_castle_move(ChessBoard *b, ChessPiece type, ChessTile tile_from, Che
 				rook_to = tile_from - 1;
 			}
 			rook_type = (type == BLACK_KING) ? BLACK_ROOK : WHITE_ROOK;
-			move_piece(b, rook_from, rook_to, rook_type);
+			move_piece(handle, rook_from, rook_to, rook_type);
 		}
 	}
 }
@@ -139,23 +140,19 @@ Bitboard get_piece_move(ChessBoard *board, Bitboard piece, ChessPiece piece_type
 	return (get_move_func(board, piece, piece_type, is_black, check_legal));
 }
 
-void promote_pawn(ChessBoard *board, ChessTile tile, ChessPiece new_piece, ChessPiece pawn_type) {
-	Bitboard mask = 1ULL << tile;
-	/* Remove the pawn */
-	board->piece[pawn_type] &= ~mask;
-	/* Add the new piece */
-	board->piece[new_piece] |= mask;
-	/* Update the piece state */
-	update_piece_state(board);
-}
 
-void check_pawn_promotion(ChessBoard *board, ChessPiece type, ChessTile tile) {
-	ChessPiece queen = (type == WHITE_PAWN) ? WHITE_QUEEN : BLACK_QUEEN;
 
-	if ((type == WHITE_PAWN && tile >= A8 && tile <= H8)
-		|| (type == BLACK_PAWN && tile >= A1 && tile <= H1)) {
-		promote_pawn(board, tile, queen, type);
+s32 check_pawn_promotion(SDLHandle *handle, ChessPiece type, ChessTile tile_to) {
+	// ChessPiece queen = (type == WHITE_PAWN) ? WHITE_QUEEN : BLACK_QUEEN;
+	s32 ret = TRUE;
+	s8 is_pawn = (type == WHITE_PAWN || type == BLACK_PAWN);
+	s8 is_black = (type >= BLACK_PAWN);
+
+	if ((is_pawn && !is_black && tile_to >= A8 && tile_to <= H8)
+		|| (is_pawn && is_black && tile_to >= A1 && tile_to <= H1)) {
+		ret = display_promotion_selection(handle, tile_to);
 	}
+	return (ret);
 }
 
 /* @brief Move a piece from a tile to another and update the board state
@@ -164,34 +161,38 @@ void check_pawn_promotion(ChessBoard *board, ChessPiece type, ChessTile tile) {
  * @param tile_to	ChessTile enum
  * @param type		ChessPiece enum
 */
-void move_piece(ChessBoard *board, ChessTile tile_from, ChessTile tile_to, ChessPiece type) {
+s32 move_piece(SDLHandle *handle, ChessTile tile_from, ChessTile tile_to, ChessPiece type) {
 	Bitboard	mask_from = 1ULL << tile_from;
 	Bitboard	mask_to = 1ULL << tile_to;
-	
+
 	/* Check if the enemy piece need to be kill, handle 'en passant' kill too */
-	handle_enemy_piece_kill(board, type, tile_to, mask_to);
+	handle_enemy_piece_kill(handle->board, type, tile_to, mask_to);
 
 	/* Check if the move is a castle move and move rook if needed */
-	handle_castle_move(board, type, tile_from, tile_to);
+	handle_castle_move(handle, type, tile_from, tile_to);
 
 	/* Remove the piece from the from tile */
-	board->piece[type] &= ~mask_from;
+	handle->board->piece[type] &= ~mask_from;
 	
 	/* Add the piece to the to tile */
-	board->piece[type] |= mask_to;
+	handle->board->piece[type] |= mask_to;
 
 	/* Update the piece state */
-	update_piece_state(board);
+	update_piece_state(handle->board);
 
 	/* Check if the pawn need to be promoted */
-	check_pawn_promotion(board, type, tile_to);
+	if (check_pawn_promotion(handle, type, tile_to) == CHESS_QUIT) {
+		return (CHESS_QUIT);
+	}
 
 	/* Check if the enemy king is check and mat or PAT */
-	verify_check_and_mat(board, !(type >= BLACK_PAWN));
+	verify_check_and_mat(handle->board, !(type >= BLACK_PAWN));
 
 	/* Set special info for the king and rook */
-	board_special_info_handler(board, type, tile_from);
+	board_special_info_handler(handle->board, type, tile_from);
 
 	/* Update 'en passant' Bitboard if needed */
-	update_en_passant_bitboard(board, type, tile_from, tile_to);
+	update_en_passant_bitboard(handle->board, type, tile_from, tile_to);
+
+	return (TRUE);
 }

@@ -78,6 +78,76 @@ void draw_possible_move(SDLHandle *handle, iVec2 tile_pos, ChessTile tile) {
 	}
 }
 
+void promote_pawn(ChessBoard *board, ChessTile tile, ChessPiece new_piece, ChessPiece pawn_type) {
+	Bitboard mask = 1ULL << tile;
+	/* Remove the pawn */
+	board->piece[pawn_type] &= ~mask;
+	/* Add the new piece */
+	board->piece[new_piece] |= mask;
+	/* Update the piece state */
+	update_piece_state(board);
+}
+
+ChessPiece get_selected_piece(s32 idx, s8 is_black) {
+	// ft_printf_fd(1, "Selected piece idx: %d\n", idx);
+	if (is_black) {
+		return (BLACK_PAWN + idx);
+	}
+	return (WHITE_KNIGHT + idx);
+}
+
+s32 display_promotion_selection(SDLHandle *handle, ChessTile tile_to) {
+	iVec2 start_pos = {2, 1}; // x, y
+	ChessTile tile_start = C7;
+	ChessTile tile_end = G7;
+	ChessPiece piece_selected = EMPTY;
+	s32 piece_idx = 0;
+	s8 is_black = (handle->player_info.color == IS_BLACK);
+
+	if (is_black) {
+		tile_start = C2;
+		tile_end = G2;
+	}
+
+	/* Clear the window */
+	handle->board->possible_moves = 0;
+	window_clear(handle->renderer);
+	draw_board(handle, handle->player_info.color);
+
+
+	/* Draw a black rectangle */
+	for (s32 i = 0; i < 4; i++) {
+		draw_color_tile(handle->renderer, start_pos, (iVec2){TILE_SIZE, TILE_SIZE}, RGBA_TO_UINT32(0, 100, 100, 255));
+		start_pos.x++;
+	}
+
+	start_pos.x = 2;
+
+	/* Draw the promotion pieces */
+	s32 idx_texture_start = is_black ? BLACK_KNIGHT : WHITE_KNIGHT;
+	for (s32 i = 0; i < 4; i++) {
+		draw_texture_tile(handle->renderer, handle->piece_texture[idx_texture_start], start_pos, (iVec2){TILE_SIZE, TILE_SIZE});
+		idx_texture_start++;
+		start_pos.x++;
+	}
+	SDL_RenderPresent(handle->renderer);
+
+	/* Wait for the player to select a piece */
+	while (1) {
+		ChessTile tile_selected = event_handler(handle->player_info.color);
+		if (tile_selected >= tile_start && tile_selected <= tile_end) {
+			piece_idx = !is_black ? tile_selected - tile_start : tile_end - tile_selected;
+			piece_selected = get_selected_piece(piece_idx, is_black);
+			ft_printf_fd(1, "Tile selected: %d\n", tile_selected);
+			promote_pawn(handle->board, tile_to, piece_selected, is_black ? BLACK_PAWN : WHITE_PAWN);
+			break ;
+		} else if (tile_selected == CHESS_QUIT) {
+			return (CHESS_QUIT);
+		}
+	}
+	return (TRUE);
+}
+
 /* Draw chess board */
 void draw_board(SDLHandle *handle, s8 player_color) {
 	iVec2		tile_pos = {0, 0};
