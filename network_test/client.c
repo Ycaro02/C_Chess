@@ -189,10 +189,18 @@ int main(int argc, char **argv) {
     /* Send a few messages to the peer with sequence numbers */
 	for (int i = 0; i < TEST_MSG_NB; i++) {
 		if (role == SENDER) {
+			// first msg to enable conection
+			if (i == 0) {
+				sendto(ctx->sockfd, "Hello", strlen("Hello"), 0, (struct sockaddr *)&ctx->peeraddr, ctx->addr_len);
+			}
 			sprintf(msg, "Hello from sender %d", i);
 			safe_udp_send(ctx->sockfd, ctx->peeraddr, ctx->addr_len, msg);
 			safe_udp_receive(ctx->sockfd, ctx->peeraddr, ctx->addr_len); // Wait for reply
 		} else {
+			// first msg to enable conection
+			if (i == 0) {
+				sendto(ctx->sockfd, "Hello", strlen("Hello"), 0, (struct sockaddr *)&ctx->peeraddr, ctx->addr_len);
+			}
 			sprintf(msg, "Hello from receiver %d", i);
 			safe_udp_receive(ctx->sockfd, ctx->peeraddr, ctx->addr_len);
 			safe_udp_send(ctx->sockfd, ctx->peeraddr, ctx->addr_len, msg);
