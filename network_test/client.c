@@ -12,10 +12,6 @@
 #define MAX_ATTEMPTS 10
 #define TIMEOUT_SEC 2
 
-
-#define FALSE 0
-#define TRUE 1
-
 #define SENDER 1
 #define RECEIVER 0
 
@@ -69,36 +65,6 @@ int safe_udp_receive(int sockfd, struct sockaddr_in peeraddr, socklen_t addr_len
 		return (FALSE);
 	}
 	return (TRUE);
-}
-
-int safe_udp_msg(int sockfd, struct sockaddr_in peeraddr, socklen_t addr_len, char *msg) {
-	int attempts = 0;
-	int ack_received = 0;
-	char buffer[1024];
-
-	bzero(buffer, 1024);
-	
-	while (attempts < MAX_ATTEMPTS && !ack_received) {
-		sendto(sockfd, msg, strlen(msg), 0, (struct sockaddr *)&peeraddr, addr_len);
-		// printf("Try to send : %s, nb %d\n", msg, attempts + 1);
-		// Wait for ACK
-		int recv_len = recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&peeraddr, &addr_len);
-		if (recv_len > 0) {
-			buffer[recv_len] = '\0';
-			if (strcmp(buffer, "ACK") == 0) {
-				printf("ACK receive for: |%s|\n", msg);
-				ack_received = 1;
-			} else { // Other msg send ACK for it
-				sendto(sockfd, "ACK", strlen("ACK"), 0, (struct sockaddr *)&peeraddr, addr_len);
-				printf("Msg receive : |%s| -> Send ACK\n", buffer);
-			}
-		} 
-		attempts++;
-		sleep(1);
-	}
-	if (!ack_received) {
-		printf("No ACK received give up msg %s\n", msg);
-	}
 }
 
 typedef struct {
@@ -194,12 +160,10 @@ int main(int argc, char **argv) {
     /* Send a few messages to the peer with sequence numbers */
 	for (int i = 0; i < TEST_MSG_NB; i++) {
 		if (role == SENDER) {
-			// first msg to enable conection
 			sprintf(msg, "Hello from sender %d", i);
 			safe_udp_send(ctx->sockfd, ctx->peeraddr, ctx->addr_len, msg);
 			safe_udp_receive(ctx->sockfd, ctx->peeraddr, ctx->addr_len); // Wait for reply
 		} else {
-			// first msg to enable conection
 			sprintf(msg, "Hello from receiver %d", i);
 			safe_udp_receive(ctx->sockfd, ctx->peeraddr, ctx->addr_len);
 			safe_udp_send(ctx->sockfd, ctx->peeraddr, ctx->addr_len, msg);
