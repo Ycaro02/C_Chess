@@ -34,7 +34,7 @@ int safe_udp_msg(int sockfd, struct sockaddr_in peeraddr, socklen_t addr_len, ch
 			}
 		} 
 		attempts++;
-		sleep(5);
+		// sleep(5);
 	}
 	if (!ack_received) {
 		printf("No ACK received give up msg %s\n", msg);
@@ -128,7 +128,7 @@ int main(int argc, char **argv) {
     for (int i = 0; i < TEST_MSG_NB; i++) {
         sprintf(msg, "Ping %d", i);
 		safe_udp_msg(ctx->sockfd, ctx->peeraddr, ctx->addr_len, msg);
-        sleep(1);
+        // sleep(1);
     }
 
     /* Wait for Bye */
