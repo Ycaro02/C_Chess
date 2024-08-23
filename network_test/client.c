@@ -22,6 +22,8 @@ int main(int argc, char **argv) {
 
 	char server_ip[16] = {};
 
+	bzero(server_ip, 16);
+
 	if (argc == 3) {
 		strcpy(server_ip, argv[2]);
 	} else {
@@ -46,7 +48,7 @@ int main(int argc, char **argv) {
     memset(&servaddr, 0, sizeof(servaddr));
     servaddr.sin_family = AF_INET;
     servaddr.sin_port = htons(SERVER_PORT);
-    servaddr.sin_addr.s_addr = inet_addr(SERVER_IP);
+    servaddr.sin_addr.s_addr = inet_addr(server_ip);
 
     // Envoi d'un message au serveur pour s'identifier
     sendto(sockfd, "Hello", strlen("Hello"), 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
