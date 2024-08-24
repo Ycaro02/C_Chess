@@ -76,6 +76,8 @@ typedef struct s_sdl_handle {
 	SDL_Texture		**piece_texture;
 	ChessBoard		*board;
 	PlayerInfo		player_info;
+	iVec2			mouse_pos;
+	ChessPiece		over_piece_select;
 } SDLHandle;
 
 /* src/sdl_handle */
@@ -86,6 +88,7 @@ void		window_close(SDL_Window* window, SDL_Renderer *renderer);
 SDL_Texture	*load_texture(SDL_Renderer *renderer, const char* path);
 void		unload_texture(SDL_Texture *texture);
 void		draw_texture_tile(SDL_Renderer *renderer, SDL_Texture *texture, iVec2 tilePos, iVec2 scale);
+void		draw_texure(SDLHandle *handle, SDL_Texture *texture, iVec2 pos, iVec2 scale);
 void		draw_color_tile(SDL_Renderer	*renderer , iVec2 tilePos, iVec2 scale, u32 color);
 void		destroy_sdl_handle(SDLHandle *handle);
 

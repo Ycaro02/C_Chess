@@ -87,6 +87,9 @@ clean_lib:
 	@$(MAKE_LIBFT) fclean
 	@printf "$(RED)Clean libft, list$(RESET)\n"
 
+test: $(NAME)
+	@./$(NAME)
+
 test_server: $(SERVER_EXE)
 	@ echo "Make test_server IP: $(IP_SERVER)"
 	@ ./$(SERVER_EXE)

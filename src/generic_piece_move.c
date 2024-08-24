@@ -171,6 +171,7 @@ s32 check_pawn_promotion(SDLHandle *handle, ChessPiece type, ChessTile tile_to) 
  * @param tile_from	ChessTile enum
  * @param tile_to	ChessTile enum
  * @param type		ChessPiece enum
+ * @return PAWN_PROMOTION if the move is a pawn promotion, CHESS_QUIT if the move is a quit move, TRUE otherwise
 */
 s32 move_piece(SDLHandle *handle, ChessTile tile_from, ChessTile tile_to, ChessPiece type) {
 	Bitboard	mask_from = 1ULL << tile_from;
@@ -195,12 +196,8 @@ s32 move_piece(SDLHandle *handle, ChessTile tile_from, ChessTile tile_to, ChessP
 
 	s32 pawn_ret = check_pawn_promotion(handle, type, tile_to);
 	/* Check if the pawn need to be promoted */
-	if (pawn_ret == CHESS_QUIT) {
-		return (CHESS_QUIT);
-	} 
-	else if (pawn_ret == TRUE) {
-		ret = PAWN_PROMOTION;
-	}
+	if (pawn_ret == CHESS_QUIT) { return (CHESS_QUIT); } 
+	else if (pawn_ret == TRUE) { ret = PAWN_PROMOTION; }
 
 	/* Check if the enemy king is check and mat or PAT */
 	verify_check_and_mat(handle->board, !(type >= BLACK_PAWN));

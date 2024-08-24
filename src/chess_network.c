@@ -1,6 +1,14 @@
 #include "../include/network.h"
 #include "../include/handle_sdl.h"
 
+void reset_selected_tile(ChessBoard *b) {
+	b->selected_tile = INVALID_TILE;
+	b->selected_piece = EMPTY;
+	b->possible_moves = 0;
+
+	h->over_piece_select = EMPTY;
+}
+
 /**
  * @brief Move piece logic for network game
  * @param h 
@@ -10,23 +18,22 @@
  */
 s32 network_move_piece(SDLHandle *h, ChessTile tile_selected) {
 	ChessBoard	*b = h->board;
-	ChessPiece	piece_type = EMPTY;
-	ChessPiece	color_piece_start = h->player_info.color == IS_WHITE ? WHITE_PAWN : BLACK_PAWN;
-	ChessPiece	color_piece_end = h->player_info.color == IS_WHITE ? WHITE_KING : BLACK_KING;
 	s32			ret = FALSE;
 	s32 		nb_iter = 0;
 	s8			send = FALSE;
 
 	/* If a piece is selected and the tile selected is a possible move */
 	if (is_selected_possible_move(b->possible_moves, tile_selected)) {
-		piece_type = get_piece_from_tile(b, b->selected_tile);
-		ret = move_piece(h, b->selected_tile, tile_selected, piece_type);
+		// piece_type = get_piece_from_tile(b, b->selected_tile);
+		ret = move_piece(h, b->selected_tile, tile_selected, b->selected_piece);
 		b->possible_moves = 0;
+		
+		h->over_piece_select = EMPTY;
+		
 		update_graphic_board(h);
-
 		/* Send move message to the other player if is not pawn promotion or chess quit */
 		if (ret == TRUE) {
-			build_message(h->player_info.msg_tosend, MSG_TYPE_MOVE, b->selected_tile, tile_selected, piece_type);
+			build_message(h->player_info.msg_tosend, MSG_TYPE_MOVE, b->selected_tile, tile_selected, b->selected_piece);
 		}
 
 		while (send == FALSE) {
@@ -39,15 +46,18 @@ s32 network_move_piece(SDLHandle *h, ChessTile tile_selected) {
 			sleep(1);
 		}
 		h->player_info.turn = FALSE;
+		reset_selected_tile(b);
 		return (ret);
 	} else { /* Update piece possible move and selected tile */
-		piece_type = get_piece_from_tile(b, tile_selected);
-		if (piece_type >= color_piece_start && piece_type <= color_piece_end) {
+		b->selected_piece = get_piece_from_tile(b, tile_selected);
+		if (b->selected_piece >= h->player_info.piece_start && b->selected_piece <= h->player_info.piece_end) {
 			b->selected_tile = tile_selected;
-			b->possible_moves = get_piece_move(b, (1ULL << b->selected_tile), piece_type, TRUE);
+			b->possible_moves = get_piece_move(b, (1ULL << b->selected_tile), b->selected_piece, TRUE);
+			if (b->possible_moves == 0) {
+				h->over_piece_select = b->selected_piece;
+			}
 		} else {
-			b->selected_tile = INVALID_TILE;
-			b->possible_moves = 0;
+			reset_selected_tile(b);
 		}
 	}
 	return (TRUE);
@@ -63,7 +73,7 @@ void network_chess_routine(SDLHandle *h) {
 	s8			rcv_ret = FALSE;
 	
 	while (1) {
-		tile_selected = event_handler(h->player_info.color);
+		tile_selected = event_handler(h, h->player_info.color);
 		/* If the quit button is pressed */
 		if (tile_selected == CHESS_QUIT) { break ; } // Send quit message to the other player
 		
@@ -93,7 +103,19 @@ void network_chess_routine(SDLHandle *h) {
 	free(h);
 }
 
+void player_color_set_info(PlayerInfo *info) {
+	// ft_printf_fd(1, YELLOW"Player color: %s\n"RESET, info->color == IS_WHITE ? "WHITE" : "BLACK");
+	if (info->color == IS_WHITE) {
+		info->turn = TRUE;
+		info->piece_start = WHITE_PAWN;
+		info->piece_end = WHITE_KING;
 
+	} else {
+		info->turn = FALSE;
+		info->piece_start = BLACK_PAWN;
+		info->piece_end = BLACK_KING;
+	}
+}
 
 /**
  * @brief Network setup
@@ -125,14 +147,7 @@ s8 network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *ser
 		display_message(player_info->msg_receiv);
 		process_message_receive(handle, player_info->msg_receiv);
 	}
-
-	ft_printf_fd(1, YELLOW"Player color: %s\n"RESET, player_info->color == IS_WHITE ? "WHITE" : "BLACK");
-	if (player_info->color == IS_WHITE) {
-		player_info->turn = TRUE;
-	} else {
-		player_info->turn = FALSE;
-	}
-
+	player_color_set_info(player_info);
 	return (TRUE);
 }
 

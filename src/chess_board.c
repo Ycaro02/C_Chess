@@ -49,6 +49,9 @@ void init_board(ChessBoard *b) {
 	b->piece[BLACK_QUEEN] = START_BLACK_QUEENS;
 	b->piece[BLACK_KING] = START_BLACK_KING;
 
+	b->selected_piece = EMPTY;
+	b->selected_tile = INVALID_TILE;
+
 	/* Update occupied and control bitboard */
 	update_piece_state(b);
 }

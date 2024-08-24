@@ -135,8 +135,9 @@ struct s_chess_board {
 	Bitboard	white;
 	Bitboard	black;
 
-	/* Selected tile handling */
+	/* Selected piece/tile handling */
 	ChessTile	selected_tile;		/* Selected tile by last click */
+	ChessPiece	selected_piece;		/* Selected piece by last click */
 	Bitboard	possible_moves;		/* Possible moves for selected piece (on selected tile) */
 
 	/* Special Bitboard for 'en passant' rule */
@@ -237,6 +238,8 @@ struct s_player_info {
 	char		msg_receiv[5];		/* Message received */
 	char		last_msg[5];		/* Last message process */
 	char		*dest_ip;			/* destination ip, NULL if we are the listener */
+	ChessPiece	piece_start;		/* ChessPiece color start */
+	ChessPiece	piece_end;			/* ChessPiece color end */
 	u16			running_port;		/* running port */
 	s8			color;				/* player color */
 	s8			turn;				/* player turn */
@@ -329,12 +332,12 @@ s32			move_piece(SDLHandle *handle, ChessTile tile_from, ChessTile tile_to, Ches
 
 /* src/handle_board.c */
 void		draw_board(SDLHandle *handle, s8 player_color);
-s32			event_handler(s8 player_color);
+s32			event_handler(SDLHandle *h, s8 player_color);
 s8			verify_check_and_mat(ChessBoard *b, s8 is_black);
 Bitboard	get_piece_color_control(ChessBoard *b, s8 is_black);
 s32			display_promotion_selection(SDLHandle *handle, ChessTile tile_to);
 void 		update_graphic_board(SDLHandle *h);
-
+void		draw_piece_over_board(SDLHandle *h, s32 x, s32 y);
 
 /* src/chess_network.c */
 s32		network_move_piece(SDLHandle *h, ChessTile tile_selected);

@@ -216,6 +216,12 @@ void draw_texture_tile(SDL_Renderer *renderer, SDL_Texture *texture, iVec2 tileP
 	SDL_RenderCopy(renderer, texture, NULL, &dstRect);
 }
 
+void draw_texure(SDLHandle *handle, SDL_Texture *texture, iVec2 pos, iVec2 scale) {
+	SDL_Rect 	dstRect = { .x = pos.x, .y = pos.y, .w = scale.x, .h = scale.y };	
+
+	SDL_RenderCopy(handle->renderer, texture, NULL, &dstRect);
+}
+
 /**
  * @brief Load a texture from a path with SDL2
  * @param window The window pointers

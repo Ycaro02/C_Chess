@@ -75,7 +75,7 @@ void draw_possible_move(SDLHandle *handle, iVec2 tile_pos, ChessTile tile) {
 		} else {
 			/* Draw a small black circle in the center of the tile */
 			if (is_king && INT_ABS_DIFF(handle->board->selected_tile, tile) == 2) {
-				SDL_SetRenderDrawColor(handle->renderer, 0, 0, 200, 150); // Blue color rock move
+				SDL_SetRenderDrawColor(handle->renderer, 0, 0, 200, 150); // Blue color castle move
 			} else {
 				SDL_SetRenderDrawColor(handle->renderer, 0, 0, 0, 150); // Black color
 			}
@@ -102,13 +102,13 @@ ChessPiece get_selected_piece(s32 idx, s8 is_black) {
 	return (WHITE_KNIGHT + idx);
 }
 
-s32 display_promotion_selection(SDLHandle *handle, ChessTile tile_to) {
+s32 display_promotion_selection(SDLHandle *h, ChessTile tile_to) {
 	iVec2 start_pos = {2, 1}; // x, y
 	ChessTile tile_start = C7;
 	ChessTile tile_end = G7;
 	ChessPiece piece_selected = EMPTY;
 	s32 piece_idx = 0;
-	s8 is_black = (handle->player_info.color == IS_BLACK);
+	s8 is_black = (h->player_info.color == IS_BLACK);
 
 	if (is_black) {
 		tile_start = C2;
@@ -116,14 +116,14 @@ s32 display_promotion_selection(SDLHandle *handle, ChessTile tile_to) {
 	}
 
 	/* Clear the window */
-	handle->board->possible_moves = 0;
-	window_clear(handle->renderer);
-	draw_board(handle, handle->player_info.color);
+	h->board->possible_moves = 0;
+	window_clear(h->renderer);
+	draw_board(h, h->player_info.color);
 
 
 	/* Draw a black rectangle */
 	for (s32 i = 0; i < 4; i++) {
-		draw_color_tile(handle->renderer, start_pos, (iVec2){TILE_SIZE, TILE_SIZE}, RGBA_TO_UINT32(0, 100, 100, 255));
+		draw_color_tile(h->renderer, start_pos, (iVec2){TILE_SIZE, TILE_SIZE}, RGBA_TO_UINT32(0, 100, 100, 255));
 		start_pos.x++;
 	}
 
@@ -132,22 +132,22 @@ s32 display_promotion_selection(SDLHandle *handle, ChessTile tile_to) {
 	/* Draw the promotion pieces */
 	s32 idx_texture_start = is_black ? BLACK_KNIGHT : WHITE_KNIGHT;
 	for (s32 i = 0; i < 4; i++) {
-		draw_texture_tile(handle->renderer, handle->piece_texture[idx_texture_start], start_pos, (iVec2){TILE_SIZE, TILE_SIZE});
+		draw_texture_tile(h->renderer, h->piece_texture[idx_texture_start], start_pos, (iVec2){TILE_SIZE, TILE_SIZE});
 		idx_texture_start++;
 		start_pos.x++;
 	}
-	SDL_RenderPresent(handle->renderer);
+	SDL_RenderPresent(h->renderer);
 
 	/* Wait for the player to select a piece */
 	while (1) {
-		ChessTile tile_selected = event_handler(handle->player_info.color);
+		ChessTile tile_selected = event_handler(h, h->player_info.color);
 		if (tile_selected >= tile_start && tile_selected <= tile_end) {
 			piece_idx = !is_black ? tile_selected - tile_start : tile_end - tile_selected;
 			piece_selected = get_selected_piece(piece_idx, is_black);
 			ft_printf_fd(1, "Tile selected: %d\n", tile_selected);
-			promote_pawn(handle->board, tile_to, piece_selected, is_black ? BLACK_PAWN : WHITE_PAWN);
+			promote_pawn(h->board, tile_to, piece_selected, is_black ? BLACK_PAWN : WHITE_PAWN);
 			/* We can build the message here and return a special value to avoir double message create/sending */
-			build_message(handle->player_info.msg_tosend, MSG_TYPE_PROMOTION, handle->player_info.color, tile_to, piece_selected);
+			build_message(h->player_info.msg_tosend, MSG_TYPE_PROMOTION, h->player_info.color, tile_to, piece_selected);
 			break ;
 		} else if (tile_selected == CHESS_QUIT) {
 			return (CHESS_QUIT);
@@ -155,6 +155,20 @@ s32 display_promotion_selection(SDLHandle *handle, ChessTile tile_to) {
 	}
 	return (TRUE);
 }
+
+/**
+ * @brief Smooth piece move, just move piece on the mouve position over the board
+ * @param h The SDLHandle pointer
+ * @param x The x position of the mouse
+ * @param y The y position of the mouse
+*/
+void draw_piece_over_board(SDLHandle *h, s32 x, s32 y) {
+	ChessPiece	piece = h->over_piece_select;
+	SDL_Texture	*texture = h->piece_texture[piece];
+
+	draw_texure(h, texture, (iVec2){x, y}, (iVec2){TILE_SIZE, TILE_SIZE});
+}
+
 
 /* Draw chess board */
 void draw_board(SDLHandle *handle, s8 player_color) {
@@ -187,6 +201,11 @@ void draw_board(SDLHandle *handle, s8 player_color) {
 		}
 		column--;
 	}
+
+	if (handle->over_piece_select != EMPTY) {
+		draw_piece_over_board(handle, handle->mouse_pos.x - (TILE_SIZE >> 1), handle->mouse_pos.y - (TILE_SIZE >> 1));
+	}
+
 }
 
 static s8 is_in_x_range(s32 x, s32 raw) {
@@ -223,12 +242,17 @@ ChessTile detect_tile_click(s32 x, s32 y, s8 player_color) {
 	return (tile);
 }
 
+void update_mouse_pos(SDLHandle *h, s32 x, s32 y) {
+	h->mouse_pos.x = x;
+	h->mouse_pos.y = y;
+}
+
 /**
  * @brief Chess event handler
  * @return The tile clicked, or CHESS_QUIT if the user want to quit
- * @note Return INVALID_TILE if no tile is clicked
+ * @note Return the clicled tile or INVALID_TILE if no tile is clicked
 */
-s32 event_handler(s8 player_color) {
+s32 event_handler(SDLHandle *h, s8 player_color) {
 	SDL_Event event;
 	ChessTile tile = INVALID_TILE;
 	s32 x = 0, y = 0;
@@ -239,10 +263,19 @@ s32 event_handler(s8 player_color) {
 		}
 		if (event.type == SDL_MOUSEBUTTONDOWN) {
 			SDL_GetMouseState(&x, &y);
+			update_mouse_pos(h, x, y);
 			tile = detect_tile_click(x, y, player_color);
+
+			h->over_piece_select = get_piece_from_tile(h->board, tile);
 		} else if (event.type == SDL_MOUSEBUTTONUP) {
 			SDL_GetMouseState(&x, &y);
-			tile = detect_tile_click(x, y, player_color);
+			update_mouse_pos(h, x, y);
+			if (h->board->selected_piece != EMPTY) {
+				tile = detect_tile_click(x, y, player_color);
+			}
+		} else if (event.type == SDL_MOUSEMOTION && h->over_piece_select != EMPTY) {
+			SDL_GetMouseState(&x, &y);
+			update_mouse_pos(h, x, y);
 		}
 	}
 	return (tile);
