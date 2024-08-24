@@ -58,12 +58,13 @@ static void draw_circle_outline(SDL_Renderer *renderer, int x, int y, int radius
 void draw_possible_move(SDLHandle *handle, iVec2 tile_pos, ChessTile tile) {
 	ChessPiece	tile_piece = EMPTY, selected_piece = EMPTY;
 	iVec2		center = {0, 0};
-	s8			is_pawn = FALSE;
+	s8			is_pawn = FALSE, is_king = FALSE;
 	/* Check if tile is current selected possible move */
 	if (is_selected_possible_move(handle->board->possible_moves, tile)) {
 		tile_piece = get_piece_from_tile(handle->board, tile);
 		selected_piece = get_piece_from_tile(handle->board, handle->board->selected_tile);
 		is_pawn = (selected_piece == WHITE_PAWN || selected_piece == BLACK_PAWN);
+		is_king = (selected_piece == WHITE_KING || selected_piece == BLACK_KING);
 		/* Get the center of the tile */
 		center.x = tile_pos.x * TILE_SIZE + (TILE_SIZE >> 1);
 		center.y = tile_pos.y * TILE_SIZE + (TILE_SIZE >> 1);
@@ -73,7 +74,11 @@ void draw_possible_move(SDLHandle *handle, iVec2 tile_pos, ChessTile tile) {
 			draw_circle_outline(handle->renderer, center.x, center.y, OUTLINE_CIRCLE_RADIUS);
 		} else {
 			/* Draw a small black circle in the center of the tile */
-			SDL_SetRenderDrawColor(handle->renderer, 0, 0, 0, 150); // Black color
+			if (is_king && INT_ABS_DIFF(handle->board->selected_tile, tile) == 2) {
+				SDL_SetRenderDrawColor(handle->renderer, 0, 0, 200, 150); // Blue color rock move
+			} else {
+				SDL_SetRenderDrawColor(handle->renderer, 0, 0, 0, 150); // Black color
+			}
 			draw_filled_circle(handle->renderer, center.x, center.y, CIRCLE_RADIUS);
 		}
 	}
