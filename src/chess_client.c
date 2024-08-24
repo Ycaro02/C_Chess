@@ -1,26 +1,32 @@
 #include "../include/chess.h"
 #include "../include/network.h"
 
-
-char *chess_msg_receive(int sockfd, struct sockaddr_in peeraddr, socklen_t addr_len) {
+char *chess_msg_receive(NetworkInfo *info) {
 	int len = 0;
 	char buffer[1024];
 	char *msg = NULL;
 
 	ft_bzero(buffer, 1024);
 	
-	len = recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&peeraddr, &addr_len);
+	len = recvfrom(info->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&info->peeraddr, &info->addr_len);
+
+	ft_printf_fd(1, "Receive len: %d\n", len);
+
 	if (len > 0) {
+		if (ftlib_strcmp(buffer, "Hello") == 0) {
+			ft_printf_fd(1, RED"Hello receive continue\n"RESET);
+			return (NULL);
+		}
 		buffer[len] = '\0';
-		sendto(sockfd, "ACK", ft_strlen("ACK"), 0, (struct sockaddr *)&peeraddr, addr_len);
-		ft_printf_fd(1, YELLOW"Chess Msg receive : |%s| -> Send ACK\n"RESET, buffer);
+		sendto(info->sockfd, "ACK", ft_strlen("ACK"), 0, (struct sockaddr *)&info->peeraddr, info->addr_len);
+		ft_printf_fd(1, YELLOW"Chess Msg receive : |%s|\n"RESET, message_type_to_str(buffer[0]));
 		msg = ft_calloc(sizeof(char), (len + 1));
 		ftlib_strcpy(msg, buffer, len);
 	} 
 	return (msg);
 }
 
-int chess_msg_send(int sockfd, struct sockaddr_in peeraddr, socklen_t addr_len, char *msg) {
+int chess_msg_send(NetworkInfo *info, char *msg) {
 	int attempts = 0;
 	int ack_received = 0;
 	char buffer[1024];
@@ -29,12 +35,13 @@ int chess_msg_send(int sockfd, struct sockaddr_in peeraddr, socklen_t addr_len, 
 	ft_bzero(buffer, 1024);
 	
 	while (attempts < MAX_ATTEMPTS && !ack_received) {
-		sendto(sockfd, msg, ft_strlen(msg), 0, (struct sockaddr *)&peeraddr, addr_len);
-		int recv_len = recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&peeraddr, &addr_len);
+		sendto(info->sockfd, msg, ft_strlen(msg), 0, (struct sockaddr *)&info->peeraddr, info->addr_len);
+		int recv_len = recvfrom(info->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&info->peeraddr, &info->addr_len);
 		if (recv_len > 0) {
 			buffer[recv_len] = '\0';
 			if (ftlib_strcmp(buffer, "ACK") == 0) {
-				ft_printf_fd(1, GREEN"ACK receive for msg: |%s|\n"RESET, msg);
+				// ft_printf_fd(1, GREEN"ACK receive for msg: |%s|\n"RESET, msg);
+				ft_printf_fd(1, GREEN"ACK receive for msg type: |%s|\n"RESET, message_type_to_str(msg[0]));
 				ack_received = 1;
 			} 
 		} 
@@ -92,11 +99,6 @@ NetworkInfo *init_network(char *server_ip, int local_port, struct timeval timeou
 	/* Receive the peer information */
 	recvfrom(info->sockfd, &info->peeraddr, sizeof(info->peeraddr), 0, (struct sockaddr *)&info->servaddr, &info->addr_len);
 	ft_printf_fd(1, "Peer info : %s:%d\n", inet_ntoa(info->peeraddr.sin_addr), ntohs(info->peeraddr.sin_port));
-
-	/* Configure timeout for socket */
-	// timeout.tv_sec = TIMEOUT_SEC;
-	// timeout.tv_usec = 0;
-
 	/* Send a first message to the peer (handshake) */
 	sendto(info->sockfd, "Hello", ft_strlen("Hello"), 0, (struct sockaddr *)&info->peeraddr, info->addr_len);
 

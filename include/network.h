@@ -21,7 +21,7 @@
 #define DISCONNECT_MSG "DISCONNECT"
 
 enum e_msg_type {
-	MSG_TYPE_COLOR,
+	MSG_TYPE_COLOR=1,
 	MSG_TYPE_MOVE,
 	MSG_TYPE_PROMOTION,
 	MSG_TYPE_QUIT,
@@ -40,8 +40,27 @@ typedef enum e_msg_type MsgType;
 typedef struct s_network_info NetworkInfo;
 
 NetworkInfo	*init_network(char *server_ip, int local_port, struct timeval timeout);
-int			chess_msg_send(int sockfd, struct sockaddr_in peeraddr, socklen_t addr_len, char *msg);
-char		*chess_msg_receive(int sockfd, struct sockaddr_in peeraddr, socklen_t addr_len);
+void		send_disconnect_to_server(int sockfd, struct sockaddr_in servaddr);
+int			chess_msg_send(NetworkInfo *info, char *msg);
+char		*chess_msg_receive(NetworkInfo *info);
+
+//main
+char *build_message(s32 msg_size, MsgType msg_type, ChessTile tile_from_or_color, ChessTile tile_to, ChessPiece piece_type);
+void process_message_receive(SDLHandle *handle, char *msg);
+
+
+FT_INLINE char *message_type_to_str(MsgType msg_type) {
+	if (msg_type == MSG_TYPE_COLOR) {
+		return ("MSG_TYPE_COLOR");
+	} else if (msg_type == MSG_TYPE_MOVE) {
+		return ("MSG_TYPE_MOVE");
+	} else if (msg_type == MSG_TYPE_PROMOTION) {
+		return ("MSG_TYPE_PROMOTION");
+	} else if (msg_type == MSG_TYPE_QUIT) {
+		return ("MSG_TYPE_QUIT");
+	}
+	return ("UNKNOWN");
+}
 
 /**
  * Packet format 4 char

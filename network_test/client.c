@@ -133,10 +133,10 @@ void send_disconnect_to_server(int sockfd, struct sockaddr_in servaddr) {
 }
 
 int main(int argc, char **argv) {
-	NetworkInfo *c = setup_client(argc, argv);
+	struct timeval timeout = { .tv_sec = TIMEOUT_SEC, .tv_usec = 0 };
+	NetworkInfo *c = setup_client(argc, argv,timeout);
 	char msg[1024];
 	int role = 0;
-	struct timeval timeout = { .tv_sec = TIMEOUT_SEC, .tv_usec = 0 };
 
 	bzero(msg, 1024);
 	if (!c) {

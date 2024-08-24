@@ -11,6 +11,11 @@ void destroy_sdl_handle(SDLHandle *handle) {
 	if (handle->player_info.dest_ip) {
 		free(handle->player_info.dest_ip);
 	}
+	send_disconnect_to_server(handle->player_info.nt_info->sockfd, handle->player_info.nt_info->servaddr);
+	if (handle->player_info.nt_info) {
+		close(handle->player_info.nt_info->sockfd);
+		free(handle->player_info.nt_info);
+	}
 }
 
 SDLHandle *init_game() {
@@ -29,7 +34,7 @@ SDLHandle *init_game() {
 	}
 	init_board(handle->board);
 	handle->player_info.color = IS_WHITE;
-	handle->player_info.turn = IS_WHITE;
+	handle->player_info.turn = FALSE;
 	return (handle);
 }
 
@@ -125,6 +130,74 @@ void netword_chess_routine(SDLHandle *h) {
 }
 
 
+void display_message(char *msg) {
+	MsgType msg_type = msg[0];
+	ChessTile tile_from = 0, tile_to = 0;
+	ChessPiece piece_type = EMPTY;
+
+
+	ft_printf_fd(1, "Message type: %s: ", message_type_to_str(msg_type));
+
+	if (msg_type == MSG_TYPE_COLOR) {
+		ft_printf_fd(1, "brut data: |%d||%d| ->", msg[0], msg[1]);
+		ft_printf_fd(1, "Color: %s\n", (msg[1] - 1) == IS_WHITE ? "WHITE" : "BLACK");
+		return ;
+	} else if (msg_type == MSG_TYPE_QUIT) {
+		ft_printf_fd(1, "Opponent quit the game, msg type %d\n", msg[0]);
+		return ;
+	}	
+	
+	/* We need to decrement all value cause we send with +1 can't send 0, interpreted like '\0' */
+	tile_from = msg[1] - 1;
+	tile_to = msg[2] - 1;
+	piece_type = msg[3] - 1;
+	ft_printf_fd(1, "brut data: |%d||%d||%d||%d|\n", msg[0], msg[1], msg[2], msg[3]);
+	if (msg_type == MSG_TYPE_MOVE) {
+		ft_printf_fd(1, "Move from %s to %s with piece %s\n", TILE_TO_STRING(tile_from), TILE_TO_STRING(tile_to), chess_piece_to_string(piece_type));
+	} else if (msg_type == MSG_TYPE_PROMOTION) {
+		ft_printf_fd(1, "Promotion from %s to %s with piece %s\n", TILE_TO_STRING(tile_from), TILE_TO_STRING(tile_to), chess_piece_to_string(piece_type));
+	} else {
+		ft_printf_fd(1, "Unknown message type\n");
+	}
+}
+
+
+#define MAX_ITER 50
+
+int network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *server_ip) {
+	struct timeval timeout = {TIMEOUT_SEC, 0};
+	int test_iter = 0;
+	char *tmp = NULL;
+
+	player_info->nt_info = init_network(server_ip, player_info->running_port, timeout);
+	if (has_flag(flag, FLAG_LISTEN)) {
+		player_info->color = random_player_color();
+		ft_printf_fd(1, "Waiting for player...\n");
+		tmp = build_message(3, MSG_TYPE_COLOR, !player_info->color, 0, 0);
+		chess_msg_send(player_info->nt_info, tmp);
+	}
+
+	if (has_flag(flag, FLAG_JOIN)) {
+		tmp = NULL;
+		while (tmp == NULL && test_iter < MAX_ITER) {
+			tmp = chess_msg_receive(player_info->nt_info);
+			test_iter++;
+			sleep(1);
+		}
+		display_message(tmp);
+		process_message_receive(handle, tmp);
+	}
+
+	ft_printf_fd(1, YELLOW"Player color: %s\n"RESET, player_info->color == IS_WHITE ? "WHITE" : "BLACK");
+	if (player_info->color == IS_WHITE) {
+		player_info->turn = TRUE;
+	} else {
+		player_info->turn = FALSE;
+	}
+
+	return (TRUE);
+}
+
 int main(int argc, char **argv) {
 	SDLHandle	*handle = NULL;
 	PlayerInfo	player_info = {0};
@@ -135,47 +208,14 @@ int main(int argc, char **argv) {
 	if (error == -1) {
 		return (1);
 	}
-
-	// struct timeval timeout = {0, TIMEOUT_SEC};
-	// dest_ip is now the address of the server, mandatory for all client
-	// maybe we can provide the server port
-	// running port is the local port of the client, mandatory for all client
-	// player_info.nt_info = init_network(player_info.dest_ip, player_info.running_port, TIMEOUT_SEC);
-
-	if (has_flag(flag, FLAG_LISTEN)) {
-		player_info.color = IS_WHITE;
-		ft_printf_fd(1, "Player color: %s\n", player_info.color == IS_WHITE ? "WHITE" : "BLACK");
-		ft_printf_fd(1, "Running port: %d\n", player_info.running_port);
-		ft_printf_fd(1, "Waiting for connection...\n");
-		/**
-		 * player_info.color = random_player_color();
-		 * char *color_msg = build_message(2, MSG_TYPE_COLOR, !player_info.color, 0, 0); 
-		 * chess_msg_send(...,color_msg); // Send color to the other player !player_info.color
-		*/
-	} else {
-		/* Need to receive color from first player here */
-		player_info.color = IS_BLACK;
-		ft_printf_fd(1, "Ip adress dest %s\n", player_info.dest_ip);
-		ft_printf_fd(1, "Running port: %d\n", player_info.running_port);
-		// player_info.color = chess_msg_receive(); // Receive color from the other player
-	}
-
-
-
-
+	
 	handle = init_game();
 	if (!handle) {
 		return (1);
 	}
-
 	handle->player_info = player_info;
 
-	// if (player_info.color == IS_WHITE) {
-	// 	player_info.turn = TRUE;
-	// } else {
-	// 	player_info.turn = FALSE;
-	// }
-
+	network_setup(handle, flag, &handle->player_info, "127.0.0.1");
 	chess_routine(handle);
 	return (0);
 }
@@ -187,21 +227,19 @@ void process_message_receive(SDLHandle *handle, char *msg) {
 	ChessTile	tile_from = 0, tile_to = 0;
 	ChessPiece	piece_type = EMPTY, opponent_pawn = EMPTY;
 	
-
-	// ft_printf_fd(1, "Message received: %d\n", msg_type);
-
 	/* If the message is a color message, set the player color */
 	if (msg_type == MSG_TYPE_COLOR) {
-		handle->player_info.color = msg[1];
+		handle->player_info.color = msg[1] - 1;
 		return ;
 	} else if (msg_type == MSG_TYPE_QUIT) {
 		ft_printf_fd(1, "Opponent quit the game\n");
 		return ;
 	}
 	
-	tile_from = msg[1];
-	tile_to = msg[2];
-	piece_type = msg[3];
+	/* We need to decrement all value cause we send with +1 can't send 0, interpreted like '\0' */
+	tile_from = msg[1] - 1;
+	tile_to = msg[2] - 1;
+	piece_type = msg[3] - 1;
 	
 	if (msg_type == MSG_TYPE_MOVE) {
 		/* If the message is a move, just call move piece */
@@ -234,47 +272,21 @@ char *build_message(s32 msg_size, MsgType msg_type, ChessTile tile_from_or_color
 	}
 
 	/* Set the tile_from or color (1st data) */
-	msg[1] = tile_from_or_color;
+	msg[1] = tile_from_or_color + 1;
+	ft_printf_fd(1, "brut data in send: |%d||%d| ->", msg[0], msg[1]);
 	/* If the message is a color message, return here */
 	if (msg_type == MSG_TYPE_COLOR) {
 		return (msg);
 	}
 
 	/* Set the tile_to (2nd data) */
-	msg[2] = tile_to;
+	msg[2] = tile_to + 1;
 
 	/* Set the piece_type (3rd data) */
-	msg[3] = piece_type;
+	msg[3] = piece_type + 1;
 	return (msg);
 }
 
-void display_message(char *msg) {
-	MsgType msg_type = msg[0];
-	ChessTile tile_from = 0, tile_to = 0;
-	ChessPiece piece_type = EMPTY;
-
-
-	if (msg_type == MSG_TYPE_COLOR) {
-		ft_printf_fd(1, "Message color brut data: |%d||%d|\n", msg[0], msg[1]);
-		ft_printf_fd(1, "Color: %s\n", msg[1] == IS_WHITE ? "WHITE" : "BLACK");
-	} else if (msg_type == MSG_TYPE_MOVE) {
-		tile_from = msg[1];
-		tile_to = msg[2];
-		piece_type = msg[3];
-		ft_printf_fd(1, "Message move brut data: |%d||%d||%d||%d|\n", msg[0], msg[1], msg[2], msg[3]);
-		ft_printf_fd(1, "Move from %s to %s with piece %s\n", TILE_TO_STRING(tile_from), TILE_TO_STRING(tile_to), chess_piece_to_string(piece_type));
-	} else if (msg_type == MSG_TYPE_PROMOTION) {
-		tile_from = msg[1];
-		tile_to = msg[2];
-		piece_type = msg[3];
-		ft_printf_fd(1, "Message promotion brut data: |%d||%d||%d||%d|\n", msg[0], msg[1], msg[2], msg[3]);
-		ft_printf_fd(1, "Promotion from %s to %s with piece %s\n", TILE_TO_STRING(tile_from), TILE_TO_STRING(tile_to), chess_piece_to_string(piece_type));
-	} else if (msg_type == MSG_TYPE_QUIT) {
-		ft_printf_fd(1, "Opponent quit the game, msg type %d\n", msg[0]);
-	} else {
-		ft_printf_fd(1, "Unknown message type\n");
-	}
-}
 
 // ft_printf_fd(1, YELLOW"Move piece from [%s](%d) TO [%s](%d)\n"RESET, TILE_TO_STRING(b->selected_tile), b->selected_tile, TILE_TO_STRING(tile_selected), tile_selected);
 // ft_printf_fd(1, GREEN"Select piece in [%s]"RESET" -> "ORANGE"%s\n"RESET, TILE_TO_STRING(tile_selected), chess_piece_to_string(piece_type));

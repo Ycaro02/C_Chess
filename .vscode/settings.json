@@ -73,6 +73,7 @@
 		"sdl_video.h": "c",
 		"inet.h": "c",
 		"stdlib.h": "c",
-		"time.h": "c"
+		"time.h": "c",
+		"network.h": "c"
 	}
 }

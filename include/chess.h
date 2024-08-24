@@ -261,7 +261,7 @@ enum chess_flag_value {
 #define LISTEN_STR		"listen"
 #define JOIN_STR		"join"
 #define PORT_STR		"port"
-#define DEFAULT_PORT 	24242
+#define DEFAULT_PORT 	54321
 #define MAX_PORT		65535
 
 /* src/chess_flag.c */
@@ -298,5 +298,7 @@ s32			event_handler(s8 player_color);
 s8			verify_check_and_mat(ChessBoard *b, s8 is_black);
 Bitboard	get_piece_color_control(ChessBoard *b, s8 is_black);
 s32			display_promotion_selection(SDLHandle *handle, ChessTile tile_to);
+
+
 
 #endif /* CHESS_H */
