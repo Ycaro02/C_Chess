@@ -7,9 +7,11 @@ CC              =   clang
 # SDL_LIB			=	-L./rsc/lib/install/lib -rpath ./rsc/lib/install/lib -lSDL2 -lSDL2_ttf
 SDL_LIB			=	-L./rsc/lib/install/lib -rpath ./rsc/lib/install/lib -lSDL2
 
+LIB_DEPS		=   rsc/lib
+
 all:        $(NAME)
 
-$(NAME): $(LIBFT) $(LIST) $(OBJ_DIR) $(OBJS)
+$(NAME): $(LIB_DEPS) $(LIBFT) $(LIST) $(OBJ_DIR) $(OBJS)
 	@$(MAKE_LIBFT)
 	@$(MAKE_LIST)
 	@printf "$(CYAN)Compiling ${NAME} ...$(RESET)\n"
@@ -28,6 +30,11 @@ ifeq ($(shell [ -f ${LIBFT} ] && echo 0 || echo 1), 1)
 	@printf "$(CYAN)Compiling libft...$(RESET)\n"
 	@$(MAKE_LIBFT)
 	@printf "$(GREEN)Compiling libft done$(RESET)\n"
+endif
+
+$(LIB_DEPS) :
+ifeq ($(shell [ -d $(LIB_DEPS) ] && echo 0 || echo 1), 1)
+	@./rsc/install/load_lib.sh -q
 endif
 
 $(OBJ_DIR):
