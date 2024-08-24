@@ -226,13 +226,18 @@ FT_INLINE void display_kill_info(ChessPiece enemy_piece, ChessTile tile_to) {
 
 typedef struct s_network_info NetworkInfo;
 
+#define MSG_SIZE 5
+
 /* Player info struct */
 struct s_player_info {
-	NetworkInfo *nt_info;	/* Network info */
-	char		*dest_ip;		/* destination ip, NULL if we are the listener */
-	u16			running_port;	/* running port */
-	s8			color;			/* player color */
-	s8			turn;			/* player turn */
+	NetworkInfo *nt_info;			/* Network info */
+	char		msg_tosend[5];		/* Message to send */
+	char		msg_receiv[5];		/* Message received */
+	char		last_msg[5];		/* Last message process */
+	char		*dest_ip;			/* destination ip, NULL if we are the listener */
+	u16			running_port;		/* running port */
+	s8			color;				/* player color */
+	s8			turn;				/* player turn */
 };
 
 /* Typedef for player info struct */

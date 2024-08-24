@@ -94,7 +94,7 @@ void update_graphic_board(SDLHandle *h) {
  */
 s32 network_move_piece(SDLHandle *h, ChessTile tile_selected) {
 	ChessBoard	*b = h->board;
-	char		*msg = NULL;
+	// char		*msg = NULL;
 	ChessPiece	piece_type = EMPTY;
 	ChessPiece	color_piece_start = h->player_info.color == IS_WHITE ? WHITE_PAWN : BLACK_PAWN;
 	ChessPiece	color_piece_end = h->player_info.color == IS_WHITE ? WHITE_KING : BLACK_KING;
@@ -109,9 +109,9 @@ s32 network_move_piece(SDLHandle *h, ChessTile tile_selected) {
 		b->possible_moves = 0;
 		update_graphic_board(h);
 		/* Send move message to the other player */
-		msg = build_message(5, MSG_TYPE_MOVE, b->selected_tile, tile_selected, piece_type);
+		build_message(h->player_info.msg_tosend, MSG_TYPE_MOVE, b->selected_tile, tile_selected, piece_type);
 		while (send == FALSE) {
-			send = chess_msg_send(h->player_info.nt_info, msg);
+			send = chess_msg_send(h->player_info.nt_info, h->player_info.msg_tosend);
 			nb_iter++;
 			if (nb_iter > MAX_ITER) {
 				ft_printf_fd(1, "Max iter reached\n");
@@ -136,8 +136,8 @@ s32 network_move_piece(SDLHandle *h, ChessTile tile_selected) {
 
 void network_chess_routine(SDLHandle *h) {
 	ChessTile	tile_selected = INVALID_TILE;
-	char		*msg_rcv = NULL;
 	s32			ret = FALSE;
+	s8			rcv_ret = FALSE;
 	
 	while (1) {
 		tile_selected = event_handler(h->player_info.color);
@@ -154,9 +154,9 @@ void network_chess_routine(SDLHandle *h) {
 
 		/* Receive message from the other player */
 		if (!h->player_info.turn) {
-			msg_rcv = chess_msg_receive(h->player_info.nt_info);
-			if (msg_rcv) {
-				process_message_receive(h, msg_rcv);
+			rcv_ret = chess_msg_receive(h->player_info.nt_info, h->player_info.msg_receiv, h->player_info.last_msg);
+			if (rcv_ret) {
+				process_message_receive(h, h->player_info.msg_receiv);
 			}
 		}
 
@@ -173,25 +173,24 @@ void network_chess_routine(SDLHandle *h) {
 int network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *server_ip) {
 	struct timeval timeout = {0, 100000};
 	int test_iter = 0;
-	char *tmp = NULL;
+	s8 ret = FALSE;
 
 	player_info->nt_info = init_network(server_ip, player_info->running_port, timeout);
 	if (has_flag(flag, FLAG_LISTEN)) {
 		player_info->color = random_player_color();
 		ft_printf_fd(1, "Waiting for player...\n");
-		tmp = build_message(3, MSG_TYPE_COLOR, !player_info->color, 0, 0);
-		chess_msg_send(player_info->nt_info, tmp);
+		build_message(player_info->msg_tosend, MSG_TYPE_COLOR, !player_info->color, 0, 0);
+		chess_msg_send(player_info->nt_info, player_info->msg_tosend);
 	}
 
 	if (has_flag(flag, FLAG_JOIN)) {
-		tmp = NULL;
-		while (tmp == NULL && test_iter < MAX_ITER) {
-			tmp = chess_msg_receive(player_info->nt_info);
+		while (ret == FALSE && test_iter < MAX_ITER) {
+			ret = chess_msg_receive(player_info->nt_info, player_info->msg_receiv, player_info->last_msg);
 			test_iter++;
 			sleep(1);
 		}
-		display_message(tmp);
-		process_message_receive(handle, tmp);
+		display_message(player_info->msg_receiv);
+		process_message_receive(handle, player_info->msg_receiv);
 	}
 
 	ft_printf_fd(1, YELLOW"Player color: %s\n"RESET, player_info->color == IS_WHITE ? "WHITE" : "BLACK");
@@ -230,6 +229,11 @@ int main(int argc, char **argv) {
 
 
 
+void update_msg_store(char *buffer, char *msg) {
+	ft_bzero(buffer, 5);
+	ft_strlcpy(buffer, msg, ft_strlen(msg));
+}
+
 void process_message_receive(SDLHandle *handle, char *msg) {
 	MsgType 	msg_type = msg[0];
 	ChessTile	tile_from = 0, tile_to = 0;
@@ -240,45 +244,43 @@ void process_message_receive(SDLHandle *handle, char *msg) {
 	/* If the message is a color message, set the player color */
 	if (msg_type == MSG_TYPE_COLOR) {
 		handle->player_info.color = msg[1] - 1;
-		return ;
 	} else if (msg_type == MSG_TYPE_QUIT) {
 		ft_printf_fd(1, "Opponent quit the game\n");
-		return ;
+	} else if (msg_type == MSG_TYPE_MOVE || msg_type == MSG_TYPE_PROMOTION) {
+		/* We need to decrement all value cause we send with +1 can't send 0, interpreted like '\0' */
+		tile_from = msg[1] - 1;
+		tile_to = msg[2] - 1;
+		piece_type = msg[3] - 1;
+		
+		if (msg_type == MSG_TYPE_MOVE) {
+			/* If the message is a move, just call move piece */
+			move_piece(handle, tile_from, tile_to, piece_type);
+		}  else if (msg_type == MSG_TYPE_PROMOTION) {
+			/* If the message is a promotion message, promote the pawn */
+			opponent_pawn = handle->player_info.color == IS_BLACK ? BLACK_PAWN : WHITE_PAWN;
+			/* Remove the pawn */
+			handle->board->piece[opponent_pawn] &= ~(1ULL << tile_from);
+			/* Add the new piece */
+			handle->board->piece[piece_type] |= (1ULL << tile_to);
+			update_piece_state(handle->board);
+		}
+		handle->player_info.turn = TRUE;
+	} else {
+		ft_printf_fd(1, RED"Unknown message type\n"RESET);
 	}
-	
-	/* We need to decrement all value cause we send with +1 can't send 0, interpreted like '\0' */
-	tile_from = msg[1] - 1;
-	tile_to = msg[2] - 1;
-	piece_type = msg[3] - 1;
-	
-	if (msg_type == MSG_TYPE_MOVE) {
-		/* If the message is a move, just call move piece */
-		move_piece(handle, tile_from, tile_to, piece_type);
-	}  else if (msg_type == MSG_TYPE_PROMOTION) {
-		/* If the message is a promotion message, promote the pawn */
-		opponent_pawn = handle->player_info.color == IS_BLACK ? BLACK_PAWN : WHITE_PAWN;
-		/* Remove the pawn */
-		handle->board->piece[opponent_pawn] &= ~(1ULL << tile_from);
-		/* Add the new piece */
-		handle->board->piece[piece_type] |= (1ULL << tile_to);
-		update_piece_state(handle->board);
-	}
-	handle->player_info.turn = TRUE;
+	update_msg_store(handle->player_info.last_msg, msg);
 }
 
 
-char *build_message(s32 msg_size, MsgType msg_type, ChessTile tile_from_or_color, ChessTile tile_to, ChessPiece piece_type) {
-	char *msg = ft_calloc(msg_size, sizeof(char));
+void build_message(char *msg, MsgType msg_type, ChessTile tile_from_or_color, ChessTile tile_to, ChessPiece piece_type) {
+	// char *msg = ft_calloc(msg_size, sizeof(char));
 
-	/* If the alloc fail, return NULL */
-	if (!msg) {
-		return (NULL);
-	}
+	ft_bzero(msg, MSG_SIZE);
 
 	/* Set the message type */
 	msg[0] = msg_type;
 	if (msg_type == MSG_TYPE_QUIT) {
-		return (msg);
+		return ;
 	}
 
 	/* Set the tile_from or color (1st data) */
@@ -286,7 +288,7 @@ char *build_message(s32 msg_size, MsgType msg_type, ChessTile tile_from_or_color
 
 	/* If the message is a color message, return here */
 	if (msg_type == MSG_TYPE_COLOR) {
-		return (msg);
+		return ;
 	}
 
 	/* Set the tile_to (2nd data) */
@@ -294,7 +296,6 @@ char *build_message(s32 msg_size, MsgType msg_type, ChessTile tile_from_or_color
 
 	/* Set the piece_type (3rd data) */
 	msg[3] = piece_type + 1;
-	return (msg);
 }
 
 
