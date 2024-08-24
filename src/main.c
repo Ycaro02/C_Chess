@@ -239,7 +239,7 @@ void process_message_receive(SDLHandle *handle, char *msg) {
 	ChessTile	tile_from = 0, tile_to = 0;
 	ChessPiece	piece_type = EMPTY, opponent_pawn = EMPTY;
 	
-	display_message(msg);
+	// display_message(msg);
 
 	/* If the message is a color message, set the player color */
 	if (msg_type == MSG_TYPE_COLOR) {
@@ -266,9 +266,10 @@ void process_message_receive(SDLHandle *handle, char *msg) {
 		}
 		handle->player_info.turn = TRUE;
 	} 
-	// else {
-	// 	ft_printf_fd(1, RED"Unknown message type\n"RESET);
-	// }
+	else {
+		ft_printf_fd(1, RED"Unknown message type\n"RESET);
+		return ;
+	}
 	update_msg_store(handle->player_info.last_msg, msg);
 }
 

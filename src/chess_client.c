@@ -13,12 +13,12 @@ s8 chess_msg_receive(NetworkInfo *info, char *rcv_buffer, char *last_msg_process
 			ft_printf_fd(1, RED"Hello receive continue listening\n"RESET);
 			return (FALSE);
 		} else if (ftlib_strcmp(buffer, last_msg_processed) == 0) {
-			ft_printf_fd(1, CYAN"Double message receive skip it\n"RESET);
+			ft_printf_fd(1, YELLOW"Double message receive skip it\n"RESET);
 			return (FALSE);
 		}
 		buffer[len] = '\0';
 		sendto(info->sockfd, "ACK", ft_strlen("ACK"), 0, (struct sockaddr *)&info->peeraddr, info->addr_len);
-		ft_printf_fd(1, YELLOW"Chess Msg receive : |%s|\n"RESET, message_type_to_str(buffer[0]));
+		ft_printf_fd(1, GREEN"Msg |%s| receive\n"RESET, message_type_to_str(buffer[0]));
 		ftlib_strcpy(rcv_buffer, buffer, len);
 		return (TRUE);
 	} 
@@ -39,7 +39,7 @@ s8 chess_msg_send(NetworkInfo *info, char *msg) {
 			buffer[recv_len] = '\0';
 			if (ftlib_strcmp(buffer, "ACK") == 0) {
 				// ft_printf_fd(1, GREEN"ACK receive for msg: |%s|\n"RESET, msg);
-				ft_printf_fd(1, GREEN"ACK receive for msg type: |%s|\n"RESET, message_type_to_str(msg[0]));
+				ft_printf_fd(1, CYAN"ACK |%s| receive\n"RESET, message_type_to_str(msg[0]));
 				ack_received = 1;
 			} 
 		} 
