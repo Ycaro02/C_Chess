@@ -254,24 +254,49 @@ FT_INLINE s8 random_player_color() {
 	return (rand() % 2 == 0 ? IS_WHITE : IS_BLACK);
 }
 
+
+#define HELP_MESSAGE "Usage: ./C_chess [OPTION]...\n\n" \
+					"Chess game\n\n" \
+					"Options:\n" \
+					"  -l, --listen         Wait for connection (create a lobby)\n" \
+					"  -j, --join           Try to join a lobby\n" \
+					"  -p, --port <port>    Local port\n" \
+					"  -i, --server-ip <ip>	Server ip\n" \
+					"  -n, --network        Network mode\n" \
+					"  -h, --help           Display this help\n" \
+					"Example: network mode\n" \
+					"  Listen mode:\n" \
+					"  ./C_chess -n -l -p 8081 -i 127.0.0.1\n" \
+					"  Join mode:\n" \
+					"  ./C_chess -n -j -p 8081 -i 127.0.0.1\n" \
+					"Example: local mode\n" \
+					"  ./C_chess\n"
+
+/* Typedef for flag context */
 typedef t_flag_context ChessFlagContext;
 
-#define LISTEN_OPT_CHAR	'l'
-#define JOIN_OPT_CHAR	'j'
-#define PORT_OPT_CHAR	'p'
+#define LISTEN_OPT_CHAR		'l'
+#define JOIN_OPT_CHAR		'j'
+#define PORT_OPT_CHAR		'p'
 #define SERVER_IP_OPT_CHAR	'i'
+#define NETWORK_OPT_CHAR	'n'
+#define HELP_OPT_CHAR		'h'
 
 enum chess_flag_value {
 	FLAG_LISTEN=1<<0,
 	FLAG_JOIN=1<<1,
 	FLAG_PORT=1<<2,
 	FLAG_SERVER_IP=1<<3,
+	FLAG_NETWORK=1<<4,
+	FLAG_HELP=1<<5
 };
 
 #define LISTEN_STR		"listen"
 #define JOIN_STR		"join"
 #define PORT_STR		"port"
 #define SERVER_IP_STR	"server_ip"
+#define NETWORK_STR		"network"
+#define HELP_STR		"help"
 #define DEFAULT_PORT 	54321
 #define MAX_PORT		65535
 

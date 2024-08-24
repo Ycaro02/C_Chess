@@ -72,7 +72,7 @@ NetworkInfo *init_network(char *server_ip, int local_port, struct timeval timeou
 		return (NULL);
 	}
 
-	ft_printf_fd(1, "Server IP: %s, Local port : %d\n", server_ip, local_port);
+	ft_printf_fd(1, "Server IP: %s, server port %d, Local port : %d\n", server_ip, SERVER_PORT, local_port);
 
 	/* Bind the socket */
 	ft_memset(&info->localaddr, 0, sizeof(info->localaddr));
@@ -103,6 +103,9 @@ NetworkInfo *init_network(char *server_ip, int local_port, struct timeval timeou
 
 	if (setsockopt(info->sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
 		perror("Error setting socket timeout");
+		close(info->sockfd);
+		free(info);
+		return (NULL);
 	}
 	return (info);
 }

@@ -11,8 +11,8 @@ void destroy_sdl_handle(SDLHandle *handle) {
 	if (handle->player_info.dest_ip) {
 		free(handle->player_info.dest_ip);
 	}
-	send_disconnect_to_server(handle->player_info.nt_info->sockfd, handle->player_info.nt_info->servaddr);
 	if (handle->player_info.nt_info) {
+		send_disconnect_to_server(handle->player_info.nt_info->sockfd, handle->player_info.nt_info->servaddr);
 		close(handle->player_info.nt_info->sockfd);
 		free(handle->player_info.nt_info);
 	}
@@ -46,6 +46,46 @@ void update_graphic_board(SDLHandle *h) {
 	SDL_RenderPresent(h->renderer);
 }
 
+
+void chess_routine(SDLHandle *handle){
+	ChessTile	tile_selected = INVALID_TILE;
+	ChessPiece	piece_type = EMPTY;
+	ChessBoard	*b = handle->board;
+	s32			ret = TRUE;
+	
+	while (1) {
+		tile_selected = event_handler(handle->player_info.color);
+		/* If the quit button is pressed */
+		if (tile_selected == CHESS_QUIT) { break ; }
+		
+		/* If tile is selected */
+		if (tile_selected != INVALID_TILE) {
+			/* If a piece is selected and the tile selected is a possible move */
+			if (is_selected_possible_move(b->possible_moves, tile_selected)) {
+				ret = move_piece(handle, b->selected_tile, tile_selected, piece_type);
+				b->possible_moves = 0;
+			} else { /* Update piece possible move and selected tile */
+				piece_type = get_piece_from_tile(b, tile_selected);
+				b->selected_tile = tile_selected;
+				b->possible_moves = get_piece_move(b, (1ULL << b->selected_tile), piece_type, TRUE);
+			}
+		}
+
+		if (ret == CHESS_QUIT) {
+			break ;
+		}
+
+		/* Draw logic */
+		update_graphic_board(handle);
+	}
+
+	/* Free memory */
+	destroy_sdl_handle(handle);
+	window_close(handle->window, handle->renderer);
+	free(handle);
+}
+
+
 /**
  * @brief Move piece logic for network game
  * @param h 
@@ -55,7 +95,6 @@ void update_graphic_board(SDLHandle *h) {
  */
 s32 network_move_piece(SDLHandle *h, ChessTile tile_selected) {
 	ChessBoard	*b = h->board;
-	// char		*msg = NULL;
 	ChessPiece	piece_type = EMPTY;
 	ChessPiece	color_piece_start = h->player_info.color == IS_WHITE ? WHITE_PAWN : BLACK_PAWN;
 	ChessPiece	color_piece_end = h->player_info.color == IS_WHITE ? WHITE_KING : BLACK_KING;
@@ -185,10 +224,13 @@ int main(int argc, char **argv) {
 	}
 	handle->player_info = player_info;
 
-	ft_printf_fd(1, ORANGE"Try to connect to Server at : %s:%d\n"RESET, player_info.dest_ip, SERVER_PORT);
-	network_setup(handle, flag, &handle->player_info, player_info.dest_ip);
-	// chess_routine(handle);
-	network_chess_routine(handle);
+	if (has_flag(flag, FLAG_NETWORK)) {
+		ft_printf_fd(1, ORANGE"Try to connect to Server at : %s:%d\n"RESET, player_info.dest_ip, SERVER_PORT);
+		network_setup(handle, flag, &handle->player_info, player_info.dest_ip);
+		network_chess_routine(handle);
+	} else {
+		chess_routine(handle);
+	}
 	return (0);
 }
 
@@ -283,42 +325,3 @@ void build_message(char *msg, MsgType msg_type, ChessTile tile_from_or_color, Ch
 
 
 
-// void chess_routine(SDLHandle *handle){
-// 	ChessTile	tile_selected = INVALID_TILE;
-// 	ChessPiece	piece_type = EMPTY;
-// 	ChessBoard	*b = handle->board;
-// 	s32			ret = TRUE;
-	
-// 	while (1) {
-// 		tile_selected = event_handler(handle->player_info.color);
-// 		/* If the quit button is pressed */
-// 		if (tile_selected == CHESS_QUIT) { break ; }
-		
-// 		/* If tile is selected */
-// 		if (tile_selected != INVALID_TILE) {
-// 			/* If a piece is selected and the tile selected is a possible move */
-// 			if (is_selected_possible_move(b->possible_moves, tile_selected)) {
-// 				ret = move_piece(handle, b->selected_tile, tile_selected, piece_type);
-// 				b->possible_moves = 0;
-// 			} else { /* Update piece possible move and selected tile */
-// 				piece_type = get_piece_from_tile(b, tile_selected);
-// 				b->selected_tile = tile_selected;
-// 				b->possible_moves = get_piece_move(b, (1ULL << b->selected_tile), piece_type, TRUE);
-// 			}
-// 		}
-
-// 		if (ret == CHESS_QUIT) {
-// 			break ;
-// 		}
-
-// 		/* Draw logic */
-// 		window_clear(handle->renderer);
-// 		draw_board(handle, handle->player_info.color);
-// 		SDL_RenderPresent(handle->renderer);
-// 	}
-
-// 	/* Free memory */
-// 	destroy_sdl_handle(handle);
-// 	window_close(handle->window, handle->renderer);
-// 	free(handle);
-// }
