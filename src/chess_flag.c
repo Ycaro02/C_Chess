@@ -20,9 +20,11 @@ u32 handle_chess_flag(int argc, char **argv, s8 *error, PlayerInfo *player_info)
 
 	/* Add flag option */
 	add_flag_option(&flag_ctx, LISTEN_OPT_CHAR, FLAG_LISTEN, OPT_NO_VALUE, OPT_NO_VALUE, LISTEN_STR);
-	// add_flag_option(&flag_ctx, JOIN_OPT_CHAR, FLAG_JOIN, 15, CHAR_VALUE, JOIN_STR);
 	add_flag_option(&flag_ctx, JOIN_OPT_CHAR, FLAG_JOIN, OPT_NO_VALUE, OPT_NO_VALUE, JOIN_STR);
 	add_flag_option(&flag_ctx, PORT_OPT_CHAR, FLAG_PORT, 65535, DECIMAL_VALUE, PORT_STR);
+
+	add_flag_option(&flag_ctx, SERVER_IP_OPT_CHAR, FLAG_SERVER_IP, 15, CHAR_VALUE, SERVER_IP_STR);
+
 
 	/* Parse flag in argv */
 	flag_value = parse_flag(argc, argv, &flag_ctx, error);
@@ -52,10 +54,14 @@ u32 handle_chess_flag(int argc, char **argv, s8 *error, PlayerInfo *player_info)
 	player_info->running_port = port;
 
 	/* Get ip if needed */
-	// if (has_flag(flag_value, FLAG_JOIN)) {
-	// 	player_info->dest_ip = get_opt_value(flag_ctx.opt_lst, flag_value, FLAG_JOIN);
-	// }
+	if (has_flag(flag_value, FLAG_SERVER_IP)) {
+		player_info->dest_ip = get_opt_value(flag_ctx.opt_lst, flag_value, FLAG_SERVER_IP);
+	} else {
+		ft_printf_fd(1, "No server ip, default to localhost\n");
+		player_info->dest_ip = ft_strdup("127.0.0.1");
+	}
 	
+
 	display_option_list(flag_ctx);
 	free_flag_context(&flag_ctx);
 	return (flag_value);

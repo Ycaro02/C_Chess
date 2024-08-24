@@ -221,7 +221,8 @@ int main(int argc, char **argv) {
 	}
 	handle->player_info = player_info;
 
-	network_setup(handle, flag, &handle->player_info, "127.0.0.1");
+	ft_printf_fd(1, ORANGE"Try to connect to Server at : %s:%d\n"RESET, player_info.dest_ip, SERVER_PORT);
+	network_setup(handle, flag, &handle->player_info, player_info.dest_ip);
 	// chess_routine(handle);
 	network_chess_routine(handle);
 	return (0);

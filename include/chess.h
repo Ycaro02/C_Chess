@@ -251,16 +251,19 @@ typedef t_flag_context ChessFlagContext;
 #define LISTEN_OPT_CHAR	'l'
 #define JOIN_OPT_CHAR	'j'
 #define PORT_OPT_CHAR	'p'
+#define SERVER_IP_OPT_CHAR	'i'
 
 enum chess_flag_value {
 	FLAG_LISTEN=1<<0,
 	FLAG_JOIN=1<<1,
 	FLAG_PORT=1<<2,
+	FLAG_SERVER_IP=1<<3,
 };
 
 #define LISTEN_STR		"listen"
 #define JOIN_STR		"join"
 #define PORT_STR		"port"
+#define SERVER_IP_STR	"server_ip"
 #define DEFAULT_PORT 	54321
 #define MAX_PORT		65535
 
