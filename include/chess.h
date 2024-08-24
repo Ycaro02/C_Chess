@@ -228,6 +228,9 @@ typedef struct s_network_info NetworkInfo;
 
 #define MSG_SIZE 5
 
+
+#define PAWN_PROMOTION 2
+
 /* Player info struct */
 struct s_player_info {
 	NetworkInfo *nt_info;			/* Network info */

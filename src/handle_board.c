@@ -1,5 +1,6 @@
 #include "../include/chess.h"
 #include "../include/handle_sdl.h"
+#include "../include/network.h"
 
 /* @brief Is selected possible move
  * @param possible_moves	Bitboard of possible moves
@@ -140,6 +141,8 @@ s32 display_promotion_selection(SDLHandle *handle, ChessTile tile_to) {
 			piece_selected = get_selected_piece(piece_idx, is_black);
 			ft_printf_fd(1, "Tile selected: %d\n", tile_selected);
 			promote_pawn(handle->board, tile_to, piece_selected, is_black ? BLACK_PAWN : WHITE_PAWN);
+			/* We can build the message here and return a special value to avoir double message create/sending */
+			build_message(handle->player_info.msg_tosend, MSG_TYPE_PROMOTION, handle->player_info.color, tile_to, piece_selected);
 			break ;
 		} else if (tile_selected == CHESS_QUIT) {
 			return (CHESS_QUIT);

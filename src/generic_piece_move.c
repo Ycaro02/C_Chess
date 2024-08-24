@@ -144,13 +144,13 @@ Bitboard get_piece_move(ChessBoard *board, Bitboard piece, ChessPiece piece_type
 
 s32 check_pawn_promotion(SDLHandle *handle, ChessPiece type, ChessTile tile_to) {
 	// ChessPiece queen = (type == WHITE_PAWN) ? WHITE_QUEEN : BLACK_QUEEN;
-	s32 ret = TRUE;
+	s32 ret = FALSE;
 	s8 is_pawn = (type == WHITE_PAWN || type == BLACK_PAWN);
 	s8 is_black = (type >= BLACK_PAWN);
 	s8 is_white = !is_black;
 
 
-	/* Check if is the player control pawn or opponent */
+	/* Check if is the player control pawn or opponent (no mandatory in network version) */
 	if (handle->player_info.color == IS_WHITE && is_black) {
 		return (ret);
 	} else if (handle->player_info.color == IS_BLACK && is_white) {
@@ -175,6 +175,7 @@ s32 check_pawn_promotion(SDLHandle *handle, ChessPiece type, ChessTile tile_to) 
 s32 move_piece(SDLHandle *handle, ChessTile tile_from, ChessTile tile_to, ChessPiece type) {
 	Bitboard	mask_from = 1ULL << tile_from;
 	Bitboard	mask_to = 1ULL << tile_to;
+	s32			ret = TRUE;
 
 	/* Check if the enemy piece need to be kill, handle 'en passant' kill too */
 	handle_enemy_piece_kill(handle->board, type, tile_to, mask_to);
@@ -191,9 +192,14 @@ s32 move_piece(SDLHandle *handle, ChessTile tile_from, ChessTile tile_to, ChessP
 	/* Update the piece state */
 	update_piece_state(handle->board);
 
+
+	ret = check_pawn_promotion(handle, type, tile_to);
 	/* Check if the pawn need to be promoted */
-	if (check_pawn_promotion(handle, type, tile_to) == CHESS_QUIT) {
+	if (ret == CHESS_QUIT) {
 		return (CHESS_QUIT);
+	} 
+	else if (ret == TRUE) {
+		ret = PAWN_PROMOTION;
 	}
 
 	/* Check if the enemy king is check and mat or PAT */
@@ -205,5 +211,5 @@ s32 move_piece(SDLHandle *handle, ChessTile tile_from, ChessTile tile_to, ChessP
 	/* Update 'en passant' Bitboard if needed */
 	update_en_passant_bitboard(handle->board, type, tile_from, tile_to);
 
-	return (TRUE);
+	return (ret);
 }

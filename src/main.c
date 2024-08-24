@@ -38,45 +38,6 @@ SDLHandle *init_game() {
 	return (handle);
 }
 
-void chess_routine(SDLHandle *handle){
-	ChessTile	tile_selected = INVALID_TILE;
-	ChessPiece	piece_type = EMPTY;
-	ChessBoard	*b = handle->board;
-	s32			ret = TRUE;
-	
-	while (1) {
-		tile_selected = event_handler(handle->player_info.color);
-		/* If the quit button is pressed */
-		if (tile_selected == CHESS_QUIT) { break ; }
-		
-		/* If tile is selected */
-		if (tile_selected != INVALID_TILE) {
-			/* If a piece is selected and the tile selected is a possible move */
-			if (is_selected_possible_move(b->possible_moves, tile_selected)) {
-				ret = move_piece(handle, b->selected_tile, tile_selected, piece_type);
-				b->possible_moves = 0;
-			} else { /* Update piece possible move and selected tile */
-				piece_type = get_piece_from_tile(b, tile_selected);
-				b->selected_tile = tile_selected;
-				b->possible_moves = get_piece_move(b, (1ULL << b->selected_tile), piece_type, TRUE);
-			}
-		}
-
-		if (ret == CHESS_QUIT) {
-			break ;
-		}
-
-		/* Draw logic */
-		window_clear(handle->renderer);
-		draw_board(handle, handle->player_info.color);
-		SDL_RenderPresent(handle->renderer);
-	}
-
-	/* Free memory */
-	destroy_sdl_handle(handle);
-	window_close(handle->window, handle->renderer);
-	free(handle);
-}
 
 
 void update_graphic_board(SDLHandle *h) {
@@ -108,8 +69,12 @@ s32 network_move_piece(SDLHandle *h, ChessTile tile_selected) {
 		ret = move_piece(h, b->selected_tile, tile_selected, piece_type);
 		b->possible_moves = 0;
 		update_graphic_board(h);
-		/* Send move message to the other player */
-		build_message(h->player_info.msg_tosend, MSG_TYPE_MOVE, b->selected_tile, tile_selected, piece_type);
+
+		/* Send move message to the other player if is not pawn promotion or chess quit */
+		if (ret == TRUE) {
+			build_message(h->player_info.msg_tosend, MSG_TYPE_MOVE, b->selected_tile, tile_selected, piece_type);
+		}
+
 		while (send == FALSE) {
 			send = chess_msg_send(h->player_info.nt_info, h->player_info.msg_tosend);
 			nb_iter++;
@@ -315,3 +280,45 @@ void build_message(char *msg, MsgType msg_type, ChessTile tile_from_or_color, Ch
 
 // ft_printf_fd(1, YELLOW"Move piece from [%s](%d) TO [%s](%d)\n"RESET, TILE_TO_STRING(b->selected_tile), b->selected_tile, TILE_TO_STRING(tile_selected), tile_selected);
 // ft_printf_fd(1, GREEN"Select piece in [%s]"RESET" -> "ORANGE"%s\n"RESET, TILE_TO_STRING(tile_selected), chess_piece_to_string(piece_type));
+
+
+
+// void chess_routine(SDLHandle *handle){
+// 	ChessTile	tile_selected = INVALID_TILE;
+// 	ChessPiece	piece_type = EMPTY;
+// 	ChessBoard	*b = handle->board;
+// 	s32			ret = TRUE;
+	
+// 	while (1) {
+// 		tile_selected = event_handler(handle->player_info.color);
+// 		/* If the quit button is pressed */
+// 		if (tile_selected == CHESS_QUIT) { break ; }
+		
+// 		/* If tile is selected */
+// 		if (tile_selected != INVALID_TILE) {
+// 			/* If a piece is selected and the tile selected is a possible move */
+// 			if (is_selected_possible_move(b->possible_moves, tile_selected)) {
+// 				ret = move_piece(handle, b->selected_tile, tile_selected, piece_type);
+// 				b->possible_moves = 0;
+// 			} else { /* Update piece possible move and selected tile */
+// 				piece_type = get_piece_from_tile(b, tile_selected);
+// 				b->selected_tile = tile_selected;
+// 				b->possible_moves = get_piece_move(b, (1ULL << b->selected_tile), piece_type, TRUE);
+// 			}
+// 		}
+
+// 		if (ret == CHESS_QUIT) {
+// 			break ;
+// 		}
+
+// 		/* Draw logic */
+// 		window_clear(handle->renderer);
+// 		draw_board(handle, handle->player_info.color);
+// 		SDL_RenderPresent(handle->renderer);
+// 	}
+
+// 	/* Free memory */
+// 	destroy_sdl_handle(handle);
+// 	window_close(handle->window, handle->renderer);
+// 	free(handle);
+// }

@@ -5,6 +5,8 @@
 #include <sys/time.h>
 #include <sys/socket.h>
 
+#include "chess.h"
+
 #include <stdio.h> // For perror
 
 /* For testing */
@@ -97,6 +99,9 @@ FT_INLINE void display_message(char *msg) {
 
 
 #define MAX_ITER 50
+
+void build_message(char *msg, MsgType msg_type, ChessTile tile_from_or_color, ChessTile tile_to, ChessPiece piece_type);
+
 
 /**
  * Packet format 4 char
