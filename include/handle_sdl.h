@@ -41,7 +41,7 @@
 
 /* Element size in pixel */
 #define		TOP_BAND_HEIGHT		0
-#define		TILE_SIZE			100
+#define		TILE_SIZE			60
 #define		TILE_SPACING		0
 
 /* Circle size */
