@@ -234,6 +234,18 @@ void update_msg_store(char *buffer, char *msg) {
 	ft_strlcpy(buffer, msg, ft_strlen(msg));
 }
 
+void display_unknow_msg(char *msg) {
+	int len = ft_strlen(msg);
+
+	ft_printf_fd(1, RED"Unknown message -> |"RESET);
+
+	for (int i = 0; i < len; i++) {
+		ft_printf_fd(1, "%d ", msg[i]);
+	}
+	ft_printf_fd(1, "|\n");
+}
+
+
 void process_message_receive(SDLHandle *handle, char *msg) {
 	MsgType 	msg_type = msg[0];
 	ChessTile	tile_from = 0, tile_to = 0;
@@ -267,7 +279,7 @@ void process_message_receive(SDLHandle *handle, char *msg) {
 		handle->player_info.turn = TRUE;
 	} 
 	else {
-		ft_printf_fd(1, RED"Unknown message type\n"RESET);
+		display_unknow_msg(msg);
 		return ;
 	}
 	update_msg_store(handle->player_info.last_msg, msg);
