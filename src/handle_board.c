@@ -235,6 +235,9 @@ s32 event_handler(s8 player_color) {
 		if (event.type == SDL_MOUSEBUTTONDOWN) {
 			SDL_GetMouseState(&x, &y);
 			tile = detect_tile_click(x, y, player_color);
+		} else if (event.type == SDL_MOUSEBUTTONUP) {
+			SDL_GetMouseState(&x, &y);
+			tile = detect_tile_click(x, y, player_color);
 		}
 	}
 	return (tile);
