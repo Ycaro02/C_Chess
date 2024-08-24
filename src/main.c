@@ -78,49 +78,90 @@ void chess_routine(SDLHandle *handle){
 	free(handle);
 }
 
-void netword_chess_routine(SDLHandle *h) {
-	ChessTile	tile_selected = INVALID_TILE;
-	ChessPiece	piece_type = EMPTY;
+
+void update_graphic_board(SDLHandle *h) {
+	window_clear(h->renderer);
+	draw_board(h, h->player_info.color);
+	SDL_RenderPresent(h->renderer);
+}
+
+/**
+ * @brief Move piece logic for network game
+ * @param h 
+ * @param tile_selected 
+ * @param piece_type 
+ * @return s32 FALSE if we can't send the message, CHESS_QUIT if the player quit the game, TRUE otherwise 
+ */
+s32 network_move_piece(SDLHandle *h, ChessTile tile_selected) {
 	ChessBoard	*b = h->board;
-	s32			ret = TRUE;
+	char		*msg = NULL;
+	ChessPiece	piece_type = EMPTY;
+	ChessPiece	color_piece_start = h->player_info.color == IS_WHITE ? WHITE_PAWN : BLACK_PAWN;
+	ChessPiece	color_piece_end = h->player_info.color == IS_WHITE ? WHITE_KING : BLACK_KING;
+	s32			ret = FALSE;
+	s32 		nb_iter = 0;
+	s8			send = FALSE;
+
+	/* If a piece is selected and the tile selected is a possible move */
+	if (is_selected_possible_move(b->possible_moves, tile_selected)) {
+		piece_type = get_piece_from_tile(b, b->selected_tile);
+		ret = move_piece(h, b->selected_tile, tile_selected, piece_type);
+		b->possible_moves = 0;
+		update_graphic_board(h);
+		/* Send move message to the other player */
+		msg = build_message(5, MSG_TYPE_MOVE, b->selected_tile, tile_selected, piece_type);
+		while (send == FALSE) {
+			send = chess_msg_send(h->player_info.nt_info, msg);
+			nb_iter++;
+			if (nb_iter > MAX_ITER) {
+				ft_printf_fd(1, "Max iter reached\n");
+				return (ret);
+			}
+			sleep(1);
+		}
+		h->player_info.turn = FALSE;
+		return (ret);
+	} else { /* Update piece possible move and selected tile */
+		piece_type = get_piece_from_tile(b, tile_selected);
+		if (piece_type >= color_piece_start && piece_type <= color_piece_end) {
+			b->selected_tile = tile_selected;
+			b->possible_moves = get_piece_move(b, (1ULL << b->selected_tile), piece_type, TRUE);
+		} else {
+			b->selected_tile = INVALID_TILE;
+			b->possible_moves = 0;
+		}
+	}
+	return (TRUE);
+}
+
+void network_chess_routine(SDLHandle *h) {
+	ChessTile	tile_selected = INVALID_TILE;
+	char		*msg_rcv = NULL;
+	s32			ret = FALSE;
 	
 	while (1) {
 		tile_selected = event_handler(h->player_info.color);
 		/* If the quit button is pressed */
 		if (tile_selected == CHESS_QUIT) { break ; } // Send quit message to the other player
 		
-		/* If tile is selected */
-		if (tile_selected != INVALID_TILE) {
-			/* If a piece is selected and the tile selected is a possible move */
-			if (h->player_info.turn == TRUE && is_selected_possible_move(b->possible_moves, tile_selected)) {
-				ret = move_piece(h, b->selected_tile, tile_selected, piece_type);
-				b->possible_moves = 0;
-				/* Send move message to the other player */
-				// char *msg = build_message(4, MSG_TYPE_MOVE, b->selected_tile, tile_selected, piece_type);
-				// ret = chess_msg_send(..., msg); // Send move message to the other player
-				// if (ret == FALSE) { If the send fail, try to resend message or quit the game }
-				// else { h->player_info.turn = FALSE ; } 
-			} else { /* Update piece possible move and selected tile */
-				piece_type = get_piece_from_tile(b, tile_selected);
-				b->selected_tile = tile_selected;
-				b->possible_moves = get_piece_move(b, (1ULL << b->selected_tile), piece_type, TRUE);
+		/* If tile is selected and is player turn, try to send move piece and move it */
+		if (h->player_info.turn == TRUE && tile_selected != INVALID_TILE) {
+			ret = network_move_piece(h, tile_selected);
+			if (ret == CHESS_QUIT || ret == FALSE) {
+				break ;
 			}
-			/* Receive message from the other player */
-			// need to adapt the function to receive message to be non blocking
-			// char *msg_rcv = chess_msg_receive(...);
-			// if (msg_rcv) {
-			// process_message_receive(h, msg_rcv);
-			// }
 		}
 
-		if (ret == CHESS_QUIT) {
-			break ; // Send quit message to the other player
+		/* Receive message from the other player */
+		if (!h->player_info.turn) {
+			msg_rcv = chess_msg_receive(h->player_info.nt_info);
+			if (msg_rcv) {
+				process_message_receive(h, msg_rcv);
+			}
 		}
 
 		/* Draw logic */
-		window_clear(h->renderer);
-		draw_board(h, h->player_info.color);
-		SDL_RenderPresent(h->renderer);
+		update_graphic_board(h);
 	}
 
 	/* Free memory */
@@ -129,43 +170,8 @@ void netword_chess_routine(SDLHandle *h) {
 	free(h);
 }
 
-
-void display_message(char *msg) {
-	MsgType msg_type = msg[0];
-	ChessTile tile_from = 0, tile_to = 0;
-	ChessPiece piece_type = EMPTY;
-
-
-	ft_printf_fd(1, "Message type: %s: ", message_type_to_str(msg_type));
-
-	if (msg_type == MSG_TYPE_COLOR) {
-		ft_printf_fd(1, "brut data: |%d||%d| ->", msg[0], msg[1]);
-		ft_printf_fd(1, "Color: %s\n", (msg[1] - 1) == IS_WHITE ? "WHITE" : "BLACK");
-		return ;
-	} else if (msg_type == MSG_TYPE_QUIT) {
-		ft_printf_fd(1, "Opponent quit the game, msg type %d\n", msg[0]);
-		return ;
-	}	
-	
-	/* We need to decrement all value cause we send with +1 can't send 0, interpreted like '\0' */
-	tile_from = msg[1] - 1;
-	tile_to = msg[2] - 1;
-	piece_type = msg[3] - 1;
-	ft_printf_fd(1, "brut data: |%d||%d||%d||%d|\n", msg[0], msg[1], msg[2], msg[3]);
-	if (msg_type == MSG_TYPE_MOVE) {
-		ft_printf_fd(1, "Move from %s to %s with piece %s\n", TILE_TO_STRING(tile_from), TILE_TO_STRING(tile_to), chess_piece_to_string(piece_type));
-	} else if (msg_type == MSG_TYPE_PROMOTION) {
-		ft_printf_fd(1, "Promotion from %s to %s with piece %s\n", TILE_TO_STRING(tile_from), TILE_TO_STRING(tile_to), chess_piece_to_string(piece_type));
-	} else {
-		ft_printf_fd(1, "Unknown message type\n");
-	}
-}
-
-
-#define MAX_ITER 50
-
 int network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *server_ip) {
-	struct timeval timeout = {TIMEOUT_SEC, 0};
+	struct timeval timeout = {0, 100000};
 	int test_iter = 0;
 	char *tmp = NULL;
 
@@ -216,7 +222,8 @@ int main(int argc, char **argv) {
 	handle->player_info = player_info;
 
 	network_setup(handle, flag, &handle->player_info, "127.0.0.1");
-	chess_routine(handle);
+	// chess_routine(handle);
+	network_chess_routine(handle);
 	return (0);
 }
 
@@ -227,6 +234,8 @@ void process_message_receive(SDLHandle *handle, char *msg) {
 	ChessTile	tile_from = 0, tile_to = 0;
 	ChessPiece	piece_type = EMPTY, opponent_pawn = EMPTY;
 	
+	display_message(msg);
+
 	/* If the message is a color message, set the player color */
 	if (msg_type == MSG_TYPE_COLOR) {
 		handle->player_info.color = msg[1] - 1;
@@ -273,7 +282,7 @@ char *build_message(s32 msg_size, MsgType msg_type, ChessTile tile_from_or_color
 
 	/* Set the tile_from or color (1st data) */
 	msg[1] = tile_from_or_color + 1;
-	ft_printf_fd(1, "brut data in send: |%d||%d| ->", msg[0], msg[1]);
+
 	/* If the message is a color message, return here */
 	if (msg_type == MSG_TYPE_COLOR) {
 		return (msg);

@@ -62,6 +62,41 @@ FT_INLINE char *message_type_to_str(MsgType msg_type) {
 	return ("UNKNOWN");
 }
 
+
+FT_INLINE void display_message(char *msg) {
+	MsgType msg_type = msg[0];
+	ChessTile tile_from = 0, tile_to = 0;
+	ChessPiece piece_type = EMPTY;
+
+
+	ft_printf_fd(1, YELLOW"Message type: %s: "RESET, message_type_to_str(msg_type));
+
+	if (msg_type == MSG_TYPE_COLOR) {
+		ft_printf_fd(1, "brut data: |%d||%d| ->", msg[0], msg[1]);
+		ft_printf_fd(1, "Color: %s\n", (msg[1] - 1) == IS_WHITE ? "WHITE" : "BLACK");
+		return ;
+	} else if (msg_type == MSG_TYPE_QUIT) {
+		ft_printf_fd(1, "Opponent quit the game, msg type %d\n", msg[0]);
+		return ;
+	}	
+	
+	/* We need to decrement all value cause we send with +1 can't send 0, interpreted like '\0' */
+	tile_from = msg[1] - 1;
+	tile_to = msg[2] - 1;
+	piece_type = msg[3] - 1;
+	ft_printf_fd(1, PURPLE"brut data: |%d||%d||%d||%d|\n"RESET, msg[0], msg[1], msg[2], msg[3]);
+	if (msg_type == MSG_TYPE_MOVE) {
+		ft_printf_fd(1, ORANGE"Move from %s to %s with piece %s\n"RESET, TILE_TO_STRING(tile_from), TILE_TO_STRING(tile_to), chess_piece_to_string(piece_type));
+	} else if (msg_type == MSG_TYPE_PROMOTION) {
+		ft_printf_fd(1, ORANGE"Promotion from %s to %s with piece %s\n"RESET, TILE_TO_STRING(tile_from), TILE_TO_STRING(tile_to), chess_piece_to_string(piece_type));
+	} else {
+		ft_printf_fd(1, RED"Unknown message type\n"RESET);
+	}
+}
+
+
+#define MAX_ITER 50
+
 /**
  * Packet format 4 char
  * -	1: msg_type

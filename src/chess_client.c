@@ -9,12 +9,9 @@ char *chess_msg_receive(NetworkInfo *info) {
 	ft_bzero(buffer, 1024);
 	
 	len = recvfrom(info->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&info->peeraddr, &info->addr_len);
-
-	ft_printf_fd(1, "Receive len: %d\n", len);
-
 	if (len > 0) {
 		if (ftlib_strcmp(buffer, "Hello") == 0) {
-			ft_printf_fd(1, RED"Hello receive continue\n"RESET);
+			ft_printf_fd(1, RED"Hello receive continue listening\n"RESET);
 			return (NULL);
 		}
 		buffer[len] = '\0';
@@ -23,6 +20,9 @@ char *chess_msg_receive(NetworkInfo *info) {
 		msg = ft_calloc(sizeof(char), (len + 1));
 		ftlib_strcpy(msg, buffer, len);
 	} 
+	// else {
+	// 	ft_printf_fd(1, "No message received\n");
+	// }
 	return (msg);
 }
 
@@ -30,7 +30,6 @@ int chess_msg_send(NetworkInfo *info, char *msg) {
 	int attempts = 0;
 	int ack_received = 0;
 	char buffer[1024];
-	int ret = TRUE;
 
 	ft_bzero(buffer, 1024);
 	
@@ -47,13 +46,14 @@ int chess_msg_send(NetworkInfo *info, char *msg) {
 		} 
 		attempts++;
 		sleep(1);
+		// usleep(100000);
 	}
 	if (!ack_received) {
-		ft_printf_fd(1, "No ACK received after 10 try give up msg %s\nVerify your network connection\n", msg);
-		ret = FALSE;
+		ft_printf_fd(1, "No ACK received after 10 try give up msg %s\nVerify your network connection\n", message_type_to_str(msg[0]));
+		return (FALSE);
 	}
 	free(msg);
-	return (ret);
+	return (TRUE);
 }
 
 
