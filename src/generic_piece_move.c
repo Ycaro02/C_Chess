@@ -21,7 +21,7 @@ void board_special_info_handler(ChessBoard *b, ChessPiece type, ChessTile tile_f
 		s32 idx = special_info[i].info_idx;
 		if (special_info[i].type == type && special_info[i].tile_from == tile_from && u8ValueGet(b->info, idx) == FALSE) {
 			b->info = u8ValueSet(b->info, idx, TRUE);
-			ft_printf_fd(1, PURPLE"Special info set to TRUE for %s on %s\n"RESET, chess_piece_to_string(type), TILE_TO_STRING(tile_from));
+			// ft_printf_fd(1, PURPLE"Special info set to TRUE for %s on %s\n"RESET, chess_piece_to_string(type), TILE_TO_STRING(tile_from));
 		}
 	}
 }
@@ -87,12 +87,12 @@ static void handle_enemy_piece_kill(ChessBoard *b, ChessPiece type, ChessTile ti
 	ChessPiece	enemy_piece = get_piece_from_mask(b, mask_to);
 	
 	if (enemy_piece != EMPTY) {
-		display_kill_info(enemy_piece, tile_to);
+		// display_kill_info(enemy_piece, tile_to);
 		b->piece[enemy_piece] &= ~(1ULL << tile_to);
 	} else if ((type == WHITE_PAWN || type == BLACK_PAWN) && mask_to == b->en_passant) {
 		mask_to = (1ULL << b->en_passant_tile);
 		enemy_piece = (type == WHITE_PAWN) ? BLACK_PAWN : WHITE_PAWN;
-		display_kill_info(enemy_piece, b->en_passant_tile);
+		// display_kill_info(enemy_piece, b->en_passant_tile);
 		b->piece[enemy_piece] &= ~mask_to;
 	}
 }
