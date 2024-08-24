@@ -193,12 +193,12 @@ s32 move_piece(SDLHandle *handle, ChessTile tile_from, ChessTile tile_to, ChessP
 	update_piece_state(handle->board);
 
 
-	ret = check_pawn_promotion(handle, type, tile_to);
+	s32 pawn_ret = check_pawn_promotion(handle, type, tile_to);
 	/* Check if the pawn need to be promoted */
-	if (ret == CHESS_QUIT) {
+	if (pawn_ret == CHESS_QUIT) {
 		return (CHESS_QUIT);
 	} 
-	else if (ret == TRUE) {
+	else if (pawn_ret == TRUE) {
 		ret = PAWN_PROMOTION;
 	}
 
