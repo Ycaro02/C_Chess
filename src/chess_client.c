@@ -9,8 +9,8 @@ s8 chess_msg_receive(NetworkInfo *info, char *rcv_buffer, char *last_msg_process
 	
 	len = recvfrom(info->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&info->peeraddr, &info->addr_len);
 	if (len > 0) {
-		if (ftlib_strcmp(buffer, "Hello") == 0) {
-			ft_printf_fd(1, RED"Hello receive continue listening\n"RESET);
+		if (ftlib_strcmp(buffer, "Hello") == 0 || ftlib_strcmp(buffer, "ACK") == 0) {
+			ft_printf_fd(1, PURPLE"Hello OR ACK receive continue listening\n"RESET);
 			return (FALSE);
 		} else if (ftlib_strcmp(buffer, last_msg_processed) == 0) {
 			ft_printf_fd(1, YELLOW"Double message receive skip it\n"RESET);
