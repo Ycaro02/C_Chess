@@ -242,6 +242,14 @@ ChessTile detect_tile_click(s32 x, s32 y, s8 player_color) {
 	return (tile);
 }
 
+void reset_selected_tile(SDLHandle *h) {
+	h->board->selected_tile = INVALID_TILE;
+	h->board->selected_piece = EMPTY;
+	h->board->possible_moves = 0;
+	h->over_piece_select = EMPTY;
+}
+
+
 void update_mouse_pos(SDLHandle *h, s32 x, s32 y) {
 	h->mouse_pos.x = x;
 	h->mouse_pos.y = y;
@@ -254,26 +262,37 @@ void update_mouse_pos(SDLHandle *h, s32 x, s32 y) {
 */
 s32 event_handler(SDLHandle *h, s8 player_color) {
 	SDL_Event event;
+	// Bitboard aly_pos = player_color == IS_BLACK ? h->board->black : h->board->white;
+	Bitboard aly_pos = 0;
 	ChessTile tile = INVALID_TILE;
+	ChessPiece piece_select = EMPTY;
 	s32 x = 0, y = 0;
 	while (SDL_PollEvent(&event)) {
 		if (event.type == SDL_QUIT \
 			|| (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE)) {
 			return (CHESS_QUIT);
 		}
+		if (h->player_info.turn == FALSE) {
+			continue ;
+		}
 		if (event.type == SDL_MOUSEBUTTONDOWN) {
 			SDL_GetMouseState(&x, &y);
-			update_mouse_pos(h, x, y);
 			tile = detect_tile_click(x, y, player_color);
-
-			h->over_piece_select = get_piece_from_tile(h->board, tile);
+			piece_select = get_piece_from_tile(h->board, tile);
+			if (piece_select >= h->player_info.piece_start && piece_select <= h->player_info.piece_end) {
+				h->over_piece_select = piece_select;
+			}
 		} else if (event.type == SDL_MOUSEBUTTONUP) {
 			SDL_GetMouseState(&x, &y);
-			update_mouse_pos(h, x, y);
-			if (h->board->selected_piece != EMPTY) {
+			if (h->over_piece_select != EMPTY) {
+				/* Here we need to fix for no network mode, aly is all occupied tile */
+				aly_pos = h->over_piece_select >= BLACK_PAWN ? h->board->black : h->board->white;
 				tile = detect_tile_click(x, y, player_color);
+				if (tile == h->board->selected_tile || ((1ULL << tile) & aly_pos) != 0) {
+					h->over_piece_select = EMPTY;
+				} 
 			}
-		} else if (event.type == SDL_MOUSEMOTION && h->over_piece_select != EMPTY) {
+		} else if (event.type == SDL_MOUSEMOTION) {
 			SDL_GetMouseState(&x, &y);
 			update_mouse_pos(h, x, y);
 		}

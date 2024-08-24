@@ -338,6 +338,7 @@ Bitboard	get_piece_color_control(ChessBoard *b, s8 is_black);
 s32			display_promotion_selection(SDLHandle *handle, ChessTile tile_to);
 void 		update_graphic_board(SDLHandle *h);
 void		draw_piece_over_board(SDLHandle *h, s32 x, s32 y);
+void		reset_selected_tile(SDLHandle *h);
 
 /* src/chess_network.c */
 s32		network_move_piece(SDLHandle *h, ChessTile tile_selected);

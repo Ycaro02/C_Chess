@@ -1,13 +1,6 @@
 #include "../include/network.h"
 #include "../include/handle_sdl.h"
 
-void reset_selected_tile(ChessBoard *b) {
-	b->selected_tile = INVALID_TILE;
-	b->selected_piece = EMPTY;
-	b->possible_moves = 0;
-
-	h->over_piece_select = EMPTY;
-}
 
 /**
  * @brief Move piece logic for network game
@@ -27,7 +20,6 @@ s32 network_move_piece(SDLHandle *h, ChessTile tile_selected) {
 		// piece_type = get_piece_from_tile(b, b->selected_tile);
 		ret = move_piece(h, b->selected_tile, tile_selected, b->selected_piece);
 		b->possible_moves = 0;
-		
 		h->over_piece_select = EMPTY;
 		
 		update_graphic_board(h);
@@ -35,7 +27,6 @@ s32 network_move_piece(SDLHandle *h, ChessTile tile_selected) {
 		if (ret == TRUE) {
 			build_message(h->player_info.msg_tosend, MSG_TYPE_MOVE, b->selected_tile, tile_selected, b->selected_piece);
 		}
-
 		while (send == FALSE) {
 			send = chess_msg_send(h->player_info.nt_info, h->player_info.msg_tosend);
 			nb_iter++;
@@ -46,19 +37,23 @@ s32 network_move_piece(SDLHandle *h, ChessTile tile_selected) {
 			sleep(1);
 		}
 		h->player_info.turn = FALSE;
-		reset_selected_tile(b);
+		reset_selected_tile(h);
 		return (ret);
 	} else { /* Update piece possible move and selected tile */
-		b->selected_piece = get_piece_from_tile(b, tile_selected);
-		if (b->selected_piece >= h->player_info.piece_start && b->selected_piece <= h->player_info.piece_end) {
-			b->selected_tile = tile_selected;
-			b->possible_moves = get_piece_move(b, (1ULL << b->selected_tile), b->selected_piece, TRUE);
-			if (b->possible_moves == 0) {
-				h->over_piece_select = b->selected_piece;
-			}
-		} else {
-			reset_selected_tile(b);
-		}
+		if (h->over_piece_select != EMPTY) {
+			b->selected_piece = get_piece_from_tile(b, tile_selected);
+			if (b->selected_piece >= h->player_info.piece_start && b->selected_piece <= h->player_info.piece_end) {
+				b->selected_tile = tile_selected;
+				b->possible_moves = get_piece_move(b, (1ULL << b->selected_tile), b->selected_piece, TRUE);
+				if (b->possible_moves == 0) {
+					h->over_piece_select = EMPTY;
+				}
+				return (TRUE);
+			} 
+			reset_selected_tile(h);
+			return (TRUE);
+		} 
+		reset_selected_tile(h);
 	}
 	return (TRUE);
 }

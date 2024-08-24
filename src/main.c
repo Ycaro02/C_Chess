@@ -41,19 +41,21 @@ void chess_routine(SDLHandle *h){
 				ret = move_piece(h, b->selected_tile, tile_selected, b->selected_piece);
 				b->possible_moves = 0;
 				h->over_piece_select = EMPTY;
-			} else { /* Update piece possible move and selected tile */
-				b->selected_piece = get_piece_from_tile(b, tile_selected);
-				b->selected_tile = tile_selected;
-				b->possible_moves = get_piece_move(b, (1ULL << b->selected_tile), b->selected_piece, TRUE);
-				if (b->possible_moves == 0) {
-					h->over_piece_select = b->selected_piece;
+				if (ret == CHESS_QUIT) { break ; }
+			} 
+			else { /* Update piece possible move and selected tile */
+				if (h->over_piece_select != EMPTY) {
+					b->selected_piece = get_piece_from_tile(b, tile_selected);
+					b->selected_tile = tile_selected;
+					b->possible_moves = get_piece_move(b, (1ULL << b->selected_tile), b->selected_piece, TRUE);
+					if (b->possible_moves == 0) {
+						h->over_piece_select = EMPTY;
+					}
+				} else { /* if over piece select is empty */
+					reset_selected_tile(h);
 				}
 			}
-		}
-
-		if (ret == CHESS_QUIT) {
-			break ;
-		}
+		} /* End if invalid tile */
 
 		/* Draw logic */
 		update_graphic_board(h);
@@ -88,6 +90,9 @@ int main(int argc, char **argv) {
 		network_setup(handle, flag, &handle->player_info, player_info.dest_ip);
 		network_chess_routine(handle);
 	} else {
+		handle->player_info.turn = TRUE;
+		handle->player_info.piece_start = WHITE_PAWN;
+		handle->player_info.piece_end = BLACK_KING;
 		chess_routine(handle);
 	}
 	return (0);
