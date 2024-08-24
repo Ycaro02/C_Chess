@@ -92,10 +92,10 @@ test_server: $(SERVER_EXE)
 	@ ./$(SERVER_EXE)
 
 test_listen:
-	@./$(NAME) -l -p 54321 -i $(IP_SERVER)
+	@./$(NAME) -n -l -p 54321 -i $(IP_SERVER)
 
 test_connect:
-	@./$(NAME) -j -p 54322 -i $(IP_SERVER)
+	@./$(NAME) -n -j -p 54322 -i $(IP_SERVER)
 
 # @ulimit -c unlimited
 leak thread debug: clean $(NAME)

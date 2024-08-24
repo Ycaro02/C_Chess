@@ -1,5 +1,4 @@
-#include "../include/chess.h"
-
+#include "../include/network.h"
 #include "../include/handle_sdl.h"
 
 /**
@@ -254,6 +253,23 @@ void unload_texture(SDL_Texture *texture) {
 	}
 	SDL_DestroyTexture(texture);
 }
+
+void destroy_sdl_handle(SDLHandle *handle) {
+	free(handle->board);
+	for (int i = 0; i < PIECE_MAX; i++) {
+		unload_texture(handle->piece_texture[i]);
+	}
+	free(handle->piece_texture);
+	if (handle->player_info.dest_ip) {
+		free(handle->player_info.dest_ip);
+	}
+	if (handle->player_info.nt_info) {
+		send_disconnect_to_server(handle->player_info.nt_info->sockfd, handle->player_info.nt_info->servaddr);
+		close(handle->player_info.nt_info->sockfd);
+		free(handle->player_info.nt_info);
+	}
+}
+
 
 /**
  * @brief Load a font with SDL2

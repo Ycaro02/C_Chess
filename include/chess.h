@@ -226,9 +226,8 @@ FT_INLINE void display_kill_info(ChessPiece enemy_piece, ChessTile tile_to) {
 
 typedef struct s_network_info NetworkInfo;
 
-#define MSG_SIZE 5
 
-
+/* Used in move piece to check if the move is a promotion and adapt message sending */
 #define PAWN_PROMOTION 2
 
 /* Player info struct */
@@ -334,7 +333,15 @@ s32			event_handler(s8 player_color);
 s8			verify_check_and_mat(ChessBoard *b, s8 is_black);
 Bitboard	get_piece_color_control(ChessBoard *b, s8 is_black);
 s32			display_promotion_selection(SDLHandle *handle, ChessTile tile_to);
+void 		update_graphic_board(SDLHandle *h);
 
 
+/* src/chess_network.c */
+s32		network_move_piece(SDLHandle *h, ChessTile tile_selected);
+void	network_chess_routine(SDLHandle *h);
+s8		network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *server_ip);
+
+
+/* src/handle_message.c */
 
 #endif /* CHESS_H */

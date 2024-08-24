@@ -319,3 +319,13 @@ Bitboard get_piece_color_control(ChessBoard *b, s8 is_black) {
     }
 	return (control);
 }
+
+
+/* @brief update_graphic_board, just call window_clear, draw_board and SDL_RenderPresent
+ * @param h The SDLHandle pointer
+*/
+void update_graphic_board(SDLHandle *h) {
+	window_clear(h->renderer);
+	draw_board(h, h->player_info.color);
+	SDL_RenderPresent(h->renderer);
+}

@@ -87,6 +87,6 @@ SDL_Texture	*load_texture(SDL_Renderer *renderer, const char* path);
 void		unload_texture(SDL_Texture *texture);
 void		draw_texture_tile(SDL_Renderer *renderer, SDL_Texture *texture, iVec2 tilePos, iVec2 scale);
 void		draw_color_tile(SDL_Renderer	*renderer , iVec2 tilePos, iVec2 scale, u32 color);
-
+void		destroy_sdl_handle(SDLHandle *handle);
 
 #endif /* HANDLE_SDL_H */
