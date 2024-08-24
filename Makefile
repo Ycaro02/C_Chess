@@ -9,6 +9,11 @@ SDL_LIB			=	-L./rsc/lib/install/lib -rpath ./rsc/lib/install/lib -lSDL2
 
 LIB_DEPS		=   rsc/lib
 
+GET_SERVER_IP 	 	=	./network_test/get_ipv4.sh 
+
+IP_SERVER		=	$(shell $(GET_SERVER_IP))
+
+
 all:        $(NAME)
 
 $(NAME): $(LIB_DEPS) $(LIBFT) $(LIST) $(OBJ_DIR) $(OBJS)
@@ -73,8 +78,15 @@ clean_lib:
 	@$(MAKE_LIBFT) fclean
 	@printf "$(RED)Clean libft, list$(RESET)\n"
 
-test: $(NAME)
-	@./$(NAME) -l
+test_server: $(NAME)
+	@ echo "Make test_server IP: $(IP_SERVER)"
+	@ cd network_test && ./compile_test.sh run
+
+test_listen:
+	@./$(NAME) -l -p 54321 -i $(IP_SERVER)
+
+test_connect:
+	@./$(NAME) -j -p 54322 -i $(IP_SERVER)
 
 # @ulimit -c unlimited
 leak thread debug: clean $(NAME)
