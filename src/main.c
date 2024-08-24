@@ -265,9 +265,10 @@ void process_message_receive(SDLHandle *handle, char *msg) {
 			update_piece_state(handle->board);
 		}
 		handle->player_info.turn = TRUE;
-	} else {
-		ft_printf_fd(1, RED"Unknown message type\n"RESET);
-	}
+	} 
+	// else {
+	// 	ft_printf_fd(1, RED"Unknown message type\n"RESET);
+	// }
 	update_msg_store(handle->player_info.last_msg, msg);
 }
 
@@ -278,13 +279,13 @@ void build_message(char *msg, MsgType msg_type, ChessTile tile_from_or_color, Ch
 	ft_bzero(msg, MSG_SIZE);
 
 	/* Set the message type */
-	msg[0] = msg_type;
+	msg[0] = (char)msg_type;
 	if (msg_type == MSG_TYPE_QUIT) {
 		return ;
 	}
 
 	/* Set the tile_from or color (1st data) */
-	msg[1] = tile_from_or_color + 1;
+	msg[1] = (char)(tile_from_or_color + 1);
 
 	/* If the message is a color message, return here */
 	if (msg_type == MSG_TYPE_COLOR) {
@@ -292,10 +293,10 @@ void build_message(char *msg, MsgType msg_type, ChessTile tile_from_or_color, Ch
 	}
 
 	/* Set the tile_to (2nd data) */
-	msg[2] = tile_to + 1;
+	msg[2] = (char)(tile_to + 1);
 
 	/* Set the piece_type (3rd data) */
-	msg[3] = piece_type + 1;
+	msg[3] = (char)(piece_type + 1);
 }
 
 

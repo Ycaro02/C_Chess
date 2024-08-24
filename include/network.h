@@ -89,9 +89,10 @@ FT_INLINE void display_message(char *msg) {
 		ft_printf_fd(1, ORANGE"Move from %s to %s with piece %s\n"RESET, TILE_TO_STRING(tile_from), TILE_TO_STRING(tile_to), chess_piece_to_string(piece_type));
 	} else if (msg_type == MSG_TYPE_PROMOTION) {
 		ft_printf_fd(1, ORANGE"Promotion from %s to %s with piece %s\n"RESET, TILE_TO_STRING(tile_from), TILE_TO_STRING(tile_to), chess_piece_to_string(piece_type));
-	} else {
-		ft_printf_fd(1, RED"Unknown message type\n"RESET);
-	}
+	} 
+	// else {
+	// 	ft_printf_fd(1, RED"Unknown message type\n"RESET);
+	// }
 }
 
 
