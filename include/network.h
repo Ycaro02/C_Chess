@@ -7,7 +7,7 @@
 #include <windows.h>
 // Link with ws2_32.lib special library for Winsock (to check)
 // #pragma comment(lib, "Ws2_32.lib")
-typedef SOCKET Socket;
+typedef SOCKET SocketGen;
 typedef int SocketLen; // Define SocketLen for Windows
 #define CLOSE_SOCKET closesocket
 #define INIT_NETWORK() init_network_windows()
@@ -27,7 +27,7 @@ typedef int SocketLen; // Define SocketLen for Windows
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <sys/time.h>
-typedef int Socket;
+typedef int SocketGen;
 typedef socklen_t SocketLen; // Define SocketLen for Unix
 #define CLOSE_SOCKET close
 #define INIT_NETWORK() init_network_posix()
@@ -69,7 +69,7 @@ enum e_msg_type {
 typedef struct sockaddr_in SockaddrIn;
 
 struct s_network_info {
-    Socket		sockfd;
+    SocketGen	sockfd;
     SockaddrIn	localaddr;
     SockaddrIn	servaddr;
     SockaddrIn	peeraddr;

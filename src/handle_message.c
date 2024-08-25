@@ -152,15 +152,7 @@ s8 chess_msg_receive(NetworkInfo *info, char *rcv_buffer, char *last_msg_process
 
 	ft_bzero(buffer, 1024);
 	
-	#ifdef CHESS_WINDOWS_VERSION
-		ft_printf_fd(1, "win before to try receive %s", "Message");
-	#endif
-	
 	len = recvfrom(info->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&info->peeraddr, &info->addr_len);
-	
-	#ifdef CHESS_WINDOWS_VERSION
-		ft_printf_fd(1, "win after to try receive %s: len %d", "Message", len);
-	#endif
 	if (len > 0) {
 		if (ftlib_strcmp(buffer, "Hello") == 0 || ftlib_strcmp(buffer, "ACK") == 0) {
 			ft_printf_fd(1, PURPLE"Hello OR ACK receive continue listening\n%s", RESET);
@@ -188,15 +180,7 @@ s8 chess_msg_send(NetworkInfo *info, char *msg) {
 	while (attempts < MAX_ATTEMPTS && !ack_received) {
 		sendto(info->sockfd, msg, ft_strlen(msg), 0, (struct sockaddr *)&info->peeraddr, info->addr_len);
 		
-		#ifdef CHESS_WINDOWS_VERSION
-			ft_printf_fd(1, "win send: %s\nMaybe block here in rcv ACK\n", message_type_to_str(msg[0]));
-		#endif
-		
 		int recv_len = recvfrom(info->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&info->peeraddr, &info->addr_len);
-		
-		#ifdef CHESS_WINDOWS_VERSION
-			ft_printf_fd(1, "After send: %s", msg);
-		#endif
 		
 		if (recv_len > 0) {
 			buffer[recv_len] = '\0';
