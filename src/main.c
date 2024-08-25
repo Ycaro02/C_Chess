@@ -48,9 +48,7 @@ void chess_routine(SDLHandle *h){
 					b->selected_piece = get_piece_from_tile(b, tile_selected);
 					b->selected_tile = tile_selected;
 					b->possible_moves = get_piece_move(b, (1ULL << b->selected_tile), b->selected_piece, TRUE);
-					if (b->possible_moves == 0) {
-						h->over_piece_select = EMPTY;
-					}
+					if (b->possible_moves == 0) { h->over_piece_select = EMPTY ; }
 				} else { /* if over piece select is empty */
 					reset_selected_tile(h);
 				}

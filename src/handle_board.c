@@ -76,9 +76,9 @@ void draw_possible_move(SDLHandle *handle, iVec2 tile_pos, ChessTile tile) {
 			/* Draw a small black circle in the center of the tile */
 			if (is_king && INT_ABS_DIFF(handle->board->selected_tile, tile) == 2) {
 				SDL_SetRenderDrawColor(handle->renderer, 0, 0, 200, 150); // Blue color castle move
-			} else {
-				SDL_SetRenderDrawColor(handle->renderer, 0, 0, 0, 150); // Black color
-			}
+				draw_circle_outline(handle->renderer, center.x, center.y, OUTLINE_CIRCLE_RADIUS);
+			} 
+			SDL_SetRenderDrawColor(handle->renderer, 0, 0, 0, 150); // Black color
 			draw_filled_circle(handle->renderer, center.x, center.y, CIRCLE_RADIUS);
 		}
 	}
@@ -144,7 +144,7 @@ s32 display_promotion_selection(SDLHandle *h, ChessTile tile_to) {
 		if (tile_selected >= tile_start && tile_selected <= tile_end) {
 			piece_idx = !is_black ? tile_selected - tile_start : tile_end - tile_selected;
 			piece_selected = get_selected_piece(piece_idx, is_black);
-			ft_printf_fd(1, "Tile selected: %d\n", tile_selected);
+			// ft_printf_fd(1, "Tile selected: %d\n", tile_selected);
 			promote_pawn(h->board, tile_to, piece_selected, is_black ? BLACK_PAWN : WHITE_PAWN);
 			/* We can build the message here and return a special value to avoir double message create/sending */
 			build_message(h->player_info.msg_tosend, MSG_TYPE_PROMOTION, h->player_info.color, tile_to, piece_selected);
@@ -177,6 +177,7 @@ void draw_board(SDLHandle *handle, s8 player_color) {
 	s32 		column = 7;
 	ChessPiece	pieceIdx = EMPTY;
 	ChessTile	tile = player_color == IS_BLACK ? H8 : A1;
+	s8			piece_hover = FALSE;
 
 	while (column >= 0) {
 		for (s32 raw = 0; raw < 8; raw++) {
@@ -192,7 +193,9 @@ void draw_board(SDLHandle *handle, s8 player_color) {
 
 			/* Draw piece */
 			pieceIdx = get_piece_from_tile(handle->board, tile);
-			if (pieceIdx != EMPTY) {
+			// piece_hover = (handle->over_piece_select == pieceIdx && (((1Ull << tile) & handle->board->piece[pieceIdx]) != 0)); ;
+			piece_hover = (handle->over_piece_select == pieceIdx && tile == handle->board->selected_tile); ;
+			if (pieceIdx != EMPTY && !piece_hover) {
 				draw_texture_tile(handle->renderer, handle->piece_texture[pieceIdx], tile_pos, (iVec2){TILE_SIZE, TILE_SIZE});
 			}
 
