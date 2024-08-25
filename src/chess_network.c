@@ -46,10 +46,12 @@ s32 network_move_piece(SDLHandle *h, ChessTile tile_selected) {
 		h->over_piece_select = EMPTY;
 		
 		update_graphic_board(h);
-		/* Send move message to the other player if is not pawn promotion or chess quit */
+		/* Build move message to the other player if is not pawn promotion or chess quit */
 		if (ret == TRUE) {
-			build_message(h->player_info.msg_tosend, MSG_TYPE_MOVE, b->selected_tile, tile_selected, b->selected_piece);
+			build_message(h->player_info.msg_tosend, MSG_TYPE_MOVE, b->selected_tile, tile_selected, b->selected_piece, b->turn);
 		}
+
+		/* Send the message to the other player */
 		while (send == FALSE) {
 			send = chess_msg_send(h->player_info.nt_info, h->player_info.msg_tosend);
 			nb_iter++;
@@ -144,11 +146,13 @@ s8 network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *ser
 	s32 test_iter = 0;
 	s8 ret = FALSE;
 
+	handle->board->turn = 1;
+
 	player_info->nt_info = init_network(server_ip, player_info->running_port, timeout);
 	if (has_flag(flag, FLAG_LISTEN)) {
 		player_info->color = random_player_color();
-		// ft_printf_fd(1, "Waiting for player...\n");
-		build_message(player_info->msg_tosend, MSG_TYPE_COLOR, !player_info->color, 0, 0);
+		ft_printf_fd(1, "Listen for player...%s", "\n");
+		build_message(player_info->msg_tosend, MSG_TYPE_COLOR, !player_info->color, 0, 0, handle->board->turn);
 		chess_msg_send(player_info->nt_info, player_info->msg_tosend);
 	}
 
@@ -188,7 +192,7 @@ NetworkInfo *init_network(char *server_ip, int local_port, struct timeval timeou
 		free(info);
 		return (NULL);
 	}
-	
+
 	/* Set the socket timeout */
 	sock_opt_ret = setsockopt(info->sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout));
 	if (sock_opt_ret < 0) {

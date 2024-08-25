@@ -102,7 +102,7 @@ ChessPiece get_selected_piece(s32 idx, s8 is_black) {
 	return (WHITE_KNIGHT + idx);
 }
 
-s32 display_promotion_selection(SDLHandle *h, ChessTile tile_to) {
+s32 display_promotion_selection(SDLHandle *h, ChessTile tile_from, ChessTile tile_to) {
 	iVec2 start_pos = {2, 1}; // x, y
 	ChessTile tile_start = C7;
 	ChessTile tile_end = G7;
@@ -147,7 +147,7 @@ s32 display_promotion_selection(SDLHandle *h, ChessTile tile_to) {
 			// ft_printf_fd(1, "Tile selected: %d\n", tile_selected);
 			promote_pawn(h->board, tile_to, piece_selected, is_black ? BLACK_PAWN : WHITE_PAWN);
 			/* We can build the message here and return a special value to avoir double message create/sending */
-			build_message(h->player_info.msg_tosend, MSG_TYPE_PROMOTION, h->player_info.color, tile_to, piece_selected);
+			build_message(h->player_info.msg_tosend, MSG_TYPE_PROMOTION, tile_from, tile_to, piece_selected, h->board->turn);
 			break ;
 		} else if (tile_selected == CHESS_QUIT) {
 			return (CHESS_QUIT);

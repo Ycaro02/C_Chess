@@ -104,13 +104,9 @@ FT_INLINE char *message_type_to_str(MsgType msg_type) {
 /* Max iteration for sending message */
 #define	MAX_ITER 50
 
-/* Message max size */
-#define	MSG_SIZE 5
-
 /* src/chess_network.c */
 NetworkInfo	*init_network(char *server_ip, int local_port, struct timeval timeout);
 void		send_disconnect_to_server(int sockfd, struct sockaddr_in servaddr);
-void		build_message(char *msg, MsgType msg_type, ChessTile tile_from_or_color, ChessTile tile_to, ChessPiece piece_type);
 void		process_message_receive(SDLHandle *handle, char *msg);
 
 /* src/chess_client.c */
@@ -120,7 +116,7 @@ s8			chess_msg_send(NetworkInfo *info, char *msg);
 
 /* src/handle_message.c */
 void	process_message_receive(SDLHandle *handle, char *msg);
-void	build_message(char *msg, MsgType msg_type, ChessTile tile_from_or_color, ChessTile tile_to, ChessPiece piece_type);
 void	display_message(char *msg);
+void	build_message(char *msg, MsgType msg_type, ChessTile tile_from_or_color, ChessTile tile_to, ChessPiece piece_type, s32 turn);
 
 #endif /* CHESS_NETWORK_H */

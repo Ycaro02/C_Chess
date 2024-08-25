@@ -148,6 +148,8 @@ struct s_chess_board {
 	Bitboard	white_control;		/* Bitboard for white control tile */
 	Bitboard	black_control;		/* Bitboard for black control tile */
 
+	s32			turn;				/* Turn counter */
+
 	/* u8 used as 8 boolean info used as follow
 	 * 0: white check
 	 * 1: black check
@@ -231,18 +233,22 @@ typedef struct s_network_info NetworkInfo;
 /* Used in move piece to check if the move is a promotion and adapt message sending */
 #define PAWN_PROMOTION 2
 
+
+/* Message max size */
+#define	MSG_SIZE 8
+
 /* Player info struct */
 struct s_player_info {
-	NetworkInfo *nt_info;			/* Network info */
-	char		msg_tosend[5];		/* Message to send */
-	char		msg_receiv[5];		/* Message received */
-	char		last_msg[5];		/* Last message process */
-	char		*dest_ip;			/* destination ip, NULL if we are the listener */
-	ChessPiece	piece_start;		/* ChessPiece color start */
-	ChessPiece	piece_end;			/* ChessPiece color end */
-	u16			running_port;		/* running port */
-	s8			color;				/* player color */
-	s8			turn;				/* player turn */
+	NetworkInfo *nt_info;				/* Network info */
+	char		msg_tosend[MSG_SIZE];	/* Message to send */
+	char		msg_receiv[MSG_SIZE];	/* Message received */
+	char		last_msg[MSG_SIZE];		/* Last message process */
+	char		*dest_ip;				/* destination ip, NULL if we are the listener */
+	ChessPiece	piece_start;			/* ChessPiece color start */
+	ChessPiece	piece_end;				/* ChessPiece color end */
+	u16			running_port;			/* running port */
+	s8			color;					/* player color */
+	s8			turn;					/* player turn */
 };
 
 /* Typedef for player info struct */
@@ -335,7 +341,7 @@ void		draw_board(SDLHandle *handle, s8 player_color);
 s32			event_handler(SDLHandle *h, s8 player_color);
 s8			verify_check_and_mat(ChessBoard *b, s8 is_black);
 Bitboard	get_piece_color_control(ChessBoard *b, s8 is_black);
-s32			display_promotion_selection(SDLHandle *handle, ChessTile tile_to);
+s32			display_promotion_selection(SDLHandle *handle, ChessTile tile_from, ChessTile tile_to);
 void 		update_graphic_board(SDLHandle *h);
 void		draw_piece_over_board(SDLHandle *h, s32 x, s32 y);
 void		reset_selected_tile(SDLHandle *h);

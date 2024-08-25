@@ -142,7 +142,7 @@ Bitboard get_piece_move(ChessBoard *board, Bitboard piece, ChessPiece piece_type
 
 
 
-s32 check_pawn_promotion(SDLHandle *handle, ChessPiece type, ChessTile tile_to) {
+s32 check_pawn_promotion(SDLHandle *handle, ChessPiece type, ChessTile tile_from, ChessTile tile_to) {
 	// ChessPiece queen = (type == WHITE_PAWN) ? WHITE_QUEEN : BLACK_QUEEN;
 	s32 ret = FALSE;
 	s8 is_pawn = (type == WHITE_PAWN || type == BLACK_PAWN);
@@ -161,7 +161,7 @@ s32 check_pawn_promotion(SDLHandle *handle, ChessPiece type, ChessTile tile_to) 
 	/* Check if the pawn need to be promoted */
 	if ((is_pawn && is_white && tile_to >= A8 && tile_to <= H8)
 		|| (is_pawn && is_black && tile_to >= A1 && tile_to <= H1)) {
-		ret = display_promotion_selection(handle, tile_to);
+		ret = display_promotion_selection(handle, tile_from, tile_to);
 	}
 	return (ret);
 }
@@ -194,7 +194,7 @@ s32 move_piece(SDLHandle *handle, ChessTile tile_from, ChessTile tile_to, ChessP
 	update_piece_state(handle->board);
 
 
-	s32 pawn_ret = check_pawn_promotion(handle, type, tile_to);
+	s32 pawn_ret = check_pawn_promotion(handle, type, tile_from, tile_to);
 	/* Check if the pawn need to be promoted */
 	if (pawn_ret == CHESS_QUIT) { return (CHESS_QUIT); } 
 	else if (pawn_ret == TRUE) { ret = PAWN_PROMOTION; }
