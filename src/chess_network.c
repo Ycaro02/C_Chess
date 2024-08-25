@@ -1,6 +1,25 @@
 #include "../include/network.h"
 #include "../include/handle_sdl.h"
 
+#ifdef CHESS_WINDOWS_VERSION
+int init_network_windows() {
+    WSADATA wsaData;
+    return WSAStartup(MAKEWORD(2, 2), &wsaData);
+}
+
+void cleanup_network_windows() {
+    WSACleanup();
+}
+#else
+int init_network_posix() {
+    return (TRUE); // No initialization needed for POSIX
+}
+
+void cleanup_network_posix() {
+    // No cleanup needed for POSIX
+}
+#endif
+
 
 /**
  * @brief Move piece logic for network game
@@ -91,11 +110,6 @@ void network_chess_routine(SDLHandle *h) {
 		/* Draw logic */
 		update_graphic_board(h);
 	}
-
-	/* Free memory */
-	destroy_sdl_handle(h);
-	window_close(h->window, h->renderer);
-	free(h);
 }
 
 void player_color_set_info(PlayerInfo *info) {
@@ -147,10 +161,15 @@ s8 network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *ser
 }
 
 NetworkInfo *init_network(char *server_ip, int local_port, struct timeval timeout) {
-    NetworkInfo *info = ft_calloc(sizeof(NetworkInfo),1);
+    NetworkInfo *info = NULL;
     char buffer[1024];
 
-	if (!info) {
+	if (!INIT_NETWORK()) {
+		ft_printf_fd(1, "Network initialization failed\n");
+		return (NULL);
+	}
+
+	if (!(info = ft_calloc(sizeof(NetworkInfo), 1))) {
 		return (NULL);
 	}
 
@@ -171,7 +190,7 @@ NetworkInfo *init_network(char *server_ip, int local_port, struct timeval timeou
 	info->localaddr.sin_port = htons(local_port);
 	if (bind(info->sockfd, (struct sockaddr *)&info->localaddr, sizeof(info->localaddr)) < 0) {
 		perror("Bind failed");
-		close(info->sockfd);
+		CLOSE_SOCKET(info->sockfd);
 		free(info);
 		return (NULL);
 	}
@@ -193,7 +212,7 @@ NetworkInfo *init_network(char *server_ip, int local_port, struct timeval timeou
 
 	if (setsockopt(info->sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
 		perror("Error setting socket timeout");
-		close(info->sockfd);
+		CLOSE_SOCKET(info->sockfd);
 		free(info);
 		return (NULL);
 	}

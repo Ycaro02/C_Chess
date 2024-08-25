@@ -1,13 +1,45 @@
 #ifndef CHESS_NETWORK_H
 #define CHESS_NETWORK_H
 
-#include <arpa/inet.h>
-#include <sys/time.h>
-#include <sys/socket.h>
+#ifdef CHESS_WINDOWS_VERSION
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <windows.h>
+// Link with ws2_32.lib special library for Winsock (to check)
+#pragma comment(lib, "Ws2_32.lib")
+typedef SOCKET Socket;
+typedef int SocketLen; // Define SocketLen for Windows
+#define CLOSE_SOCKET closesocket
+#define INIT_NETWORK() init_network_windows()
+#define CLEANUP_NETWORK() cleanup_network_windows()
 
-#include "chess.h"
+// Define timeval for Windows
+struct timeval {
+    long tv_sec;  /* seconds */
+    long tv_usec; /* microseconds */
+};
+
+#else
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <sys/time.h>
+typedef int Socket;
+typedef socklen_t SocketLen; // Define SocketLen for Unix
+#define CLOSE_SOCKET close
+#define INIT_NETWORK() init_network_posix()
+#define CLEANUP_NETWORK() cleanup_network_posix()
+#endif
+
+
+int init_network_posix();
+void cleanup_network_posix();
+int init_network_windows();
+void cleanup_network_windows();
 
 #include <stdio.h> // For perror
+#include "chess.h"
 
 /* For testing */
 #define TEST_MSG_NB 3
@@ -29,13 +61,24 @@ enum e_msg_type {
 	MSG_TYPE_QUIT,
 }; 
 
+typedef struct sockaddr_in SockaddrIn;
+
 struct s_network_info {
-	struct sockaddr_in	localaddr;
-	struct sockaddr_in	servaddr;
-	struct sockaddr_in	peeraddr;
-	socklen_t			addr_len;
-	int					sockfd;
+    Socket		sockfd;
+    SockaddrIn	localaddr;
+    SockaddrIn	servaddr;
+    SockaddrIn	peeraddr;
+    SocketLen	addr_len;
 };
+
+
+// struct s_network_info {
+// 	struct sockaddr_in	localaddr;
+// 	struct sockaddr_in	servaddr;
+// 	struct sockaddr_in	peeraddr;
+// 	socklen_t			addr_len;
+// 	int					sockfd;
+// };
 
 typedef enum e_msg_type MsgType;
 typedef struct s_network_info NetworkInfo;

@@ -74,6 +74,8 @@
 		"inet.h": "c",
 		"stdlib.h": "c",
 		"time.h": "c",
-		"network.h": "c"
+		"network.h": "c",
+		"string.h": "c",
+		"uv.h": "c"
 	}
 }

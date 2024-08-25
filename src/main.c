@@ -58,11 +58,6 @@ void chess_routine(SDLHandle *h){
 		/* Draw logic */
 		update_graphic_board(h);
 	}
-
-	/* Free memory */
-	destroy_sdl_handle(h);
-	window_close(h->window, h->renderer);
-	free(h);
 }
 
 
@@ -93,6 +88,11 @@ int main(int argc, char **argv) {
 		handle->player_info.piece_end = BLACK_KING;
 		chess_routine(handle);
 	}
+	/* Free memory */
+	destroy_sdl_handle(handle);
+	window_close(handle->window, handle->renderer);
+	free(handle);
+	CLEANUP_NETWORK();
 	return (0);
 }
 

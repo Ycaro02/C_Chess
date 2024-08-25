@@ -94,11 +94,14 @@ test_server: $(SERVER_EXE)
 	@ echo "Make test_server IP: $(IP_SERVER)"
 	@ ./$(SERVER_EXE)
 
-test_listen:
+test_listen: $(NAME)
 	@./$(NAME) -n -l -p 54321 -i $(IP_SERVER)
 
-test_connect:
-	@./$(NAME) -n -j -p 54322 -i $(IP_SERVER)
+test_local_listen: $(NAME)
+	@./$(NAME) -n -l -p 54321 -i 127.0.0.1
+
+test_local_connect: $(NAME)
+	@./$(NAME) -n -j -p 54322 -i 127.0.0.1
 
 # @ulimit -c unlimited
 leak thread debug: clean $(NAME)
