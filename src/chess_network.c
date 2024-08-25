@@ -4,7 +4,11 @@
 #ifdef CHESS_WINDOWS_VERSION
 int init_network_windows() {
     WSADATA wsaData;
-    return WSAStartup(MAKEWORD(2, 2), &wsaData);
+    int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    if (result != 0) {
+        return 1;
+    }
+	return (0);
 }
 
 void cleanup_network_windows() {
@@ -12,7 +16,7 @@ void cleanup_network_windows() {
 }
 #else
 int init_network_posix() {
-    return (TRUE); // No initialization needed for POSIX
+    return (0); // No initialization needed for POSIX
 }
 
 void cleanup_network_posix() {
@@ -50,7 +54,7 @@ s32 network_move_piece(SDLHandle *h, ChessTile tile_selected) {
 			send = chess_msg_send(h->player_info.nt_info, h->player_info.msg_tosend);
 			nb_iter++;
 			if (nb_iter > MAX_ITER) {
-				ft_printf_fd(1, "Max iter reached\n");
+				// ft_printf_fd(1, "Max iter reached\n");
 				return (ret);
 			}
 			sleep(1);
@@ -142,7 +146,7 @@ s8 network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *ser
 	player_info->nt_info = init_network(server_ip, player_info->running_port, timeout);
 	if (has_flag(flag, FLAG_LISTEN)) {
 		player_info->color = random_player_color();
-		ft_printf_fd(1, "Waiting for player...\n");
+		// ft_printf_fd(1, "Waiting for player...\n");
 		build_message(player_info->msg_tosend, MSG_TYPE_COLOR, !player_info->color, 0, 0);
 		chess_msg_send(player_info->nt_info, player_info->msg_tosend);
 	}
@@ -164,8 +168,8 @@ NetworkInfo *init_network(char *server_ip, int local_port, struct timeval timeou
     NetworkInfo *info = NULL;
     char buffer[1024];
 
-	if (!INIT_NETWORK()) {
-		ft_printf_fd(1, "Network initialization failed\n");
+	if (INIT_NETWORK() != 0) {
+		ft_printf_fd(2, "Error %s\n", __func__);
 		return (NULL);
 	}
 
@@ -175,11 +179,20 @@ NetworkInfo *init_network(char *server_ip, int local_port, struct timeval timeou
 
     ft_bzero(buffer, 1024);
 
-	if ((info->sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-		perror("Socket creation failed");
-		free(info);
-		return (NULL);
-	}
+	#ifdef CHESS_WINDOWS_VERSION
+		info->sockfd = WSASocket(AF_INET, SOCK_DGRAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
+		if (info->sockfd == INVALID_SOCKET) {
+			perror("Socket creation failed");
+			free(info);
+			return NULL;
+		}
+	#else
+		if ((info->sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+			perror("Socket creation failed");
+			free(info);
+			return (NULL);
+		}
+	#endif
 
 	ft_printf_fd(1, "Server IP: %s, server port %d, Local port : %d\n", server_ip, SERVER_PORT, local_port);
 
@@ -205,12 +218,25 @@ NetworkInfo *init_network(char *server_ip, int local_port, struct timeval timeou
 	sendto(info->sockfd, "Hello", ft_strlen("Hello"), 0, (struct sockaddr *)&info->servaddr, sizeof(info->servaddr));
 
 	/* Receive the peer information */
-	recvfrom(info->sockfd, &info->peeraddr, sizeof(info->peeraddr), 0, (struct sockaddr *)&info->servaddr, &info->addr_len);
+	// ft_printf_fd(1, "Waiting for peer info...\n");
+	recvfrom(info->sockfd, (char *)&info->peeraddr, sizeof(info->peeraddr), 0, (struct sockaddr *)&info->servaddr, &info->addr_len);
 	ft_printf_fd(1, "Peer info : %s:%d\n", inet_ntoa(info->peeraddr.sin_addr), ntohs(info->peeraddr.sin_port));
 	/* Send a first message to the peer (handshake) */
 	sendto(info->sockfd, "Hello", ft_strlen("Hello"), 0, (struct sockaddr *)&info->peeraddr, info->addr_len);
 
-	if (setsockopt(info->sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
+	int sock_opt_ret = -1;
+
+	#ifdef CHESS_WINDOWS_VERSION
+		DWORD win_timeout = 200;
+		ft_printf_fd(1, "Windows timeout %lu ms\n", win_timeout);
+		sock_opt_ret = setsockopt(info->sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&win_timeout, sizeof(DWORD));
+		ft_printf_fd(1, "Windows ret setsockpot %d\n", sock_opt_ret);
+	#else 
+		sock_opt_ret = setsockopt(info->sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+	#endif
+
+	// if (setsockopt(info->sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
+	if (sock_opt_ret < 0) {
 		perror("Error setting socket timeout");
 		CLOSE_SOCKET(info->sockfd);
 		free(info);

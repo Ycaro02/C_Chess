@@ -8,12 +8,12 @@ SDLHandle *init_game() {
 
 	handle = create_sdl_handle(WINDOW_WIDTH, WINDOW_HEIGHT, "Chess");
 	if (!handle) {
-		ft_printf_fd(2, "Error: create_sdl_handle failed\n");
+		ft_printf_fd(2, "Error %s: create_sdl_handle failed\n", __func__);
 		return (NULL);
 	}
 	handle->board = ft_calloc(1, sizeof(ChessBoard));
 	if (!handle->board) {
-		ft_printf_fd(2, "Error: malloc failed\n");
+		ft_printf_fd(2, "Error %s : malloc failed\n", __func__);
 		free(handle);
 		return (NULL);
 	}

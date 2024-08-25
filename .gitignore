@@ -3,3 +3,4 @@ rsc/log
 C_Chess
 obj
 .vscode
+windows/*.dll

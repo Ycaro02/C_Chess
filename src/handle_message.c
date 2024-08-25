@@ -45,12 +45,12 @@ void update_msg_store(char *buffer, char *msg) {
 void display_unknow_msg(char *msg) {
 	int len = ft_strlen(msg);
 
-	ft_printf_fd(1, RED"Unknown message -> |"RESET);
+	ft_printf_fd(1, RED"Unknown message -> |%s",RESET);
 
 	for (int i = 0; i < len; i++) {
 		ft_printf_fd(1, "%d ", msg[i]);
 	}
-	ft_printf_fd(1, "|\n");
+	ft_printf_fd(1, "%s", "|\n");
 }
 
 /* @brief Process the message receive
@@ -68,7 +68,7 @@ void process_message_receive(SDLHandle *handle, char *msg) {
 	if (msg_type == MSG_TYPE_COLOR) {
 		handle->player_info.color = msg[1] - 1;
 	} else if (msg_type == MSG_TYPE_QUIT) {
-		ft_printf_fd(1, "Opponent quit the game\n");
+		ft_printf_fd(1, "%s\n", "Opponent quit the game");
 	} else if (msg_type == MSG_TYPE_MOVE || msg_type == MSG_TYPE_PROMOTION) {
 		/* We need to decrement all value cause we send with +1 can't send 0, interpreted like '\0' */
 		tile_from = msg[1] - 1;
@@ -152,13 +152,21 @@ s8 chess_msg_receive(NetworkInfo *info, char *rcv_buffer, char *last_msg_process
 
 	ft_bzero(buffer, 1024);
 	
+	#ifdef CHESS_WINDOWS_VERSION
+		ft_printf_fd(1, "win before to try receive %s", "Message");
+	#endif
+	
 	len = recvfrom(info->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&info->peeraddr, &info->addr_len);
+	
+	#ifdef CHESS_WINDOWS_VERSION
+		ft_printf_fd(1, "win after to try receive %s: len %d", "Message", len);
+	#endif
 	if (len > 0) {
 		if (ftlib_strcmp(buffer, "Hello") == 0 || ftlib_strcmp(buffer, "ACK") == 0) {
-			ft_printf_fd(1, PURPLE"Hello OR ACK receive continue listening\n"RESET);
+			ft_printf_fd(1, PURPLE"Hello OR ACK receive continue listening\n%s", RESET);
 			return (FALSE);
 		} else if (ftlib_strcmp(buffer, last_msg_processed) == 0) {
-			ft_printf_fd(1, YELLOW"Double message receive skip it\n"RESET);
+			ft_printf_fd(1, YELLOW"Double message receive skip it\n%s", RESET);
 			return (FALSE);
 		}
 		buffer[len] = '\0';
@@ -179,7 +187,17 @@ s8 chess_msg_send(NetworkInfo *info, char *msg) {
 	
 	while (attempts < MAX_ATTEMPTS && !ack_received) {
 		sendto(info->sockfd, msg, ft_strlen(msg), 0, (struct sockaddr *)&info->peeraddr, info->addr_len);
+		
+		#ifdef CHESS_WINDOWS_VERSION
+			ft_printf_fd(1, "win send: %s\nMaybe block here in rcv ACK\n", message_type_to_str(msg[0]));
+		#endif
+		
 		int recv_len = recvfrom(info->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&info->peeraddr, &info->addr_len);
+		
+		#ifdef CHESS_WINDOWS_VERSION
+			ft_printf_fd(1, "After send: %s", msg);
+		#endif
+		
 		if (recv_len > 0) {
 			buffer[recv_len] = '\0';
 			if (ftlib_strcmp(buffer, "ACK") == 0) {

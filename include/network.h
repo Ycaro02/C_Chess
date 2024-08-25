@@ -6,18 +6,20 @@
 #include <ws2tcpip.h>
 #include <windows.h>
 // Link with ws2_32.lib special library for Winsock (to check)
-#pragma comment(lib, "Ws2_32.lib")
+// #pragma comment(lib, "Ws2_32.lib")
 typedef SOCKET Socket;
 typedef int SocketLen; // Define SocketLen for Windows
 #define CLOSE_SOCKET closesocket
 #define INIT_NETWORK() init_network_windows()
 #define CLEANUP_NETWORK() cleanup_network_windows()
 
+#define ft_printf_fd(fd, format, ...) printf(format, __VA_ARGS__)
+
 // Define timeval for Windows
-struct timeval {
-    long tv_sec;  /* seconds */
-    long tv_usec; /* microseconds */
-};
+// struct timeval {
+//     long tv_sec;  /* seconds */
+//     long tv_usec; /* microseconds */
+// };
 
 #else
 #include <sys/socket.h>
@@ -30,6 +32,9 @@ typedef socklen_t SocketLen; // Define SocketLen for Unix
 #define CLOSE_SOCKET close
 #define INIT_NETWORK() init_network_posix()
 #define CLEANUP_NETWORK() cleanup_network_posix()
+
+// #define ft_printf_fd(fd, format, ...) dprintf(fd, format, __VA_ARGS__)
+
 #endif
 
 

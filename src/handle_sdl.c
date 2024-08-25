@@ -95,7 +95,7 @@ static s8 load_piece_texture(SDLHandle *handle) {
 SDLHandle *create_sdl_handle(u32 width , u32 height, const char* title) {
 	SDLHandle *handle = malloc(sizeof(SDLHandle));
 	if (!handle) {
-		ft_printf_fd(2, "Error: malloc failed\n");
+		ft_printf_fd(2, "Error %s : malloc failed\n", __func__);
 		return (NULL);
 	}
 	handle->window = createWindow(width, height, title);
