@@ -51,6 +51,9 @@ void init_board(ChessBoard *b) {
 
 	b->selected_piece = EMPTY;
 	b->selected_tile = INVALID_TILE;
+	b->last_tile_from = INVALID_TILE;
+	b->last_tile_to = INVALID_TILE;
+	b->possible_moves = 0;
 
 	/* Update occupied and control bitboard */
 	update_piece_state(b);

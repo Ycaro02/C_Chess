@@ -148,6 +148,10 @@ struct s_chess_board {
 	Bitboard	white_control;		/* Bitboard for white control tile */
 	Bitboard	black_control;		/* Bitboard for black control tile */
 
+	/* Store last move for display it */
+	ChessTile	last_tile_from;			/* Tile from */
+	ChessTile	last_tile_to;			/* Tile to */
+
 	s32			turn;				/* Turn counter */
 
 	/* u8 used as 8 boolean info used as follow
@@ -223,7 +227,7 @@ FT_INLINE void display_kill_info(ChessPiece enemy_piece, ChessTile tile_to) {
 }
 
 /* Tile color */
-#define BLACK_TILE ((u32)(RGBA_TO_UINT32(0, 120, 0, 255)))
+#define BLACK_TILE ((u32)(RGBA_TO_UINT32(0, 120, 120, 255)))
 #define WHITE_TILE ((u32)(RGBA_TO_UINT32(255, 255, 255, 255)))
 
 

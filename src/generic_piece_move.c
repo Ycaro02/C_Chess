@@ -208,5 +208,7 @@ s32 move_piece(SDLHandle *handle, ChessTile tile_from, ChessTile tile_to, ChessP
 	/* Update 'en passant' Bitboard if needed */
 	update_en_passant_bitboard(handle->board, type, tile_from, tile_to);
 
+	handle->board->last_tile_from = tile_from;
+	handle->board->last_tile_to = tile_to;
 	return (ret);
 }

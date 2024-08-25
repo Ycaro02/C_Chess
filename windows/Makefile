@@ -19,6 +19,11 @@ $(NAME):
 			@echo "\033[7;32m -----  Compiling $(NAME) done  ----- \033[0m\n"
 
 
+update: $(NAME)
+	@echo "\033[5;36m ----- Updating windows version in /media/ycaro/Data/C_chess_win ...  ----- \033[0m\n"
+	@cp -r * /media/ycaro/Data/C_chess_win
+	@echo "\033[7;32m -----  Updating done  ----- \033[0m\n"
+
 connect: $(NAME)
 	wine $(NAME) -j -n -i 127.0.0.1
 

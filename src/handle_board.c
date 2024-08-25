@@ -178,6 +178,9 @@ void draw_board(SDLHandle *handle, s8 player_color) {
 	ChessPiece	pieceIdx = EMPTY;
 	ChessTile	tile = player_color == IS_BLACK ? H8 : A1;
 	s8			piece_hover = FALSE;
+	s8 			black_check = u8ValueGet(handle->board->info, BLACK_CHECK);
+	s8 			white_check = u8ValueGet(handle->board->info, WHITE_CHECK);
+	s8			is_black = 0, is_king = 0;
 
 	while (column >= 0) {
 		for (s32 raw = 0; raw < 8; raw++) {
@@ -186,16 +189,25 @@ void draw_board(SDLHandle *handle, s8 player_color) {
 			/* Set color of tile */
 			color = (column + raw) & 1 ? BLACK_TILE : WHITE_TILE;
 			
+			/* Draw tile */
 			draw_color_tile(handle->renderer, tile_pos, (iVec2){TILE_SIZE, TILE_SIZE}, color);
+
+			if (tile == handle->board->last_tile_from || tile == handle->board->last_tile_to) {
+				draw_color_tile(handle->renderer, tile_pos, (iVec2){TILE_SIZE, TILE_SIZE}, RGBA_TO_UINT32(0, 120, 0, 150));
+			}
 
 			/* Draw possible move */
 			draw_possible_move(handle, tile_pos, tile);
 
 			/* Draw piece */
 			pieceIdx = get_piece_from_tile(handle->board, tile);
-			// piece_hover = (handle->over_piece_select == pieceIdx && (((1Ull << tile) & handle->board->piece[pieceIdx]) != 0)); ;
 			piece_hover = (handle->over_piece_select == pieceIdx && tile == handle->board->selected_tile); ;
 			if (pieceIdx != EMPTY && !piece_hover) {
+				is_black = (pieceIdx >= BLACK_PAWN);
+				is_king = (pieceIdx == WHITE_KING || pieceIdx == BLACK_KING);
+				if (is_king && ((is_black && black_check) || (!is_black && white_check))) {
+					draw_color_tile(handle->renderer, tile_pos, (iVec2){TILE_SIZE, TILE_SIZE}, RGBA_TO_UINT32(120, 0, 0, 255));
+				}
 				draw_texture_tile(handle->renderer, handle->piece_texture[pieceIdx], tile_pos, (iVec2){TILE_SIZE, TILE_SIZE});
 			}
 
