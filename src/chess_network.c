@@ -169,6 +169,30 @@ s8 network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *ser
 	return (TRUE);
 }
 
+s8 socket_no_block(Socket *sockfd) {
+	#ifdef CHESS_WINDOWS_VERSION
+		u_long mode = 1;
+		if (ioctlsocket(*sockfd, FIONBIO, &mode) != 0) {
+			perror("ioctlsocket failed");
+			CLOSE_SOCKET(*sockfd);
+			return (FALSE);
+		}
+	#else
+		int flags = fcntl(*sockfd, F_GETFL, 0);
+		if (flags == -1) {
+			perror("fcntl failed");
+			CLOSE_SOCKET(*sockfd);
+			return (FALSE);
+		}
+		if (fcntl(*sockfd, F_SETFL, flags | O_NONBLOCK) == -1) {
+			perror("fcntl failed");
+			CLOSE_SOCKET(*sockfd);
+			return (FALSE);
+		}
+	#endif
+	return (TRUE);
+}
+
 NetworkInfo *init_network(char *server_ip, int local_port, struct timeval timeout) {
     NetworkInfo *info = NULL;
     char buffer[1024];
@@ -184,7 +208,13 @@ NetworkInfo *init_network(char *server_ip, int local_port, struct timeval timeou
 
     ft_bzero(buffer, 1024);
 
-	int sock_opt_ret = 0;
+	/**
+	 * @todo Need to change timeout logic to be more flexible
+	 * @note Instead we can use select to check if we have data to read
+	 * In linux we can use fcntl with O_NONBLOCK
+	 * In windows we can use ioctlsocket with FIONBIO
+	 */
+
 	/* Create the socket */
 
 	if ((info->sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
@@ -193,7 +223,17 @@ NetworkInfo *init_network(char *server_ip, int local_port, struct timeval timeou
 		return (NULL);
 	}
 
+	socket_no_block(&info->sockfd);
+
+	info->timeout = timeout;
+
+	/* Clear the readfds and set it to sockfd */
+	FD_ZERO(&info->readfds);
+	FD_SET(info->sockfd, &info->readfds);
+
+
 	/* Set the socket timeout */
+	int sock_opt_ret = 0;
 	sock_opt_ret = setsockopt(info->sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout));
 	if (sock_opt_ret < 0) {
 		perror("Error setting socket timeout");

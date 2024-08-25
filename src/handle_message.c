@@ -162,11 +162,30 @@ void build_message(char *msg, MsgType msg_type, ChessTile tile_from_or_color, Ch
 	msg[4] = (char)(piece_type + 1);
 }
 
+s8 select_check_data(NetworkInfo *info) {
+	int ret = 0;
+	
+	FD_ZERO(&info->readfds);
+	FD_SET(info->sockfd, &info->readfds);
+
+	select(info->sockfd + 1, &info->readfds, NULL, NULL, &info->timeout);
+	if (ret > 0 && FD_ISSET(info->sockfd, &info->readfds)) {
+		return (TRUE);
+	}
+	return (FALSE);
+}
+
 s8 chess_msg_receive(NetworkInfo *info, char *rcv_buffer, char *last_msg_processed) {
 	int len = 0;
 	char buffer[1024];
 
 	ft_bzero(buffer, 1024);
+
+	// if (!select_check_data(info)) {
+	// 	// ft_printf_fd(1, RED"No data to read\n%s", RESET);
+	// 	return (FALSE);
+	// }
+
 	
 	len = recvfrom(info->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&info->peeraddr, &info->addr_len);
 	if (len > 0) {
@@ -183,13 +202,13 @@ s8 chess_msg_receive(NetworkInfo *info, char *rcv_buffer, char *last_msg_process
 		ftlib_strcpy(rcv_buffer, buffer, len);
 		return (TRUE);
 	} 
-	ft_printf_fd(1, RED"No receive message\n%s", RESET);
+	// ft_printf_fd(1, RED"No receive message\n%s", RESET);
 	return (FALSE);
 }
 
 s8 chess_msg_send(NetworkInfo *info, char *msg) {
 	int attempts = 0;
-	int ack_received = 0;
+	int ack_received = 0, rcv_len = 0;
 	char buffer[1024];
 
 	ft_bzero(buffer, 1024);
@@ -200,10 +219,17 @@ s8 chess_msg_send(NetworkInfo *info, char *msg) {
 	while (attempts < MAX_ATTEMPTS && !ack_received) {
 		sendto(info->sockfd, msg, ft_strlen(msg), 0, (struct sockaddr *)&info->peeraddr, info->addr_len);
 		
-		int recv_len = recvfrom(info->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&info->peeraddr, &info->addr_len);
+		// if (!select_check_data(info)) {
+		// 	ft_printf_fd(1, RED"No ACK to read\n%s", RESET);
+		// 	attempts++;
+		// 	sleep(1);
+		// 	continue;
+		// }
 		
-		if (recv_len > 0) {
-			buffer[recv_len] = '\0';
+		rcv_len = recvfrom(info->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&info->peeraddr, &info->addr_len);
+		
+		if (rcv_len > 0) {
+			buffer[rcv_len] = '\0';
 			if (ftlib_strcmp(buffer, "ACK") == 0) {
 				// ft_printf_fd(1, GREEN"ACK receive for msg: |%s|\n"RESET, msg);
 				ft_printf_fd(1, CYAN"ACK receive\n%s", RESET);
