@@ -2,37 +2,26 @@
 #define CHESS_NETWORK_H
 
 #ifdef CHESS_WINDOWS_VERSION
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <windows.h>
-typedef SOCKET Socket;
-typedef int SocketLen; // Define SocketLen for Windows
-#define CLOSE_SOCKET closesocket
-#define INIT_NETWORK() init_network_windows()
-#define CLEANUP_NETWORK() cleanup_network_windows()
-
-#define ft_printf_fd(fd, format, ...) printf(format, __VA_ARGS__)
-
-// Define timeval for Windows
-// struct timeval {
-//     long tv_sec;  /* seconds */
-//     long tv_usec; /* microseconds */
-// };
-
+	#include <winsock2.h>
+	#include <ws2tcpip.h>
+	#include <windows.h>
+	typedef SOCKET Socket;
+	typedef int SocketLen; // Define SocketLen for Windows
+	#define CLOSE_SOCKET closesocket
+	#define INIT_NETWORK() init_network_windows()
+	#define CLEANUP_NETWORK() cleanup_network_windows()
+	#define ft_printf_fd(fd, format, ...) printf(format, __VA_ARGS__)
 #else
-
-#include <fcntl.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <sys/time.h>
-typedef int Socket;
-typedef socklen_t SocketLen; // Define SocketLen for Unix
-#define CLOSE_SOCKET close
-#define INIT_NETWORK() init_network_posix()
-#define CLEANUP_NETWORK() cleanup_network_posix()
-
+	#include <sys/socket.h>
+	#include <netinet/in.h>
+	#include <arpa/inet.h>
+	#include <unistd.h>
+	#include <sys/time.h>
+	typedef int Socket;
+	typedef socklen_t SocketLen; // Define SocketLen for Unix
+	#define CLOSE_SOCKET close
+	#define INIT_NETWORK() init_network_posix()
+	#define CLEANUP_NETWORK() cleanup_network_posix()
 #endif
 
 

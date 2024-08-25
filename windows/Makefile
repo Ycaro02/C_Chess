@@ -10,7 +10,7 @@ SRC_DIRS    = ../libft/libft ../libft/list ../libft/printf_fd ../libft/parse_fla
 # Trouver tous les fichiers .c dans les répertoires de sources et leurs sous-dossiers
 SRCS        = $(shell find $(SRC_DIRS) -name '*.c')
 
-NAME        = WinCchess
+NAME        = WinCchess.exe
 
 $(NAME):    
 			@echo "\033[5;36m ----- Compiling $(NAME) window version...  ----- \033[0m\n"
@@ -18,9 +18,14 @@ $(NAME):
 			@${WCC} $(SRCS) $(W_SDL2) $(W_FLAGS) -DCHESS_WINDOWS_VERSION -o $(NAME)
 			@echo "\033[7;32m -----  Compiling $(NAME) done  ----- \033[0m\n"
 
+
+connect: $(NAME)
+	wine $(NAME) -j -n -i 127.0.0.1
+
+
 clean:
 			@echo "\033[7;31m\n -----  Cleaning all objects...  ----- \033[0m\n"
-			@${RM} ${NAME}.exe
+			@${RM} ${NAME}
 			@echo "\033[7;33m -----  Cleaning done  ----- \033[0m\n"
 
 fclean:     clean

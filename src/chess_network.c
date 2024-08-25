@@ -169,24 +169,22 @@ s8 network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *ser
 	return (TRUE);
 }
 
-s8 socket_no_block(Socket *sockfd) {
+s8 socket_no_block(NetworkInfo *info, struct timeval timeout) {
 	#ifdef CHESS_WINDOWS_VERSION
+		/* Set the socket no block */
 		u_long mode = 1;
-		if (ioctlsocket(*sockfd, FIONBIO, &mode) != 0) {
+		if (ioctlsocket(info->sockfd, FIONBIO, &mode) != 0) {
 			perror("ioctlsocket failed");
-			CLOSE_SOCKET(*sockfd);
+			CLOSE_SOCKET(info->sockfd);
+			free(info);
 			return (FALSE);
 		}
 	#else
-		int flags = fcntl(*sockfd, F_GETFL, 0);
-		if (flags == -1) {
-			perror("fcntl failed");
-			CLOSE_SOCKET(*sockfd);
-			return (FALSE);
-		}
-		if (fcntl(*sockfd, F_SETFL, flags | O_NONBLOCK) == -1) {
-			perror("fcntl failed");
-			CLOSE_SOCKET(*sockfd);
+		/* Set the socket receive timeout */
+		if (setsockopt(info->sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0) {
+			perror("Error setting socket timeout");
+			CLOSE_SOCKET(info->sockfd);
+			free(info);
 			return (FALSE);
 		}
 	#endif
@@ -196,6 +194,9 @@ s8 socket_no_block(Socket *sockfd) {
 NetworkInfo *init_network(char *server_ip, int local_port, struct timeval timeout) {
     NetworkInfo *info = NULL;
     char buffer[1024];
+	ssize_t ret_rcv = 0;
+
+    ft_bzero(buffer, 1024);
 
 	if (INIT_NETWORK() != 0) {
 		ft_printf_fd(2, "Error %s\n", __func__);
@@ -206,41 +207,18 @@ NetworkInfo *init_network(char *server_ip, int local_port, struct timeval timeou
 		return (NULL);
 	}
 
-    ft_bzero(buffer, 1024);
-
-	/**
-	 * @todo Need to change timeout logic to be more flexible
-	 * @note Instead we can use select to check if we have data to read
-	 * In linux we can use fcntl with O_NONBLOCK
-	 * In windows we can use ioctlsocket with FIONBIO
-	 */
-
 	/* Create the socket */
-
 	if ((info->sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
 		perror("Socket creation failed");
 		free(info);
 		return (NULL);
 	}
 
-	socket_no_block(&info->sockfd);
-
-	info->timeout = timeout;
-
-	/* Clear the readfds and set it to sockfd */
-	FD_ZERO(&info->readfds);
-	FD_SET(info->sockfd, &info->readfds);
-
-
-	/* Set the socket timeout */
-	int sock_opt_ret = 0;
-	sock_opt_ret = setsockopt(info->sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout));
-	if (sock_opt_ret < 0) {
-		perror("Error setting socket timeout");
-		CLOSE_SOCKET(info->sockfd);
-		free(info);
+	/* Set the socket no block */
+	if (socket_no_block(info, timeout) == FALSE) {
 		return (NULL);
 	}
+
 	
 	/* Bind the socket */
 	(void)local_port; // Bind can be done on any port
@@ -277,20 +255,17 @@ NetworkInfo *init_network(char *server_ip, int local_port, struct timeval timeou
 	sendto(info->sockfd, "Hello", ft_strlen("Hello"), 0, (struct sockaddr *)&info->servaddr, sizeof(info->servaddr));
 
 	/* Receive the peer information */
-	ft_printf_fd(1, "Waiting %s...\n", "for peer info");
-	
-	ssize_t ret_rcv = 0;
 	while (ret_rcv <= 0) {
+		ft_printf_fd(1, "Waiting %s...\n", "for peer info");
 		ret_rcv = recvfrom(info->sockfd, (char *)&info->peeraddr, sizeof(info->peeraddr), 0, (struct sockaddr *)&info->servaddr, &info->addr_len);
 		sleep(1);
 	}
 	
 	// recvfrom(info->sockfd, (char *)&info->peeraddr, sizeof(info->peeraddr), 0, (struct sockaddr *)&info->servaddr, &info->addr_len);
 
-	ft_printf_fd(1, "Peer info : %s:%d, add_len %d\n", inet_ntoa(info->peeraddr.sin_addr), ntohs(info->peeraddr.sin_port), info->addr_len);
+	ft_printf_fd(1, "Peer info : %s:%d, addr_len %d\n", inet_ntoa(info->peeraddr.sin_addr), ntohs(info->peeraddr.sin_port), info->addr_len);
 	/* Send a first message to the peer (handshake) */
 	sendto(info->sockfd, "Hello", ft_strlen("Hello"), 0, (struct sockaddr *)&info->peeraddr, info->addr_len);
-
 
 	return (info);
 }

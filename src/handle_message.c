@@ -10,7 +10,7 @@ void display_message(char *msg) {
 	ft_printf_fd(1, YELLOW"Message type: %s: "RESET, message_type_to_str(msg_type));
 
 	if (msg_type == MSG_TYPE_COLOR) {
-		ft_printf_fd(1, "turn: |%d| color |%d| -> ", msg[2], msg[3]);
+		ft_printf_fd(1, "turn: |%d| color |%d| -> ", msg[1], msg[2]);
 		ft_printf_fd(1, "Color: %s\n", (msg[1] - 1) == IS_WHITE ? "WHITE" : "BLACK");
 		return ;
 	} else if (msg_type == MSG_TYPE_QUIT) {
@@ -162,31 +162,24 @@ void build_message(char *msg, MsgType msg_type, ChessTile tile_from_or_color, Ch
 	msg[4] = (char)(piece_type + 1);
 }
 
-s8 select_check_data(NetworkInfo *info) {
-	int ret = 0;
+// s8 select_check_data(NetworkInfo *info) {
+// 	int ret = 0;
 	
-	FD_ZERO(&info->readfds);
-	FD_SET(info->sockfd, &info->readfds);
+// 	FD_ZERO(&info->readfds);
+// 	FD_SET(info->sockfd, &info->readfds);
 
-	select(info->sockfd + 1, &info->readfds, NULL, NULL, &info->timeout);
-	if (ret > 0 && FD_ISSET(info->sockfd, &info->readfds)) {
-		return (TRUE);
-	}
-	return (FALSE);
-}
+// 	select(info->sockfd + 1, &info->readfds, NULL, NULL, &info->timeout);
+// 	if (ret > 0 && FD_ISSET(info->sockfd, &info->readfds)) {
+// 		return (TRUE);
+// 	}
+// 	return (FALSE);
+// }
 
 s8 chess_msg_receive(NetworkInfo *info, char *rcv_buffer, char *last_msg_processed) {
 	int len = 0;
 	char buffer[1024];
 
 	ft_bzero(buffer, 1024);
-
-	// if (!select_check_data(info)) {
-	// 	// ft_printf_fd(1, RED"No data to read\n%s", RESET);
-	// 	return (FALSE);
-	// }
-
-	
 	len = recvfrom(info->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&info->peeraddr, &info->addr_len);
 	if (len > 0) {
 		if (ftlib_strcmp(buffer, "Hello") == 0 || ftlib_strcmp(buffer, "ACK") == 0) {
@@ -218,16 +211,7 @@ s8 chess_msg_send(NetworkInfo *info, char *msg) {
 
 	while (attempts < MAX_ATTEMPTS && !ack_received) {
 		sendto(info->sockfd, msg, ft_strlen(msg), 0, (struct sockaddr *)&info->peeraddr, info->addr_len);
-		
-		// if (!select_check_data(info)) {
-		// 	ft_printf_fd(1, RED"No ACK to read\n%s", RESET);
-		// 	attempts++;
-		// 	sleep(1);
-		// 	continue;
-		// }
-		
 		rcv_len = recvfrom(info->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&info->peeraddr, &info->addr_len);
-		
 		if (rcv_len > 0) {
 			buffer[rcv_len] = '\0';
 			if (ftlib_strcmp(buffer, "ACK") == 0) {
