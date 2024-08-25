@@ -4,3 +4,4 @@ C_Chess
 obj
 .vscode
 windows/*.dll
+windows/*.exe

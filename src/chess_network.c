@@ -179,6 +179,9 @@ NetworkInfo *init_network(char *server_ip, int local_port, struct timeval timeou
 
     ft_bzero(buffer, 1024);
 
+	int sock_opt_ret = -1;
+	/* Create the socket */
+
 	#ifdef CHESS_WINDOWS_VERSION
 		info->sockfd = WSASocket(AF_INET, SOCK_DGRAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
 		if (info->sockfd == INVALID_SOCKET) {
@@ -186,16 +189,27 @@ NetworkInfo *init_network(char *server_ip, int local_port, struct timeval timeou
 			free(info);
 			return NULL;
 		}
+		DWORD win_timeout = 200;
+		ft_printf_fd(1, "Windows timeout %lu ms\n", win_timeout);
+		sock_opt_ret = setsockopt(info->sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&win_timeout, sizeof(DWORD));
+		ft_printf_fd(1, "Windows ret setsockpot %d\n", sock_opt_ret);
 	#else
 		if ((info->sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
 			perror("Socket creation failed");
 			free(info);
 			return (NULL);
 		}
+		sock_opt_ret = setsockopt(info->sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 	#endif
 
+	if (sock_opt_ret < 0) {
+		perror("Error setting socket timeout");
+		CLOSE_SOCKET(info->sockfd);
+		free(info);
+		return (NULL);
+	}
+	
 	ft_printf_fd(1, "Server IP: %s, server port %d, Local port : %d\n", server_ip, SERVER_PORT, local_port);
-
 	/* Bind the socket */
 	ft_memset(&info->localaddr, 0, sizeof(info->localaddr));
 	info->localaddr.sin_family = AF_INET;
@@ -218,30 +232,21 @@ NetworkInfo *init_network(char *server_ip, int local_port, struct timeval timeou
 	sendto(info->sockfd, "Hello", ft_strlen("Hello"), 0, (struct sockaddr *)&info->servaddr, sizeof(info->servaddr));
 
 	/* Receive the peer information */
-	// ft_printf_fd(1, "Waiting for peer info...\n");
-	recvfrom(info->sockfd, (char *)&info->peeraddr, sizeof(info->peeraddr), 0, (struct sockaddr *)&info->servaddr, &info->addr_len);
+	ft_printf_fd(1, "Waiting %s...\n", "for peer info");
+	
+	ssize_t ret_rcv = 0;
+	while (ret_rcv <= 0) {
+		ret_rcv = recvfrom(info->sockfd, (char *)&info->peeraddr, sizeof(info->peeraddr), 0, (struct sockaddr *)&info->servaddr, &info->addr_len);
+		sleep(1);
+	}
+	
+	// recvfrom(info->sockfd, (char *)&info->peeraddr, sizeof(info->peeraddr), 0, (struct sockaddr *)&info->servaddr, &info->addr_len);
+
 	ft_printf_fd(1, "Peer info : %s:%d\n", inet_ntoa(info->peeraddr.sin_addr), ntohs(info->peeraddr.sin_port));
 	/* Send a first message to the peer (handshake) */
 	sendto(info->sockfd, "Hello", ft_strlen("Hello"), 0, (struct sockaddr *)&info->peeraddr, info->addr_len);
 
-	int sock_opt_ret = -1;
 
-	#ifdef CHESS_WINDOWS_VERSION
-		DWORD win_timeout = 200;
-		ft_printf_fd(1, "Windows timeout %lu ms\n", win_timeout);
-		sock_opt_ret = setsockopt(info->sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&win_timeout, sizeof(DWORD));
-		ft_printf_fd(1, "Windows ret setsockpot %d\n", sock_opt_ret);
-	#else 
-		sock_opt_ret = setsockopt(info->sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
-	#endif
-
-	// if (setsockopt(info->sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
-	if (sock_opt_ret < 0) {
-		perror("Error setting socket timeout");
-		CLOSE_SOCKET(info->sockfd);
-		free(info);
-		return (NULL);
-	}
 	return (info);
 }
 

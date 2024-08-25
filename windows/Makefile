@@ -12,8 +12,6 @@ SRCS        = $(shell find $(SRC_DIRS) -name '*.c')
 
 NAME        = WinCchess
 
-EDIT_NAME   = edit_map
-
 $(NAME):    
 			@echo "\033[5;36m ----- Compiling $(NAME) window version...  ----- \033[0m\n"
 			@${UPDATE_BIN_DIR}
