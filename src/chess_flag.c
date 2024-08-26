@@ -22,7 +22,7 @@ u32 handle_chess_flag(int argc, char **argv, s8 *error, PlayerInfo *player_info)
 	u32					*alloc_port = NULL;
 	u32					flag_value = 0, port = DEFAULT_PORT;
 
-	ft_bzero(&flag_ctx, sizeof(ChessFlagContext));
+	fast_bzero(&flag_ctx, sizeof(ChessFlagContext));
 
 	/* Add flag option */
 	add_flag_option(&flag_ctx, LISTEN_OPT_CHAR, FLAG_LISTEN, OPT_NO_VALUE, OPT_NO_VALUE, LISTEN_STR);

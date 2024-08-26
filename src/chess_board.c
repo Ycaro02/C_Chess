@@ -32,7 +32,7 @@ void update_piece_state(ChessBoard *b) {
 void init_board(ChessBoard *b) {
 
 	/* Set all pieces to 0 */
-	ft_bzero(b, sizeof(ChessBoard));
+	fast_bzero(b, sizeof(ChessBoard));
 
 	/* Set start for white and black piece */
 	b->piece[WHITE_PAWN] = START_WHITE_PAWNS;

@@ -35,15 +35,16 @@ void display_message(char *msg) {
  * @param msg The message to display
 */
 void update_msg_store(char *buffer, char *msg) {
-	ft_bzero(buffer, MSG_SIZE);
-	ft_strlcpy(buffer, msg, ft_strlen(msg));
+	fast_bzero(buffer, MSG_SIZE);
+	// ft_strlcpy(buffer, msg, ft_strlen(msg));
+	fast_strcpy(buffer, msg);
 }
 
 /* @brief Display the message
  * @param msg The message to display
 */
 void display_unknow_msg(char *msg) {
-	int len = ft_strlen(msg);
+	int len = fast_strlen(msg);
 
 	ft_printf_fd(1, RED"Unknown message -> |%s",RESET);
 
@@ -133,7 +134,7 @@ void process_message_receive(SDLHandle *handle, char *msg) {
 void build_message(char *msg, MsgType msg_type, ChessTile tile_from_or_color, ChessTile tile_to, ChessPiece piece_type, s32 turn) {
 	// char *msg = ft_calloc(msg_size, sizeof(char));
 
-	ft_bzero(msg, MSG_SIZE);
+	fast_bzero(msg, MSG_SIZE);
 
 	/* Set the message type */
 	msg[0] = (char)msg_type;
@@ -181,14 +182,14 @@ void build_message(char *msg, MsgType msg_type, ChessTile tile_from_or_color, Ch
 #define HELLO_LEN 5
 
 s8 ignore_msg(char *buffer, char *last_msg_processed) {
-	return (ftlib_strcmp(buffer, HELLO_STR) == 0 || ftlib_strcmp(buffer, ACK_STR) == 0 || ftlib_strcmp(buffer, last_msg_processed) == 0);
+	return (fast_strcmp(buffer, HELLO_STR) == 0 || fast_strcmp(buffer, ACK_STR) == 0 || fast_strcmp(buffer, last_msg_processed) == 0);
 }
 
 s8 chess_msg_receive(NetworkInfo *info, char *rcv_buffer, char *last_msg_processed) {
 	ssize_t	rcv_len = 0;
 	char	buffer[1024];
 
-	ft_bzero(buffer, 1024);
+	fast_bzero(buffer, 1024);
 	rcv_len = recvfrom(info->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&info->peeraddr, &info->addr_len);
 	if (rcv_len > 0) {
 		if (ignore_msg(buffer, last_msg_processed)) {
@@ -207,17 +208,17 @@ s8 chess_msg_receive(NetworkInfo *info, char *rcv_buffer, char *last_msg_process
 
 s8 chess_msg_send(NetworkInfo *info, char *msg) {
 	ssize_t	rcv_len = 0;
-	int		ack_received = 0, attempts = 0;
+	int		ack_received = 0, attempts = 0, msg_len = fast_strlen(msg);
 	char	buffer[1024];
 
-	ft_bzero(buffer, 1024);
+	fast_bzero(buffer, 1024);
 	ft_printf_fd(1, CYAN"Try to send %s -> "RESET, message_type_to_str(msg[0]));
 	while (attempts < MAX_ATTEMPTS && !ack_received) {
-		sendto(info->sockfd, msg, ft_strlen(msg), 0, (struct sockaddr *)&info->peeraddr, info->addr_len);
+		sendto(info->sockfd, msg, msg_len, 0, (struct sockaddr *)&info->peeraddr, info->addr_len);
 		rcv_len = recvfrom(info->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&info->peeraddr, &info->addr_len);
 		if (rcv_len > 0) {
 			buffer[rcv_len] = '\0';
-			if (ftlib_strcmp(buffer, ACK_STR) == 0) {
+			if (fast_strcmp(buffer, ACK_STR) == 0) {
 				ft_printf_fd(1, CYAN"ACK receive\n%s", RESET);
 				ack_received = 1;
 			} 

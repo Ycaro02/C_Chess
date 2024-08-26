@@ -23,7 +23,7 @@ typedef struct s_chess_server {
 } ChessServer;
 
 void handle_client_message(int sockfd, ClientInfo *clientA, ClientInfo *clientB, struct sockaddr_in *cliaddr, char *buffer) {
-    if (ftlib_strcmp(buffer, DISCONNECT_MSG) == 0) {
+    if (fast_strcmp(buffer, DISCONNECT_MSG) == 0) {
 		if (clientA->connected && ft_memcmp(cliaddr, &clientA->addr, sizeof(struct sockaddr_in)) == 0) {
             clientA->connected = 0;
             ft_printf_fd(1, RED"Client A disconnected: %s:%d\n"RESET, inet_ntoa(clientA->addr.sin_addr), ntohs(clientA->addr.sin_port));
@@ -65,7 +65,7 @@ ChessServer *server_setup() {
 		return (NULL);
 	}
 
-	ft_bzero(&server->room, sizeof(ChessRoom));
+	fast_bzero(&server->room, sizeof(ChessRoom));
 
     /* Create UDP socket */
     if ((server->sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {

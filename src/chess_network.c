@@ -104,7 +104,7 @@ NetworkInfo *init_network(char *server_ip, int local_port, struct timeval timeou
     char buffer[1024];
 	ssize_t ret_rcv = 0;
 
-    ft_bzero(buffer, 1024);
+    fast_bzero(buffer, 1024);
 
 	if (INIT_NETWORK() != 0) {
 		ft_printf_fd(2, "Error %s\n", __func__);
@@ -160,7 +160,7 @@ NetworkInfo *init_network(char *server_ip, int local_port, struct timeval timeou
 	info->servaddr.sin_addr.s_addr = inet_addr(server_ip);
 
 	/* Send a message to the server */
-	sendto(info->sockfd, "Hello", ft_strlen("Hello"), 0, (struct sockaddr *)&info->servaddr, sizeof(info->servaddr));
+	sendto(info->sockfd, "Hello", fast_strlen("Hello"), 0, (struct sockaddr *)&info->servaddr, sizeof(info->servaddr));
 
 	/* Receive the peer information */
 	while (ret_rcv <= 0) {
@@ -173,11 +173,11 @@ NetworkInfo *init_network(char *server_ip, int local_port, struct timeval timeou
 
 	ft_printf_fd(1, "Peer info : %s:%d, addr_len %d\n", inet_ntoa(info->peeraddr.sin_addr), ntohs(info->peeraddr.sin_port), info->addr_len);
 	/* Send a first message to the peer (handshake) */
-	sendto(info->sockfd, "Hello", ft_strlen("Hello"), 0, (struct sockaddr *)&info->peeraddr, info->addr_len);
+	sendto(info->sockfd, "Hello", fast_strlen("Hello"), 0, (struct sockaddr *)&info->peeraddr, info->addr_len);
 
 	return (info);
 }
 
 void send_disconnect_to_server(int sockfd, struct sockaddr_in servaddr) {
-	sendto(sockfd, DISCONNECT_MSG, ft_strlen(DISCONNECT_MSG), 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
+	sendto(sockfd, DISCONNECT_MSG, fast_strlen(DISCONNECT_MSG), 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
 }
