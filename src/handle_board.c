@@ -73,11 +73,11 @@ void draw_possible_move(SDLHandle *handle, iVec2 tile_pos, ChessTile tile) {
 			SDL_SetRenderDrawColor(handle->renderer, 200, 0, 0, 255); // Red color
 			draw_circle_outline(handle->renderer, center.x, center.y, OUTLINE_CIRCLE_RADIUS);
 		} else {
-			/* Draw a small black circle in the center of the tile */
 			if (is_king && INT_ABS_DIFF(handle->board->selected_tile, tile) == 2) {
 				SDL_SetRenderDrawColor(handle->renderer, 0, 0, 200, 150); // Blue color castle move
 				draw_circle_outline(handle->renderer, center.x, center.y, OUTLINE_CIRCLE_RADIUS);
 			} 
+			/* Draw a small black circle in the center of the tile */
 			SDL_SetRenderDrawColor(handle->renderer, 0, 0, 0, 150); // Black color
 			draw_filled_circle(handle->renderer, center.x, center.y, CIRCLE_RADIUS);
 		}

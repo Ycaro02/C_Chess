@@ -66,7 +66,7 @@ s8 network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *ser
 
 	if (has_flag(flag, FLAG_JOIN)) {
 		while (ret == FALSE && test_iter < MAX_ITER) {
-			ret = chess_msg_receive(player_info->nt_info, player_info->msg_receiv, player_info->last_msg);
+			ret = chess_msg_receive(handle, player_info->nt_info, player_info->msg_receiv, player_info->last_msg);
 			test_iter++;
 			sleep(1);
 		}
