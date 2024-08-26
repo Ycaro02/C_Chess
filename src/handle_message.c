@@ -193,7 +193,7 @@ s8 chess_msg_receive(NetworkInfo *info, char *rcv_buffer, char *last_msg_process
 	rcv_len = recvfrom(info->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&info->peeraddr, &info->addr_len);
 	if (rcv_len > 0) {
 		if (ignore_msg(buffer, last_msg_processed)) {
-			ft_printf_fd(1, PURPLE"Hello,ACK or double message receive continue listening\n%s", RESET);
+			// ft_printf_fd(1, PURPLE"Hello,ACK or double message receive continue listening\n%s", RESET);
 			return (FALSE);
 		}
 		buffer[rcv_len] = '\0';

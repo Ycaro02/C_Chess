@@ -70,7 +70,7 @@ s8 network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *ser
 			test_iter++;
 			sleep(1);
 		}
-		display_message(player_info->msg_receiv);
+		// display_message(player_info->msg_receiv);
 		process_message_receive(handle, player_info->msg_receiv);
 	}
 	player_color_set_info(player_info);
@@ -162,9 +162,9 @@ NetworkInfo *init_network(char *server_ip, int local_port, struct timeval timeou
 	/* Send a message to the server */
 	sendto(info->sockfd, "Hello", fast_strlen("Hello"), 0, (struct sockaddr *)&info->servaddr, sizeof(info->servaddr));
 
+	ft_printf_fd(1, "Waiting %s...\n", "for peer info");
 	/* Receive the peer information */
 	while (ret_rcv <= 0) {
-		ft_printf_fd(1, "Waiting %s...\n", "for peer info");
 		ret_rcv = recvfrom(info->sockfd, (char *)&info->peeraddr, sizeof(info->peeraddr), 0, (struct sockaddr *)&info->servaddr, &info->addr_len);
 		sleep(1);
 	}
