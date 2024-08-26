@@ -6,10 +6,21 @@
 #define PORT 24242
 #define DISCONNECT_MSG "DISCONNECT"
 
-typedef struct {
+typedef struct s_client_info {
     struct sockaddr_in addr;
     int connected;
 } ClientInfo;
+
+typedef struct s_chess_room {
+	ClientInfo clientA;
+	ClientInfo clientB;
+} ChessRoom;
+
+typedef struct s_chess_server {
+	int sockfd;
+	struct sockaddr_in addr;
+	ChessRoom room;
+} ChessServer;
 
 void handle_client_message(int sockfd, ClientInfo *clientA, ClientInfo *clientB, struct sockaddr_in *cliaddr, char *buffer) {
     if (ftlib_strcmp(buffer, DISCONNECT_MSG) == 0) {
@@ -40,45 +51,66 @@ void handle_client_message(int sockfd, ClientInfo *clientA, ClientInfo *clientB,
     }
 }
 
-int main() {
-    int sockfd;
-    struct sockaddr_in servaddr, cliaddr;
-    socklen_t len = sizeof(cliaddr);
-    char buffer[1024];
+ChessServer *server_setup() {
+	ChessServer *server = ft_calloc(1, sizeof(ChessServer));
+	if (!server) {
+		ft_printf_fd(2, RED"Error: alloc %s\n"RESET, __func__);
+		return (NULL);
+	}
+
+	ft_bzero(&server->room, sizeof(ChessRoom));
 
     /* Create UDP socket */
-    if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+    if ((server->sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
         perror("Socket creation failed");
-        exit(EXIT_FAILURE);
+		free(server);
+		return (NULL);
     }
 
-
-    ft_memset(&servaddr, 0, sizeof(servaddr));
-    ft_memset(&cliaddr, 0, sizeof(cliaddr));
-
+    ft_memset(&server->addr, 0, sizeof(server->addr));
 	/* Server addr configuration */
-    servaddr.sin_family = AF_INET;
-    servaddr.sin_addr.s_addr = INADDR_ANY;
-    servaddr.sin_port = htons(PORT);
+    server->addr.sin_family = AF_INET;
+    server->addr.sin_addr.s_addr = INADDR_ANY;
+    server->addr.sin_port = htons(PORT);
+
 
 	/* Bind the socket */
-    if (bind(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
+    if (bind(server->sockfd, (struct sockaddr *)&server->addr, sizeof(server->addr)) < 0) {
         perror("Bind failed");
-        close(sockfd);
-        exit(EXIT_FAILURE);
+		free(server);
+        close(server->sockfd);
+		return (NULL);
     }
+	return (server);
+}
 
-    ft_printf_fd(1, ORANGE"Server waiting on port %d...\n"RESET, PORT);
+void server_routine(ChessServer *server) {
+	struct sockaddr_in	cliaddr;
+	socklen_t			len = sizeof(cliaddr);
+	char				buffer[1024];
 
-	ClientInfo clientAInfo = {0};
-	ClientInfo clientBInfo = {0};
+	ft_memset(buffer, 0, sizeof(buffer));
+	ft_memset(&cliaddr, 0, sizeof(cliaddr));
 
-    while (1) {
-        recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&cliaddr, &len);
-		handle_client_message(sockfd, &clientAInfo, &clientBInfo, &cliaddr, buffer);
+	ft_printf_fd(1, ORANGE"Server waiting on port %d...\n"RESET, PORT);
+
+	while (1) {
+		recvfrom(server->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&cliaddr, &len);
+		handle_client_message(server->sockfd, &server->room.clientA, &server->room.clientB, &cliaddr, buffer);
 		ft_memset(buffer, 0, sizeof(buffer));
-    }
+	}
 
-    close(sockfd);
-    return 0;
+    close(server->sockfd);
+	free(server);
+}
+
+int main() {
+	ChessServer			*server = NULL;
+
+
+	if (!(server = server_setup())) {
+		return (1);
+	}
+	server_routine(server);
+    return (0);
 }
