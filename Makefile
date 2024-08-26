@@ -8,7 +8,7 @@ SDL_LIB			=	-L./rsc/lib/install/lib -rpath ./rsc/lib/install/lib -lSDL2
 
 LIB_DEPS		=   rsc/lib
 
-GET_SERVER_IP 	 	=	./network_test/get_ipv4.sh 
+GET_SERVER_IP 	 	=	./rsc/network_test/get_ipv4.sh 
 
 IP_SERVER		=	$(shell $(GET_SERVER_IP))
 
@@ -92,7 +92,7 @@ test: $(NAME)
 	@./$(NAME)
 
 test_server: $(SERVER_EXE)
-	@ echo "Make test_server IP: $(IP_SERVER)"
+	@ echo "Server running on : $(IP_SERVER):24242"
 	@ ./$(SERVER_EXE)
 
 test_listen: $(NAME)
