@@ -271,7 +271,7 @@ s8 ignore_msg(SDLHandle *h, char *buffer, char *last_msg_processed) {
 		piece_check_legal = piece_type;
 
 		if (buffer[0] == MSG_TYPE_PROMOTION) {
-			piece_check_legal = handle->player_info.color == IS_WHITE ? BLACK_PAWN : WHITE_PAWN;
+			piece_check_legal = h->player_info.color == IS_WHITE ? BLACK_PAWN : WHITE_PAWN;
 		}
 
 		if (is_legal_move_pck(h, tile_from, tile_to, piece_check_legal) == FALSE) {
