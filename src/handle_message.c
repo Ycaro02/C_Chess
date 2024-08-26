@@ -55,48 +55,58 @@ void display_unknow_msg(char *msg) {
 }
 
 
-s8 is_legal_promotion_pck(SDLHandle *handle, ChessPiece new_piece) {
+s8 is_legal_promotion_pck(SDLHandle *handle, ChessPiece new_piece, ChessTile tile_to) {
 	s8 enemy_color = handle->player_info.color == IS_WHITE ? IS_BLACK : IS_WHITE;
 	ChessPiece start_piece = enemy_color == IS_WHITE ? WHITE_KNIGHT : BLACK_KNIGHT;
 	ChessPiece end_piece = enemy_color == IS_WHITE ? WHITE_QUEEN : BLACK_QUEEN;
 
 	if (new_piece < start_piece || new_piece > end_piece) {
-		ft_printf_fd(1, "Piece type promotion is out of range %d\n", new_piece);
+		ft_printf_fd(1, "Piece type promotion is out of range %d\n", chess_piece_to_string(new_piece));
 		return (FALSE);
 	}
+
+	/* Is if a promotion we need to check te pawn reach the raw of the promotion */
+	if (enemy_color == IS_WHITE && tile_to < A8 && tile_to > H8) {
+		ft_printf_fd(1, "Tile to is not in the promotion raw %d\n", TILE_TO_STRING(tile_to));
+		return (FALSE);
+	} else if (enemy_color == IS_BLACK && tile_to < A1 && tile_to > H1) {
+		ft_printf_fd(1, "Tile to is not in the promotion raw %d\n", TILE_TO_STRING(tile_to));
+		return (FALSE);
+	}
+
 	return (TRUE);
 }
 
 s8 is_legal_move_pck(SDLHandle *handle, ChessTile tile_from, ChessTile tile_to, ChessPiece piece_type) {
-	s8 enemy_color = handle->player_info.color == IS_WHITE ? IS_BLACK : IS_WHITE;
-	ChessPiece enemy_piece_start = enemy_color == IS_WHITE ? WHITE_PAWN : BLACK_PAWN;
-	ChessPiece enemy_piece_end = enemy_color == IS_WHITE ? WHITE_KING : BLACK_KING;
+	Bitboard	possible_moves = 0;
+	s8			enemy_color = handle->player_info.color == IS_WHITE ? IS_BLACK : IS_WHITE;
+	ChessPiece	enemy_piece_start = enemy_color == IS_WHITE ? WHITE_PAWN : BLACK_PAWN;
+	ChessPiece	enemy_piece_end = enemy_color == IS_WHITE ? WHITE_KING : BLACK_KING;
 
-
+	/* Check if the tile is out of bound */
 	if (tile_from < A1 || tile_from > H8 || tile_to < A1 || tile_to > H8) {
-		ft_printf_fd(1, "Tile from or to is out of bound %d %d\n", tile_from, tile_to);
+		ft_printf_fd(1, "Tile from or to is out of bound %d %d\n", TILE_TO_STRING(tile_from), TILE_TO_STRING(tile_to));
 		return (FALSE);
 	}
 
+	/* Check if the piece is out of range */
 	if (piece_type < enemy_piece_start || piece_type > enemy_piece_end) {
-		ft_printf_fd(1, "Piece type is out of range %d\n", piece_type);
+		ft_printf_fd(1, "Piece type is out of range %d\n", chess_piece_to_string(piece_type));
 		return (FALSE);
 	}
 
 	/* Check if the piece is on the tile */
 	if ((handle->board->piece[piece_type] & (1ULL << tile_from)) == 0) {
-		ft_printf_fd(1, "Piece is %s not on the tile %d\n", chess_piece_to_string(piece_type), tile_from);
+		ft_printf_fd(1, "Piece is %s not on the tile %d\n", chess_piece_to_string(piece_type), TILE_TO_STRING(tile_from));
 		return (FALSE);
 	}
 
-	Bitboard possible_moves = get_piece_move(handle->board, 1ULL << tile_from, piece_type, TRUE);
+	/* Check if the move is possible */
+	possible_moves = get_piece_move(handle->board, 1ULL << tile_from, piece_type, TRUE);
 	if ((possible_moves & (1ULL << tile_to)) == 0) {
 		ft_printf_fd(1, "Move is not possible from %s to %s\n", TILE_TO_STRING(tile_from), TILE_TO_STRING(tile_to));
 		return (FALSE);
 	}
-
-	/* Check turn too */
-
 	return (TRUE);
 }
 
