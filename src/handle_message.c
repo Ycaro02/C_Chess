@@ -229,3 +229,19 @@ s8 chess_msg_send(NetworkInfo *info, char *msg) {
 	}
 	return (TRUE);
 }
+
+
+s8 safe_msg_send(SDLHandle *h) {
+	s32 		nb_iter = 0;
+	s8			send = FALSE;
+
+	while (send == FALSE) {
+		send = chess_msg_send(h->player_info.nt_info, h->player_info.msg_tosend);
+		nb_iter++;
+		if (nb_iter > MAX_ITER) {
+			return (FALSE);
+		}
+		sleep(1);
+	}
+	return (TRUE);
+}

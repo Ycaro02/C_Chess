@@ -79,7 +79,7 @@ ifeq ($(shell [ -d "rsc/lib" ] && echo 0 || echo 1), 0)
 endif
 
 fclean:		clean_lib clean
-	@make -s -C window fclean
+	@make -s -C windows fclean
 	@$(RM) $(NAME) $(SERVER_EXE)
 	@printf "$(RED)Clean $(NAME)$(RESET)\n"
 

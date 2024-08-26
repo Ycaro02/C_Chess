@@ -152,6 +152,9 @@ struct s_chess_board {
 	ChessTile	last_tile_from;			/* Tile from */
 	ChessTile	last_tile_to;			/* Tile to */
 
+	/* Last clicked tile */
+	ChessTile	last_clicked_tile;		/* Last clicked tile */
+
 	s32			turn;				/* Turn counter */
 
 	/* u8 used as 8 boolean info used as follow
@@ -349,11 +352,6 @@ s32			display_promotion_selection(SDLHandle *handle, ChessTile tile_from, ChessT
 void 		update_graphic_board(SDLHandle *h);
 void		draw_piece_over_board(SDLHandle *h, s32 x, s32 y);
 void		reset_selected_tile(SDLHandle *h);
-
-/* src/chess_network.c */
-s32		network_move_piece(SDLHandle *h, ChessTile tile_selected);
-void	network_chess_routine(SDLHandle *h);
-s8		network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *server_ip);
 
 
 /* src/handle_message.c */

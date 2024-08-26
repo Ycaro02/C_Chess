@@ -14,6 +14,7 @@ SRCS			=	chess_board.c \
 					generic_piece_move.c \
 					handle_board.c \
 					chess_network.c \
+					network_routine.c \
 					handle_message.c \
 					handle_sdl.c \
 

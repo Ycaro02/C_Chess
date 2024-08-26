@@ -95,17 +95,18 @@ FT_INLINE char *message_type_to_str(MsgType msg_type) {
 
 /* src/chess_network.c */
 NetworkInfo	*init_network(char *server_ip, int local_port, struct timeval timeout);
+s8			network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *server_ip);
 void		send_disconnect_to_server(int sockfd, struct sockaddr_in servaddr);
-void		process_message_receive(SDLHandle *handle, char *msg);
-
-/* src/chess_client.c */
-s8			chess_msg_receive(NetworkInfo *info, char *rcv_buffer, char *last_msg_processed);
-s8			chess_msg_send(NetworkInfo *info, char *msg);
-
 
 /* src/handle_message.c */
 void	process_message_receive(SDLHandle *handle, char *msg);
 void	display_message(char *msg);
 void	build_message(char *msg, MsgType msg_type, ChessTile tile_from_or_color, ChessTile tile_to, ChessPiece piece_type, s32 turn);
+s8		chess_msg_receive(NetworkInfo *info, char *rcv_buffer, char *last_msg_processed);
+s8		chess_msg_send(NetworkInfo *info, char *msg);
+s8		safe_msg_send(SDLHandle *h);
+
+/* src/network_routine.c */
+void	network_chess_routine(SDLHandle *h);
 
 #endif /* CHESS_NETWORK_H */

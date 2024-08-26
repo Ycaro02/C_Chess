@@ -140,16 +140,17 @@ s32 display_promotion_selection(SDLHandle *h, ChessTile tile_from, ChessTile til
 
 	/* Wait for the player to select a piece */
 	while (1) {
-		ChessTile tile_selected = event_handler(h, h->player_info.color);
-		if (tile_selected >= tile_start && tile_selected <= tile_end) {
-			piece_idx = !is_black ? tile_selected - tile_start : tile_end - tile_selected;
+		s32 event = event_handler(h, h->player_info.color);
+		ChessTile last_click = h->board->last_clicked_tile;
+		if (last_click >= tile_start && last_click <= tile_end) {
+			piece_idx = !is_black ? last_click - tile_start : tile_end - last_click;
 			piece_selected = get_selected_piece(piece_idx, is_black);
 			// ft_printf_fd(1, "Tile selected: %d\n", tile_selected);
 			promote_pawn(h->board, tile_to, piece_selected, is_black ? BLACK_PAWN : WHITE_PAWN);
 			/* We can build the message here and return a special value to avoir double message create/sending */
 			build_message(h->player_info.msg_tosend, MSG_TYPE_PROMOTION, tile_from, tile_to, piece_selected, h->board->turn);
 			break ;
-		} else if (tile_selected == CHESS_QUIT) {
+		} else if (event == CHESS_QUIT) {
 			return (CHESS_QUIT);
 		}
 	}
@@ -277,11 +278,15 @@ void update_mouse_pos(SDLHandle *h, s32 x, s32 y) {
 */
 s32 event_handler(SDLHandle *h, s8 player_color) {
 	SDL_Event event;
-	// Bitboard aly_pos = player_color == IS_BLACK ? h->board->black : h->board->white;
-	Bitboard aly_pos = 0;
-	ChessTile tile = INVALID_TILE;
+	Bitboard aly_pos = h->over_piece_select >= BLACK_PAWN ? h->board->black : h->board->white;;
 	ChessPiece piece_select = EMPTY;
 	s32 x = 0, y = 0;
+
+	/* For local mode, aly is all occupied tile */
+	if (!has_flag(h->flag, FLAG_NETWORK)) {
+		aly_pos = h->board->occupied;
+	}
+
 	while (SDL_PollEvent(&event)) {
 		if (event.type == SDL_QUIT \
 			|| (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE)) {
@@ -290,29 +295,25 @@ s32 event_handler(SDLHandle *h, s8 player_color) {
 		if (h->player_info.turn == FALSE) {
 			continue ;
 		}
-		if (event.type == SDL_MOUSEBUTTONDOWN) {
-			SDL_GetMouseState(&x, &y);
-			tile = detect_tile_click(x, y, player_color);
-			piece_select = get_piece_from_tile(h->board, tile);
+		SDL_GetMouseState(&x, &y);
+		if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+			h->board->last_clicked_tile = detect_tile_click(x, y, player_color);
+			piece_select = get_piece_from_tile(h->board, h->board->last_clicked_tile);
 			if (piece_select >= h->player_info.piece_start && piece_select <= h->player_info.piece_end) {
 				h->over_piece_select = piece_select;
 			}
-		} else if (event.type == SDL_MOUSEBUTTONUP) {
-			SDL_GetMouseState(&x, &y);
+		} else if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {
 			if (h->over_piece_select != EMPTY) {
-				/* Here we need to fix for no network mode, aly is all occupied tile */
-				aly_pos = h->over_piece_select >= BLACK_PAWN ? h->board->black : h->board->white;
-				tile = detect_tile_click(x, y, player_color);
-				if (tile == h->board->selected_tile || ((1ULL << tile) & aly_pos) != 0) {
+				h->board->last_clicked_tile = detect_tile_click(x, y, player_color);
+				if (h->board->last_clicked_tile == h->board->selected_tile || ((1ULL << h->board->last_clicked_tile) & aly_pos) != 0) {
 					h->over_piece_select = EMPTY;
 				} 
 			}
 		} else if (event.type == SDL_MOUSEMOTION) {
-			SDL_GetMouseState(&x, &y);
 			update_mouse_pos(h, x, y);
 		}
 	}
-	return (tile);
+	return (TRUE);
 }
 
 /* @brief Verify if the king is check and mat or PAT

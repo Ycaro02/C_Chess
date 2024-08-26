@@ -71,13 +71,14 @@ typedef struct s_iVec2 {
 
 
 typedef struct s_sdl_handle {
-	SDL_Window		*window;
-	SDL_Renderer	*renderer;
-	SDL_Texture		**piece_texture;
-	ChessBoard		*board;
-	PlayerInfo		player_info;
-	iVec2			mouse_pos;
-	ChessPiece		over_piece_select;
+	SDL_Window		*window;			/* The window ptr */
+	SDL_Renderer	*renderer;			/* The renderer ptr */
+	SDL_Texture		**piece_texture;	/* Array of texture for each piece */
+	ChessBoard		*board;				/* The chess board */
+	PlayerInfo		player_info;		/* Player info */
+	iVec2			mouse_pos;			/* Mouse position */
+	ChessPiece		over_piece_select;	/* The piece selected (over display) */
+	u32				flag;				/* App Flag */
 } SDLHandle;
 
 /* src/sdl_handle */

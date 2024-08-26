@@ -25,28 +25,29 @@ SDLHandle *init_game() {
 }
 
 void chess_routine(SDLHandle *h){
-	ChessTile	tile_selected = INVALID_TILE;
+	// ChessTile	tile_selected = INVALID_TILE;
 	ChessBoard	*b = h->board;
 	s32			ret = TRUE;
+	s32			event = 0;
 	
 	while (1) {
-		tile_selected = event_handler(h, h->player_info.color);
+		event = event_handler(h, h->player_info.color);
 		/* If the quit button is pressed */
-		if (tile_selected == CHESS_QUIT) { break ; }
+		if (event == CHESS_QUIT) { break ; }
 		
 		/* If tile is selected */
-		if (tile_selected != INVALID_TILE) {
+		if (b->last_clicked_tile != INVALID_TILE) {
 			/* If a piece is selected and the tile selected is a possible move */
-			if (is_selected_possible_move(b->possible_moves, tile_selected)) {
-				ret = move_piece(h, b->selected_tile, tile_selected, b->selected_piece);
+			if (is_selected_possible_move(b->possible_moves, b->last_clicked_tile)) {
+				ret = move_piece(h, b->selected_tile, b->last_clicked_tile, b->selected_piece);
 				b->possible_moves = 0;
 				h->over_piece_select = EMPTY;
 				if (ret == CHESS_QUIT) { break ; }
 			} 
 			else { /* Update piece possible move and selected tile */
 				if (h->over_piece_select != EMPTY) {
-					b->selected_piece = get_piece_from_tile(b, tile_selected);
-					b->selected_tile = tile_selected;
+					b->selected_piece = get_piece_from_tile(b, b->last_clicked_tile);
+					b->selected_tile = b->last_clicked_tile;
 					b->possible_moves = get_piece_move(b, (1ULL << b->selected_tile), b->selected_piece, TRUE);
 					if (b->possible_moves == 0) { h->over_piece_select = EMPTY ; }
 				} else { /* if over piece select is empty */
@@ -76,6 +77,7 @@ int main(int argc, char **argv) {
 	if (!handle) {
 		return (1);
 	}
+	handle->flag = flag;
 	handle->player_info = player_info;
 
 	if (has_flag(flag, FLAG_NETWORK)) {

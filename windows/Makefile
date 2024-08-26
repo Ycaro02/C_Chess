@@ -1,3 +1,5 @@
+include ../libft/rsc/mk/color.mk
+
 WCC         = x86_64-w64-mingw32-gcc
 
 W_SDL2      = -L../rsc/lib/win_lib/SDL2-2.30.5/x86_64-w64-mingw32/lib -I../rsc/lib/win_lib/SDL2-2.30.5/x86_64-w64-mingw32/include
@@ -13,25 +15,24 @@ SRCS        = $(shell find $(SRC_DIRS) -name '*.c')
 NAME        = WinCchess.exe
 
 $(NAME):    
-			@echo "\033[5;36m ----- Compiling $(NAME) window version...  ----- \033[0m\n"
+			@printf "$(CYAN)Compiling ${NAME} ...$(RESET)\n"
 			@${UPDATE_BIN_DIR}
 			@${WCC} $(SRCS) $(W_SDL2) $(W_FLAGS) -DCHESS_WINDOWS_VERSION -o $(NAME)
-			@echo "\033[7;32m -----  Compiling $(NAME) done  ----- \033[0m\n"
+			@printf "$(GREEN)Compiling $(NAME) done$(RESET)\n"
 
 
 update: $(NAME)
-	@echo "\033[5;36m ----- Updating windows version in /media/ycaro/Data/C_chess_win ...  ----- \033[0m\n"
+	@printf "$(CYAN)Updating windows version in /media/ycaro/Data/C_chess_win ${NAME} ...$(RESET)\n"
 	@cp -r * /media/ycaro/Data/C_chess_win
-	@echo "\033[7;32m -----  Updating done  ----- \033[0m\n"
+	@printf "$(GREEN)Update done $(NAME) done$(RESET)\n"
 
 connect: $(NAME)
 	wine $(NAME) -j -n -i 127.0.0.1
 
 
 clean:
-			@echo "\033[7;31m\n -----  Cleaning all objects...  ----- \033[0m\n"
 			@${RM} ${NAME}
-			@echo "\033[7;33m -----  Cleaning done  ----- \033[0m\n"
+			@printf "$(RED)Clean $(NAME)$(RESET)\n"
 
 fclean:     clean
 
