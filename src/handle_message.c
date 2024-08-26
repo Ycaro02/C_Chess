@@ -175,24 +175,30 @@ void build_message(char *msg, MsgType msg_type, ChessTile tile_from_or_color, Ch
 // 	return (FALSE);
 // }
 
+#define ACK_STR "ACK"
+#define HELLO_STR "Hello"
+#define ACK_LEN 3
+#define HELLO_LEN 5
+
+s8 ignore_msg(char *buffer, char *last_msg_processed) {
+	return (ftlib_strcmp(buffer, HELLO_STR) == 0 || ftlib_strcmp(buffer, ACK_STR) == 0 || ftlib_strcmp(buffer, last_msg_processed) == 0);
+}
+
 s8 chess_msg_receive(NetworkInfo *info, char *rcv_buffer, char *last_msg_processed) {
-	int len = 0;
-	char buffer[1024];
+	ssize_t	rcv_len = 0;
+	char	buffer[1024];
 
 	ft_bzero(buffer, 1024);
-	len = recvfrom(info->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&info->peeraddr, &info->addr_len);
-	if (len > 0) {
-		if (ftlib_strcmp(buffer, "Hello") == 0 || ftlib_strcmp(buffer, "ACK") == 0) {
-			ft_printf_fd(1, PURPLE"Hello OR ACK receive continue listening\n%s", RESET);
-			return (FALSE);
-		} else if (ftlib_strcmp(buffer, last_msg_processed) == 0) {
-			ft_printf_fd(1, YELLOW"Double message receive skip it\n%s", RESET);
+	rcv_len = recvfrom(info->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&info->peeraddr, &info->addr_len);
+	if (rcv_len > 0) {
+		if (ignore_msg(buffer, last_msg_processed)) {
+			ft_printf_fd(1, PURPLE"Hello,ACK or double message receive continue listening\n%s", RESET);
 			return (FALSE);
 		}
-		buffer[len] = '\0';
-		sendto(info->sockfd, "ACK", ft_strlen("ACK"), 0, (struct sockaddr *)&info->peeraddr, info->addr_len);
+		buffer[rcv_len] = '\0';
+		sendto(info->sockfd, ACK_STR, ACK_LEN, 0, (struct sockaddr *)&info->peeraddr, info->addr_len);
 		ft_printf_fd(1, GREEN"Msg |%s| receive -> ACK send\n"RESET, message_type_to_str(buffer[0]));
-		ftlib_strcpy(rcv_buffer, buffer, len);
+		ftlib_strcpy(rcv_buffer, buffer, rcv_len);
 		return (TRUE);
 	} 
 	// ft_printf_fd(1, RED"No receive message\n%s", RESET);
@@ -200,22 +206,18 @@ s8 chess_msg_receive(NetworkInfo *info, char *rcv_buffer, char *last_msg_process
 }
 
 s8 chess_msg_send(NetworkInfo *info, char *msg) {
-	int attempts = 0;
-	int ack_received = 0, rcv_len = 0;
-	char buffer[1024];
+	ssize_t	rcv_len = 0;
+	int		ack_received = 0, attempts = 0;
+	char	buffer[1024];
 
 	ft_bzero(buffer, 1024);
-	
 	ft_printf_fd(1, CYAN"Try to send %s -> "RESET, message_type_to_str(msg[0]));
-
-
 	while (attempts < MAX_ATTEMPTS && !ack_received) {
 		sendto(info->sockfd, msg, ft_strlen(msg), 0, (struct sockaddr *)&info->peeraddr, info->addr_len);
 		rcv_len = recvfrom(info->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&info->peeraddr, &info->addr_len);
 		if (rcv_len > 0) {
 			buffer[rcv_len] = '\0';
-			if (ftlib_strcmp(buffer, "ACK") == 0) {
-				// ft_printf_fd(1, GREEN"ACK receive for msg: |%s|\n"RESET, msg);
+			if (ftlib_strcmp(buffer, ACK_STR) == 0) {
 				ft_printf_fd(1, CYAN"ACK receive\n%s", RESET);
 				ack_received = 1;
 			} 
@@ -224,24 +226,22 @@ s8 chess_msg_send(NetworkInfo *info, char *msg) {
 		sleep(1);
 	}
 	if (!ack_received) {
-		ft_printf_fd(1, "No ACK received after 10 try give up msg %s\nVerify your network connection\n", message_type_to_str(msg[0]));
+		ft_printf_fd(1, "No ACK received after %d try give up msg %s\nVerify your network connection\n",MAX_ATTEMPTS, message_type_to_str(msg[0]));
 		return (FALSE);
 	}
 	return (TRUE);
 }
 
-
+/* Need to refactore this to store last message unsend and resend it when needed */
 s8 safe_msg_send(SDLHandle *h) {
 	s32 		nb_iter = 0;
-	s8			send = FALSE;
 
-	while (send == FALSE) {
-		send = chess_msg_send(h->player_info.nt_info, h->player_info.msg_tosend);
-		nb_iter++;
-		if (nb_iter > MAX_ITER) {
-			return (FALSE);
+	while (nb_iter < MAX_ITER) {
+		if (chess_msg_send(h->player_info.nt_info, h->player_info.msg_tosend) == TRUE){
+			return (TRUE);
 		}
+		nb_iter++;
 		sleep(1);
 	}
-	return (TRUE);
+	return (FALSE);
 }
