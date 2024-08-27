@@ -150,7 +150,7 @@ NetworkInfo *init_network(char *server_ip, int local_port, struct timeval timeou
 		return (NULL);
 	}
 
-	ft_printf_fd(1, "Server IP: %s, server port %d, Local port : %d\n", server_ip, SERVER_PORT, info->localaddr.sin_port);
+	ft_printf_fd(1, "Server IP: %s, server port %d, Local port : %d\n", server_ip, SERVER_PORT, ntohs(info->localaddr.sin_port));
 
 
 	/* Server addr configuration */

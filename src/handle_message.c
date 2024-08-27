@@ -288,7 +288,7 @@ s8 ignore_msg(SDLHandle *h, char *buffer, char *last_msg_processed) {
 			return (TRUE);
 		}
 		if (buffer[0] == MSG_TYPE_PROMOTION) {
-			if (is_legal_promotion_pck(h, piece_type) == FALSE) {
+			if (is_legal_promotion_pck(h, piece_type, tile_to) == FALSE) {
 				return (TRUE);
 			}
 		}
