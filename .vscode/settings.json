@@ -76,6 +76,7 @@
 		"time.h": "c",
 		"network.h": "c",
 		"string.h": "c",
-		"uv.h": "c"
+		"uv.h": "c",
+		"signum-arch.h": "c"
 	}
 }

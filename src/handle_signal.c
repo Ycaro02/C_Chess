@@ -51,6 +51,12 @@ static void signal_handler(int signum)
 			perror("Can't catch SIGQUIT");
 			return (FALSE);
 		}
+
+		/* Handle SIGHUP */
+		if (sigaction(SIGHUP, &sa, NULL) == -1) {
+			perror("Can't catch SIGHUP");
+			return (FALSE);
+		}
 		return (TRUE);
 	}
 #endif
