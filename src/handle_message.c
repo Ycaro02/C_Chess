@@ -61,16 +61,16 @@ s8 is_legal_promotion_pck(SDLHandle *handle, ChessPiece new_piece, ChessTile til
 	ChessPiece end_piece = enemy_color == IS_WHITE ? WHITE_QUEEN : BLACK_QUEEN;
 
 	if (new_piece < start_piece || new_piece > end_piece) {
-		ft_printf_fd(1, "Piece type promotion is out of range %d\n", chess_piece_to_string(new_piece));
+		ft_printf_fd(1, "Piece type promotion is out of range %s\n", chess_piece_to_string(new_piece));
 		return (FALSE);
 	}
 
 	/* Is if a promotion we need to check te pawn reach the raw of the promotion */
 	if (enemy_color == IS_WHITE && tile_to < A8 && tile_to > H8) {
-		ft_printf_fd(1, "Tile to is not in the promotion raw %d\n", TILE_TO_STRING(tile_to));
+		ft_printf_fd(1, "Tile to is not in the promotion raw %s\n", TILE_TO_STRING(tile_to));
 		return (FALSE);
 	} else if (enemy_color == IS_BLACK && tile_to < A1 && tile_to > H1) {
-		ft_printf_fd(1, "Tile to is not in the promotion raw %d\n", TILE_TO_STRING(tile_to));
+		ft_printf_fd(1, "Tile to is not in the promotion raw %s\n", TILE_TO_STRING(tile_to));
 		return (FALSE);
 	}
 
@@ -85,19 +85,19 @@ s8 is_legal_move_pck(SDLHandle *handle, ChessTile tile_from, ChessTile tile_to, 
 
 	/* Check if the tile is out of bound */
 	if (tile_from < A1 || tile_from > H8 || tile_to < A1 || tile_to > H8) {
-		ft_printf_fd(1, "Tile from or to is out of bound %d %d\n", TILE_TO_STRING(tile_from), TILE_TO_STRING(tile_to));
+		ft_printf_fd(1, "Tile from or to is out of bound %s %s\n", TILE_TO_STRING(tile_from), TILE_TO_STRING(tile_to));
 		return (FALSE);
 	}
 
 	/* Check if the piece is out of range */
 	if (piece_type < enemy_piece_start || piece_type > enemy_piece_end) {
-		ft_printf_fd(1, "Piece type is out of range %d\n", chess_piece_to_string(piece_type));
+		ft_printf_fd(1, "Piece type is out of range %s\n", chess_piece_to_string(piece_type));
 		return (FALSE);
 	}
 
 	/* Check if the piece is on the tile */
 	if ((handle->board->piece[piece_type] & (1ULL << tile_from)) == 0) {
-		ft_printf_fd(1, "Piece is %s not on the tile %d\n", chess_piece_to_string(piece_type), TILE_TO_STRING(tile_from));
+		ft_printf_fd(1, "Piece is %s not on the tile %s\n", chess_piece_to_string(piece_type), TILE_TO_STRING(tile_from));
 		return (FALSE);
 	}
 

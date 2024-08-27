@@ -315,6 +315,14 @@ enum chess_flag_value {
 #define DEFAULT_PORT 	54321
 #define MAX_PORT		65535
 
+
+/* Declarion for SDLHandle struct */
+typedef struct s_sdl_handle SDLHandle;
+
+/* src/main.c */
+/* Singleton to get the sdl pointer */
+SDLHandle	*get_SDL_handle();
+void		chess_destroy(SDLHandle *h);
 /* src/chess_flag.c */
 u32 handle_chess_flag(int argc, char **argv, s8 *error, PlayerInfo *player_info);
 
@@ -335,9 +343,6 @@ Bitboard	get_queen_moves(ChessBoard *b, Bitboard queen, ChessPiece type, s8 is_b
 Bitboard	get_king_moves(ChessBoard *b, Bitboard king, ChessPiece type, s8 is_black, s8 check_legal);
 Bitboard	get_knight_moves(ChessBoard *b, Bitboard knight, ChessPiece type, s8 is_black, s8 check_legal);
 
-
-/* Declarion for SDLHandle struct */
-typedef struct s_sdl_handle SDLHandle;
 
 /* src/generic_piece_move.c */
 Bitboard 	get_piece_move(ChessBoard *board, Bitboard piece, ChessPiece piece_type, s8 check_legal);

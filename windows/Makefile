@@ -14,6 +14,8 @@ SRCS        = $(shell find $(SRC_DIRS) -name '*.c')
 
 NAME        = WinCchess.exe
 
+all:	$(NAME)
+
 $(NAME):    
 			@printf "$(CYAN)Compiling ${NAME} ...$(RESET)\n"
 			@${UPDATE_BIN_DIR}

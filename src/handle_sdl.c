@@ -147,13 +147,14 @@ u8 window_is_open(SDL_Window* window) {
  * @note We need to destroy renderer before destroying the window
  */
 void window_close(SDL_Window* window, SDL_Renderer *renderer) {
-	if (!window || !renderer) {
-		return ;
+
+	if (renderer) {
+		SDL_DestroyRenderer(renderer);
 	}
-	SDL_DestroyRenderer(renderer);
-	SDL_DestroyWindow(window);
-	SDL_Quit();
-	// TTF_Quit();
+	if (window) {
+		SDL_DestroyWindow(window);
+		SDL_Quit();
+	}
 }
 
 /**
@@ -261,15 +262,37 @@ void unload_texture(SDL_Texture *texture) {
 }
 
 void destroy_sdl_handle(SDLHandle *handle) {
-	free(handle->board);
-	for (int i = 0; i < PIECE_MAX; i++) {
-		unload_texture(handle->piece_texture[i]);
+	if (!handle) {
+		return ;
 	}
-	free(handle->piece_texture);
+
+	/* free board */
+	if (handle->board) {
+		free(handle->board);
+	}
+	
+	/* Unload texture */
+	if (handle->piece_texture) {
+		for (int i = 0; i < PIECE_MAX; i++) {
+			unload_texture(handle->piece_texture[i]);
+		}
+		free(handle->piece_texture);
+	}
+
+	/* Close window */
+	window_close(handle->window, handle->renderer);
+
+	/* Free ip addr */
 	if (handle->player_info.dest_ip) {
 		free(handle->player_info.dest_ip);
 	}
+
+	ft_printf_fd(1, RED"Destroy SDLHandle end game%s\n", RESET);
+
+
+	/* Free network info and send disconnect to server */
 	if (handle->player_info.nt_info) {
+		ft_printf_fd(1, ORANGE"Send disconnect to server\n"RESET);
 		send_disconnect_to_server(handle->player_info.nt_info->sockfd, handle->player_info.nt_info->servaddr);
 		close(handle->player_info.nt_info->sockfd);
 		free(handle->player_info.nt_info);

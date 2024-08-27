@@ -1,6 +1,7 @@
 #include "../include/chess.h"
 #include "../include/handle_sdl.h"
 #include "../include/network.h"
+#include "../include/handle_signal.h"
 
 
 SDLHandle *init_game() {
@@ -62,39 +63,68 @@ void chess_routine(SDLHandle *h){
 }
 
 
+
+void chess_destroy(SDLHandle *h) {
+	ft_printf_fd(1, RED"Destroy chess game%s\n", RESET);
+	destroy_sdl_handle(h);
+	free(h);
+	CLEANUP_NETWORK();
+}
+
+/* Singleton to get the SDL handle pointer structure */
+SDLHandle *get_SDL_handle() {
+	static SDLHandle *stat = NULL;
+
+	if (!stat) {
+		stat = init_game();
+	}
+
+	return (stat);
+}
+
+void chess_game(SDLHandle *h) {
+	
+	INIT_SIGNAL_HANDLER();
+	
+	if (has_flag(h->flag, FLAG_NETWORK)) {
+		ft_printf_fd(1, ORANGE"Try to connect to Server at : %s:%d\n"RESET, h->player_info.dest_ip, SERVER_PORT);
+		network_setup(h, h->flag, &h->player_info, h->player_info.dest_ip);
+		network_chess_routine(h);
+	} else {
+		h->player_info.turn = TRUE;
+		h->player_info.piece_start = WHITE_PAWN;
+		h->player_info.piece_end = BLACK_KING;
+		chess_routine(h);
+	}
+}
+
 int main(int argc, char **argv) {
 	SDLHandle	*handle = NULL;
 	PlayerInfo	player_info = {0};
 	u32			flag = 0;
 	s8			error = 0;
 
+
 	flag = handle_chess_flag(argc, argv, &error, &player_info);
 	if (error == -1) {
 		return (1);
 	}
-	
-	handle = init_game();
+
+	handle = get_SDL_handle();
 	if (!handle) {
+		ft_printf_fd(2, "Error %s: get_SDL_handle failed init\n", __func__);
 		return (1);
 	}
+
+	// ft_printf_fd(1, YELLOW"Handle addr main: %p\n"RESET, handle);
+
 	handle->flag = flag;
 	handle->player_info = player_info;
 
-	if (has_flag(flag, FLAG_NETWORK)) {
-		ft_printf_fd(1, ORANGE"Try to connect to Server at : %s:%d\n"RESET, player_info.dest_ip, SERVER_PORT);
-		network_setup(handle, flag, &handle->player_info, player_info.dest_ip);
-		network_chess_routine(handle);
-	} else {
-		handle->player_info.turn = TRUE;
-		handle->player_info.piece_start = WHITE_PAWN;
-		handle->player_info.piece_end = BLACK_KING;
-		chess_routine(handle);
-	}
+	chess_game(handle);
+
 	/* Free memory */
-	destroy_sdl_handle(handle);
-	window_close(handle->window, handle->renderer);
-	free(handle);
-	CLEANUP_NETWORK();
+	chess_destroy(handle);
 	return (0);
 }
 
