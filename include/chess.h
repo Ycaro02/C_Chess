@@ -124,8 +124,25 @@ typedef struct s_special_info SpecialInfo;
 /* Special info array size */
 #define SPECIAL_INFO_SIZE 6
 
+/* Struct for move save */
+struct s_move_save {
+	u32			id;
+	ChessTile	tile_from;
+	ChessTile	tile_to;
+	ChessPiece	piece_from;
+	ChessPiece	piece_to;
+};
+
+/* Typedef for move save struct */
+typedef struct s_move_save MoveSave;
+
+/* Typedef for t_list */
+typedef t_list ChessMoveList; 
+
 /* ChessBoard struct */
 struct s_chess_board {
+	ChessMoveList	*lst;			/* List of MoveSave struct */
+
 	/* 64 bitboard for each piece */
 	Bitboard	piece[PIECE_MAX];
 
@@ -157,6 +174,7 @@ struct s_chess_board {
 	ChessTile	last_clicked_tile;		/* Last clicked tile */
 
 	s32			turn;				/* Turn counter */
+	// s32			move_count;			/* White king position */
 
 	/* u8 used as 8 boolean info used as follow
 	 * 0: white check
@@ -362,6 +380,8 @@ void		draw_piece_over_board(SDLHandle *h, s32 x, s32 y);
 void		reset_selected_tile(SDLHandle *h);
 
 
-/* src/handle_message.c */
+/* src/move_save.c */
+s8 move_save_add(ChessMoveList **lst, u32 id, ChessTile tile_from, ChessTile tile_to, ChessPiece piece_from, ChessPiece piece_to);
+void display_move_list(ChessMoveList *lst);
 
 #endif /* CHESS_H */

@@ -19,6 +19,7 @@ SRCS			=	chess_board.c \
 					handle_signal.c \
 					handle_sdl.c \
 					chess_log.c \
+					move_save.c \
 
 # SRCS_BONUS		=	main_bonus.c
 

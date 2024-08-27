@@ -192,7 +192,6 @@ s32 move_piece(SDLHandle *handle, ChessTile tile_from, ChessTile tile_to, ChessP
 	/* Update the piece state */
 	update_piece_state(handle->board);
 
-
 	s32 pawn_ret = check_pawn_promotion(handle, type, tile_from, tile_to);
 	/* Check if the pawn need to be promoted */
 	if (pawn_ret == CHESS_QUIT) { return (CHESS_QUIT); } 
@@ -209,5 +208,9 @@ s32 move_piece(SDLHandle *handle, ChessTile tile_from, ChessTile tile_to, ChessP
 
 	handle->board->last_tile_from = tile_from;
 	handle->board->last_tile_to = tile_to;
+
+	move_save_add(&handle->board->lst, handle->board->turn, tile_from, tile_to, type, get_piece_from_tile(handle->board, tile_to));
+
+	display_move_list(handle->board->lst);
 	return (ret);
 }
