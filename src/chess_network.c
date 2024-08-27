@@ -1,5 +1,6 @@
 #include "../include/network.h"
 #include "../include/handle_sdl.h"
+#include "../include/chess_log.h"
 
 #ifdef CHESS_WINDOWS_VERSION
 int init_network_windows() {
@@ -55,7 +56,7 @@ s8 network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *ser
 	player_info->nt_info = init_network(server_ip, player_info->running_port, timeout);
 	if (has_flag(flag, FLAG_LISTEN)) {
 		player_info->color = random_player_color();
-		ft_printf_fd(1, "Listen for player...%s", "\n");
+		CHESS_LOG(LOG_INFO, "Listen for player...%s", "\n");
 		build_message(player_info->msg_tosend, MSG_TYPE_COLOR, !player_info->color, 0, 0, handle->board->turn);
 		chess_msg_send(player_info->nt_info, player_info->msg_tosend);
 	}
@@ -70,6 +71,9 @@ s8 network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *ser
 		process_message_receive(handle, player_info->msg_receiv);
 	}
 	player_color_set_info(player_info);
+
+	update_graphic_board(handle);
+
 	return (TRUE);
 }
 
@@ -103,7 +107,7 @@ NetworkInfo *init_network(char *server_ip, int local_port, struct timeval timeou
     fast_bzero(buffer, 1024);
 
 	if (INIT_NETWORK() != 0) {
-		ft_printf_fd(2, "Error %s\n", __func__);
+		CHESS_LOG(LOG_ERROR, "%s\n", __func__);
 		return (NULL);
 	}
 
@@ -146,7 +150,7 @@ NetworkInfo *init_network(char *server_ip, int local_port, struct timeval timeou
 		return (NULL);
 	}
 
-	ft_printf_fd(1, "Server IP: %s, server port %d, Local port : %d\n", server_ip, SERVER_PORT, ntohs(info->localaddr.sin_port));
+	CHESS_LOG(LOG_INFO, "Server IP: %s, server port %d, Local port : %d\n", server_ip, SERVER_PORT, ntohs(info->localaddr.sin_port));
 
 
 	/* Server addr configuration */
@@ -158,7 +162,7 @@ NetworkInfo *init_network(char *server_ip, int local_port, struct timeval timeou
 	/* Send a message to the server */
 	sendto(info->sockfd, "Hello", fast_strlen("Hello"), 0, (struct sockaddr *)&info->servaddr, sizeof(info->servaddr));
 
-	ft_printf_fd(1, "Waiting %s...\n", "for peer info");
+	CHESS_LOG(LOG_INFO, "Waiting %s...\n", "for peer info");
 	/* Receive the peer information */
 	while (ret_rcv <= 0) {
 		ret_rcv = recvfrom(info->sockfd, (char *)&info->peeraddr, sizeof(info->peeraddr), 0, (struct sockaddr *)&info->servaddr, &info->addr_len);
@@ -167,7 +171,7 @@ NetworkInfo *init_network(char *server_ip, int local_port, struct timeval timeou
 	
 	// recvfrom(info->sockfd, (char *)&info->peeraddr, sizeof(info->peeraddr), 0, (struct sockaddr *)&info->servaddr, &info->addr_len);
 
-	ft_printf_fd(1, "Peer info : %s:%d, addr_len %d\n", inet_ntoa(info->peeraddr.sin_addr), ntohs(info->peeraddr.sin_port), info->addr_len);
+	CHESS_LOG(LOG_INFO, "Peer info : %s:%d, addr_len %d\n", inet_ntoa(info->peeraddr.sin_addr), ntohs(info->peeraddr.sin_port), info->addr_len);
 	/* Send a first message to the peer (handshake) */
 	sendto(info->sockfd, "Hello", fast_strlen("Hello"), 0, (struct sockaddr *)&info->peeraddr, info->addr_len);
 

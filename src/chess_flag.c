@@ -1,4 +1,5 @@
 #include "../include/chess.h"
+#include "../include/chess_log.h"
 
 /*
 	@Brief Parser flag to handle listen and join mode
@@ -39,18 +40,18 @@ u32 handle_chess_flag(int argc, char **argv, s8 *error, PlayerInfo *player_info)
 	
 	/* Check if error occured */
 	if (*error == -1) {
-		ft_printf_fd(2, "Error: Flag parser%s\n");
+		CHESS_LOG(LOG_ERROR, "Flag parser %d\n", *error);
 		display_option_list(flag_ctx);
 		goto flag_error;
 	}
 
 	if (has_flag(flag_value, FLAG_HELP)) {
-		ft_printf_fd(1, HELP_MESSAGE);
+		printf(HELP_MESSAGE);
 		goto flag_error;
 	}
 
 	if (has_flag(flag_value, FLAG_NETWORK)) {
-		ft_printf_fd(1, "Network mode\n");
+		CHESS_LOG(LOG_INFO, "Network mode\n");
 		/* Get port if needed */
 		if (has_flag(flag_value, FLAG_PORT)) {
 			alloc_port = get_opt_value(flag_ctx.opt_lst, flag_value, FLAG_PORT);
@@ -65,28 +66,26 @@ u32 handle_chess_flag(int argc, char **argv, s8 *error, PlayerInfo *player_info)
 		if (has_flag(flag_value, FLAG_SERVER_IP)) {
 			player_info->dest_ip = get_opt_value(flag_ctx.opt_lst, flag_value, FLAG_SERVER_IP);
 		} else {
-			ft_printf_fd(1, "No server ip, default to localhost\n");
+			CHESS_LOG(LOG_INFO, "No server ip, default to localhost\n");
 			player_info->dest_ip = ft_strdup("127.0.0.1");
 		}
 		
 		if (has_flag(flag_value, FLAG_LISTEN) && has_flag(flag_value, FLAG_JOIN)) {
-			ft_printf_fd(2, "Error: Can't have listen and join flag at the same time\n");
+			CHESS_LOG(LOG_ERROR, "Can't have listen and join flag at the same time\n");
 			goto flag_error;
 		} else if (!has_flag(flag_value, FLAG_LISTEN) && !has_flag(flag_value, FLAG_JOIN)) {
-			ft_printf_fd(2, "Error: Need to have listen or join flag\n");
+			CHESS_LOG(LOG_ERROR, "Need to have listen or join flag\n");
 			goto flag_error;
 		}
 	} else {
-		ft_printf_fd(1, "Local mode\n");
+		CHESS_LOG(LOG_INFO, "Local mode\n");
 		if (has_flag(flag_value, FLAG_PORT) || has_flag(flag_value, FLAG_SERVER_IP) || has_flag(flag_value, FLAG_LISTEN) || has_flag(flag_value, FLAG_JOIN)) {
-			ft_printf_fd(2, "Error: Can't have port, server ip, listen or join flag in local mode\n");
+			CHESS_LOG(LOG_ERROR, "Can't have port, server ip, listen or join flag in local mode\n");
 			goto flag_error;
 		}
 	}
 
-
-
-	display_option_list(flag_ctx);
+	// display_option_list(flag_ctx);
 	free_flag_context(&flag_ctx);
 	return (flag_value);
 

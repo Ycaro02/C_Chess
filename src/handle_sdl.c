@@ -1,5 +1,6 @@
 #include "../include/network.h"
 #include "../include/handle_sdl.h"
+#include "../include/chess_log.h"
 
 /**
  * @brief Create a window with SDL2
@@ -42,7 +43,7 @@ SDL_Window* createWindow(u32 width ,u32 height, const char* title) {
 static SDL_Texture *safe_load_texture(SDL_Renderer *renderer, const char *path) {
 	SDL_Texture *texture = load_texture(renderer, path);
 	if (!texture) {
-		ft_printf_fd(2, "Error %s: load_texture %s failed\n", __func__, path);
+		CHESS_LOG(LOG_ERROR, "%s: load_texture %s failed\n", __func__, path);
 		return (NULL);
 	}
 	return (texture);
@@ -51,7 +52,7 @@ static SDL_Texture *safe_load_texture(SDL_Renderer *renderer, const char *path) 
 static s8 load_piece_texture(SDLHandle *handle) {
 	handle->piece_texture = malloc(sizeof(SDL_Texture*) * PIECE_MAX);
 	if (!handle->piece_texture) {
-		ft_printf_fd(2, "Error %s: malloc failed\n", __func__);
+		CHESS_LOG(LOG_ERROR, "%s: malloc failed\n", __func__);
 		return (FALSE);
 	}
 	
@@ -73,7 +74,7 @@ static s8 load_piece_texture(SDLHandle *handle) {
 
 	for (s32 i = 0; i < PIECE_MAX; i++) {
 		if (!handle->piece_texture[i]) {
-			ft_printf_fd(2, "Error %s: load_texture failed\n", __func__);
+			CHESS_LOG(LOG_ERROR, "%s: load_texture failed\n", __func__);
 			for (s32 j = 0; j < i; j++) {
 				unload_texture(handle->piece_texture[j]);
 			}
@@ -95,7 +96,7 @@ static s8 load_piece_texture(SDLHandle *handle) {
 SDLHandle *create_sdl_handle(u32 width , u32 height, const char* title) {
 	SDLHandle *handle = malloc(sizeof(SDLHandle));
 	if (!handle) {
-		ft_printf_fd(2, "Error %s : malloc failed\n", __func__);
+		CHESS_LOG(LOG_ERROR, "%s : malloc failed\n", __func__);
 		return (NULL);
 	}
 	handle->window = createWindow(width, height, title);
@@ -287,12 +288,9 @@ void destroy_sdl_handle(SDLHandle *handle) {
 		free(handle->player_info.dest_ip);
 	}
 
-	ft_printf_fd(1, RED"Destroy SDLHandle end game%s\n", RESET);
-
-
 	/* Free network info and send disconnect to server */
 	if (handle->player_info.nt_info) {
-		ft_printf_fd(1, ORANGE"Send disconnect to server\n"RESET);
+		CHESS_LOG(LOG_INFO, ORANGE"Send disconnect to server%s\n", RESET);
 		send_disconnect_to_server(handle->player_info.nt_info->sockfd, handle->player_info.nt_info->servaddr);
 		close(handle->player_info.nt_info->sockfd);
 		free(handle->player_info.nt_info);

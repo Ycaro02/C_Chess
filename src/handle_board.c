@@ -1,6 +1,7 @@
 #include "../include/chess.h"
 #include "../include/handle_sdl.h"
 #include "../include/network.h"
+#include "../include/chess_log.h"
 
 /* @brief Is selected possible move
  * @param possible_moves	Bitboard of possible moves
@@ -95,7 +96,6 @@ void promote_pawn(ChessBoard *board, ChessTile tile, ChessPiece new_piece, Chess
 }
 
 ChessPiece get_selected_piece(s32 idx, s8 is_black) {
-	// ft_printf_fd(1, "Selected piece idx: %d\n", idx);
 	if (is_black) {
 		return (BLACK_PAWN + idx);
 	}
@@ -145,7 +145,6 @@ s32 display_promotion_selection(SDLHandle *h, ChessTile tile_from, ChessTile til
 		if (last_click >= tile_start && last_click <= tile_end) {
 			piece_idx = !is_black ? last_click - tile_start : tile_end - last_click;
 			piece_selected = get_selected_piece(piece_idx, is_black);
-			// ft_printf_fd(1, "Tile selected: %d\n", tile_selected);
 			promote_pawn(h->board, tile_to, piece_selected, is_black ? BLACK_PAWN : WHITE_PAWN);
 			/* We can build the message here and return a special value to avoir double message create/sending */
 			build_message(h->player_info.msg_tosend, MSG_TYPE_PROMOTION, tile_from, tile_to, piece_selected, h->board->turn);
@@ -247,7 +246,7 @@ ChessTile detect_tile_click(s32 x, s32 y, s8 player_color) {
 	while (column >= 0) {
 		for (s32 raw = 0; raw < 8; raw++) {
 			if (is_in_x_range(x, raw) && is_in_y_range(y, column)) {
-				// ft_printf_fd(1, "Click on "ORANGE"[%s]"RESET" -> "PINK"|%d|\n"RESET, TILE_TO_STRING(tile), tile);
+				CHESS_LOG(LOG_INFO, "Click on "ORANGE"[%s]"RESET" -> "PINK"|%d|\n"RESET, TILE_TO_STRING(tile), tile);
 				return (tile);
 			}
 			/* Increment or decrement tile */
@@ -347,7 +346,7 @@ s8 verify_check_and_mat(ChessBoard *b, s8 is_black) {
 			/* Get the possible moves */
 			possible_moves = get_piece_move(b, piece, type, TRUE);
 			if (possible_moves != 0) {
-				// ft_printf_fd(1, "Piece %s on [%s] has possible moves\n", chess_piece_to_string(type), TILE_TO_STRING(piece));
+				CHESS_LOG(LOG_DEBUG, "Piece %s on [%s] has possible moves\n", chess_piece_to_string(type), TILE_TO_STRING(piece));
 				mat = FALSE;
 				break ;
 			}
@@ -355,10 +354,10 @@ s8 verify_check_and_mat(ChessBoard *b, s8 is_black) {
 	}
 
 	if (check && mat) {
-		ft_printf_fd(1, YELLOW"Checkmate detected for %s\n"RESET, color);
+		CHESS_LOG(LOG_ERROR, YELLOW"Checkmate detected for %s\n"RESET, color);
 		return (TRUE);
 	} else if (!check && mat) {
-		ft_printf_fd(1, PURPLE"PAT detected Egality for %s\n"RESET, color);
+		CHESS_LOG(LOG_ERROR, PURPLE"PAT detected Egality for %s\n"RESET, color);
 		return (TRUE);	
 	}
 	return (FALSE);

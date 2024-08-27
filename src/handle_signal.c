@@ -1,14 +1,13 @@
 #include "../include/chess.h"
 #include "../include/handle_sdl.h"
 #include "../include/handle_signal.h"
+#include "../include/chess_log.h"
 
 static void signal_handler(int signum)
 {
 	SDLHandle *stat = get_SDL_handle();
 
-	// ft_printf_fd(2, RED"\nHandle addr in signal handler: %p\n"RESET, stat);
-
-	ft_printf_fd(2, RED"\nSignal Catch: %d\n"RESET, signum);
+	CHESS_LOG(LOG_DEBUG, RED"\nSignal Catch: %d\n"RESET, signum);
 	chess_destroy(stat);
 	exit(signum);
 }

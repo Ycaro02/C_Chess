@@ -77,6 +77,8 @@
 		"network.h": "c",
 		"string.h": "c",
 		"uv.h": "c",
-		"signum-arch.h": "c"
+		"signum-arch.h": "c",
+		"socket.h": "c",
+		"chess_log.h": "c"
 	}
 }

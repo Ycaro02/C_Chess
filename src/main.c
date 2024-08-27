@@ -2,6 +2,7 @@
 #include "../include/handle_sdl.h"
 #include "../include/network.h"
 #include "../include/handle_signal.h"
+#include "../include/chess_log.h"
 
 
 SDLHandle *init_game() {
@@ -9,12 +10,12 @@ SDLHandle *init_game() {
 
 	handle = create_sdl_handle(WINDOW_WIDTH, WINDOW_HEIGHT, "Chess");
 	if (!handle) {
-		ft_printf_fd(2, "Error %s: create_sdl_handle failed\n", __func__);
+		CHESS_LOG(LOG_ERROR, "Error %s: create_sdl_handle failed\n", __func__);
 		return (NULL);
 	}
 	handle->board = ft_calloc(1, sizeof(ChessBoard));
 	if (!handle->board) {
-		ft_printf_fd(2, "Error %s : malloc failed\n", __func__);
+		CHESS_LOG(LOG_ERROR, "Error %s : malloc failed\n", __func__);
 		free(handle);
 		return (NULL);
 	}
@@ -65,7 +66,7 @@ void chess_routine(SDLHandle *h){
 
 
 void chess_destroy(SDLHandle *h) {
-	ft_printf_fd(1, RED"Destroy chess game%s\n", RESET);
+	CHESS_LOG(LOG_INFO, RED"Destroy chess game%s\n", RESET);
 	destroy_sdl_handle(h);
 	free(h);
 	CLEANUP_NETWORK();
@@ -89,7 +90,7 @@ void chess_game(SDLHandle *h) {
 	update_graphic_board(h);
 
 	if (has_flag(h->flag, FLAG_NETWORK)) {
-		ft_printf_fd(1, ORANGE"Try to connect to Server at : %s:%d\n"RESET, h->player_info.dest_ip, SERVER_PORT);
+		CHESS_LOG(LOG_INFO, ORANGE"Try to connect to Server at : %s:%d\n"RESET, h->player_info.dest_ip, SERVER_PORT);
 		network_setup(h, h->flag, &h->player_info, h->player_info.dest_ip);
 		network_chess_routine(h);
 	} else {
@@ -100,11 +101,16 @@ void chess_game(SDLHandle *h) {
 	}
 }
 
+#include "../include/chess_log.h"
+
 int main(int argc, char **argv) {
 	SDLHandle	*handle = NULL;
 	PlayerInfo	player_info = {0};
 	u32			flag = 0;
 	s8			error = 0;
+
+
+	set_log_level(LOG_ERROR);
 
 
 	flag = handle_chess_flag(argc, argv, &error, &player_info);
@@ -114,7 +120,7 @@ int main(int argc, char **argv) {
 
 	handle = get_SDL_handle();
 	if (!handle) {
-		ft_printf_fd(2, "Error %s: get_SDL_handle failed init\n", __func__);
+		CHESS_LOG(LOG_ERROR, "Error %s: get_SDL_handle failed init\n", __func__);
 		return (1);
 	}
 
@@ -127,11 +133,3 @@ int main(int argc, char **argv) {
 	chess_destroy(handle);
 	return (0);
 }
-
-
-
-// ft_printf_fd(1, YELLOW"Move piece from [%s](%d) TO [%s](%d)\n"RESET, TILE_TO_STRING(b->selected_tile), b->selected_tile, TILE_TO_STRING(tile_selected), tile_selected);
-// ft_printf_fd(1, GREEN"Select piece in [%s]"RESET" -> "ORANGE"%s\n"RESET, TILE_TO_STRING(tile_selected), chess_piece_to_string(piece_type));
-
-
-

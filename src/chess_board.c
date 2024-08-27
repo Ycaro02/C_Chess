@@ -1,5 +1,6 @@
 #include "../include/chess.h"
 #include "../include/handle_sdl.h"
+#include "../include/chess_log.h"
 
 /* Update control bitboard */
 void update_piece_control(ChessBoard *b) {
@@ -97,14 +98,15 @@ ChessPiece get_piece_from_mask(ChessBoard *b, Bitboard mask) {
 }
 
 
+
 /* Display bitboard for debug */
 void display_bitboard(Bitboard bitboard, const char *msg) {
-	ft_printf_fd(1, "%s", msg);
+	printf("%s", msg);
 	for (int i = 0; i < TILE_MAX; i++) {
 		if (i % 8 == 0) {
-			ft_printf_fd(1, "\n");
+			printf("\n");
 		}
-		ft_printf_fd(1, "%d", (bitboard >> i) & 1);
+		printf("%d", (int)(bitboard >> i) & 1);
 	}
-	ft_printf_fd(1, "\n");
+	printf("\n");
 }

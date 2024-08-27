@@ -3,6 +3,7 @@
 
 #include "../libft/libft.h"
 #include "../libft/parse_flag/parse_flag.h"
+#include <stdio.h>
 
 
 /* Typedef for Bitboard type just unsigned long long (64 bits) */
@@ -225,7 +226,7 @@ enum tile_type {
  * @param tile_to		ChessTile enum
 */
 FT_INLINE void display_kill_info(ChessPiece enemy_piece, ChessTile tile_to) {
-	ft_printf_fd(1, RED"Kill %s on [%s]\n"RESET, \
+	printf(RED"Kill %s on [%s]\n"RESET, \
 		chess_piece_to_string(enemy_piece), TILE_TO_STRING(tile_to));
 }
 

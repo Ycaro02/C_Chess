@@ -61,8 +61,8 @@
 
 
 
-#define SDL_ERR_FUNC() ft_printf_fd(2, "SDL Error %s: %s\n", __func__, SDL_GetError())
-// #define TTF_ERR_FUNC() ft_printf_fd(2, "TTF Error %s: %s\n", __func__, TTF_GetError())
+#define SDL_ERR_FUNC() printf("SDL Error %s: %s\n", __func__, SDL_GetError())
+// #define TTF_ERR_FUNC() printf("TTF Error %s: %s\n", __func__, TTF_GetError())
 
 typedef struct s_iVec2 {
 	s32 x;

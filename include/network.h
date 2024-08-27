@@ -10,7 +10,6 @@
 	#define CLOSE_SOCKET closesocket
 	#define INIT_NETWORK() init_network_windows()
 	#define CLEANUP_NETWORK() cleanup_network_windows()
-	#define ft_printf_fd(fd, format, ...) printf(format, __VA_ARGS__)
 #else
 	#include <sys/socket.h>
 	#include <netinet/in.h>

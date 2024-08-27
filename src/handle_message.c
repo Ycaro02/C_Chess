@@ -1,5 +1,6 @@
 #include "../include/network.h"
 #include "../include/handle_sdl.h"
+#include "../include/chess_log.h"
 
 void display_message(char *msg) {
 	MsgType msg_type = msg[0];
@@ -7,14 +8,14 @@ void display_message(char *msg) {
 	ChessPiece piece_type = EMPTY;
 
 
-	ft_printf_fd(1, YELLOW"Message type: %s: "RESET, message_type_to_str(msg_type));
+	CHESS_LOG(LOG_INFO, YELLOW"Message type: %s: "RESET, message_type_to_str(msg_type));
 
 	if (msg_type == MSG_TYPE_COLOR) {
-		ft_printf_fd(1, "turn: |%d| color |%d| -> ", msg[1], msg[2]);
-		ft_printf_fd(1, "Color: %s\n", (msg[1] - 1) == IS_WHITE ? "WHITE" : "BLACK");
+		CHESS_LOG(LOG_INFO, "turn: |%d| color |%d| -> ", msg[1], msg[2]);
+		CHESS_LOG(LOG_INFO, "Color: %s\n", (msg[1] - 1) == IS_WHITE ? "WHITE" : "BLACK");
 		return ;
 	} else if (msg_type == MSG_TYPE_QUIT) {
-		ft_printf_fd(1, "Opponent quit the game, msg type %d\n", msg[0]);
+		CHESS_LOG(LOG_INFO, "Opponent quit the game, msg type %d\n", msg[0]);
 		return ;
 	}	
 	
@@ -22,11 +23,11 @@ void display_message(char *msg) {
 	tile_from = msg[2] - 1;
 	tile_to = msg[3] - 1;
 	piece_type = msg[4] - 1;
-	ft_printf_fd(1, PURPLE"brut data: |%d||%d||%d||%d|\n"RESET, msg[2], msg[3], msg[4], msg[5]);
+	CHESS_LOG(LOG_INFO, PURPLE"brut data: |%d||%d||%d||%d|\n"RESET, msg[2], msg[3], msg[4], msg[5]);
 	if (msg_type == MSG_TYPE_MOVE) {
-		ft_printf_fd(1, ORANGE"Move from %s to %s with piece %s\n"RESET, TILE_TO_STRING(tile_from), TILE_TO_STRING(tile_to), chess_piece_to_string(piece_type));
+		CHESS_LOG(LOG_INFO, ORANGE"Move from %s to %s with piece %s\n"RESET, TILE_TO_STRING(tile_from), TILE_TO_STRING(tile_to), chess_piece_to_string(piece_type));
 	} else if (msg_type == MSG_TYPE_PROMOTION) {
-		ft_printf_fd(1, ORANGE"Promotion from %s to %s with piece %s\n"RESET, TILE_TO_STRING(tile_from), TILE_TO_STRING(tile_to), chess_piece_to_string(piece_type));
+		CHESS_LOG(LOG_INFO, ORANGE"Promotion from %s to %s with piece %s\n"RESET, TILE_TO_STRING(tile_from), TILE_TO_STRING(tile_to), chess_piece_to_string(piece_type));
 	} 
 }
 
@@ -46,12 +47,12 @@ void update_msg_store(char *buffer, char *msg) {
 void display_unknow_msg(char *msg) {
 	int len = fast_strlen(msg);
 
-	ft_printf_fd(1, RED"Unknown message -> |%s",RESET);
+	CHESS_LOG(LOG_INFO, RED"Unknown message -> |%s",RESET);
 
 	for (int i = 0; i < len; i++) {
-		ft_printf_fd(1, "%d ", msg[i]);
+		CHESS_LOG(LOG_INFO, "%d ", msg[i]);
 	}
-	ft_printf_fd(1, "%s", "|\n");
+	CHESS_LOG(LOG_INFO, "%s", "|\n");
 }
 
 
@@ -61,16 +62,16 @@ s8 is_legal_promotion_pck(SDLHandle *handle, ChessPiece new_piece, ChessTile til
 	ChessPiece end_piece = enemy_color == IS_WHITE ? WHITE_QUEEN : BLACK_QUEEN;
 
 	if (new_piece < start_piece || new_piece > end_piece) {
-		ft_printf_fd(1, "Piece type promotion is out of range %s\n", chess_piece_to_string(new_piece));
+		CHESS_LOG(LOG_INFO, "Piece type promotion is out of range %s\n", chess_piece_to_string(new_piece));
 		return (FALSE);
 	}
 
 	/* Is if a promotion we need to check te pawn reach the raw of the promotion */
 	if (enemy_color == IS_WHITE && tile_to < A8 && tile_to > H8) {
-		ft_printf_fd(1, "Tile to is not in the promotion raw %s\n", TILE_TO_STRING(tile_to));
+		CHESS_LOG(LOG_INFO, "Tile to is not in the promotion raw %s\n", TILE_TO_STRING(tile_to));
 		return (FALSE);
 	} else if (enemy_color == IS_BLACK && tile_to < A1 && tile_to > H1) {
-		ft_printf_fd(1, "Tile to is not in the promotion raw %s\n", TILE_TO_STRING(tile_to));
+		CHESS_LOG(LOG_INFO, "Tile to is not in the promotion raw %s\n", TILE_TO_STRING(tile_to));
 		return (FALSE);
 	}
 
@@ -85,26 +86,26 @@ s8 is_legal_move_pck(SDLHandle *handle, ChessTile tile_from, ChessTile tile_to, 
 
 	/* Check if the tile is out of bound */
 	if (tile_from < A1 || tile_from > H8 || tile_to < A1 || tile_to > H8) {
-		ft_printf_fd(1, "Tile from or to is out of bound %s %s\n", TILE_TO_STRING(tile_from), TILE_TO_STRING(tile_to));
+		CHESS_LOG(LOG_INFO, "Tile from or to is out of bound %s %s\n", TILE_TO_STRING(tile_from), TILE_TO_STRING(tile_to));
 		return (FALSE);
 	}
 
 	/* Check if the piece is out of range */
 	if (piece_type < enemy_piece_start || piece_type > enemy_piece_end) {
-		ft_printf_fd(1, "Piece type is out of range %s\n", chess_piece_to_string(piece_type));
+		CHESS_LOG(LOG_INFO, "Piece type is out of range %s\n", chess_piece_to_string(piece_type));
 		return (FALSE);
 	}
 
 	/* Check if the piece is on the tile */
 	if ((handle->board->piece[piece_type] & (1ULL << tile_from)) == 0) {
-		ft_printf_fd(1, "Piece is %s not on the tile %s\n", chess_piece_to_string(piece_type), TILE_TO_STRING(tile_from));
+		CHESS_LOG(LOG_INFO, "Piece is %s not on the tile %s\n", chess_piece_to_string(piece_type), TILE_TO_STRING(tile_from));
 		return (FALSE);
 	}
 
 	/* Check if the move is possible */
 	possible_moves = get_piece_move(handle->board, 1ULL << tile_from, piece_type, TRUE);
 	if ((possible_moves & (1ULL << tile_to)) == 0) {
-		ft_printf_fd(1, "Move is not possible from %s to %s\n", TILE_TO_STRING(tile_from), TILE_TO_STRING(tile_to));
+		CHESS_LOG(LOG_INFO, "Move is not possible from %s to %s\n", TILE_TO_STRING(tile_from), TILE_TO_STRING(tile_to));
 		return (FALSE);
 	}
 	return (TRUE);
@@ -125,7 +126,7 @@ void process_message_receive(SDLHandle *handle, char *msg) {
 	if (msg_type == MSG_TYPE_COLOR) {
 		handle->player_info.color = msg[2] - 1;
 	} else if (msg_type == MSG_TYPE_QUIT) {
-		ft_printf_fd(1, "%s\n", "Opponent quit the game");
+		CHESS_LOG(LOG_INFO, "%s\n", "Opponent quit the game");
 	} else if (msg_type == MSG_TYPE_MOVE || msg_type == MSG_TYPE_PROMOTION) {
 		/* We need to decrement all value cause we send with +1 can't send 0, interpreted like '\0' */
 		tile_from = msg[2] - 1;
@@ -246,12 +247,12 @@ s8 is_illegal_packet(SDLHandle *h, char *buffer, int len) {
 	/* If the message is COLOR and not the right size return here */
 	if (buffer[0] == MSG_TYPE_COLOR) {
 		if (len != 3) {
-			ft_printf_fd(1, RED"Buffer color size is not 3 %s\n", RESET);
+			CHESS_LOG(LOG_INFO, RED"Buffer color size is not 3 %s\n", RESET);
 			return (TRUE);
 		}
 		color = buffer[2] - 1;
 		if (color != IS_WHITE && color != IS_BLACK) {
-			ft_printf_fd(1, RED"Buffer color is not WHITE or BLACK%s\n", RESET);
+			CHESS_LOG(LOG_INFO, RED"Buffer color is not WHITE or BLACK%s\n", RESET);
 			return (TRUE);
 		}
 	}
@@ -259,7 +260,7 @@ s8 is_illegal_packet(SDLHandle *h, char *buffer, int len) {
 	/* If the message is QUIT and not the right size return here */
 	if (buffer[0] == MSG_TYPE_QUIT) {
 		if (len != 2) {
-			ft_printf_fd(1, RED"Buffer quit size is not 2 %s\n", RESET);
+			CHESS_LOG(LOG_INFO, RED"Buffer quit size is not 2 %s\n", RESET);
 			return (TRUE);
 		}
 	}
@@ -268,7 +269,7 @@ s8 is_illegal_packet(SDLHandle *h, char *buffer, int len) {
 		
 		/* If the message is MOVE or PROMOTION and not the right size return here */
 		if (len != 5) {
-			ft_printf_fd(1, RED"Buffer move/promot size is not 5 %s\n", RESET);
+			CHESS_LOG(LOG_INFO, RED"Buffer move/promot size is not 5 %s\n", RESET);
 			return (TRUE);
 		}
 
@@ -309,7 +310,7 @@ s8 ignore_msg(SDLHandle *h, char *buffer, char *last_msg_processed) {
 
 	/* If the message is not the right size return here */
 	if (len < 2) {
-		ft_printf_fd(1, RED"Buffer size is less than 2 %s\n", RESET);
+		CHESS_LOG(LOG_INFO, RED"Buffer size is less than 2 %s\n", RESET);
 		return (TRUE);
 	}
 
@@ -334,16 +335,14 @@ s8 chess_msg_receive(SDLHandle *h, NetworkInfo *info, char *rcv_buffer, char *la
 	rcv_len = recvfrom(info->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&info->peeraddr, &info->addr_len);
 	if (rcv_len > 0) {
 		if (ignore_msg(h, buffer, last_msg_processed)) {
-			// ft_printf_fd(1, PURPLE"Hello,ACK or double message receive continue listening\n%s", RESET);
 			return (FALSE);
 		}
 		buffer[rcv_len] = '\0';
 		sendto(info->sockfd, ACK_STR, ACK_LEN, 0, (struct sockaddr *)&info->peeraddr, info->addr_len);
-		ft_printf_fd(1, GREEN"Msg |%s| receive -> ACK send\n"RESET, message_type_to_str(buffer[0]));
+		CHESS_LOG(LOG_INFO, GREEN"Msg |%s| receive -> ACK send\n"RESET, message_type_to_str(buffer[0]));
 		ftlib_strcpy(rcv_buffer, buffer, rcv_len);
 		return (TRUE);
 	} 
-	// ft_printf_fd(1, RED"No receive message\n%s", RESET);
 	return (FALSE);
 }
 
@@ -353,14 +352,14 @@ s8 chess_msg_send(NetworkInfo *info, char *msg) {
 	char	buffer[1024];
 
 	fast_bzero(buffer, 1024);
-	ft_printf_fd(1, CYAN"Try to send %s -> "RESET, message_type_to_str(msg[0]));
+	CHESS_LOG(LOG_INFO, CYAN"Try to send %s -> "RESET, message_type_to_str(msg[0]));
 	while (attempts < MAX_ATTEMPTS && !ack_received) {
 		sendto(info->sockfd, msg, msg_len, 0, (struct sockaddr *)&info->peeraddr, info->addr_len);
 		rcv_len = recvfrom(info->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&info->peeraddr, &info->addr_len);
 		if (rcv_len > 0) {
 			buffer[rcv_len] = '\0';
 			if (fast_strcmp(buffer, ACK_STR) == 0) {
-				ft_printf_fd(1, CYAN"ACK receive\n%s", RESET);
+				CHESS_LOG(LOG_INFO, CYAN"ACK receive\n%s", RESET);
 				ack_received = 1;
 			} 
 		} 
@@ -368,7 +367,7 @@ s8 chess_msg_send(NetworkInfo *info, char *msg) {
 		sleep(1);
 	}
 	if (!ack_received) {
-		ft_printf_fd(1, "No ACK received after %d try give up msg %s\nVerify your network connection\n",MAX_ATTEMPTS, message_type_to_str(msg[0]));
+		CHESS_LOG(LOG_ERROR, "No ACK received for |%s| after %d sending try\nVerify your network connection\n",message_type_to_str(msg[0]), MAX_ATTEMPTS);
 		return (FALSE);
 	}
 	return (TRUE);

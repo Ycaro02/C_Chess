@@ -21,7 +21,6 @@ void board_special_info_handler(ChessBoard *b, ChessPiece type, ChessTile tile_f
 		s32 idx = special_info[i].info_idx;
 		if (special_info[i].type == type && special_info[i].tile_from == tile_from && u8ValueGet(b->info, idx) == FALSE) {
 			b->info = u8ValueSet(b->info, idx, TRUE);
-			// ft_printf_fd(1, PURPLE"Special info set to TRUE for %s on %s\n"RESET, chess_piece_to_string(type), TILE_TO_STRING(tile_from));
 		}
 	}
 }
