@@ -316,6 +316,8 @@ enum chess_flag_value {
 #define MAX_PORT		65535
 
 
+
+
 /* Declarion for SDLHandle struct */
 typedef struct s_sdl_handle SDLHandle;
 

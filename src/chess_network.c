@@ -27,17 +27,14 @@ void cleanup_network_posix() {
 
 
 static void player_color_set_info(PlayerInfo *info) {
-	// ft_printf_fd(1, YELLOW"Player color: %s\n"RESET, info->color == IS_WHITE ? "WHITE" : "BLACK");
-	if (info->color == IS_WHITE) {
-		info->turn = TRUE;
-		info->piece_start = WHITE_PAWN;
-		info->piece_end = WHITE_KING;
+	/* 1 for white, and 0 for black */
+	info->turn = !(info->color);
 
-	} else {
-		info->turn = FALSE;
-		info->piece_start = BLACK_PAWN;
-		info->piece_end = BLACK_KING;
-	}
+	/* 5 * 0 for white, and 5 * 1 for black */
+	info->piece_start = BLACK_PAWN * info->color;
+
+	/* 5 * 0 for white, and 5 * 1 for black, + 5 */
+	info->piece_end = BLACK_KING * info->color + 5;
 }
 
 /**
@@ -49,10 +46,9 @@ static void player_color_set_info(PlayerInfo *info) {
  * @return s8 TRUE if the network is setup, FALSE otherwise
  */
 s8 network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *server_ip) {
-	// 500000 microseconds = 0.5 seconds
-	struct timeval timeout = {0, 500000};
-	s32 test_iter = 0;
-	s8 ret = FALSE;
+	struct timeval	timeout = {0, 500000}; /* 500000 microseconds = 0.5 seconds */
+	s32				iter = 0;
+	s8				ret = FALSE;
 
 	handle->board->turn = 1;
 
@@ -65,12 +61,12 @@ s8 network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *ser
 	}
 
 	if (has_flag(flag, FLAG_JOIN)) {
-		while (ret == FALSE && test_iter < MAX_ITER) {
+		while (ret == FALSE && iter < MAX_ITER) {
 			ret = chess_msg_receive(handle, player_info->nt_info, player_info->msg_receiv, player_info->last_msg);
-			test_iter++;
+			iter++;
 			sleep(1);
 		}
-		// display_message(player_info->msg_receiv);
+		/* Process message receive, here set color  */
 		process_message_receive(handle, player_info->msg_receiv);
 	}
 	player_color_set_info(player_info);
@@ -78,24 +74,24 @@ s8 network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *ser
 }
 
 s8 socket_no_block(NetworkInfo *info, struct timeval timeout) {
-	#ifdef CHESS_WINDOWS_VERSION
-		/* Set the socket no block */
-		u_long mode = 1;
-		if (ioctlsocket(info->sockfd, FIONBIO, &mode) != 0) {
-			perror("ioctlsocket failed");
-			CLOSE_SOCKET(info->sockfd);
-			free(info);
-			return (FALSE);
-		}
-	#else
-		/* Set the socket receive timeout */
-		if (setsockopt(info->sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0) {
-			perror("Error setting socket timeout");
-			CLOSE_SOCKET(info->sockfd);
-			free(info);
-			return (FALSE);
-		}
-	#endif
+#ifdef CHESS_WINDOWS_VERSION
+	/* Set the socket no block */
+	u_long mode = 1;
+	if (ioctlsocket(info->sockfd, FIONBIO, &mode) != 0) {
+		perror("ioctlsocket failed");
+		CLOSE_SOCKET(info->sockfd);
+		free(info);
+		return (FALSE);
+	}
+#else
+	/* Set the socket receive timeout */
+	if (setsockopt(info->sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0) {
+		perror("Error setting socket timeout");
+		CLOSE_SOCKET(info->sockfd);
+		free(info);
+		return (FALSE);
+	}
+#endif
 	return (TRUE);
 }
 

@@ -86,6 +86,8 @@ void chess_game(SDLHandle *h) {
 	
 	INIT_SIGNAL_HANDLER();
 	
+	update_graphic_board(h);
+
 	if (has_flag(h->flag, FLAG_NETWORK)) {
 		ft_printf_fd(1, ORANGE"Try to connect to Server at : %s:%d\n"RESET, h->player_info.dest_ip, SERVER_PORT);
 		network_setup(h, h->flag, &h->player_info, h->player_info.dest_ip);
@@ -115,8 +117,6 @@ int main(int argc, char **argv) {
 		ft_printf_fd(2, "Error %s: get_SDL_handle failed init\n", __func__);
 		return (1);
 	}
-
-	// ft_printf_fd(1, YELLOW"Handle addr main: %p\n"RESET, handle);
 
 	handle->flag = flag;
 	handle->player_info = player_info;

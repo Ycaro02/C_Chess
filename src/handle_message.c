@@ -221,47 +221,44 @@ void build_message(char *msg, MsgType msg_type, ChessTile tile_from_or_color, Ch
 	msg[4] = (char)(piece_type + 1);
 }
 
-// s8 select_check_data(NetworkInfo *info) {
-// 	int ret = 0;
-	
-// 	FD_ZERO(&info->readfds);
-// 	FD_SET(info->sockfd, &info->readfds);
-
-// 	select(info->sockfd + 1, &info->readfds, NULL, NULL, &info->timeout);
-// 	if (ret > 0 && FD_ISSET(info->sockfd, &info->readfds)) {
-// 		return (TRUE);
-// 	}
-// 	return (FALSE);
-// }
-
 #define ACK_STR "ACK"
 #define HELLO_STR "Hello"
 #define ACK_LEN 3
 #define HELLO_LEN 5
 
-
-s8 ignore_msg(SDLHandle *h, char *buffer, char *last_msg_processed) {
-	ChessTile tile_from = INVALID_TILE, tile_to = INVALID_TILE;
-	ChessPiece piece_type = EMPTY ,piece_check_legal = EMPTY;
+/**
+ * @brief Check if the packet is illegal
+ * @param h The SDLHandle pointer
+ * @param buffer The buffer
+ * @param len The length of the buffer
+ * @return s8 TRUE if the packet is illegal, FALSE otherwise
+*/
+s8 is_illegal_packet(SDLHandle *h, char *buffer, int len) {
+	ChessTile	tile_from = INVALID_TILE, tile_to = INVALID_TILE;
+	ChessPiece	piece_type = EMPTY, piece_check_legal = EMPTY;
+	s8			color = -1;
 	
+	/* If the message is not a valid message type return here */
 	if (buffer[0] < MSG_TYPE_COLOR || buffer[0] > MSG_TYPE_QUIT) {
 		return (TRUE);
 	}
 
+	/* If the message is COLOR and not the right size return here */
 	if (buffer[0] == MSG_TYPE_COLOR) {
-		if (fast_strlen(buffer) != 3) {
+		if (len != 3) {
 			ft_printf_fd(1, RED"Buffer color size is not 3 %s\n", RESET);
 			return (TRUE);
 		}
-		s8 color = buffer[2] - 1;
+		color = buffer[2] - 1;
 		if (color != IS_WHITE && color != IS_BLACK) {
 			ft_printf_fd(1, RED"Buffer color is not WHITE or BLACK%s\n", RESET);
 			return (TRUE);
 		}
 	}
 
+	/* If the message is QUIT and not the right size return here */
 	if (buffer[0] == MSG_TYPE_QUIT) {
-		if (fast_strlen(buffer) != 2) {
+		if (len != 2) {
 			ft_printf_fd(1, RED"Buffer quit size is not 2 %s\n", RESET);
 			return (TRUE);
 		}
@@ -269,7 +266,8 @@ s8 ignore_msg(SDLHandle *h, char *buffer, char *last_msg_processed) {
 
 	if (buffer[0] == MSG_TYPE_MOVE || buffer[0] == MSG_TYPE_PROMOTION) {
 		
-		if (fast_strlen(buffer) != 5) {
+		/* If the message is MOVE or PROMOTION and not the right size return here */
+		if (len != 5) {
 			ft_printf_fd(1, RED"Buffer move/promot size is not 5 %s\n", RESET);
 			return (TRUE);
 		}
@@ -280,21 +278,51 @@ s8 ignore_msg(SDLHandle *h, char *buffer, char *last_msg_processed) {
 
 		piece_check_legal = piece_type;
 
+		/* If the message is PROMOTION, we need to check for pawn move instead of piece receive */
 		if (buffer[0] == MSG_TYPE_PROMOTION) {
 			piece_check_legal = h->player_info.color == IS_WHITE ? BLACK_PAWN : WHITE_PAWN;
 		}
 
+		/* If the message is MOVE or PROMOTION and the data for move are not valid return here */
 		if (is_legal_move_pck(h, tile_from, tile_to, piece_check_legal) == FALSE) {
 			return (TRUE);
 		}
-		if (buffer[0] == MSG_TYPE_PROMOTION) {
-			if (is_legal_promotion_pck(h, piece_type, tile_to) == FALSE) {
-				return (TRUE);
-			}
+
+		/* If the message is PROMOTION and the data are not valid return here */
+		if (buffer[0] == MSG_TYPE_PROMOTION && is_legal_promotion_pck(h, piece_type, tile_to) == FALSE) {
+			return (TRUE);
 		}
 	}
+	return (FALSE);
+}
 
-	return (fast_strcmp(buffer, HELLO_STR) == 0 || fast_strcmp(buffer, ACK_STR) == 0 || fast_strcmp(buffer, last_msg_processed) == 0);
+
+/**
+ * @brief Ignore the message
+ * @param h The SDLHandle pointer
+ * @param buffer The buffer
+ * @param last_msg_processed The last message processed
+ * @return s8 TRUE if the message is ignored, FALSE otherwise
+*/
+s8 ignore_msg(SDLHandle *h, char *buffer, char *last_msg_processed) {
+	int			len = fast_strlen(buffer);
+
+	/* If the message is not the right size return here */
+	if (len < 2) {
+		ft_printf_fd(1, RED"Buffer size is less than 2 %s\n", RESET);
+		return (TRUE);
+	}
+
+	/* If the message is a hello,ack message or same than last msg process return here */
+	if (fast_strcmp(buffer, HELLO_STR) == 0 || fast_strcmp(buffer, ACK_STR) == 0 
+		|| fast_strcmp(buffer, last_msg_processed) == 0) {
+		return (TRUE);
+	}
+
+	if (is_illegal_packet(h, buffer, len)) {
+		return (TRUE);
+	}
+	return (FALSE);
 }
 
 
