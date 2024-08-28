@@ -226,24 +226,6 @@ void draw_board(SDLHandle *handle, s8 player_color) {
 
 }
 
-// #define IS_IN_X_RANGE(_x_, _raw_, _tl_, _wb_) \
-// 	((_x_ >= (_raw_ * _tl_) + _wb_.left) && (_x_ <= ((_raw_ + 1) * _tl) + _wb_.left))	
-
-// #define IS_IN_Y_RANGE(_y_, _column_, _tl_, _wb_) \
-// 	((_y_ >= (_column_ * _tl_) + _wb_.top) && (_y_ <= ((_column_ + 1) * _tl) + _wb_.top))
-
-
-
-// static s8 is_in_x_range(s32 x, s32 raw, s32 tile_size) {
-// 	return (x >= (raw * tile_size) + ((raw + 1) * TILE_SPACING)
-// 			&& x <= ((raw + 1) * tile_size )+ ((raw + 1) * TILE_SPACING));
-// }
-
-// static s8 is_in_y_range(s32 y, s32 column, s32 tile_size) {
-// 	return (y >= (column * tile_size) + ((column + 1) * TILE_SPACING) + TOP_BAND_HEIGHT
-// 			&& y <= ((column + 1) * tile_size )+ ((column + 1) * TILE_SPACING) + TOP_BAND_HEIGHT);
-// }
-
 /**
  * @brief Detect click tile on the board
  * @param handle The SDLHandle pointer

@@ -110,14 +110,27 @@ function load_SDL2 {
 
 }
 
-function get_SDL2_for_windows {
+function get_SDL2_windows {
 	cd ${BASE_DIR}
-	mkdir win_lib && cd win_lib
+	mkdir -p win_lib && cd win_lib
 	wget https://github.com/libsdl-org/SDL/releases/download/release-2.30.5/SDL2-devel-2.30.5-mingw.tar.gz >> $FD_OUT 2>&1
 	tar -xvf SDL2-devel-2.30.5-mingw.tar.gz >> $FD_OUT 2>&1
 	rm -rf SDL2-devel-2.30.5-mingw.tar.gz
 }
 
+function get_SDL2_tff_windows {
+	cd ${BASE_DIR}
+	cd win_lib
+	wget https://github.com/libsdl-org/SDL_ttf/releases/download/release-2.22.0/SDL2_ttf-devel-2.22.0-mingw.tar.gz >> $FD_OUT 2>&1
+	tar -xvf SDL2_ttf-devel-2.22.0-mingw.tar.gz >> $FD_OUT 2>&1
+	rm -rf SDL2_ttf-devel-2.22.0-mingw.tar.gz
+}
+
+
+function load_SDL2_windows {
+	get_SDL2_windows
+	get_SDL2_tff_windows
+}
 
 # Get the current directory
 PWD=$(pwd)
@@ -153,4 +166,4 @@ load_SDL2 "https://github.com/libsdl-org/SDL/releases/download/release-2.30.5/SD
 # Load FreeType for SDL2_ttf for text rendering
 load_lib "https://sourceforge.net/projects/freetype/files/freetype2/2.11.0/freetype-2.11.0.tar.gz/download"
 load_SDL2_TTF "https://github.com/libsdl-org/SDL_ttf/releases/download/release-2.22.0/SDL2_ttf-2.22.0.tar.gz" "2.22.0"
-get_SDL2_for_windows
+load_SDL2_windows
