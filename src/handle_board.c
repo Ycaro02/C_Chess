@@ -172,6 +172,43 @@ void draw_piece_over_board(SDLHandle *h, s32 x, s32 y) {
 	draw_texure(h, texture, (iVec2){x, y}, h->tile_size);
 }
 
+void draw_letter_number(SDLHandle *handle, s8 player_color) {
+	iVec2		pos = {0, 0};
+	s32			tile_size = handle->tile_size.x;
+	s32			column = 7;
+	char		letter = 'H';
+	char		number = '1';
+
+	iVec2		char_pos = {0, 0};
+
+	if (player_color == IS_BLACK) {
+		letter = 'A';
+		number = '8';
+	}
+
+	while (column >= 0) {
+		/* Draw letter */
+		pos = (iVec2){column, 8};
+
+		TILE_POSITION_TO_PIXEL(pos, char_pos.x, char_pos.y, tile_size, handle->band_size);
+		char_pos.x += (tile_size >> 1) - FONT_SHIFT;
+		char_pos.y += FONT_SHIFT;
+
+		write_text(handle, (char[]){letter, '\0'}, char_pos, RGBA_TO_UINT32(255, 0, 0, 255));
+		/* Draw number */
+		pos = (iVec2){0, column};
+		
+		TILE_POSITION_TO_PIXEL(pos, char_pos.x, char_pos.y, tile_size, handle->band_size);
+		char_pos.x -= (FONT_SIZE + FONT_SHIFT);
+		char_pos.y += (tile_size >> 1) - FONT_SHIFT;
+
+		write_text(handle, (char[]){number, '\0'}, char_pos, RGBA_TO_UINT32(255, 0, 0, 255));
+
+		number = player_color == IS_BLACK ? number - 1 : number + 1;
+		letter = player_color == IS_BLACK ? letter + 1 : letter - 1;
+		column--;
+	}
+}
 
 /* Draw chess board */
 void draw_board(SDLHandle *handle, s8 player_color) {
@@ -220,6 +257,10 @@ void draw_board(SDLHandle *handle, s8 player_color) {
 		column--;
 	}
 
+	/* Draw the letter and number for raw/column */
+	draw_letter_number(handle, player_color);
+
+	/* Draw the selected piece over the board */
 	if (handle->over_piece_select != EMPTY) {
 		draw_piece_over_board(handle, handle->mouse_pos.x - (handle->tile_size.x >> 1), handle->mouse_pos.y - (handle->tile_size.x >> 1));
 	}

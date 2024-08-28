@@ -80,6 +80,9 @@ typedef struct s_sdl_handle {
 } SDLHandle;
 
 
+
+#define FONT_SIZE 24
+#define FONT_SHIFT (FONT_SIZE >> 1)
 #define FONT_PATH "rsc/font/arial.ttf"
 
 /* @brief Macro to convert tile position to pixel position
@@ -117,5 +120,5 @@ void		draw_color_tile(SDLHandle *h, iVec2 tilePos, iVec2 scale, u32 color);
 void		destroy_sdl_handle(SDLHandle *handle);
 TTF_Font	*load_font(const char *path, s32 size);
 void		unload_font(TTF_Font *font);
-void 		write_text(SDLHandle *h, char *text, iVec2 pos, u32 fontSize, u32 color);
+void 		write_text(SDLHandle *h, char *text, iVec2 pos, u32 color);
 #endif /* HANDLE_SDL_H */

@@ -197,7 +197,7 @@ SDLHandle *create_sdl_handle(const char* title) {
 		free(handle);
 		return (NULL);
 	}
-	handle->font = load_font(FONT_PATH, 24);
+	handle->font = load_font(FONT_PATH, FONT_SIZE);
 	if (!handle->font) {
 		SDL_DestroyRenderer(handle->renderer);
 		SDL_DestroyWindow(handle->window);
@@ -423,13 +423,11 @@ void unload_font(TTF_Font *font) {
  * @param fontSize The size of the text
  * @param color The color of the text
 */
-void write_text(SDLHandle *h, char *text, iVec2 pos, u32 fontSize, u32 color) {
+void write_text(SDLHandle *h, char *text, iVec2 pos, u32 color) {
 	SDL_Surface		*surface = NULL;
 	SDL_Texture		*texture = NULL;
 	SDL_Rect		textRect = {0,0,0,0};
 	u8 				r, g, b, a;
-
-	(void)fontSize;
 
 	if (!h->window || !h->font) {
 		return;
