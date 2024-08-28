@@ -20,6 +20,7 @@ SDLHandle *init_game() {
 		return (NULL);
 	}
 	init_board(handle->board);
+	handle->board->turn = 1;
 	handle->player_info.color = IS_WHITE;
 	handle->player_info.turn = FALSE;
 	handle->over_piece_select = EMPTY;
@@ -68,6 +69,9 @@ void chess_routine(SDLHandle *h){
 void chess_destroy(SDLHandle *h) {
 	CHESS_LOG(LOG_INFO, RED"Destroy chess game%s\n", RESET);
 	destroy_sdl_handle(h);
+	if (h->board->lst) {
+		ft_lstclear(&h->board->lst, free);
+	}
 	free(h);
 	CLEANUP_NETWORK();
 }

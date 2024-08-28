@@ -4,22 +4,20 @@
 
 /* @brief Add a move to the move list
  * @param lst		ChessMoveList head pointer 
- * @param id		u32 id
  * @param tile_from	ChessTile enum
  * @param tile_to	ChessTile enum
  * @param piece_from	ChessPiece enum
  * @param piece_to	ChessPiece enum
  * @return TRUE if the move is added, FALSE otherwise
  */
-s8 move_save_add(ChessMoveList **lst, u32 id, ChessTile tile_from, ChessTile tile_to, ChessPiece piece_from, ChessPiece piece_to) {
-	MoveSave		*m = malloc(sizeof(MoveSave));
+s8 move_save_add(ChessMoveList **lst, ChessTile tile_from, ChessTile tile_to, ChessPiece piece_from, ChessPiece piece_to) {
 	ChessMoveList	*node = NULL;
+	MoveSave		*m = malloc(sizeof(MoveSave));
 
 	if (!m) {
 		return (FALSE);
 	}
 
-	m->id = id;
 	m->tile_from = tile_from;
 	m->tile_to = tile_to;
 	m->piece_from = piece_from;
@@ -43,7 +41,8 @@ void display_move_list(ChessMoveList *lst) {
 
 	while (tmp) {
 		m = tmp->content;
-		printf("Move id: %d, from: %s, to: %s, piece from: %s, piece to: %s\n", m->id, TILE_TO_STRING(m->tile_from), TILE_TO_STRING(m->tile_to), chess_piece_to_string(m->piece_from), chess_piece_to_string(m->piece_to));
+		printf("Move from: %s, to: %s, piece from: %s, piece to: %s\n", TILE_TO_STRING(m->tile_from), TILE_TO_STRING(m->tile_to), chess_piece_to_string(m->piece_from), chess_piece_to_string(m->piece_to));
 		tmp = tmp->next;
 	}
+	printf("-----------------------------------------------------------------------\n");
 }

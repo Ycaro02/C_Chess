@@ -209,8 +209,8 @@ s32 move_piece(SDLHandle *handle, ChessTile tile_from, ChessTile tile_to, ChessP
 	handle->board->last_tile_from = tile_from;
 	handle->board->last_tile_to = tile_to;
 
-	move_save_add(&handle->board->lst, handle->board->turn, tile_from, tile_to, type, get_piece_from_tile(handle->board, tile_to));
+	move_save_add(&handle->board->lst, tile_from, tile_to, type, get_piece_from_tile(handle->board, tile_to));
 
-	display_move_list(handle->board->lst);
+	// display_move_list(handle->board->lst);
 	return (ret);
 }

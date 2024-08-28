@@ -126,7 +126,6 @@ typedef struct s_special_info SpecialInfo;
 
 /* Struct for move save */
 struct s_move_save {
-	u32			id;
 	ChessTile	tile_from;
 	ChessTile	tile_to;
 	ChessPiece	piece_from;
@@ -381,7 +380,7 @@ void		reset_selected_tile(SDLHandle *h);
 
 
 /* src/move_save.c */
-s8 move_save_add(ChessMoveList **lst, u32 id, ChessTile tile_from, ChessTile tile_to, ChessPiece piece_from, ChessPiece piece_to);
+s8 move_save_add(ChessMoveList **lst, ChessTile tile_from, ChessTile tile_to, ChessPiece piece_from, ChessPiece piece_to);
 void display_move_list(ChessMoveList *lst);
 
 #endif /* CHESS_H */

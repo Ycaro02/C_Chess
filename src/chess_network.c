@@ -51,8 +51,6 @@ s8 network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *ser
 	s32				iter = 0;
 	s8				ret = FALSE;
 
-	handle->board->turn = 1;
-
 	player_info->nt_info = init_network(server_ip, player_info->running_port, timeout);
 	if (has_flag(flag, FLAG_LISTEN)) {
 		player_info->color = random_player_color();
