@@ -3,6 +3,11 @@
 #include "../include/chess_log.h"
 
 
+/**
+ * @brief Get the screen size
+ * @param width The width of the screen (out)
+ * @param height The height of the screen (out)
+*/
 void get_screen_size(int *width, int *height) {
     SDL_DisplayMode mode;
     if (SDL_GetCurrentDisplayMode(0, &mode) != 0) {
@@ -15,6 +20,12 @@ void get_screen_size(int *width, int *height) {
     }
 }
 
+/**
+ * @brief Dynamic compute the window size
+ * @param h The SDLHandle pointer
+ * @note The window size is computed by removing 1/4 of the screen size on each dimension
+ * @note The tile size is computed by dividing the minimum between the width and height by 8
+*/
 void compute_win_size(SDLHandle *h) {
 	s32 size_w=0, size_h=0, width = 0, height = 0;
 	s32 minus, tile_size, band_w, band_h;
@@ -110,6 +121,12 @@ SDL_Window* createWindow(SDLHandle *h, const char* title) {
 	return (window);
 }
 
+/**
+ * @brief Load a texture with SDL2
+ * @param renderer The renderer pointer
+ * @param path The path of the texture
+ * @return The texture pointer
+*/
 static SDL_Texture *safe_load_texture(SDL_Renderer *renderer, const char *path) {
 	SDL_Texture *texture = load_texture(renderer, path);
 	if (!texture) {
@@ -119,6 +136,12 @@ static SDL_Texture *safe_load_texture(SDL_Renderer *renderer, const char *path) 
 	return (texture);
 }
 
+
+/**
+ * @brief Load the piece texture
+ * @param handle The SDLHandle pointer
+ * @return TRUE if success, FALSE otherwise
+*/
 static s8 load_piece_texture(SDLHandle *handle) {
 	handle->piece_texture = malloc(sizeof(SDL_Texture*) * PIECE_MAX);
 	if (!handle->piece_texture) {
@@ -297,6 +320,14 @@ void draw_texture_tile(SDLHandle *h, SDL_Texture *texture, iVec2 tile_pos, iVec2
 	SDL_RenderCopy(h->renderer, texture, NULL, &dstRect);
 }
 
+
+/**
+ * @brief Draw a texture with SDL2
+ * @param window The window pointers
+ * @param texture The texture pointer
+ * @param pos The position of the texture
+ * @param scale The scale of the texture
+*/
 void draw_texure(SDLHandle *handle, SDL_Texture *texture, iVec2 pos, iVec2 scale) {
 	SDL_Rect 	dstRect = { .x = pos.x, .y = pos.y, .w = scale.x, .h = scale.y };	
 

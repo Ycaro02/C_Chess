@@ -12,6 +12,11 @@ s8 is_selected_possible_move(Bitboard possible_moves, ChessTile tile) {
     return ((possible_moves & (1ULL << tile)) != 0);
 }
 
+/* @brief Is en passant move
+ * @param b		ChessBoard structure
+ * @param tile	ChessTile enum
+ * @return 1 if en passant move, 0 otherwise
+ */
 s8 is_en_passant_move(ChessBoard *b, ChessTile tile) {
 	return ((b->en_passant & (1ULL << tile)) != 0);
 }
@@ -89,6 +94,12 @@ void draw_possible_move(SDLHandle *handle, iVec2 tile_pos, ChessTile tile) {
 	}
 }
 
+/* @brief Promot the pawn
+ * @param board The ChessBoard structure
+ * @param tile The tile to promote
+ * @param new_piece The new piece to promote
+ * @param pawn_type The pawn type to remove
+*/
 void promote_pawn(ChessBoard *board, ChessTile tile, ChessPiece new_piece, ChessPiece pawn_type) {
 	Bitboard mask = 1ULL << tile;
 	/* Remove the pawn */
@@ -99,6 +110,11 @@ void promote_pawn(ChessBoard *board, ChessTile tile, ChessPiece new_piece, Chess
 	update_piece_state(board);
 }
 
+/* @brief Get the selected piece
+ * @param idx The index of the piece
+ * @param is_black The player color
+ * @return The selected piece
+ */
 ChessPiece get_selected_piece(s32 idx, s8 is_black) {
 	if (is_black) {
 		return (BLACK_PAWN + idx);
@@ -106,6 +122,12 @@ ChessPiece get_selected_piece(s32 idx, s8 is_black) {
 	return (WHITE_KNIGHT + idx);
 }
 
+/* @brief Display the promotion selection
+ * @param h The SDLHandle pointer
+ * @param tile_from The tile from
+ * @param tile_to The tile to
+ * @return TRUE if the promotion is done, CHESS_QUIT if the player quit
+ */
 s32 display_promotion_selection(SDLHandle *h, ChessTile tile_from, ChessTile tile_to) {
 	iVec2 start_pos = {2, 1}; // x, y
 	ChessTile tile_start = C7;
@@ -173,6 +195,14 @@ void draw_piece_over_board(SDLHandle *h, s32 x, s32 y) {
 	draw_texure(h, texture, (iVec2){x, y}, h->tile_size);
 }
 
+
+/* @brief Center the text in the left band
+ * @param char_pos The position of the text
+ * @param text The text to center
+ * @param font The font
+ * @param tile_size The size of the tile
+ * @param band_left_size The size of the left band
+ */
 void left_band_center_text(iVec2 *char_pos, char *text, TTF_Font *font, s32 tile_size, s32 band_left_size) {
 	iVec2 text_size = {0, 0};
 
@@ -188,6 +218,13 @@ void left_band_center_text(iVec2 *char_pos, char *text, TTF_Font *font, s32 tile
 		
 }
 
+/* @brief Center the text in the bottom band
+ * @param char_pos The position of the text
+ * @param text The text to center
+ * @param font The font
+ * @param tile_size The size of the tile
+ * @param band_bot_size The size of the bottom band
+ */
 void bot_band_center_text(iVec2 *char_pos, char *text, TTF_Font *font, s32 tile_size, s32 band_bot_size) {
 	iVec2 text_size = {0, 0};
 
@@ -202,6 +239,7 @@ void bot_band_center_text(iVec2 *char_pos, char *text, TTF_Font *font, s32 tile_
 	char_pos->y -= (text_size.x >> 1);
 }
 
+/* Draw letter and number for raw/column */
 void draw_letter_number(SDLHandle *handle, s8 player_color) {
 	iVec2		pos = {0, 0}, char_pos = {0, 0};
 	s32			tile_size = handle->tile_size.x;
