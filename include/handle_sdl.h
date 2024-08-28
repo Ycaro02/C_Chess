@@ -9,7 +9,7 @@
 #include "../rsc/lib/install/include/SDL2/SDL_render.h"
 
 /* TTF include */
-// #include "../rsc/lib/install/include/SDL2/SDL_ttf.h"
+#include "../rsc/lib/install/include/SDL2/SDL_ttf.h"
 
 /* Texture path */
 #define BLACK_KING_TEXTURE "rsc/texture/piece/black_king.bmp"
@@ -50,7 +50,7 @@
 
 
 #define SDL_ERR_FUNC() printf("SDL Error %s: %s\n", __func__, SDL_GetError())
-// #define TTF_ERR_FUNC() printf("TTF Error %s: %s\n", __func__, TTF_GetError())
+#define TTF_ERR_FUNC() printf("TTF Error %s: %s\n", __func__, TTF_GetError())
 
 typedef struct s_iVec2 {
 	s32 x;
@@ -69,6 +69,7 @@ typedef struct s_sdl_handle {
 	SDL_Renderer	*renderer;			/* The renderer ptr */
 	SDL_Texture		**piece_texture;	/* Array of texture for each piece */
 	ChessBoard		*board;				/* The chess board */
+	TTF_Font		*font;				/* The font */
 	iVec2			window_size;		/* The size of the window */
 	iVec2			tile_size;			/* The size of the tile */
 	WinBand			band_size;			/* The band size */
@@ -78,6 +79,8 @@ typedef struct s_sdl_handle {
 	u32				flag;				/* App Flag */
 } SDLHandle;
 
+
+#define FONT_PATH "rsc/font/arial.ttf"
 
 /* @brief Macro to convert tile position to pixel position
  * @param p The tile position
@@ -112,5 +115,7 @@ void		draw_texture_tile(SDLHandle *h, SDL_Texture *texture, iVec2 tilePos, iVec2
 void		draw_texure(SDLHandle *handle, SDL_Texture *texture, iVec2 pos, iVec2 scale);
 void		draw_color_tile(SDLHandle *h, iVec2 tilePos, iVec2 scale, u32 color);
 void		destroy_sdl_handle(SDLHandle *handle);
-
+TTF_Font	*load_font(const char *path, s32 size);
+void		unload_font(TTF_Font *font);
+void 		write_text(SDLHandle *h, char *text, iVec2 pos, u32 fontSize, u32 color);
 #endif /* HANDLE_SDL_H */

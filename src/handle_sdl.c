@@ -15,70 +15,49 @@ void get_screen_size(int *width, int *height) {
     }
 }
 
-/**
- * @brief Create a window with SDL2
- * @param width The width of the window
- * @param height The height of the window
- * @param title The title of the window
- * @return The window pointer
-*/
-SDL_Window* createWindow(SDLHandle * h, const char* title) {
-	SDL_Window		*window = NULL;
-	SDL_Renderer	*renderer = NULL;
-	
-	/* Init SDL2 and TTF */
-	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-		SDL_ERR_FUNC();
-		return (NULL);
-	}
-	// if (TTF_Init() != 0) {
-	// 	TTF_ERR_FUNC();
-	// 	SDL_Quit();
-	// 	return (NULL);
-	// }
-
+void compue_win_size(SDLHandle *h) {
 	s32 size_w=0, size_h=0, width = 0, height = 0;
+	s32 minus, tile_size, band_w, band_h;
 
 	get_screen_size(&size_w, &size_h);
 	
-	
-	// Adjust width and height by removing 1/4 of each dimension, for information (display coilumn and row)
+	/* Adjust width and height by removing 1/4 of each dimension, for information (display coilumn and row) */
     width = size_w - (size_w / 4);
     height = size_h - (size_h / 4);
 
-    // Calculate tile size for the chessboard
-	int minus = width < height ? width : height;
-    int tile_size = minus / 8;
+    /* Calculate tile size for the chessboard */
+	minus = width < height ? width : height;
+    tile_size = minus / 8;
 
 	h->tile_size.x = tile_size;
 	h->tile_size.y = tile_size;
 
-    printf("Tile size: %d\n", tile_size);
+    CHESS_LOG(LOG_INFO, "Tile size: %d\n", tile_size);
 
-	// Calculate band size
-	int band_w = (size_w / 8);
-	int band_h = (size_h / 16);
+	/* Calculate band size */
+	band_w = (size_w / 8);
+	band_h = (size_h / 16);
 
 
-	// Calculate the band size bot and left for raw,column number display
+	/* Calculate the band size bot and left for raw,column number display */
 	h->band_size.bot = band_h;
 	h->band_size.left = band_w / 4;
 
-	// Detect minus between left and bot band size
+	/* Detect minus between left and bot band size */
 	minus = h->band_size.left < h->band_size.bot ? h->band_size.left : h->band_size.bot;
 
-	// Set the band size
+	/* Set the band size */
 	h->band_size.left = minus;
 	h->band_size.bot = minus;
 
-	// Set the band size right and top
+	/* Set the band size right and top */
 	h->band_size.right = band_w - h->band_size.left;
 	h->band_size.top = 0;
 
-	// Set the band size height for the window
+	/* Set the band size height for the window */
 	band_h = h->band_size.bot;
 
-	// Calculate the window size
+	/* Calculate the window size */
 	width = (8 * tile_size) + band_w;
 	height = (8 * tile_size) + band_h;
 
@@ -93,10 +72,35 @@ SDL_Window* createWindow(SDLHandle * h, const char* title) {
 	h->window_size.x = width;
 	h->window_size.y = height;
 
+}
+
+/**
+ * @brief Create a window with SDL2
+ * @param width The width of the window
+ * @param height The height of the window
+ * @param title The title of the window
+ * @return The window pointer
+*/
+SDL_Window* createWindow(SDLHandle *h, const char* title) {
+	SDL_Window		*window = NULL;
+	SDL_Renderer	*renderer = NULL;
+	
+	/* Init SDL2 and TTF */
+	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+		SDL_ERR_FUNC();
+		return (NULL);
+	}
+
+	if (TTF_Init() != 0) {
+		TTF_ERR_FUNC();
+		SDL_Quit();
+		return (NULL);
+	}
 
 
+	compue_win_size(h);
 
-	window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_SHOWN);
+	window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, h->window_size.x, h->window_size.y, SDL_WINDOW_SHOWN);
 	if (!window) {
 		SDL_ERR_FUNC();
 		return (NULL);
@@ -193,6 +197,14 @@ SDLHandle *create_sdl_handle(const char* title) {
 		free(handle);
 		return (NULL);
 	}
+	handle->font = load_font(FONT_PATH, 24);
+	if (!handle->font) {
+		SDL_DestroyRenderer(handle->renderer);
+		SDL_DestroyWindow(handle->window);
+		free(handle);
+		return (NULL);
+	}
+
 	window_clear(handle->renderer);
 	return (handle);
 }
@@ -230,6 +242,7 @@ void window_close(SDL_Window* window, SDL_Renderer *renderer) {
 	}
 	if (window) {
 		SDL_DestroyWindow(window);
+		TTF_Quit();
 		SDL_Quit();
 	}
 }
@@ -356,6 +369,10 @@ void destroy_sdl_handle(SDLHandle *handle) {
 		free(handle->piece_texture);
 	}
 
+	if (handle->font) {
+		unload_font(handle->font);
+	}
+
 	/* Close window */
 	window_close(handle->window, handle->renderer);
 
@@ -379,23 +396,23 @@ void destroy_sdl_handle(SDLHandle *handle) {
  * @param path The path of the font
  * @return The font pointer
 */
-// void *loadFont(const char *path, s32 fontSize) {
-// 	TTF_Font *font = TTF_OpenFont(path, fontSize);
-// 	if (!font) {
-// 		return (NULL);
-// 	}
-// 	return (font);
-// }
+TTF_Font *load_font(const char *path, s32 fontSize) {
+	TTF_Font *font = TTF_OpenFont(path, fontSize);
+	if (!font) {
+		return (NULL);
+	}
+	return (font);
+}
 
 /**
  * @brief Unload a font with SDL2
  * @param font The font pointer
 */
-// void unloadFont(TTF_Font *font) {
-// 	if (font) {
-// 		TTF_CloseFont(font);
-// 	}
-// }
+void unload_font(TTF_Font *font) {
+	if (font) {
+		TTF_CloseFont(font);
+	}
+}
 
 /**
  * @brief Write a text with SDL2
@@ -406,44 +423,37 @@ void destroy_sdl_handle(SDLHandle *handle) {
  * @param fontSize The size of the text
  * @param color The color of the text
 */
-// void writeText(SDL_Window *window, TTF_Font *font, char *text, iVec2 pos, u32 fontSize, u32 color) {
-// 	SDL_Renderer	*renderer = NULL;
-// 	SDL_Surface		*textSurface = NULL;
-// 	SDL_Texture		*textTexture = NULL;
-// 	SDL_Rect		textRect = {0,0,0,0};
-// 	u8 				r, g, b, a;
+void write_text(SDLHandle *h, char *text, iVec2 pos, u32 fontSize, u32 color) {
+	SDL_Surface		*surface = NULL;
+	SDL_Texture		*texture = NULL;
+	SDL_Rect		textRect = {0,0,0,0};
+	u8 				r, g, b, a;
 
-// 	(void)fontSize;
+	(void)fontSize;
 
-// 	if (!window || !font) {
-// 		return;
-// 	}
+	if (!h->window || !h->font) {
+		return;
+	}
 
-// 	renderer = SDL_GetRenderer(window);
-// 	if (!renderer) {
-// 		std::cerr << "SDL_GetRenderer Error: " << SDL_GetError() << std::endl;
-// 		return;
-// 	}
+	UINT32_TO_RGBA(color, r, g, b, a);
 
-// 	UINT32_TO_RGBA(color, r, g, b, a);
+	surface = TTF_RenderText_Solid(h->font, text, (SDL_Color){r, g, b, a});
+	if (!surface) {
+		CHESS_LOG(LOG_ERROR, "%s\n", SDL_GetError());
+		return;
+	}
+	texture = SDL_CreateTextureFromSurface(h->renderer, surface);
+	if (!texture) {
+		CHESS_LOG(LOG_ERROR, "%s\n", SDL_GetError());
+		SDL_FreeSurface(surface);
+		return;
+	}
 
-// 	textSurface = TTF_RenderText_Solid(font, text, {r, g, b, a});
-// 	if (!textSurface) {
-// 		std::cerr << "TTF_RenderText_Solid Error: " << TTF_GetError() << std::endl;
-// 		return;
-// 	}
-// 	textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
-// 	if (!textTexture) {
-// 		std::cerr << "SDL_CreateTextureFromSurface Error: " << SDL_GetError() << std::endl;
-// 		SDL_FreeSurface(textSurface);
-// 		return;
-// 	}
-
-// 	textRect.x = pos.x;
-// 	textRect.y = pos.y;
-// 	textRect.w = textSurface->w;
-// 	textRect.h = textSurface->h;
-// 	SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
-// 	SDL_FreeSurface(textSurface);
-// 	SDL_DestroyTexture(textTexture);
-// }
+	textRect.x = pos.x;
+	textRect.y = pos.y;
+	textRect.w = surface->w;
+	textRect.h = surface->h;
+	SDL_RenderCopy(h->renderer, texture, NULL, &textRect);
+	SDL_FreeSurface(surface);
+	SDL_DestroyTexture(texture);
+}

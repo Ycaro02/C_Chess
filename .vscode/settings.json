@@ -79,6 +79,7 @@
 		"uv.h": "c",
 		"signum-arch.h": "c",
 		"socket.h": "c",
-		"chess_log.h": "c"
+		"chess_log.h": "c",
+		"sdl_ttf.h": "c"
 	}
 }
