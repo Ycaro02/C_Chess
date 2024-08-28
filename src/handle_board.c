@@ -107,32 +107,6 @@ void draw_piece_over_board(SDLHandle *h, s32 x, s32 y) {
 	draw_texure(h, texture, (iVec2){x, y}, h->tile_size);
 }
 
-void wite_timer_in_rect(SDLHandle *h, SDL_Rect rect){
-	char *timer = "10:00";
-
-	u32 color = RGBA_TO_UINT32(0, 0, 0, 255);
-
-	iVec2 pos = {0, 0};
-	iVec2 text_size = {0, 0};
-
-	TTF_SizeText(h->timer_font, timer, &text_size.x, &text_size.y);
-	pos.x = rect.x + (rect.w >> 1);
-	pos.x -= (text_size.x >> 1);
-
-	pos.y = rect.y + (rect.h >> 1);
-	pos.y -= (text_size.y >> 1);
-
-	write_text(h, timer, h->timer_font, pos, color);
-
-}
-
-void draw_timer_rect(SDLHandle *h) {
-	SDL_SetRenderDrawColor(h->renderer, 180, 180, 180, 255);
-	SDL_RenderFillRect(h->renderer, &h->timer_rect_bot);
-	SDL_RenderFillRect(h->renderer, &h->timer_rect_top);
-	wite_timer_in_rect(h, h->timer_rect_bot);
-	wite_timer_in_rect(h, h->timer_rect_top);
-}
 
 /* Draw chess board */
 void draw_board(SDLHandle *handle, s8 player_color) {

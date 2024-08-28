@@ -64,26 +64,35 @@ typedef struct s_window_band {
 	s32 bot;
 } WinBand;
 
+#define TIME_STR_SIZE 16
+
 typedef struct s_sdl_handle {
 	SDL_Window		*window;			/* The window ptr */
 	SDL_Renderer	*renderer;			/* The renderer ptr */
 	SDL_Texture		**piece_texture;	/* Array of texture for each piece */
 	ChessBoard		*board;				/* The chess board */
+
+	/* GUI */
 	TTF_Font		*tile_font;			/* The font for tile number/letters */
+	TTF_Font		*timer_font;		/* The font */
+	char			timer_str[TIME_STR_SIZE];	/* Timer string */
 	iVec2			window_size;		/* The size of the window */
 	iVec2			tile_size;			/* The size of the tile */
+	iVec2			mouse_pos;			/* Mouse position */
 	WinBand			band_size;			/* The band size */
 	SDL_Rect		timer_rect_bot;		/* Timer rect */
 	SDL_Rect		timer_rect_top;		/* Timer rect */
-	TTF_Font		*timer_font;		/* The font */
-	PlayerInfo		player_info;		/* Player info */
-	iVec2			mouse_pos;			/* Mouse position */
 	ChessPiece		over_piece_select;	/* The piece selected (over display) */
+
+	/* Player info */
+	struct timeval	turn_start;			/* Turn start Timer */
+	struct timeval	black_time;			/* Black Timer */
+	struct timeval	white_time;			/* White Timer */
+	PlayerInfo		player_info;		/* Player info */
 	u32				flag;				/* App Flag */
-} SDLHandle;
+}	SDLHandle ;
 
-
-#define FONT_PATH "rsc/font/arial.ttf"
+#define	FONT_PATH "rsc/font/arial.ttf"
 
 /* @brief Inline func to convert tile position to pixel position
  * @param p The tile position
@@ -91,7 +100,7 @@ typedef struct s_sdl_handle {
  * @param py The pixel y position
  * @param _ts_ The tile size
  * @param _wb_ The window band size
-*/ 
+*/
 FT_INLINE void tile_to_pixel_pos(iVec2 *pos, iVec2 p, s32 tile_size, WinBand wb) {
 	pos->x = (p.x * tile_size) + wb.left;
 	pos->y = (p.y * tile_size) + wb.top;

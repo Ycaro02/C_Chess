@@ -7,7 +7,6 @@
 
 SDLHandle *init_game() {
 	SDLHandle	*handle = NULL;
-
 	handle = create_sdl_handle("C_Chess");
 	if (!handle) {
 		CHESS_LOG(LOG_ERROR, "Error %s: create_sdl_handle failed\n", __func__);
@@ -21,9 +20,6 @@ SDLHandle *init_game() {
 	}
 	init_board(handle->board);
 	handle->board->turn = 1;
-	handle->player_info.color = IS_WHITE;
-	handle->player_info.turn = FALSE;
-	handle->over_piece_select = EMPTY;
 	return (handle);
 }
 

@@ -10,6 +10,7 @@
 	#define CLOSE_SOCKET closesocket
 	#define INIT_NETWORK() init_network_windows()
 	#define CLEANUP_NETWORK() cleanup_network_windows()
+	int		gettimeofday(struct timeval* tp, struct timezone* tzp);
 #else
 	#include <sys/socket.h>
 	#include <netinet/in.h>

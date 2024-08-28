@@ -238,6 +238,10 @@ SDLHandle *create_sdl_handle(const char* title) {
 		return (NULL);
 	}
 
+	handle->player_info.turn = FALSE;
+	handle->player_info.color = IS_WHITE;
+	handle->over_piece_select = EMPTY;
+
 	handle->timer_rect_bot = build_timer_rect(handle, TRUE);
 	handle->timer_rect_top = build_timer_rect(handle, FALSE);
 
@@ -248,6 +252,15 @@ SDLHandle *create_sdl_handle(const char* title) {
 		return (NULL);
 	}
 
+	fast_bzero(handle->timer_str, TIME_STR_SIZE);
+
+	gettimeofday(&handle->turn_start, NULL);
+
+	handle->white_time = (struct timeval){.tv_sec = 0, .tv_usec = 10000};
+	handle->white_time.tv_sec = 60 * 10 + 1;
+
+	handle->black_time = (struct timeval){.tv_sec = 0, .tv_usec = 10000};
+	handle->black_time.tv_sec = 60 * 10 + 1;
 
 
 	window_clear(handle->renderer);

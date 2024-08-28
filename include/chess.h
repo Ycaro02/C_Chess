@@ -386,4 +386,8 @@ s32			check_pawn_promotion(SDLHandle *handle, ChessPiece type, ChessTile tile_fr
 s8 move_save_add(ChessMoveList **lst, ChessTile tile_from, ChessTile tile_to, ChessPiece piece_from, ChessPiece piece_to);
 void display_move_list(ChessMoveList *lst);
 
+
+/* src/timer.c */
+void draw_timer_rect(SDLHandle *h);
+
 #endif /* CHESS_H */
