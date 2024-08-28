@@ -141,29 +141,6 @@ Bitboard get_piece_move(ChessBoard *board, Bitboard piece, ChessPiece piece_type
 
 
 
-s32 check_pawn_promotion(SDLHandle *handle, ChessPiece type, ChessTile tile_from, ChessTile tile_to) {
-	// ChessPiece queen = (type == WHITE_PAWN) ? WHITE_QUEEN : BLACK_QUEEN;
-	s32 ret = FALSE;
-	s8 is_pawn = (type == WHITE_PAWN || type == BLACK_PAWN);
-	s8 is_black = (type >= BLACK_PAWN);
-	s8 is_white = !is_black;
-
-
-	/* Check if is the player control pawn or opponent (no mandatory in network version) */
-	if (handle->player_info.color == IS_WHITE && is_black) {
-		return (ret);
-	} else if (handle->player_info.color == IS_BLACK && is_white) {
-		return (ret);
-	}
-
-
-	/* Check if the pawn need to be promoted */
-	if ((is_pawn && is_white && tile_to >= A8 && tile_to <= H8)
-		|| (is_pawn && is_black && tile_to >= A1 && tile_to <= H1)) {
-		ret = display_promotion_selection(handle, tile_from, tile_to);
-	}
-	return (ret);
-}
 
 /* @brief Move a piece from a tile to another and update the board state
  * @param board		ChessBoard struct

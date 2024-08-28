@@ -18,6 +18,7 @@ SRCS			=	chess_board.c \
 					handle_message.c \
 					handle_signal.c \
 					handle_sdl.c \
+					pawn_promotion.c \
 					chess_log.c \
 					move_save.c \
 

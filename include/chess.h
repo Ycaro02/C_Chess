@@ -343,8 +343,9 @@ typedef struct s_sdl_handle SDLHandle;
 /* Singleton to get the sdl pointer */
 SDLHandle	*get_SDL_handle();
 void		chess_destroy(SDLHandle *h);
+
 /* src/chess_flag.c */
-u32 handle_chess_flag(int argc, char **argv, s8 *error, PlayerInfo *player_info);
+u32			handle_chess_flag(int argc, char **argv, s8 *error, PlayerInfo *player_info);
 
 /* src/chess_board.c */
 void		init_board(ChessBoard *board);
@@ -373,11 +374,13 @@ void		draw_board(SDLHandle *handle, s8 player_color);
 s32			event_handler(SDLHandle *h, s8 player_color);
 s8			verify_check_and_mat(ChessBoard *b, s8 is_black);
 Bitboard	get_piece_color_control(ChessBoard *b, s8 is_black);
-s32			display_promotion_selection(SDLHandle *handle, ChessTile tile_from, ChessTile tile_to);
 void 		update_graphic_board(SDLHandle *h);
 void		draw_piece_over_board(SDLHandle *h, s32 x, s32 y);
 void		reset_selected_tile(SDLHandle *h);
 
+
+/* src/pawn_promotion.c */
+s32 check_pawn_promotion(SDLHandle *handle, ChessPiece type, ChessTile tile_from, ChessTile tile_to);
 
 /* src/move_save.c */
 s8 move_save_add(ChessMoveList **lst, ChessTile tile_from, ChessTile tile_to, ChessPiece piece_from, ChessPiece piece_to);
