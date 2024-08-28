@@ -98,6 +98,10 @@ typedef struct s_sdl_handle {
         (py) = ((p).y * _ts_) + _wb_.top; \
     } while (0)
 
+FT_INLINE void tile_to_pixel_pos(iVec2 p, iVec2 *pos, s32 tile_size, WinBand wb) {
+	pos->x = (p.x * tile_size) + wb.left;
+	pos->y = (p.y * tile_size) + wb.top;
+}
 
 FT_INLINE s8 is_in_x_range(s32 x, s32 raw, s32 tile_size, WinBand wb) {
 	return (x >= (raw * tile_size) + wb.left && x <= ((raw + 1) * tile_size) + wb.left);

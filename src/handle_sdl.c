@@ -36,7 +36,6 @@ void compue_win_size(SDLHandle *h) {
 	band_w = size_w >> 3;
 	band_h = size_h >> 4;
 
-
 	/* Calculate the band size bot and left for raw,column number display */
 	h->band_size.bot = band_h;
 	h->band_size.left = band_w >> 2;
@@ -252,20 +251,20 @@ void window_close(SDL_Window* window, SDL_Renderer *renderer) {
 */
 void draw_color_tile(SDLHandle *h, iVec2 tilePos, iVec2 scale, u32 color) {
 	SDL_Rect		tileRect = {0,0,0,0};
-	s32				pixel_x = 0, pixel_y = 0;
+	iVec2			pixel_pos = {0,0};
 	u8 				r, g, b, a;
 
 	UINT32_TO_RGBA(color, r, g, b, a);
 
 	/* Convert tile coordinates to pixel coordinates */
-	// if (scale.x == TILE_SIZE && scale.y == TILE_SIZE) {
-	TILE_POSITION_TO_PIXEL(tilePos, pixel_x, pixel_y, scale.x, h->band_size);
-	// } else {
-	// 	pixel_x = tilePos.x;
-	// 	pixel_y = tilePos.y;
-	// }
+	if (scale.x == h->tile_size.x && scale.y == h->tile_size.y) {
+		tile_to_pixel_pos(tilePos, &pixel_pos, scale.x, h->band_size);
+	} else {
+		pixel_pos.x = tilePos.x;
+		pixel_pos.y = tilePos.y;
+	}
 
-	tileRect.x = pixel_x; tileRect.y = pixel_y;
+	tileRect.x = pixel_pos.x; tileRect.y = pixel_pos.y;
 	tileRect.w = scale.x; tileRect.h = scale.y;
 
 	/* Set the drawing color and draw the tile */
@@ -283,23 +282,21 @@ void draw_color_tile(SDLHandle *h, iVec2 tilePos, iVec2 scale, u32 color) {
 */
 void draw_texture_tile(SDLHandle *h, SDL_Texture *texture, iVec2 tilePos, iVec2 scale) {
 	SDL_Rect 	dstRect;
-	s32 		pixel_x, pixel_y;
+	iVec2		pixel_pos = {0,0};
 	
 	if (!texture || !h->renderer) {
 		return;
 	}
 	/* Convert tile coordinates to pixel coordinates */
-	// if (scale.x == TILE_SIZE && scale.y == TILE_SIZE) {
-	TILE_POSITION_TO_PIXEL(tilePos, pixel_x, pixel_y, scale.x, h->band_size);
-	// } else {
-		// pixel_x = tilePos.x;
-		// pixel_y = tilePos.y;
-	// }
+	if (scale.x == h->tile_size.x && scale.y == h->tile_size.y) {
+		tile_to_pixel_pos(tilePos, &pixel_pos, scale.x, h->band_size);
+	} else {
+		pixel_pos.x = tilePos.x;
+		pixel_pos.y = tilePos.y;
+	}
 
-	dstRect.x = pixel_x;
-	dstRect.y = pixel_y;
-	dstRect.w = scale.x;
-	dstRect.h = scale.y;
+	dstRect.x = pixel_pos.x; dstRect.y = pixel_pos.y;
+	dstRect.w = scale.x; dstRect.h = scale.y;
 	SDL_RenderCopy(h->renderer, texture, NULL, &dstRect);
 }
 
