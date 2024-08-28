@@ -22,26 +22,24 @@ void compue_win_size(SDLHandle *h) {
 	get_screen_size(&size_w, &size_h);
 	
 	/* Adjust width and height by removing 1/4 of each dimension, for information (display coilumn and row) */
-    width = size_w - (size_w / 4);
-    height = size_h - (size_h / 4);
+    width = size_w - (size_w >> 2);
+    height = size_h - (size_h >> 2);
 
     /* Calculate tile size for the chessboard */
 	minus = width < height ? width : height;
-    tile_size = minus / 8;
+    tile_size = minus >> 3;
 
 	h->tile_size.x = tile_size;
 	h->tile_size.y = tile_size;
 
-    CHESS_LOG(LOG_INFO, "Tile size: %d\n", tile_size);
-
 	/* Calculate band size */
-	band_w = (size_w / 8);
-	band_h = (size_h / 16);
+	band_w = size_w >> 3;
+	band_h = size_h >> 4;
 
 
 	/* Calculate the band size bot and left for raw,column number display */
 	h->band_size.bot = band_h;
-	h->band_size.left = band_w / 4;
+	h->band_size.left = band_w >> 2;
 
 	/* Detect minus between left and bot band size */
 	minus = h->band_size.left < h->band_size.bot ? h->band_size.left : h->band_size.bot;
@@ -57,17 +55,14 @@ void compue_win_size(SDLHandle *h) {
 	/* Set the band size height for the window */
 	band_h = h->band_size.bot;
 
-	/* Calculate the window size */
-	width = (8 * tile_size) + band_w;
-	height = (8 * tile_size) + band_h;
+	/* Calculate the window size (tile_size * 8) + band */
+	width = (tile_size << 3) + band_w;
+	height = (tile_size << 3) + band_h;
 
 
-	printf("Width: %d, Height: %d\n", width, height);
-
-	printf("Band height: %d\n", band_h);
-	printf("Band width: %d\n", band_w);
-
-	printf("Top band: %d, Bot band: %d, Left band: %d, Right band: %d\n", h->band_size.top, h->band_size.bot, h->band_size.left, h->band_size.right);
+	CHESS_LOG(LOG_INFO, "Width: %d, Height: %d, tile_size %d\n", width, height, tile_size);
+	CHESS_LOG(LOG_INFO, "Band height: %d, Band width: %d\n", band_h, band_w);
+	CHESS_LOG(LOG_INFO, "Top: %d, Bot: %d, Left: %d, Right: %d\n", h->band_size.top, h->band_size.bot, h->band_size.left, h->band_size.right);
 
 	h->window_size.x = width;
 	h->window_size.y = height;
@@ -214,7 +209,8 @@ SDLHandle *create_sdl_handle(const char* title) {
  * @param window The window pointers
 */
 void window_clear(SDL_Renderer* renderer) {
-	SDL_SetRenderDrawColor(renderer, 0, 0, 120, 255);
+	// SDL_SetRenderDrawColor(renderer, 0, 0, 120, 255);
+	SDL_SetRenderDrawColor(renderer, 70, 70, 70, 255);
 	SDL_RenderClear(renderer);
 }
 

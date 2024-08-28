@@ -173,13 +173,10 @@ void draw_piece_over_board(SDLHandle *h, s32 x, s32 y) {
 }
 
 void draw_letter_number(SDLHandle *handle, s8 player_color) {
-	iVec2		pos = {0, 0};
+	iVec2		pos = {0, 0}, char_pos = {0, 0};
 	s32			tile_size = handle->tile_size.x;
 	s32			column = 7;
-	char		letter = 'H';
-	char		number = '1';
-
-	iVec2		char_pos = {0, 0};
+	char		letter = 'H', number = '1';
 
 	if (player_color == IS_BLACK) {
 		letter = 'A';
@@ -190,19 +187,32 @@ void draw_letter_number(SDLHandle *handle, s8 player_color) {
 		/* Draw letter */
 		pos = (iVec2){column, 8};
 
+		/* Get the pixel position */
 		TILE_POSITION_TO_PIXEL(pos, char_pos.x, char_pos.y, tile_size, handle->band_size);
+		
+		/* Center the letter */
 		char_pos.x += (tile_size >> 1) - FONT_SHIFT;
+		
+		/* Move the letter down */
 		char_pos.y += FONT_SHIFT;
 
-		write_text(handle, (char[]){letter, '\0'}, char_pos, RGBA_TO_UINT32(255, 0, 0, 255));
+		/* Draw the letter */
+		write_text(handle, (char[]){letter, '\0'}, char_pos, RGBA_TO_UINT32(255, 165, 0, 255)); // orange color
+		
 		/* Draw number */
 		pos = (iVec2){0, column};
 		
+		/* Get the pixel position */
 		TILE_POSITION_TO_PIXEL(pos, char_pos.x, char_pos.y, tile_size, handle->band_size);
-		char_pos.x -= (FONT_SIZE + FONT_SHIFT);
+		
+		/* Center the number */
 		char_pos.y += (tile_size >> 1) - FONT_SHIFT;
 
-		write_text(handle, (char[]){number, '\0'}, char_pos, RGBA_TO_UINT32(255, 0, 0, 255));
+		/* Move the number to the left */
+		char_pos.x -= (FONT_SIZE + FONT_SHIFT);
+		
+		/* Draw the number */
+		write_text(handle, (char[]){number, '\0'}, char_pos, RGBA_TO_UINT32(255, 165, 0, 255)); // orange color
 
 		number = player_color == IS_BLACK ? number - 1 : number + 1;
 		letter = player_color == IS_BLACK ? letter + 1 : letter - 1;
@@ -217,7 +227,7 @@ void draw_board(SDLHandle *handle, s8 player_color) {
 	s32 		column = 7;
 	ChessPiece	pieceIdx = EMPTY;
 	ChessTile	tile = player_color == IS_BLACK ? H8 : A1;
-	s8			piece_hover = FALSE;
+	s8			piece_hiden = FALSE;
 	s8 			black_check = u8ValueGet(handle->board->info, BLACK_CHECK);
 	s8 			white_check = u8ValueGet(handle->board->info, WHITE_CHECK);
 	s8			is_black = 0, is_king = 0;
@@ -241,8 +251,11 @@ void draw_board(SDLHandle *handle, s8 player_color) {
 
 			/* Draw piece */
 			pieceIdx = get_piece_from_tile(handle->board, tile);
-			piece_hover = (handle->over_piece_select == pieceIdx && tile == handle->board->selected_tile); ;
-			if (pieceIdx != EMPTY && !piece_hover) {
+
+			/* Check if the piece is the current selected piece */
+			piece_hiden = (handle->over_piece_select == pieceIdx && tile == handle->board->selected_tile); ;
+			
+			if (pieceIdx != EMPTY && !piece_hiden) {
 				is_black = (pieceIdx >= BLACK_PAWN);
 				is_king = (pieceIdx == WHITE_KING || pieceIdx == BLACK_KING);
 				if (is_king && ((is_black && black_check) || (!is_black && white_check))) {
@@ -428,7 +441,6 @@ Bitboard get_piece_color_control(ChessBoard *b, s8 is_black) {
     }
 	return (control);
 }
-
 
 /* @brief update_graphic_board, just call window_clear, draw_board and SDL_RenderPresent
  * @param h The SDLHandle pointer
