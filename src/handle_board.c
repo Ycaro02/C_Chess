@@ -191,7 +191,7 @@ ChessTile detect_tile_click(s32 x, s32 y, s32 tile_size, WinBand wb, s8 player_c
 		}
 		column--;
 	}
-	return (tile);
+	return (INVALID_TILE);
 }
 
 void reset_selected_tile(SDLHandle *h) {
@@ -236,6 +236,7 @@ s32 event_handler(SDLHandle *h, s8 player_color) {
 			h->board->last_clicked_tile = detect_tile_click(x, y, h->tile_size.x, h->band_size, player_color);
 			piece_select = get_piece_from_tile(h->board, h->board->last_clicked_tile);
 			if (piece_select >= h->player_info.piece_start && piece_select <= h->player_info.piece_end) {
+				printf("here\n");
 				h->over_piece_select = piece_select;
 			}
 		} else if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {

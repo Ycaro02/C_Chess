@@ -81,7 +81,7 @@ static s32 display_promotion_selection(SDLHandle *h, ChessTile tile_from, ChessT
 			piece_selected = get_promot_selected_piece(piece_idx, is_black);
 			promote_pawn(h->board, tile_to, piece_selected, is_black ? BLACK_PAWN : WHITE_PAWN);
 			/* We can build the message here and return a special value to avoir double message create/sending */
-			build_message(h->player_info.msg_tosend, MSG_TYPE_PROMOTION, tile_from, tile_to, piece_selected, h->board->turn);
+			build_message(h, h->player_info.msg_tosend, MSG_TYPE_PROMOTION, tile_from, tile_to, piece_selected);
 			break ;
 		} else if (event == CHESS_QUIT) {
 			return (CHESS_QUIT);

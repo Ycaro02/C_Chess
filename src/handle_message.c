@@ -47,12 +47,12 @@ void update_msg_store(char *buffer, char *msg) {
 void display_unknow_msg(char *msg) {
 	int len = fast_strlen(msg);
 
-	CHESS_LOG(LOG_INFO, RED"Unknown message -> |%s",RESET);
+	printf(RED"Unknown message -> |%s",RESET);
 
 	for (int i = 0; i < len; i++) {
-		CHESS_LOG(LOG_INFO, "%d ", msg[i]);
+		printf("%d ", msg[i]);
 	}
-	CHESS_LOG(LOG_INFO, "%s", "|\n");
+	printf("%s", "|\n");
 }
 
 
@@ -156,11 +156,20 @@ void process_message_receive(SDLHandle *handle, char *msg) {
 			update_piece_state(handle->board);
 		}
 		handle->player_info.turn = TRUE;
+		handle->enemy_elapsed_time = *(u64 *)&msg[5];
 	} 
 	else {
 		display_unknow_msg(msg);
 		return ;
 	}
+
+	// u64 rcv_rime =  *(u64 *)&msg[5];
+	// s32 min = rcv_rime / 60;
+	// s32 sec = rcv_rime % 60;
+	// char buff[TIME_STR_SIZE] = {0};
+	// snprintf(buff, TIME_STR_SIZE, "%02d:%02d", min, sec);
+	// printf("Enemy rest time: %lu: %s\n", rcv_rime, buff);
+	/* Update the turn counter */
 	handle->board->turn += 1;
 	update_msg_store(handle->player_info.last_msg, msg);
 }
@@ -190,17 +199,20 @@ void process_message_receive(SDLHandle *handle, char *msg) {
  * @param piece_type The piece type
  * @note We use +1 to avoid sending 0, interpreted like '\0'
 */
-void build_message(char *msg, MsgType msg_type, ChessTile tile_from_or_color, ChessTile tile_to, ChessPiece piece_type, s32 turn) {
+void build_message(SDLHandle *h, char *msg, MsgType msg_type, ChessTile tile_from_or_color, ChessTile tile_to, ChessPiece piece_type) {
 	// char *msg = ft_calloc(msg_size, sizeof(char));
 
 	fast_bzero(msg, MSG_SIZE);
+
+	/* Set the elapsed time */
+	ft_memcpy(&msg[5], &h->my_elapsed_time, sizeof(u64));
 
 	/* Set the message type */
 	msg[0] = (char)msg_type;
 
 
 	/* Set the message turn counter */
-	msg[1] = (char)turn;
+	msg[1] = (char)h->board->turn;
 
 	/* If the message is a quit message, return here */
 	if (msg_type == MSG_TYPE_QUIT) {
@@ -239,6 +251,8 @@ s8 is_illegal_packet(SDLHandle *h, char *buffer, int len) {
 	ChessPiece	piece_type = EMPTY, piece_check_legal = EMPTY;
 	s8			color = -1;
 	
+	(void)len;
+
 	/* If the message is not a valid message type return here */
 	if (buffer[0] < MSG_TYPE_COLOR || buffer[0] > MSG_TYPE_QUIT) {
 		return (TRUE);
@@ -246,10 +260,6 @@ s8 is_illegal_packet(SDLHandle *h, char *buffer, int len) {
 
 	/* If the message is COLOR and not the right size return here */
 	if (buffer[0] == MSG_TYPE_COLOR) {
-		if (len != 3) {
-			CHESS_LOG(LOG_INFO, RED"Buffer color size is not 3 %s\n", RESET);
-			return (TRUE);
-		}
 		color = buffer[2] - 1;
 		if (color != IS_WHITE && color != IS_BLACK) {
 			CHESS_LOG(LOG_INFO, RED"Buffer color is not WHITE or BLACK%s\n", RESET);
@@ -257,22 +267,8 @@ s8 is_illegal_packet(SDLHandle *h, char *buffer, int len) {
 		}
 	}
 
-	/* If the message is QUIT and not the right size return here */
-	if (buffer[0] == MSG_TYPE_QUIT) {
-		if (len != 2) {
-			CHESS_LOG(LOG_INFO, RED"Buffer quit size is not 2 %s\n", RESET);
-			return (TRUE);
-		}
-	}
-
 	if (buffer[0] == MSG_TYPE_MOVE || buffer[0] == MSG_TYPE_PROMOTION) {
 		
-		/* If the message is MOVE or PROMOTION and not the right size return here */
-		if (len != 5) {
-			CHESS_LOG(LOG_INFO, RED"Buffer move/promot size is not 5 %s\n", RESET);
-			return (TRUE);
-		}
-
 		tile_from = buffer[2] - 1;
 		tile_to = buffer[3] - 1;
 		piece_type = buffer[4] - 1;
@@ -361,6 +357,7 @@ s8 chess_msg_send(NetworkInfo *info, char *msg) {
 			if (fast_strcmp(buffer, ACK_STR) == 0) {
 				CHESS_LOG(LOG_INFO, CYAN"ACK receive\n%s", RESET);
 				ack_received = 1;
+				break ;
 			} 
 		} 
 		attempts++;

@@ -30,18 +30,15 @@ void wite_timer_in_rect(SDLHandle *h, SDL_Rect rect, u64 time) {
 
 void draw_timer_rect(SDLHandle *h) {
 	static u64	prev_tick = 0;
-	s8 			is_black = h->player_info.color == IS_BLACK;
 	u64 		*timer_to_update = NULL;
-	u64			bot_timer = is_black ? h->black_elapsed_time : h->white_elapsed_time;
-	u64			top_timer = is_black ? h->white_elapsed_time : h->black_elapsed_time;
 	u64 		now = SDL_GetTicks() / 1000;
 	u64 		elapsed_time = now - prev_tick;
 
 	/* Get the timer to update */
 	if (h->player_info.turn == TRUE) {
-		timer_to_update = is_black ? &h->black_elapsed_time : &h->white_elapsed_time;
+		timer_to_update = &h->my_elapsed_time;
 	} else {
-		timer_to_update = is_black ? &h->white_elapsed_time : &h->black_elapsed_time;
+		timer_to_update = &h->enemy_elapsed_time;
 	} 
 
 	/* Update timer every second */
@@ -54,6 +51,6 @@ void draw_timer_rect(SDLHandle *h) {
 	SDL_SetRenderDrawColor(h->renderer, 180, 180, 180, 255);
 	SDL_RenderFillRect(h->renderer, &h->timer_rect_bot);
 	SDL_RenderFillRect(h->renderer, &h->timer_rect_top);
-	wite_timer_in_rect(h, h->timer_rect_bot, bot_timer);
-	wite_timer_in_rect(h, h->timer_rect_top, top_timer);
+	wite_timer_in_rect(h, h->timer_rect_bot, h->my_elapsed_time);
+	wite_timer_in_rect(h, h->timer_rect_top, h->enemy_elapsed_time);
 }

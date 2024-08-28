@@ -260,7 +260,7 @@ typedef struct s_network_info NetworkInfo;
 
 
 /* Message max size */
-#define	MSG_SIZE 8
+#define	MSG_SIZE 16
 
 /* Player info struct */
 struct s_player_info {

@@ -33,8 +33,6 @@ void cleanup_network_windows();
 #include "chess.h"
 
 /* For testing */
-#define TEST_MSG_NB 3
-#define TIMEOUT_SEC 2
 #define SENDER 1
 #define RECEIVER 0
 
@@ -65,14 +63,6 @@ struct s_network_info {
 };
 
 
-// struct s_network_info {
-// 	struct sockaddr_in	localaddr;
-// 	struct sockaddr_in	servaddr;
-// 	struct sockaddr_in	peeraddr;
-// 	socklen_t			addr_len;
-// 	int					sockfd;
-// };
-
 typedef enum e_msg_type MsgType;
 typedef struct s_network_info NetworkInfo;
 
@@ -100,7 +90,7 @@ void		send_disconnect_to_server(int sockfd, struct sockaddr_in servaddr);
 /* src/handle_message.c */
 void	process_message_receive(SDLHandle *handle, char *msg);
 void	display_message(char *msg);
-void	build_message(char *msg, MsgType msg_type, ChessTile tile_from_or_color, ChessTile tile_to, ChessPiece piece_type, s32 turn);
+void	build_message(SDLHandle *h, char *msg, MsgType msg_type, ChessTile tile_from_or_color, ChessTile tile_to, ChessPiece piece_type);
 s8		chess_msg_receive(SDLHandle *h, NetworkInfo *info, char *rcv_buffer, char *last_msg_processed);
 s8		chess_msg_send(NetworkInfo *info, char *msg);
 s8		safe_msg_send(SDLHandle *h);

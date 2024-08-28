@@ -55,7 +55,7 @@ s8 network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *ser
 	if (has_flag(flag, FLAG_LISTEN)) {
 		player_info->color = random_player_color();
 		CHESS_LOG(LOG_INFO, "Listen for player...%s", "\n");
-		build_message(player_info->msg_tosend, MSG_TYPE_COLOR, !player_info->color, 0, 0, handle->board->turn);
+		build_message(handle, player_info->msg_tosend, MSG_TYPE_COLOR, !player_info->color, 0, 0);
 		chess_msg_send(player_info->nt_info, player_info->msg_tosend);
 	}
 

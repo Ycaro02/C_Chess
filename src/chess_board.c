@@ -68,6 +68,10 @@ void init_board(ChessBoard *b) {
 ChessPiece get_piece_from_tile(ChessBoard *b, ChessTile tile) {
 	Bitboard mask = 1ULL << tile;
 	ChessPiece piece = EMPTY;
+	
+	if (tile == INVALID_TILE) {
+		return (piece);
+	}
 	if (b->occupied & mask) {
 		for (s32 i = 0; i < PIECE_MAX; i++) {
 			if (b->piece[i] & mask) {

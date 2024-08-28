@@ -40,7 +40,7 @@ static s32 network_move_piece(SDLHandle *h, ChessTile last_tile_click) {
 
 		/* Build move message to the other player if is not pawn promotion or chess quit */
 		if (ret == TRUE) {
-			build_message(h->player_info.msg_tosend, MSG_TYPE_MOVE, b->selected_tile, last_tile_click, b->selected_piece, b->turn);
+			build_message(h, h->player_info.msg_tosend, MSG_TYPE_MOVE, b->selected_tile, last_tile_click, b->selected_piece);
 		}
 
 		/* Send the message to the other player */
