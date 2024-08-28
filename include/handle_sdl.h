@@ -85,9 +85,10 @@ typedef struct s_sdl_handle {
 	ChessPiece		over_piece_select;	/* The piece selected (over display) */
 
 	/* Player info */
-	struct timeval	turn_start;			/* Turn start Timer */
-	struct timeval	black_time;			/* Black Timer */
-	struct timeval	white_time;			/* White Timer */
+	// u64				black_time;			/* Black Timer */
+	// u64				white_time;			/* White Timer */
+	u64				black_elapsed_time;	/* Black Elapsed time */
+	u64				white_elapsed_time;	/* White Elapsed time */
 	PlayerInfo		player_info;		/* Player info */
 	u32				flag;				/* App Flag */
 }	SDLHandle ;

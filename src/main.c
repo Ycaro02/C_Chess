@@ -84,10 +84,9 @@ SDLHandle *get_SDL_handle() {
 void chess_game(SDLHandle *h) {
 	
 	INIT_SIGNAL_HANDLER();
-	
-	update_graphic_board(h);
 
 	if (has_flag(h->flag, FLAG_NETWORK)) {
+		update_graphic_board(h);
 		CHESS_LOG(LOG_INFO, ORANGE"Try to connect to Server at : %s:%d\n"RESET, h->player_info.dest_ip, SERVER_PORT);
 		network_setup(h, h->flag, &h->player_info, h->player_info.dest_ip);
 		network_chess_routine(h);
@@ -95,6 +94,7 @@ void chess_game(SDLHandle *h) {
 		h->player_info.turn = TRUE;
 		h->player_info.piece_start = WHITE_PAWN;
 		h->player_info.piece_end = BLACK_KING;
+		update_graphic_board(h);
 		chess_routine(h);
 	}
 }
@@ -108,9 +108,9 @@ int main(int argc, char **argv) {
 	s8			error = 0;
 
 
-	set_log_level(LOG_ERROR);
+	// set_log_level(LOG_ERROR);
 
-	// set_log_level(LOG_INFO);
+	set_log_level(LOG_INFO);
 
 
 	flag = handle_chess_flag(argc, argv, &error, &player_info);

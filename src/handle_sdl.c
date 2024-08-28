@@ -254,14 +254,8 @@ SDLHandle *create_sdl_handle(const char* title) {
 
 	fast_bzero(handle->timer_str, TIME_STR_SIZE);
 
-	gettimeofday(&handle->turn_start, NULL);
-
-	handle->white_time = (struct timeval){.tv_sec = 0, .tv_usec = 10000};
-	handle->white_time.tv_sec = 60 * 10 + 1;
-
-	handle->black_time = (struct timeval){.tv_sec = 0, .tv_usec = 10000};
-	handle->black_time.tv_sec = 60 * 10 + 1;
-
+	handle->black_elapsed_time = 60 * 10;
+	handle->white_elapsed_time = 60 * 10;
 
 	window_clear(handle->renderer);
 	return (handle);
