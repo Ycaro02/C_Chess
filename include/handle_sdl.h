@@ -85,20 +85,14 @@ typedef struct s_sdl_handle {
 #define FONT_SHIFT (FONT_SIZE >> 1)
 #define FONT_PATH "rsc/font/arial.ttf"
 
-/* @brief Macro to convert tile position to pixel position
+/* @brief Inline func to convert tile position to pixel position
  * @param p The tile position
  * @param px The pixel x position
  * @param py The pixel y position
  * @param _ts_ The tile size
  * @param _wb_ The window band size
 */ 
-#define TILE_POSITION_TO_PIXEL(p, px, py, _ts_, _wb_) \
-    do { \
-        (px) = ((p).x * _ts_) + _wb_.left ; \
-        (py) = ((p).y * _ts_) + _wb_.top; \
-    } while (0)
-
-FT_INLINE void tile_to_pixel_pos(iVec2 p, iVec2 *pos, s32 tile_size, WinBand wb) {
+FT_INLINE void tile_to_pixel_pos(iVec2 *pos, iVec2 p, s32 tile_size, WinBand wb) {
 	pos->x = (p.x * tile_size) + wb.left;
 	pos->y = (p.y * tile_size) + wb.top;
 }

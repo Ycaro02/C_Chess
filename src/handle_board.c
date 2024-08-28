@@ -69,7 +69,7 @@ void draw_possible_move(SDLHandle *handle, iVec2 tile_pos, ChessTile tile) {
 		is_king = (selected_piece == WHITE_KING || selected_piece == BLACK_KING);
 		/* Get the center of the tile */
 		// TILE_POSITION_TO_PIXEL(tile_pos, center.x, center.y, tile_size, handle->band_size);
-		tile_to_pixel_pos(tile_pos, &center, tile_size, handle->band_size);
+		tile_to_pixel_pos(&center, tile_pos, tile_size, handle->band_size);
 		center.x += (tile_size >> 1);
 		center.y += (tile_size >> 1);
 
@@ -221,7 +221,7 @@ void draw_letter_number(SDLHandle *handle, s8 player_color) {
 
 		/* Get the pixel position en center it */
 		// TILE_POSITION_TO_PIXEL(pos, char_pos.x, char_pos.y, tile_size, handle->band_size);
-		tile_to_pixel_pos(pos, &char_pos, tile_size, handle->band_size);
+		tile_to_pixel_pos(&char_pos, pos, tile_size, handle->band_size);
 		bot_band_center_text(&char_pos, text, handle->font, tile_size, handle->band_size.bot);
 
 		/* Draw the letter */
@@ -233,7 +233,7 @@ void draw_letter_number(SDLHandle *handle, s8 player_color) {
 		
 		/* Get the pixel position en center it */
 		// TILE_POSITION_TO_PIXEL(pos, char_pos.x, char_pos.y, tile_size, handle->band_size);
-		tile_to_pixel_pos(pos, &char_pos, tile_size, handle->band_size);
+		tile_to_pixel_pos(&char_pos, pos, tile_size, handle->band_size);
 		left_band_center_text(&char_pos, text, handle->font, tile_size, handle->band_size.left);
 
 		/* Draw the number */

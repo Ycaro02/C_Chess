@@ -15,7 +15,7 @@ void get_screen_size(int *width, int *height) {
     }
 }
 
-void compue_win_size(SDLHandle *h) {
+void compute_win_size(SDLHandle *h) {
 	s32 size_w=0, size_h=0, width = 0, height = 0;
 	s32 minus, tile_size, band_w, band_h;
 
@@ -91,8 +91,7 @@ SDL_Window* createWindow(SDLHandle *h, const char* title) {
 		return (NULL);
 	}
 
-
-	compue_win_size(h);
+	compute_win_size(h);
 
 	window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, h->window_size.x, h->window_size.y, SDL_WINDOW_SHOWN);
 	if (!window) {
@@ -105,8 +104,6 @@ SDL_Window* createWindow(SDLHandle *h, const char* title) {
 		SDL_DestroyWindow(window);
 		return (NULL);
 	}
-
-
 
 	/* Enable blending mode to handle alpha */
 	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
@@ -245,11 +242,11 @@ void window_close(SDL_Window* window, SDL_Renderer *renderer) {
 /**
  * @brief Draw a color tile with SDL2
  * @param window The window pointers
- * @param tilePos, The position of the tile
+ * @param tile_pos, The position of the tile
  * @param scale The scale of the tile
  * @note If scale.x/y are equal to TILE_SIZE, we use TILE_SPACING to space the tiles
 */
-void draw_color_tile(SDLHandle *h, iVec2 tilePos, iVec2 scale, u32 color) {
+void draw_color_tile(SDLHandle *h, iVec2 tile_pos, iVec2 scale, u32 color) {
 	SDL_Rect		tileRect = {0,0,0,0};
 	iVec2			pixel_pos = {0,0};
 	u8 				r, g, b, a;
@@ -258,10 +255,10 @@ void draw_color_tile(SDLHandle *h, iVec2 tilePos, iVec2 scale, u32 color) {
 
 	/* Convert tile coordinates to pixel coordinates */
 	if (scale.x == h->tile_size.x && scale.y == h->tile_size.y) {
-		tile_to_pixel_pos(tilePos, &pixel_pos, scale.x, h->band_size);
+		tile_to_pixel_pos(&pixel_pos, tile_pos, scale.x, h->band_size);
 	} else {
-		pixel_pos.x = tilePos.x;
-		pixel_pos.y = tilePos.y;
+		pixel_pos.x = tile_pos.x;
+		pixel_pos.y = tile_pos.y;
 	}
 
 	tileRect.x = pixel_pos.x; tileRect.y = pixel_pos.y;
@@ -276,11 +273,11 @@ void draw_color_tile(SDLHandle *h, iVec2 tilePos, iVec2 scale, u32 color) {
  * @brief Draw a texture tile with SDL2
  * @param window The window pointers
  * @param texture The texture pointer
- * @param tilePos, The position of the tile
+ * @param tile_pos, The position of the tile
  * @param scale The scale of the tile
  * @note If the scale is equal to TILE_SIZE, the function will draw the tile at the right position
 */
-void draw_texture_tile(SDLHandle *h, SDL_Texture *texture, iVec2 tilePos, iVec2 scale) {
+void draw_texture_tile(SDLHandle *h, SDL_Texture *texture, iVec2 tile_pos, iVec2 scale) {
 	SDL_Rect 	dstRect;
 	iVec2		pixel_pos = {0,0};
 	
@@ -289,10 +286,10 @@ void draw_texture_tile(SDLHandle *h, SDL_Texture *texture, iVec2 tilePos, iVec2 
 	}
 	/* Convert tile coordinates to pixel coordinates */
 	if (scale.x == h->tile_size.x && scale.y == h->tile_size.y) {
-		tile_to_pixel_pos(tilePos, &pixel_pos, scale.x, h->band_size);
+		tile_to_pixel_pos(&pixel_pos, tile_pos, scale.x, h->band_size);
 	} else {
-		pixel_pos.x = tilePos.x;
-		pixel_pos.y = tilePos.y;
+		pixel_pos.x = tile_pos.x;
+		pixel_pos.y = tile_pos.y;
 	}
 
 	dstRect.x = pixel_pos.x; dstRect.y = pixel_pos.y;
