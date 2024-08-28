@@ -86,7 +86,7 @@ void compute_win_size(SDLHandle *h) {
  * @param title The title of the window
  * @return The window pointer
 */
-SDL_Window* createWindow(SDLHandle *h, const char* title) {
+SDL_Window* create_sdl_windows(SDLHandle *h, const char* title) {
 	SDL_Window		*window = NULL;
 	SDL_Renderer	*renderer = NULL;
 	
@@ -178,6 +178,33 @@ static s8 load_piece_texture(SDLHandle *handle) {
 }
 
 
+static SDL_Rect build_timer_rect(SDLHandle *h, s8 is_bot_band) {
+	SDL_Rect timer_rect = {0}; 
+
+	/* Window end width - size band right - (size_band_right / 16)*/
+	s32 timer_padding = h->band_size.right >> 4;
+	s32 timer_rect_start = (h->window_size.x - h->band_size.right) + timer_padding;
+	s32 timer_rect_end = h->window_size.x - timer_padding;
+	s32 timer_height = h->tile_size.x;
+
+	timer_rect.x = timer_rect_start;
+
+	if (is_bot_band) {
+		/* Start to the bot of window - band_size_bot - timer_height */
+		timer_rect.y = h->window_size.y - (h->band_size.bot) - (timer_height);
+	} else {
+		timer_rect.y = h->band_size.top;
+	}
+	
+
+	timer_rect.w = timer_rect_end - timer_rect_start;
+	timer_rect.h = timer_height;
+
+	CHESS_LOG(LOG_INFO, "Timer rect start: %d, end: %d, height: %d, width: %d\n", timer_rect_start, timer_rect_end, timer_height, timer_rect.w);
+	return (timer_rect);
+}
+
+
 /**
  * @brief Create a SDLHandle
  * @param width The width of the window
@@ -191,33 +218,37 @@ SDLHandle *create_sdl_handle(const char* title) {
 	if (!handle) {
 		CHESS_LOG(LOG_ERROR, "%s : malloc failed\n", __func__);
 		return (NULL);
-	}
-
-	handle->window = createWindow(handle, title);
-	if (!handle->window) {
+	} else if (!(handle->window = create_sdl_windows(handle, title))) {
 		free(handle);
 		return (NULL);
-	}
-	handle->renderer = SDL_GetRenderer(handle->window);
-	if (!handle->renderer) {
+	} else if (!(handle->renderer = SDL_GetRenderer(handle->window))) {
 		SDL_ERR_FUNC();
 		SDL_DestroyWindow(handle->window);
 		free(handle);
 		return (NULL);
-	}
-	if (!load_piece_texture(handle)) {
+	} else if (!load_piece_texture(handle)) {
+		SDL_DestroyRenderer(handle->renderer);
+		SDL_DestroyWindow(handle->window);
+		free(handle);
+		return (NULL);
+	} else if (!(handle->tile_font = load_font(FONT_PATH, (handle->band_size.bot >> 1)))) {
 		SDL_DestroyRenderer(handle->renderer);
 		SDL_DestroyWindow(handle->window);
 		free(handle);
 		return (NULL);
 	}
-	handle->font = load_font(FONT_PATH, FONT_SIZE);
-	if (!handle->font) {
+
+	handle->timer_rect_bot = build_timer_rect(handle, TRUE);
+	handle->timer_rect_top = build_timer_rect(handle, FALSE);
+
+	if (!(handle->timer_font = load_font(FONT_PATH, (handle->timer_rect_bot.h >> 1)))) {
 		SDL_DestroyRenderer(handle->renderer);
 		SDL_DestroyWindow(handle->window);
 		free(handle);
 		return (NULL);
 	}
+
+
 
 	window_clear(handle->renderer);
 	return (handle);
@@ -390,8 +421,11 @@ void destroy_sdl_handle(SDLHandle *handle) {
 		free(handle->piece_texture);
 	}
 
-	if (handle->font) {
-		unload_font(handle->font);
+	if (handle->tile_font) {
+		unload_font(handle->tile_font);
+	}
+	if (handle->timer_font) {
+		unload_font(handle->timer_font);
 	}
 
 	/* Close window */
@@ -444,19 +478,19 @@ void unload_font(TTF_Font *font) {
  * @param fontSize The size of the text
  * @param color The color of the text
 */
-void write_text(SDLHandle *h, char *text, iVec2 pos, u32 color) {
+void write_text(SDLHandle *h, char *text, TTF_Font *font, iVec2 pos, u32 color) {
 	SDL_Surface		*surface = NULL;
 	SDL_Texture		*texture = NULL;
 	SDL_Rect		textRect = {0,0,0,0};
 	u8 				r, g, b, a;
 
-	if (!h->window || !h->font) {
+	if (!h->window || !font) {
 		return;
 	}
 
 	UINT32_TO_RGBA(color, r, g, b, a);
 
-	surface = TTF_RenderText_Solid(h->font, text, (SDL_Color){r, g, b, a});
+	surface = TTF_RenderText_Solid(font, text, (SDL_Color){r, g, b, a});
 	if (!surface) {
 		CHESS_LOG(LOG_ERROR, "%s\n", SDL_GetError());
 		return;

@@ -114,6 +114,8 @@ int main(int argc, char **argv) {
 
 	set_log_level(LOG_ERROR);
 
+	// set_log_level(LOG_INFO);
+
 
 	flag = handle_chess_flag(argc, argv, &error, &player_info);
 	if (error == -1) {

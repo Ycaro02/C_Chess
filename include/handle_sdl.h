@@ -69,10 +69,13 @@ typedef struct s_sdl_handle {
 	SDL_Renderer	*renderer;			/* The renderer ptr */
 	SDL_Texture		**piece_texture;	/* Array of texture for each piece */
 	ChessBoard		*board;				/* The chess board */
-	TTF_Font		*font;				/* The font */
+	TTF_Font		*tile_font;			/* The font for tile number/letters */
 	iVec2			window_size;		/* The size of the window */
 	iVec2			tile_size;			/* The size of the tile */
 	WinBand			band_size;			/* The band size */
+	SDL_Rect		timer_rect_bot;		/* Timer rect */
+	SDL_Rect		timer_rect_top;		/* Timer rect */
+	TTF_Font		*timer_font;		/* The font */
 	PlayerInfo		player_info;		/* Player info */
 	iVec2			mouse_pos;			/* Mouse position */
 	ChessPiece		over_piece_select;	/* The piece selected (over display) */
@@ -80,9 +83,6 @@ typedef struct s_sdl_handle {
 } SDLHandle;
 
 
-
-#define FONT_SIZE 24
-#define FONT_SHIFT (FONT_SIZE >> 1)
 #define FONT_PATH "rsc/font/arial.ttf"
 
 /* @brief Inline func to convert tile position to pixel position
@@ -118,5 +118,12 @@ void		draw_color_tile(SDLHandle *h, iVec2 tilePos, iVec2 scale, u32 color);
 void		destroy_sdl_handle(SDLHandle *handle);
 TTF_Font	*load_font(const char *path, s32 size);
 void		unload_font(TTF_Font *font);
-void 		write_text(SDLHandle *h, char *text, iVec2 pos, u32 color);
+void 		write_text(SDLHandle *h, char *text, TTF_Font *font, iVec2 pos, u32 color);
+
+/* src/text_display.c */
+void		left_band_center_text(iVec2 *char_pos, char *text, TTF_Font *font, s32 tile_size, s32 band_left_size);
+void		bot_band_center_text(iVec2 *char_pos, char *text, TTF_Font *font, s32 tile_size, s32 band_bot_size);
+void		draw_letter_number(SDLHandle *handle, s8 player_color);
+
+
 #endif /* HANDLE_SDL_H */
