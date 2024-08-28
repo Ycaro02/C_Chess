@@ -41,24 +41,12 @@
 
 /* Element size in pixel */
 #define		TOP_BAND_HEIGHT		0
-#define		TILE_SIZE			80
+// #define		TILE_SIZE			80
 #define		TILE_SPACING		0
 
 /* Circle size */
-#define		CIRCLE_RADIUS ((TILE_SIZE >> 3) + (TILE_SIZE >> 5))
-#define		OUTLINE_CIRCLE_RADIUS (TILE_SIZE >> 1)
-
-/* Window size */
-#define WINDOW_WIDTH (8 * TILE_SIZE + 9 * TILE_SPACING)
-#define WINDOW_HEIGHT (8 * TILE_SIZE + 9 * TILE_SPACING + TOP_BAND_HEIGHT)
-
-/* Macro to convert tile position to pixel position */
-#define TILE_POSITION_TO_PIXEL(p, px, py) \
-    do { \
-        (px) = (p).x * TILE_SIZE + ((p).x + 1) * TILE_SPACING; \
-        (py) = ((p).y * TILE_SIZE + ((p).y + 1) * TILE_SPACING) + TOP_BAND_HEIGHT; \
-    } while (0)
-
+#define		CIRCLE_RADIUS(_ts_) ((_ts_ >> 3) + (_ts_ >> 5))
+#define		OUTLINE_CIRCLE_RADIUS(_ts_) (_ts_ >> 1)
 
 
 #define SDL_ERR_FUNC() printf("SDL Error %s: %s\n", __func__, SDL_GetError())
@@ -69,28 +57,60 @@ typedef struct s_iVec2 {
 	s32 y;
 } iVec2;
 
+typedef struct s_window_band {
+	s32 top;
+	s32 left;
+	s32 right;
+	s32 bot;
+} WinBand;
 
 typedef struct s_sdl_handle {
 	SDL_Window		*window;			/* The window ptr */
 	SDL_Renderer	*renderer;			/* The renderer ptr */
 	SDL_Texture		**piece_texture;	/* Array of texture for each piece */
 	ChessBoard		*board;				/* The chess board */
+	iVec2			window_size;		/* The size of the window */
+	iVec2			tile_size;			/* The size of the tile */
+	WinBand			band_size;			/* The band size */
 	PlayerInfo		player_info;		/* Player info */
 	iVec2			mouse_pos;			/* Mouse position */
 	ChessPiece		over_piece_select;	/* The piece selected (over display) */
 	u32				flag;				/* App Flag */
 } SDLHandle;
 
+
+/* @brief Macro to convert tile position to pixel position
+ * @param p The tile position
+ * @param px The pixel x position
+ * @param py The pixel y position
+ * @param _ts_ The tile size
+ * @param _wb_ The window band size
+*/ 
+#define TILE_POSITION_TO_PIXEL(p, px, py, _ts_, _wb_) \
+    do { \
+        (px) = ((p).x * _ts_) + _wb_.left ; \
+        (py) = ((p).y * _ts_) + _wb_.top; \
+    } while (0)
+
+
+FT_INLINE s8 is_in_x_range(s32 x, s32 raw, s32 tile_size, WinBand wb) {
+	return (x >= (raw * tile_size) + wb.left && x <= ((raw + 1) * tile_size) + wb.left);
+}
+
+FT_INLINE s8 is_in_y_range(s32 y, s32 column, s32 tile_size, WinBand wb) {
+	return (y >= (column * tile_size) + wb.top && y <= ((column + 1) * tile_size) + wb.top);
+}
+
 /* src/sdl_handle */
-SDLHandle	*create_sdl_handle(u32 width , u32 height, const char* title);
+SDLHandle	*create_sdl_handle(const char* title);
 u8 			window_is_open(SDL_Window* window);
 void		window_clear(SDL_Renderer* renderer);
 void		window_close(SDL_Window* window, SDL_Renderer *renderer);
 SDL_Texture	*load_texture(SDL_Renderer *renderer, const char* path);
 void		unload_texture(SDL_Texture *texture);
-void		draw_texture_tile(SDL_Renderer *renderer, SDL_Texture *texture, iVec2 tilePos, iVec2 scale);
+void		draw_texture_tile(SDLHandle *h, SDL_Texture *texture, iVec2 tilePos, iVec2 scale);
 void		draw_texure(SDLHandle *handle, SDL_Texture *texture, iVec2 pos, iVec2 scale);
-void		draw_color_tile(SDL_Renderer	*renderer , iVec2 tilePos, iVec2 scale, u32 color);
+void		draw_color_tile(SDLHandle *h, iVec2 tilePos, iVec2 scale, u32 color);
 void		destroy_sdl_handle(SDLHandle *handle);
 
 #endif /* HANDLE_SDL_H */

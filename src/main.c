@@ -8,7 +8,7 @@
 SDLHandle *init_game() {
 	SDLHandle	*handle = NULL;
 
-	handle = create_sdl_handle(WINDOW_WIDTH, WINDOW_HEIGHT, "Chess");
+	handle = create_sdl_handle("C_Chess");
 	if (!handle) {
 		CHESS_LOG(LOG_ERROR, "Error %s: create_sdl_handle failed\n", __func__);
 		return (NULL);
@@ -64,14 +64,12 @@ void chess_routine(SDLHandle *h){
 	}
 }
 
-
-
 void chess_destroy(SDLHandle *h) {
 	CHESS_LOG(LOG_INFO, RED"Destroy chess game%s\n", RESET);
-	destroy_sdl_handle(h);
 	if (h->board->lst) {
 		ft_lstclear(&h->board->lst, free);
 	}
+	destroy_sdl_handle(h);
 	free(h);
 	CLEANUP_NETWORK();
 }

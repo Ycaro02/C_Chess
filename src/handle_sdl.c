@@ -2,6 +2,19 @@
 #include "../include/handle_sdl.h"
 #include "../include/chess_log.h"
 
+
+void get_screen_size(int *width, int *height) {
+    SDL_DisplayMode mode;
+    if (SDL_GetCurrentDisplayMode(0, &mode) != 0) {
+        SDL_Log("SDL_GetCurrentDisplayMode failed: %s", SDL_GetError());
+        *width = 0;
+        *height = 0;
+    } else {
+        *width = mode.w;
+        *height = mode.h;
+    }
+}
+
 /**
  * @brief Create a window with SDL2
  * @param width The width of the window
@@ -9,7 +22,7 @@
  * @param title The title of the window
  * @return The window pointer
 */
-SDL_Window* createWindow(u32 width ,u32 height, const char* title) {
+SDL_Window* createWindow(SDLHandle * h, const char* title) {
 	SDL_Window		*window = NULL;
 	SDL_Renderer	*renderer = NULL;
 	
@@ -23,6 +36,66 @@ SDL_Window* createWindow(u32 width ,u32 height, const char* title) {
 	// 	SDL_Quit();
 	// 	return (NULL);
 	// }
+
+	s32 size_w=0, size_h=0, width = 0, height = 0;
+
+	get_screen_size(&size_w, &size_h);
+	
+	
+	// Adjust width and height by removing 1/4 of each dimension, for information (display coilumn and row)
+    width = size_w - (size_w / 4);
+    height = size_h - (size_h / 4);
+
+    // Calculate tile size for the chessboard
+	int minus = width < height ? width : height;
+    int tile_size = minus / 8;
+
+	h->tile_size.x = tile_size;
+	h->tile_size.y = tile_size;
+
+    printf("Tile size: %d\n", tile_size);
+
+	// Calculate band size
+	int band_w = (size_w / 8);
+	int band_h = (size_h / 16);
+
+
+	// Calculate the band size bot and left for raw,column number display
+	h->band_size.bot = band_h;
+	h->band_size.left = band_w / 4;
+
+	// Detect minus between left and bot band size
+	minus = h->band_size.left < h->band_size.bot ? h->band_size.left : h->band_size.bot;
+
+	// Set the band size
+	h->band_size.left = minus;
+	h->band_size.bot = minus;
+
+	// Set the band size right and top
+	h->band_size.right = band_w - h->band_size.left;
+	h->band_size.top = 0;
+
+	// Set the band size height for the window
+	band_h = h->band_size.bot;
+
+	// Calculate the window size
+	width = (8 * tile_size) + band_w;
+	height = (8 * tile_size) + band_h;
+
+
+	printf("Width: %d, Height: %d\n", width, height);
+
+	printf("Band height: %d\n", band_h);
+	printf("Band width: %d\n", band_w);
+
+	printf("Top band: %d, Bot band: %d, Left band: %d, Right band: %d\n", h->band_size.top, h->band_size.bot, h->band_size.left, h->band_size.right);
+
+	h->window_size.x = width;
+	h->window_size.y = height;
+
+
+
+
 	window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_SHOWN);
 	if (!window) {
 		SDL_ERR_FUNC();
@@ -34,6 +107,8 @@ SDL_Window* createWindow(u32 width ,u32 height, const char* title) {
 		SDL_DestroyWindow(window);
 		return (NULL);
 	}
+
+
 
 	/* Enable blending mode to handle alpha */
 	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
@@ -93,13 +168,14 @@ static s8 load_piece_texture(SDLHandle *handle) {
  * @param board The chess board
  * @return The SDLHandle pointer
 */
-SDLHandle *create_sdl_handle(u32 width , u32 height, const char* title) {
+SDLHandle *create_sdl_handle(const char* title) {
 	SDLHandle *handle = malloc(sizeof(SDLHandle));
 	if (!handle) {
 		CHESS_LOG(LOG_ERROR, "%s : malloc failed\n", __func__);
 		return (NULL);
 	}
-	handle->window = createWindow(width, height, title);
+
+	handle->window = createWindow(handle, title);
 	if (!handle->window) {
 		free(handle);
 		return (NULL);
@@ -126,7 +202,7 @@ SDLHandle *create_sdl_handle(u32 width , u32 height, const char* title) {
  * @param window The window pointers
 */
 void window_clear(SDL_Renderer* renderer) {
-	SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
+	SDL_SetRenderDrawColor(renderer, 0, 0, 120, 255);
 	SDL_RenderClear(renderer);
 }
 
@@ -165,7 +241,7 @@ void window_close(SDL_Window* window, SDL_Renderer *renderer) {
  * @param scale The scale of the tile
  * @note If scale.x/y are equal to TILE_SIZE, we use TILE_SPACING to space the tiles
 */
-void draw_color_tile(SDL_Renderer	*renderer , iVec2 tilePos, iVec2 scale, u32 color) {
+void draw_color_tile(SDLHandle *h, iVec2 tilePos, iVec2 scale, u32 color) {
 	SDL_Rect		tileRect = {0,0,0,0};
 	s32				pixel_x = 0, pixel_y = 0;
 	u8 				r, g, b, a;
@@ -173,19 +249,19 @@ void draw_color_tile(SDL_Renderer	*renderer , iVec2 tilePos, iVec2 scale, u32 co
 	UINT32_TO_RGBA(color, r, g, b, a);
 
 	/* Convert tile coordinates to pixel coordinates */
-	if (scale.x == TILE_SIZE && scale.y == TILE_SIZE) {
-		TILE_POSITION_TO_PIXEL(tilePos, pixel_x, pixel_y);
-	} else {
-		pixel_x = tilePos.x;
-		pixel_y = tilePos.y;
-	}
+	// if (scale.x == TILE_SIZE && scale.y == TILE_SIZE) {
+	TILE_POSITION_TO_PIXEL(tilePos, pixel_x, pixel_y, scale.x, h->band_size);
+	// } else {
+	// 	pixel_x = tilePos.x;
+	// 	pixel_y = tilePos.y;
+	// }
 
 	tileRect.x = pixel_x; tileRect.y = pixel_y;
 	tileRect.w = scale.x; tileRect.h = scale.y;
 
 	/* Set the drawing color and draw the tile */
-	SDL_SetRenderDrawColor(renderer, r, g, b, a);
-	SDL_RenderFillRect(renderer, &tileRect);
+	SDL_SetRenderDrawColor(h->renderer, r, g, b, a);
+	SDL_RenderFillRect(h->renderer, &tileRect);
 }
 
 /**
@@ -196,26 +272,26 @@ void draw_color_tile(SDL_Renderer	*renderer , iVec2 tilePos, iVec2 scale, u32 co
  * @param scale The scale of the tile
  * @note If the scale is equal to TILE_SIZE, the function will draw the tile at the right position
 */
-void draw_texture_tile(SDL_Renderer *renderer, SDL_Texture *texture, iVec2 tilePos, iVec2 scale) {
+void draw_texture_tile(SDLHandle *h, SDL_Texture *texture, iVec2 tilePos, iVec2 scale) {
 	SDL_Rect 	dstRect;
 	s32 		pixel_x, pixel_y;
 	
-	if (!texture || !renderer) {
+	if (!texture || !h->renderer) {
 		return;
 	}
 	/* Convert tile coordinates to pixel coordinates */
-	if (scale.x == TILE_SIZE && scale.y == TILE_SIZE) {
-		TILE_POSITION_TO_PIXEL(tilePos, pixel_x, pixel_y);
-	} else {
-		pixel_x = tilePos.x;
-		pixel_y = tilePos.y;
-	}
+	// if (scale.x == TILE_SIZE && scale.y == TILE_SIZE) {
+	TILE_POSITION_TO_PIXEL(tilePos, pixel_x, pixel_y, scale.x, h->band_size);
+	// } else {
+		// pixel_x = tilePos.x;
+		// pixel_y = tilePos.y;
+	// }
 
 	dstRect.x = pixel_x;
 	dstRect.y = pixel_y;
 	dstRect.w = scale.x;
 	dstRect.h = scale.y;
-	SDL_RenderCopy(renderer, texture, NULL, &dstRect);
+	SDL_RenderCopy(h->renderer, texture, NULL, &dstRect);
 }
 
 void draw_texure(SDLHandle *handle, SDL_Texture *texture, iVec2 pos, iVec2 scale) {

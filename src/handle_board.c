@@ -60,6 +60,7 @@ void draw_possible_move(SDLHandle *handle, iVec2 tile_pos, ChessTile tile) {
 	ChessPiece	tile_piece = EMPTY, selected_piece = EMPTY;
 	iVec2		center = {0, 0};
 	s8			is_pawn = FALSE, is_king = FALSE;
+	s32			tile_size = handle->tile_size.x;
 	/* Check if tile is current selected possible move */
 	if (is_selected_possible_move(handle->board->possible_moves, tile)) {
 		tile_piece = get_piece_from_tile(handle->board, tile);
@@ -67,20 +68,22 @@ void draw_possible_move(SDLHandle *handle, iVec2 tile_pos, ChessTile tile) {
 		is_pawn = (selected_piece == WHITE_PAWN || selected_piece == BLACK_PAWN);
 		is_king = (selected_piece == WHITE_KING || selected_piece == BLACK_KING);
 		/* Get the center of the tile */
-		center.x = tile_pos.x * TILE_SIZE + (TILE_SIZE >> 1);
-		center.y = tile_pos.y * TILE_SIZE + (TILE_SIZE >> 1);
+		TILE_POSITION_TO_PIXEL(tile_pos, center.x, center.y, tile_size, handle->band_size);
+		center.x += (tile_size >> 1);
+		center.y += (tile_size >> 1);
+
 		/*	Check if tile is not empty (kill move) or en passant move (only for pawn) */
 		if ((is_pawn && is_en_passant_move(handle->board, tile)) || tile_piece != EMPTY) {
 			SDL_SetRenderDrawColor(handle->renderer, 200, 0, 0, 255); // Red color
-			draw_circle_outline(handle->renderer, center.x, center.y, OUTLINE_CIRCLE_RADIUS);
+			draw_circle_outline(handle->renderer, center.x, center.y, OUTLINE_CIRCLE_RADIUS(tile_size));
 		} else {
 			if (is_king && INT_ABS_DIFF(handle->board->selected_tile, tile) == 2) {
 				SDL_SetRenderDrawColor(handle->renderer, 0, 0, 200, 150); // Blue color castle move
-				draw_circle_outline(handle->renderer, center.x, center.y, OUTLINE_CIRCLE_RADIUS);
+				draw_circle_outline(handle->renderer, center.x, center.y, OUTLINE_CIRCLE_RADIUS(tile_size));
 			} 
 			/* Draw a small black circle in the center of the tile */
 			SDL_SetRenderDrawColor(handle->renderer, 0, 0, 0, 150); // Black color
-			draw_filled_circle(handle->renderer, center.x, center.y, CIRCLE_RADIUS);
+			draw_filled_circle(handle->renderer, center.x, center.y, CIRCLE_RADIUS(tile_size));
 		}
 	}
 }
@@ -123,7 +126,7 @@ s32 display_promotion_selection(SDLHandle *h, ChessTile tile_from, ChessTile til
 
 	/* Draw a black rectangle */
 	for (s32 i = 0; i < 4; i++) {
-		draw_color_tile(h->renderer, start_pos, (iVec2){TILE_SIZE, TILE_SIZE}, RGBA_TO_UINT32(0, 100, 100, 255));
+		draw_color_tile(h, start_pos, h->tile_size, RGBA_TO_UINT32(0, 100, 100, 255));
 		start_pos.x++;
 	}
 
@@ -132,7 +135,7 @@ s32 display_promotion_selection(SDLHandle *h, ChessTile tile_from, ChessTile til
 	/* Draw the promotion pieces */
 	s32 idx_texture_start = is_black ? BLACK_KNIGHT : WHITE_KNIGHT;
 	for (s32 i = 0; i < 4; i++) {
-		draw_texture_tile(h->renderer, h->piece_texture[idx_texture_start], start_pos, (iVec2){TILE_SIZE, TILE_SIZE});
+		draw_texture_tile(h, h->piece_texture[idx_texture_start], start_pos, h->tile_size);
 		idx_texture_start++;
 		start_pos.x++;
 	}
@@ -166,7 +169,7 @@ void draw_piece_over_board(SDLHandle *h, s32 x, s32 y) {
 	ChessPiece	piece = h->over_piece_select;
 	SDL_Texture	*texture = h->piece_texture[piece];
 
-	draw_texure(h, texture, (iVec2){x, y}, (iVec2){TILE_SIZE, TILE_SIZE});
+	draw_texure(h, texture, (iVec2){x, y}, h->tile_size);
 }
 
 
@@ -190,10 +193,10 @@ void draw_board(SDLHandle *handle, s8 player_color) {
 			color = (column + raw) & 1 ? BLACK_TILE : WHITE_TILE;
 			
 			/* Draw tile */
-			draw_color_tile(handle->renderer, tile_pos, (iVec2){TILE_SIZE, TILE_SIZE}, color);
+			draw_color_tile(handle, tile_pos, handle->tile_size, color);
 
 			if (tile == handle->board->last_tile_from || tile == handle->board->last_tile_to) {
-				draw_color_tile(handle->renderer, tile_pos, (iVec2){TILE_SIZE, TILE_SIZE}, RGBA_TO_UINT32(0, 120, 0, 150));
+				draw_color_tile(handle, tile_pos, handle->tile_size, RGBA_TO_UINT32(0, 120, 0, 150));
 			}
 
 			/* Draw possible move */
@@ -206,9 +209,9 @@ void draw_board(SDLHandle *handle, s8 player_color) {
 				is_black = (pieceIdx >= BLACK_PAWN);
 				is_king = (pieceIdx == WHITE_KING || pieceIdx == BLACK_KING);
 				if (is_king && ((is_black && black_check) || (!is_black && white_check))) {
-					draw_color_tile(handle->renderer, tile_pos, (iVec2){TILE_SIZE, TILE_SIZE}, RGBA_TO_UINT32(120, 0, 0, 255));
+					draw_color_tile(handle, tile_pos, handle->tile_size, RGBA_TO_UINT32(120, 0, 0, 255));
 				}
-				draw_texture_tile(handle->renderer, handle->piece_texture[pieceIdx], tile_pos, (iVec2){TILE_SIZE, TILE_SIZE});
+				draw_texture_tile(handle, handle->piece_texture[pieceIdx], tile_pos, handle->tile_size);
 			}
 
 			/* Increment or decrement tile */
@@ -218,20 +221,28 @@ void draw_board(SDLHandle *handle, s8 player_color) {
 	}
 
 	if (handle->over_piece_select != EMPTY) {
-		draw_piece_over_board(handle, handle->mouse_pos.x - (TILE_SIZE >> 1), handle->mouse_pos.y - (TILE_SIZE >> 1));
+		draw_piece_over_board(handle, handle->mouse_pos.x - (handle->tile_size.x >> 1), handle->mouse_pos.y - (handle->tile_size.x >> 1));
 	}
 
 }
 
-static s8 is_in_x_range(s32 x, s32 raw) {
-	return (x >= (raw * TILE_SIZE) + ((raw + 1) * TILE_SPACING)
-			&& x <= ((raw + 1) * TILE_SIZE )+ ((raw + 1) * TILE_SPACING));
-}
+// #define IS_IN_X_RANGE(_x_, _raw_, _tl_, _wb_) \
+// 	((_x_ >= (_raw_ * _tl_) + _wb_.left) && (_x_ <= ((_raw_ + 1) * _tl) + _wb_.left))	
 
-static s8 is_in_y_range(s32 y, s32 column) {
-	return (y >= (column * TILE_SIZE) + ((column + 1) * TILE_SPACING) + TOP_BAND_HEIGHT
-			&& y <= ((column + 1) * TILE_SIZE )+ ((column + 1) * TILE_SPACING) + TOP_BAND_HEIGHT);
-}
+// #define IS_IN_Y_RANGE(_y_, _column_, _tl_, _wb_) \
+// 	((_y_ >= (_column_ * _tl_) + _wb_.top) && (_y_ <= ((_column_ + 1) * _tl) + _wb_.top))
+
+
+
+// static s8 is_in_x_range(s32 x, s32 raw, s32 tile_size) {
+// 	return (x >= (raw * tile_size) + ((raw + 1) * TILE_SPACING)
+// 			&& x <= ((raw + 1) * tile_size )+ ((raw + 1) * TILE_SPACING));
+// }
+
+// static s8 is_in_y_range(s32 y, s32 column, s32 tile_size) {
+// 	return (y >= (column * tile_size) + ((column + 1) * TILE_SPACING) + TOP_BAND_HEIGHT
+// 			&& y <= ((column + 1) * tile_size )+ ((column + 1) * TILE_SPACING) + TOP_BAND_HEIGHT);
+// }
 
 /**
  * @brief Detect click tile on the board
@@ -239,13 +250,13 @@ static s8 is_in_y_range(s32 y, s32 column) {
  * @param x The x position of the mouse
  * @param y The y position of the mouse
 */
-ChessTile detect_tile_click(s32 x, s32 y, s8 player_color) {
+ChessTile detect_tile_click(s32 x, s32 y, s32 tile_size, WinBand wb, s8 player_color) {
 	ChessTile	tile = player_color == IS_BLACK ? H8 : A1;
 	s32 		column = 7;
 
 	while (column >= 0) {
 		for (s32 raw = 0; raw < 8; raw++) {
-			if (is_in_x_range(x, raw) && is_in_y_range(y, column)) {
+			if (is_in_x_range(x, raw, tile_size, wb) && is_in_y_range(y, column, tile_size, wb)) {
 				CHESS_LOG(LOG_INFO, "Click on "ORANGE"[%s]"RESET" -> "PINK"|%d|\n"RESET, TILE_TO_STRING(tile), tile);
 				return (tile);
 			}
@@ -296,14 +307,14 @@ s32 event_handler(SDLHandle *h, s8 player_color) {
 		}
 		SDL_GetMouseState(&x, &y);
 		if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
-			h->board->last_clicked_tile = detect_tile_click(x, y, player_color);
+			h->board->last_clicked_tile = detect_tile_click(x, y, h->tile_size.x, h->band_size, player_color);
 			piece_select = get_piece_from_tile(h->board, h->board->last_clicked_tile);
 			if (piece_select >= h->player_info.piece_start && piece_select <= h->player_info.piece_end) {
 				h->over_piece_select = piece_select;
 			}
 		} else if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {
 			if (h->over_piece_select != EMPTY) {
-				h->board->last_clicked_tile = detect_tile_click(x, y, player_color);
+				h->board->last_clicked_tile = detect_tile_click(x, y, h->tile_size.x, h->band_size, player_color);
 				if (h->board->last_clicked_tile == h->board->selected_tile || ((1ULL << h->board->last_clicked_tile) & aly_pos) != 0) {
 					h->over_piece_select = EMPTY;
 				} 
