@@ -87,8 +87,8 @@ typedef struct s_sdl_handle {
 	/* Player info */
 	// u64				black_time;			/* Black Timer */
 	// u64				white_time;			/* White Timer */
-	u64				my_elapsed_time;	/* Black Elapsed time */
-	u64				enemy_elapsed_time;	/* White Elapsed time */
+	u64				my_remaining_time;	/* Black Elapsed time */
+	u64				enemy_remaining_time;	/* White Elapsed time */
 	PlayerInfo		player_info;		/* Player info */
 	u32				flag;				/* App Flag */
 }	SDLHandle ;

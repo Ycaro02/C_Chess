@@ -156,7 +156,7 @@ void process_message_receive(SDLHandle *handle, char *msg) {
 			update_piece_state(handle->board);
 		}
 		handle->player_info.turn = TRUE;
-		handle->enemy_elapsed_time = *(u64 *)&msg[5];
+		handle->enemy_remaining_time = *(u64 *)&msg[5];
 	} 
 	else {
 		display_unknow_msg(msg);
@@ -174,7 +174,7 @@ void process_message_receive(SDLHandle *handle, char *msg) {
 	update_msg_store(handle->player_info.last_msg, msg);
 }
 
-/* Packet format 5 char
+/* Packet format 5 char + 8 char (for u64) = 13 char
  * -	1: msg_type
  * -	2: turn
  *  * if (msg_type == MSG_TYPE_COLOR)
@@ -183,11 +183,14 @@ void process_message_receive(SDLHandle *handle, char *msg) {
  * - 	3: tile_from
  * - 	4: tile_to
  * - 	5: piece_type
+ * -	6-13: remaining_time time (u64)
  * if (msg_type == MSG_TYPE_PROMOTION)
  * -	3: tile_from
  * -	4: tile_to
  * -	5: NEW_piece_type (QUEEN, ROOK, BISHOP, KNIGHT)
+ * -	6-13: remaining_time time (u64)
  * -	@note The piece type is the new piece type, not the pawn type (WHITE_PAWN, BLACK_PAWN)
+ * -	@note We use +1 to avoid sending 0, interpreted like '\0'
  * 
  */
 
@@ -205,7 +208,7 @@ void build_message(SDLHandle *h, char *msg, MsgType msg_type, ChessTile tile_fro
 	fast_bzero(msg, MSG_SIZE);
 
 	/* Set the elapsed time */
-	ft_memcpy(&msg[5], &h->my_elapsed_time, sizeof(u64));
+	ft_memcpy(&msg[5], &h->my_remaining_time, sizeof(u64));
 
 	/* Set the message type */
 	msg[0] = (char)msg_type;

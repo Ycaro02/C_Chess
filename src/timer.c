@@ -36,9 +36,9 @@ void draw_timer_rect(SDLHandle *h) {
 
 	/* Get the timer to update */
 	if (h->player_info.turn == TRUE) {
-		timer_to_update = &h->my_elapsed_time;
+		timer_to_update = &h->my_remaining_time;
 	} else {
-		timer_to_update = &h->enemy_elapsed_time;
+		timer_to_update = &h->enemy_remaining_time;
 	} 
 
 	/* Update timer every second */
@@ -51,6 +51,6 @@ void draw_timer_rect(SDLHandle *h) {
 	SDL_SetRenderDrawColor(h->renderer, 180, 180, 180, 255);
 	SDL_RenderFillRect(h->renderer, &h->timer_rect_bot);
 	SDL_RenderFillRect(h->renderer, &h->timer_rect_top);
-	wite_timer_in_rect(h, h->timer_rect_bot, h->my_elapsed_time);
-	wite_timer_in_rect(h, h->timer_rect_top, h->enemy_elapsed_time);
+	wite_timer_in_rect(h, h->timer_rect_bot, h->my_remaining_time);
+	wite_timer_in_rect(h, h->timer_rect_top, h->enemy_remaining_time);
 }

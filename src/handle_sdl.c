@@ -254,8 +254,8 @@ SDLHandle *create_sdl_handle(const char* title) {
 
 	fast_bzero(handle->timer_str, TIME_STR_SIZE);
 
-	handle->my_elapsed_time = 60 * 10;
-	handle->enemy_elapsed_time = 60 * 10;
+	handle->my_remaining_time = 60 * 10;
+	handle->enemy_remaining_time = 60 * 10;
 
 	window_clear(handle->renderer);
 	return (handle);
