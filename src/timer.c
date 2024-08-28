@@ -34,23 +34,28 @@ void draw_timer_rect(SDLHandle *h) {
 	u64 		now = SDL_GetTicks() / 1000;
 	u64 		elapsed_time = now - prev_tick;
 
-	/* Get the timer to update */
-	if (h->player_info.turn == TRUE) {
-		timer_to_update = &h->my_remaining_time;
-	} else {
-		timer_to_update = &h->enemy_remaining_time;
-	} 
-
-	/* Update timer every second */
-    if (elapsed_time >= 1) {
-        (*timer_to_update)--;
-		prev_tick = now;
-    }
-
 	/* Draw timer rect */
 	SDL_SetRenderDrawColor(h->renderer, 180, 180, 180, 255);
 	SDL_RenderFillRect(h->renderer, &h->timer_rect_bot);
 	SDL_RenderFillRect(h->renderer, &h->timer_rect_top);
+	if (h->game_start) {
+		SDL_SetRenderDrawColor(h->renderer, 0, 0, 150, 150);
+		/* Get the timer to update */
+		if (h->player_info.turn == TRUE) {
+			SDL_RenderFillRect(h->renderer, &h->timer_rect_bot);
+			timer_to_update = &h->my_remaining_time;
+		} else {
+			SDL_RenderFillRect(h->renderer, &h->timer_rect_top);
+			timer_to_update = &h->enemy_remaining_time;
+		} 
+
+		/* Update timer every second */
+		if (elapsed_time >= 1) {
+			(*timer_to_update)--;
+			prev_tick = now;
+		}
+
+	}
 	wite_timer_in_rect(h, h->timer_rect_bot, h->my_remaining_time);
 	wite_timer_in_rect(h, h->timer_rect_top, h->enemy_remaining_time);
 }

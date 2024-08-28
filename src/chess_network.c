@@ -63,7 +63,7 @@ s8 network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *ser
 		while (ret == FALSE && iter < MAX_ITER) {
 			ret = chess_msg_receive(handle, player_info->nt_info, player_info->msg_receiv, player_info->last_msg);
 			iter++;
-			sleep(1);
+			SDL_Delay(1000);
 		}
 		/* Process message receive, here set color  */
 		process_message_receive(handle, player_info->msg_receiv);
@@ -164,7 +164,7 @@ NetworkInfo *init_network(char *server_ip, int local_port, struct timeval timeou
 	/* Receive the peer information */
 	while (ret_rcv <= 0) {
 		ret_rcv = recvfrom(info->sockfd, (char *)&info->peeraddr, sizeof(info->peeraddr), 0, (struct sockaddr *)&info->servaddr, &info->addr_len);
-		sleep(1);
+		SDL_Delay(1000);
 	}
 	
 	// recvfrom(info->sockfd, (char *)&info->peeraddr, sizeof(info->peeraddr), 0, (struct sockaddr *)&info->servaddr, &info->addr_len);

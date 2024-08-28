@@ -364,7 +364,7 @@ s8 chess_msg_send(NetworkInfo *info, char *msg) {
 			} 
 		} 
 		attempts++;
-		sleep(1);
+		SDL_Delay(1000);
 	}
 	if (!ack_received) {
 		CHESS_LOG(LOG_ERROR, "No ACK received for |%s| after %d sending try\nVerify your network connection\n",message_type_to_str(msg[0]), MAX_ATTEMPTS);
@@ -382,7 +382,7 @@ s8 safe_msg_send(SDLHandle *h) {
 			return (TRUE);
 		}
 		nb_iter++;
-		sleep(1);
+		SDL_Delay(1000);
 	}
 	return (FALSE);
 }

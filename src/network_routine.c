@@ -43,13 +43,16 @@ static s32 network_move_piece(SDLHandle *h, ChessTile last_tile_click) {
 			build_message(h, h->player_info.msg_tosend, MSG_TYPE_MOVE, b->selected_tile, last_tile_click, b->selected_piece);
 		}
 
+		h->player_info.turn = FALSE;
+		update_graphic_board(h);
+
 		/* Send the message to the other player */
 		if (!safe_msg_send(h)) {
 			return (ret);
 		}
 
-		h->player_info.turn = FALSE;
 		reset_selected_tile(h);
+		update_graphic_board(h);
 		return (ret);
 	} else { /* Update piece possible move and selected tile */
 		piece_update_move(h, b, last_tile_click);
@@ -65,6 +68,8 @@ void network_chess_routine(SDLHandle *h) {
 	s32			ret = FALSE, event = 0;
 	s8			rcv_ret = FALSE;
 	
+	h->game_start = TRUE;
+
 	while (1) {
 		event = event_handler(h, h->player_info.color);
 		/* If the quit button is pressed */
