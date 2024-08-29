@@ -52,7 +52,7 @@ s8 network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *ser
 	s32				iter = 0;
 	s8				ret = FALSE;
 
-	player_info->nt_info = init_network(server_ip, player_info->running_port, timeout);
+	player_info->nt_info = init_network(server_ip, timeout);
 	if (has_flag(flag, FLAG_LISTEN)) {
 		// player_info->color = random_player_color();
 		player_info->color = IS_WHITE;
@@ -142,11 +142,9 @@ s8 wait_peer_info(NetworkInfo *info, const char *msg) {
 	return (FALSE);
 }
 
-NetworkInfo *init_network(char *server_ip, int local_port, struct timeval timeout) {
+NetworkInfo *init_network(char *server_ip, struct timeval timeout) {
     NetworkInfo *info = NULL;
     char buffer[1024];
-
-	(void )local_port;
 
     fast_bzero(buffer, 1024);
 	if (INIT_NETWORK() != 0) {

@@ -67,10 +67,8 @@ void connect_client_together(int sockfd, ChessRoom *r) {
 	ft_printf_fd(1, PURPLE"Room is Ready send info: ClientA : %s:%d, ClientB : %s:%d\n"RESET, inet_ntoa(r->cliA.addr.sin_addr), ntohs(r->cliA.addr.sin_port), inet_ntoa(r->cliB.addr.sin_addr), ntohs(r->cliB.addr.sin_port));
 	
 	/* Send information from B to A */
-	ft_printf_fd(1, PURPLE"Send information from B to A\n"RESET);
 	sendto(sockfd, (char *)&r->cliB.addr, sizeof(r->cliB.addr), 0, (struct sockaddr *)&r->cliA.addr, sizeof(r->cliA.addr));
 	/* Send information from A to B */
-	ft_printf_fd(1, PURPLE"Send information from A to B\n"RESET);
 	sendto(sockfd, (char *)&r->cliA.addr, sizeof(r->cliA.addr), 0, (struct sockaddr *)&r->cliB.addr, sizeof(r->cliB.addr));
 }
 

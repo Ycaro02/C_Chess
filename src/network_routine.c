@@ -80,6 +80,7 @@ void network_chess_routine(SDLHandle *h) {
 		if (h->player_info.nt_info->peer_conected == FALSE) {
 			msg_recv = wait_peer_info(h->player_info.nt_info, "Wait reconnect peer info");
 			if (msg_recv) {
+				/* Here we need to build MSG_TYPE_RECONECT and while on the list of move to give them to the reconnected client */
 				build_message(h, h->player_info.msg_tosend, MSG_TYPE_COLOR, !h->player_info.color, 0, 0);
 				chess_msg_send(h->player_info.nt_info, h->player_info.msg_tosend);
 				h->player_info.nt_info->peer_conected = TRUE;
@@ -93,13 +94,9 @@ void network_chess_routine(SDLHandle *h) {
 
 			/* Receive message from the other player */
 			msg_recv = chess_msg_receive(h, h->player_info.nt_info, h->player_info.msg_receiv, h->player_info.last_msg);
-			// if ((!h->player_info.turn && msg_recv) || (h->player_info.turn && msg_recv && h->player_info.msg_receiv[IDX_TYPE] == MSG_TYPE_QUIT)) {
-			// 	process_message_receive(h, h->player_info.msg_receiv);
-			// } 
-			if (msg_recv) {
+			if ((!h->player_info.turn && msg_recv) || (h->player_info.turn && msg_recv && h->player_info.msg_receiv[IDX_TYPE] == MSG_TYPE_QUIT)) {
 				process_message_receive(h, h->player_info.msg_receiv);
 			}
-			// process_message_receive(h, h->player_info.msg_receiv);
 		}
 
 		/* Draw logic */

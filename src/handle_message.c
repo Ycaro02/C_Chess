@@ -176,25 +176,38 @@ void process_message_receive(SDLHandle *handle, char *msg) {
 	update_msg_store(handle->player_info.last_msg, msg);
 }
 
-/* Packet format 5 char + 8 char (for u64) = 13 char
- * -	1: msg_type
- * -	2: turn
- *  * if (msg_type == MSG_TYPE_COLOR)
- * -	3: color
- * if (msg_type == MSG_TYPE_MOVE)
- * - 	3: tile_from
- * - 	4: tile_to
- * - 	5: piece_type
- * -	6-13: remaining_time time (u64)
- * if (msg_type == MSG_TYPE_PROMOTION)
- * -	3: tile_from
- * -	4: tile_to
- * -	5: NEW_piece_type (QUEEN, ROOK, BISHOP, KNIGHT)
- * -	6-13: remaining_time time (u64)
- * -	@note The piece type is the new piece type, not the pawn type (WHITE_PAWN, BLACK_PAWN)
- * -	@note We use +1 to avoid sending 0, interpreted like '\0'
+/*
+ * Packet format: 5 char + 8 char (for u64) = 13 char
  * 
+ * General structure:
+ * - 1: msg_type
+ * - 2: turn
+ * 
+ * Specific fields based on msg_type:
+ * 
+ * MSG_TYPE_COLOR:
+ * - 3: color
+ * 
+ * MSG_TYPE_MOVE:
+ * - 3: tile_from
+ * - 4: tile_to
+ * - 5: piece_type
+ * - 6-13: remaining_time (u64)
+ * 
+ * MSG_TYPE_PROMOTION:
+ * - 3: tile_from
+ * - 4: tile_to
+ * - 5: NEW_piece_type (QUEEN, ROOK, BISHOP, KNIGHT)
+ * - 6-13: remaining_time (u64)
+ * - @note: The piece type is the new piece type, not the pawn type (WHITE_PAWN, BLACK_PAWN)
+ * 
+ * MSG_TYPE_RECONNECT:
+ * - 3: color
+ * - 4-5: number of messages to represent the current board state (u16)
+ * - 6-13: remaining_time (u64)
+ * - @note: We use +1 to avoid sending 0, interpreted like '\0'
  */
+
 
 /* @brief Build the message
  * @param msg The message to build

@@ -271,7 +271,6 @@ struct s_player_info {
 	char		*dest_ip;				/* destination ip, NULL if we are the listener */
 	ChessPiece	piece_start;			/* ChessPiece color start */
 	ChessPiece	piece_end;				/* ChessPiece color end */
-	u16			running_port;			/* running port */
 	s8			color;					/* player color */
 	s8			turn;					/* player turn */
 };
@@ -310,7 +309,7 @@ typedef t_flag_context ChessFlagContext;
 
 #define LISTEN_OPT_CHAR		'l'
 #define JOIN_OPT_CHAR		'j'
-#define PORT_OPT_CHAR		'p'
+#define RECONNECT_OPT_CHAR	'r'
 #define SERVER_IP_OPT_CHAR	'i'
 #define NETWORK_OPT_CHAR	'n'
 #define HELP_OPT_CHAR		'h'
@@ -318,7 +317,7 @@ typedef t_flag_context ChessFlagContext;
 enum chess_flag_value {
 	FLAG_LISTEN=1<<0,
 	FLAG_JOIN=1<<1,
-	FLAG_PORT=1<<2,
+	FLAG_RECONNECT=1<<2,
 	FLAG_SERVER_IP=1<<3,
 	FLAG_NETWORK=1<<4,
 	FLAG_HELP=1<<5
@@ -326,12 +325,12 @@ enum chess_flag_value {
 
 #define LISTEN_STR		"listen"
 #define JOIN_STR		"join"
-#define PORT_STR		"port"
+#define RECONNECT_STR	"reconect"
 #define SERVER_IP_STR	"server_ip"
 #define NETWORK_STR		"network"
 #define HELP_STR		"help"
-#define DEFAULT_PORT 	54321
-#define MAX_PORT		65535
+// #define DEFAULT_PORT 	54321
+// #define MAX_PORT		65535
 
 
 

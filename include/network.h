@@ -47,6 +47,7 @@ enum e_msg_type {
 	MSG_TYPE_COLOR=1,
 	MSG_TYPE_MOVE,
 	MSG_TYPE_PROMOTION,
+	MSG_TYPE_RECONNECT,
 	MSG_TYPE_QUIT,
 };
 
@@ -77,13 +78,15 @@ typedef struct s_network_info NetworkInfo;
 
 FT_INLINE char *message_type_to_str(MsgType msg_type) {
 	if (msg_type == MSG_TYPE_COLOR) {
-		return ("MSG_TYPE_COLOR");
+		return ("COLOR");
 	} else if (msg_type == MSG_TYPE_MOVE) {
-		return ("MSG_TYPE_MOVE");
+		return ("MOVE");
 	} else if (msg_type == MSG_TYPE_PROMOTION) {
-		return ("MSG_TYPE_PROMOTION");
+		return ("PROMOTION");
 	} else if (msg_type == MSG_TYPE_QUIT) {
-		return ("MSG_TYPE_QUIT");
+		return ("QUIT");
+	} else if (msg_type == MSG_TYPE_RECONNECT) {
+		return ("RECONNECT");
 	}
 	return ("UNKNOWN");
 }
@@ -92,7 +95,7 @@ FT_INLINE char *message_type_to_str(MsgType msg_type) {
 #define	MAX_ITER 50
 
 /* src/chess_network.c */
-NetworkInfo	*init_network(char *server_ip, int local_port, struct timeval timeout);
+NetworkInfo	*init_network(char *server_ip, struct timeval timeout);
 s8			network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *server_ip);
 void		send_disconnect_to_server(int sockfd, struct sockaddr_in servaddr);
 s8			wait_peer_info(NetworkInfo *info, const char *msg);
