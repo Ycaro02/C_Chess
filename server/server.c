@@ -64,7 +64,6 @@ s8 handle_client_disconect(ChessRoom *r, struct sockaddr_in *cliaddr, char *buff
 }
 
 void connect_client_together(int sockfd, ChessRoom *r) {
-	ft_printf_fd(1, PURPLE"Room is Ready send info: ClientA : %s:%d, ClientB : %s:%d\n"RESET, inet_ntoa(r->cliA.addr.sin_addr), ntohs(r->cliA.addr.sin_port), inet_ntoa(r->cliB.addr.sin_addr), ntohs(r->cliB.addr.sin_port));
 
 	char *dataClientA = ft_calloc(1, MAGIC_SIZE + sizeof(r->cliA.addr));
 	ft_memcpy(dataClientA, MAGIC_STRING, MAGIC_SIZE);
@@ -73,6 +72,8 @@ void connect_client_together(int sockfd, ChessRoom *r) {
 	char *dataClientB = ft_calloc(1, MAGIC_SIZE + sizeof(r->cliB.addr));
 	ft_memcpy(dataClientB, MAGIC_STRING, MAGIC_SIZE);
 	ft_memcpy(dataClientB + MAGIC_SIZE, &r->cliB.addr, sizeof(r->cliB.addr));
+
+	ft_printf_fd(1, PURPLE"Room is Ready send info: ClientA : %s:%d, ClientB : %s:%d\n"RESET, inet_ntoa(r->cliA.addr.sin_addr), ntohs(r->cliA.addr.sin_port), inet_ntoa(r->cliB.addr.sin_addr), ntohs(r->cliB.addr.sin_port));
 
 	/* Send information from B to A */
 	// sendto(sockfd, (char *)&r->cliB.addr, MAGIC_SIZE + sizeof(r->cliB.addr), 0, (struct sockaddr *)&r->cliA.addr, sizeof(r->cliA.addr));
@@ -83,8 +84,6 @@ void connect_client_together(int sockfd, ChessRoom *r) {
 
 	free(dataClientA);
 	free(dataClientB);
-
-	printf("Data sent\n");
 }
 
 void handle_client_message(int sockfd, ChessRoom *r, struct sockaddr_in *cliaddr, char *buffer) {

@@ -18,22 +18,18 @@ void process_reconnect_message(SDLHandle *h, char *msg) {
 	// ChessMoveList *move_list = h->board->lst;
 	MoveSave *move_arr = NULL;
 	u16 list_size = 0, array_byte_size = 0;
-	u64 remaining_time = 0;
+	u64 my_remaining_time = 0;
+	u64 enemy_remaining_time = 0;
 
 	/* Get the size of the move list */
 	ft_memcpy(&list_size, &msg[5], sizeof(u16));
 	ft_memcpy(&array_byte_size, &msg[7], sizeof(u16));
-	ft_memcpy(&remaining_time, &msg[9 + array_byte_size], sizeof(u64));
-
-	// printf("receive Size of the list: %d\n", list_size);
-	// printf("receive Size of the list in byte: %d\n", array_byte_size);
-	// printf("receive Remaining time: %lu\n", remaining_time);
+	ft_memcpy(&my_remaining_time, &msg[9 + array_byte_size], sizeof(u64));
+	ft_memcpy(&enemy_remaining_time, &msg[9 + array_byte_size + 8], sizeof(u64));
 
 	/* Transform the array in list */
 	move_arr = (MoveSave *)&msg[9];
 	for (int i = 0; i < list_size; i++) {
-		// printf(ORANGE"Array Move Tile: %s to %s\n"RESET, TILE_TO_STRING(move_arr[i].tile_from), TILE_TO_STRING(move_arr[i].tile_to));
-		// printf(ORANGE"Array Move Piece: %s to %s\n"RESET, chess_piece_to_string(move_arr[i].piece_from), chess_piece_to_string(move_arr[i].piece_to));
 		move_piece(h, move_arr[i].tile_from, move_arr[i].tile_to, move_arr[i].piece_from);
 	}
 
@@ -41,8 +37,8 @@ void process_reconnect_message(SDLHandle *h, char *msg) {
 	h->board->lst = array_to_list(move_arr, list_size, sizeof(MoveSave));
 	h->board->turn = msg[1];
 	h->player_info.color = msg[2];
-	h->my_remaining_time = remaining_time;
-	h->enemy_remaining_time = remaining_time;
+	h->my_remaining_time = my_remaining_time;
+	h->enemy_remaining_time = enemy_remaining_time;
 
 	ChessPiece piece = get_piece_from_tile(h->board, move_arr[list_size - 1].tile_to);
 	s8 is_black_last = piece >= BLACK_PAWN;
@@ -50,8 +46,6 @@ void process_reconnect_message(SDLHandle *h, char *msg) {
 		h->player_info.turn = !(h->player_info.color);
 	} else {
 		h->player_info.turn = !(is_black_last == h->player_info.color);
-		// printf("Last piece: %s -> black_last: %d: color: %s\n", chess_piece_to_string(piece), is_black_last, h->player_info.color ? "BLACK" : "WHITE");
-		// printf("Player Turn: %d\n", h->player_info.turn);
 	}
 
 	/* 5 * 0 for white, and 5 * 1 for black */
@@ -270,7 +264,8 @@ void process_message_receive(SDLHandle *handle, char *msg) {
  * - 5-6: list_size: Len of the move list (u16), is the number of element in the move list transmitted
  * - 6-7: list_byte_size: The len of the list is the list_size * sizeof(MoveSave) (u16)
  * - After we store the move list in array format to be send
- * - list_byte_size-(list_byte_size + 8): remaining_time (u64)
+ * - list_byte_size-(list_byte_size + 8): enemy_remaining_time (u64)
+ * - list_byte_size + 8 - end: my_remaining_time (u64)
  */
 
 char *build_reconnect_message(SDLHandle *h, u16 *msg_size) {
@@ -295,8 +290,9 @@ char *build_reconnect_message(SDLHandle *h, u16 *msg_size) {
 	// 4 byte for the size of the message and the size of the list
 	// 2 byte for the size of the list in byte
 	// size of array
-	// 8 byte for the remaining time
-	*msg_size = 3 + 4 + 2 + array_byte_size + 8;
+	// 8 byte for enemy_remaining time
+	// 8 byte for my_remaining time
+	*msg_size = 3 + 4 + 2 + array_byte_size + 8 + 8;
 	char *buff = ft_calloc(*msg_size, sizeof(char));
 	buff[0] = MSG_TYPE_RECONNECT; // msg_type
 	buff[1] = h->board->turn; // turn
@@ -305,22 +301,22 @@ char *build_reconnect_message(SDLHandle *h, u16 *msg_size) {
 	ft_memcpy(&buff[5], &list_size, sizeof(u16)); // size of the list
 	ft_memcpy(&buff[7], &array_byte_size, sizeof(u16)); // size of the list in byte
 	ft_memcpy(&buff[9], move_arr, array_byte_size); // move list
-	ft_memcpy(&buff[9 + array_byte_size], &h->my_remaining_time, sizeof(u64)); // remaining time
+	ft_memcpy(&buff[9 + array_byte_size], &h->enemy_remaining_time, sizeof(u64)); // remaining time
+	ft_memcpy(&buff[9 + array_byte_size + 8], &h->my_remaining_time, sizeof(u64)); // remaining time
 
 	free(move_arr);
 
-	move_arr = (MoveSave *)&buff[9];
-	u64 time_remain = *(u64 *)&buff[9 + array_byte_size]; 
-	printf("Affter copy time remain %lu\n", time_remain);
-	printf("msg_size: %d, list_size: %d, array_byte_size: %d\n", *(u16 *)&buff[3], *(u16 *)&buff[5], *(u16 *)&buff[7]);
-		
-	for (int i = 0; i < list_size; i++) {
-		printf(ORANGE"Array Move Tile: %s to %s\n"RESET, TILE_TO_STRING(move_arr[i].tile_from), TILE_TO_STRING(move_arr[i].tile_to));
-		printf(ORANGE"Array Move Piece: %s to %s\n"RESET, chess_piece_to_string(move_arr[i].piece_from), chess_piece_to_string(move_arr[i].piece_to));
-		printf(YELLOW"List Move Tile: %s %s\n"RESET, TILE_TO_STRING(((MoveSave *)(move_list->content))->tile_from), TILE_TO_STRING(((MoveSave *)(move_list->content))->tile_to));
-		printf(YELLOW"List Move Piece: %s %s\n"RESET, chess_piece_to_string(((MoveSave *)(move_list->content))->piece_from), chess_piece_to_string(((MoveSave *)(move_list->content))->piece_to));
-		move_list = move_list->next;
-	}
+	// move_arr = (MoveSave *)&buff[9];
+	// u64 time_remain = *(u64 *)&buff[9 + array_byte_size]; 
+	// printf("Affter copy time remain %lu\n", time_remain);
+	// printf("msg_size: %d, list_size: %d, array_byte_size: %d\n", *(u16 *)&buff[3], *(u16 *)&buff[5], *(u16 *)&buff[7]);
+	// for (int i = 0; i < list_size; i++) {
+	// 	printf(ORANGE"Array Move Tile: %s to %s\n"RESET, TILE_TO_STRING(move_arr[i].tile_from), TILE_TO_STRING(move_arr[i].tile_to));
+	// 	printf(ORANGE"Array Move Piece: %s to %s\n"RESET, chess_piece_to_string(move_arr[i].piece_from), chess_piece_to_string(move_arr[i].piece_to));
+	// 	printf(YELLOW"List Move Tile: %s %s\n"RESET, TILE_TO_STRING(((MoveSave *)(move_list->content))->tile_from), TILE_TO_STRING(((MoveSave *)(move_list->content))->tile_to));
+	// 	printf(YELLOW"List Move Piece: %s %s\n"RESET, chess_piece_to_string(((MoveSave *)(move_list->content))->piece_from), chess_piece_to_string(((MoveSave *)(move_list->content))->piece_to));
+	// 	move_list = move_list->next;
+	// }
 	return (buff);
 }
 
