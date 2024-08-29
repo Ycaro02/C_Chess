@@ -74,7 +74,7 @@ s8 network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *ser
 	return (TRUE);
 }
 
-s8 socket_no_block(NetworkInfo *info, struct timeval timeout) {
+static s8 socket_no_block(NetworkInfo *info, struct timeval timeout) {
 #ifdef CHESS_WINDOWS_VERSION
 	/* Set the socket no block */
 	u_long mode = 1;
@@ -96,13 +96,38 @@ s8 socket_no_block(NetworkInfo *info, struct timeval timeout) {
 	return (TRUE);
 }
 
+static s8 local_socket_setup(NetworkInfo *info) {
+	/* Bind the socket */
+	ft_memset(&info->localaddr, 0, sizeof(info->localaddr));
+	info->localaddr.sin_family = AF_INET;
+	info->localaddr.sin_addr.s_addr = INADDR_ANY;
+	info->localaddr.sin_port = htons(0);
+	if (bind(info->sockfd, (struct sockaddr *)&info->localaddr, sizeof(info->localaddr)) < 0) {
+		perror("Bind failed");
+		CLOSE_SOCKET(info->sockfd);
+		free(info);
+		return (FALSE);
+	}
+
+	/* Get the local port */
+	info->addr_len = sizeof(info->localaddr);
+	if (getsockname(info->sockfd, (struct sockaddr *)&info->localaddr, &info->addr_len) == -1) {
+		perror("getsockname failed");
+		CLOSE_SOCKET(info->sockfd);
+		free(info);
+		return (FALSE);
+	}
+	return (TRUE);
+}
+
 NetworkInfo *init_network(char *server_ip, int local_port, struct timeval timeout) {
     NetworkInfo *info = NULL;
     char buffer[1024];
 	ssize_t ret_rcv = 0;
 
-    fast_bzero(buffer, 1024);
+	(void )local_port;
 
+    fast_bzero(buffer, 1024);
 	if (INIT_NETWORK() != 0) {
 		CHESS_LOG(LOG_ERROR, "%s\n", __func__);
 		return (NULL);
@@ -122,28 +147,7 @@ NetworkInfo *init_network(char *server_ip, int local_port, struct timeval timeou
 	/* Set the socket no block */
 	if (socket_no_block(info, timeout) == FALSE) {
 		return (NULL);
-	}
-
-	
-	/* Bind the socket */
-	(void)local_port; // Bind can be done on any port
-	ft_memset(&info->localaddr, 0, sizeof(info->localaddr));
-	info->localaddr.sin_family = AF_INET;
-	info->localaddr.sin_addr.s_addr = INADDR_ANY;
-	info->localaddr.sin_port = htons(0);
-	if (bind(info->sockfd, (struct sockaddr *)&info->localaddr, sizeof(info->localaddr)) < 0) {
-		perror("Bind failed");
-		CLOSE_SOCKET(info->sockfd);
-		free(info);
-		return (NULL);
-	}
-
-	/* Get the local port */
-	info->addr_len = sizeof(info->localaddr);
-	if (getsockname(info->sockfd, (struct sockaddr *)&info->localaddr, &info->addr_len) == -1) {
-		perror("getsockname failed");
-		CLOSE_SOCKET(info->sockfd);
-		free(info);
+	} else if (!local_socket_setup(info)) {
 		return (NULL);
 	}
 
@@ -165,12 +169,9 @@ NetworkInfo *init_network(char *server_ip, int local_port, struct timeval timeou
 		ret_rcv = recvfrom(info->sockfd, (char *)&info->peeraddr, sizeof(info->peeraddr), 0, (struct sockaddr *)&info->servaddr, &info->addr_len);
 		SDL_Delay(1000);
 	}
-
 	info->peer_conected = TRUE;
-	
-	// recvfrom(info->sockfd, (char *)&info->peeraddr, sizeof(info->peeraddr), 0, (struct sockaddr *)&info->servaddr, &info->addr_len);
-
 	CHESS_LOG(LOG_INFO, "Peer info : %s:%d, addr_len %d\n", inet_ntoa(info->peeraddr.sin_addr), ntohs(info->peeraddr.sin_port), info->addr_len);
+
 	/* Send a first message to the peer (handshake) */
 	sendto(info->sockfd, "Hello", fast_strlen("Hello"), 0, (struct sockaddr *)&info->peeraddr, info->addr_len);
 

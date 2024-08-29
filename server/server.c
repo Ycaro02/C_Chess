@@ -2,6 +2,7 @@
 #include <arpa/inet.h>
 
 #include "../include/chess.h"
+#include <signal.h>
 
 #define PORT 24242
 #define DISCONNECT_MSG "DISCONNECT"
@@ -24,6 +25,9 @@ typedef struct s_chess_server {
 	struct sockaddr_in	addr;
 	RoomList			*room_lst;
 } ChessServer;
+
+
+ChessServer *g_server = NULL;
 
 ChessRoom *room_create(u32 id) {
 	ChessRoom *room = ft_calloc(1, sizeof(ChessRoom));
@@ -130,6 +134,12 @@ ChessServer *server_setup() {
 	return (server);
 }
 
+void server_destroy(ChessServer *server) {
+	ft_lstclear(&server->room_lst, free);
+	close(server->sockfd);
+	free(server);
+}
+
 void server_routine(ChessServer *server) {
 	struct sockaddr_in	cliaddr;
 	socklen_t			addr_len = sizeof(cliaddr);
@@ -140,7 +150,6 @@ void server_routine(ChessServer *server) {
 	fast_bzero(&cliaddr, sizeof(cliaddr));
 
 	ft_printf_fd(1, ORANGE"Server waiting on port %d...\n"RESET, PORT);
-
 
 	ChessRoom *room = room_create(1);
 	if (!room) {
@@ -159,19 +168,59 @@ void server_routine(ChessServer *server) {
 			fast_bzero(&cliaddr, sizeof(cliaddr));
 		}
 	}
+	server_destroy(server);
+}
 
-	ft_lstclear(&server->room_lst, free);
-    close(server->sockfd);
-	free(server);
+static void signal_handler_server(int signum)
+{
+	(void)signum;
+	ft_printf_fd(1, RED"\nSignal Catch: %d\n"RESET, signum);
+	if (g_server) {
+		server_destroy(g_server);
+	}
+	exit(signum);
+}
+
+int init_sig_handler(void)
+{
+	struct sigaction sa;
+
+	sa.sa_handler = signal_handler_server;
+	sa.sa_flags = 0;
+	sigemptyset(&sa.sa_mask);
+
+	/* Handle SIGINT */
+	if (sigaction(SIGINT, &sa, NULL) == -1) {
+		perror("Can't catch SIGINT");
+		return (FALSE);
+	}
+	/* Handle SIGTERM */
+	if (sigaction(SIGTERM, &sa, NULL) == -1) {
+		perror("Can't catch SIGTERM");
+		return (FALSE);
+	}
+
+	/* Handle SIGQUIT */
+	if (sigaction(SIGQUIT, &sa, NULL) == -1) {
+		perror("Can't catch SIGQUIT");
+		return (FALSE);
+	}
+
+	/* Handle SIGHUP */
+	if (sigaction(SIGHUP, &sa, NULL) == -1) {
+		perror("Can't catch SIGHUP");
+		return (FALSE);
+	}
+	return (TRUE);
 }
 
 int main() {
-	ChessServer			*server = NULL;
 
+	init_sig_handler();
 
-	if (!(server = server_setup())) {
+	if (!(g_server = server_setup())) {
 		return (1);
 	}
-	server_routine(server);
+	server_routine(g_server);
     return (0);
 }
