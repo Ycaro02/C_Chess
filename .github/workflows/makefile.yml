@@ -34,12 +34,15 @@ jobs:
       run: |
           git diff --quiet || (git commit -am "Update submodules" && git push)
 
-    - name: Install windows compiler x86_64-w64-mingw32-gcc
+    - name: Install windows compiler x86_64-w64-mingw32-gcc and zip
       run: |
-        sudo apt update && sudo apt install mingw-w64
+        sudo apt update && sudo apt install mingw-w64 zip -y
 
     - name: Run make
       run: make && make -C windows
+
+    - name: Run make windows
+      run: cd windows && ./load_windll.sh && make
 
     - name: clean
       run: make fclean
