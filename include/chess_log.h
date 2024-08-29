@@ -21,7 +21,11 @@ void set_log_level(u8 level);
 
 /* Log message */
 #define LOG_MESSAGE(_color_, _level_, _func_, _line_, _format_str_, ...) do { \
-	printf("%s%s: %s:%d: "RESET, _color_, _level_, _func_, _line_); \
+	if (_func_ == NULL) {\
+		printf("%s%s: "RESET, _color_, _level_); \
+	} else { \
+		printf("%s%s: %s:%d: "RESET, _color_, _level_, _func_, _line_); \
+	} \
 	printf(_format_str_, ##__VA_ARGS__); \
 } while (0) \
 
@@ -35,7 +39,7 @@ void set_log_level(u8 level);
             break; \
         case LOG_INFO: \
             if (_curr_level_ >= LOG_INFO) \
-                LOG_MESSAGE(GREEN, "Info", __func__, __LINE__, _format_str_, ##__VA_ARGS__); \
+                LOG_MESSAGE(GREEN, "Info", (char *)NULL, __LINE__, _format_str_, ##__VA_ARGS__); \
             break; \
         case LOG_DEBUG: \
             if (_curr_level_ >= LOG_DEBUG) \

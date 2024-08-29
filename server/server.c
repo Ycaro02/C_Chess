@@ -6,66 +6,98 @@
 #define PORT 24242
 #define DISCONNECT_MSG "DISCONNECT"
 
+typedef t_list RoomList;
+
 typedef struct s_client_info {
-    struct sockaddr_in addr;
-    int connected;
+    struct sockaddr_in	addr;
+    s8					connected;
 } ClientInfo;
 
 typedef struct s_chess_room {
-	ClientInfo clientA;
-	ClientInfo clientB;
+	u32			room_id;
+	ClientInfo	cliA;
+	ClientInfo	cliB;
 } ChessRoom;
 
 typedef struct s_chess_server {
-	int sockfd;
-	struct sockaddr_in addr;
-	ChessRoom room;
+	int					sockfd;
+	struct sockaddr_in	addr;
+	RoomList			*room_lst;
 } ChessServer;
 
-void handle_client_message(int sockfd, ClientInfo *clientA, ClientInfo *clientB, struct sockaddr_in *cliaddr, char *buffer) {
-    if (fast_strcmp(buffer, DISCONNECT_MSG) == 0) {
-		if (clientA->connected && ft_memcmp(cliaddr, &clientA->addr, sizeof(struct sockaddr_in)) == 0) {
-            clientA->connected = 0;
-            ft_printf_fd(1, RED"Client A disconnected: %s:%d\n"RESET, inet_ntoa(clientA->addr.sin_addr), ntohs(clientA->addr.sin_port));
-        } else if (clientB->connected && ft_memcmp(cliaddr, &clientB->addr, sizeof(struct sockaddr_in)) == 0) {
-            clientB->connected = 0;
-            ft_printf_fd(1, RED"Client B disconnected: %s:%d\n"RESET, inet_ntoa(clientB->addr.sin_addr), ntohs(clientB->addr.sin_port));
-        }
-		return ;
-    }
+ChessRoom *room_create(u32 id) {
+	ChessRoom *room = ft_calloc(1, sizeof(ChessRoom));
+	if (!room) {
+		ft_printf_fd(2, RED"Error: alloc %s\n"RESET, __func__);
+		return (NULL);
+	}
+	room->room_id = id;
+	return (room);
+}
 
-	if (clientA->connected && clientB->connected) {
+void room_list_add(RoomList **lst, ChessRoom *room) {
+	t_list *new = ft_lstnew(room);
+	if (!new) {
+		ft_printf_fd(2, RED"Error: %s\n"RESET, __func__);
+		return ;
+	}
+	ft_lstadd_back(lst, new);
+}
+
+s8 handle_client_disconect(ChessRoom *r, struct sockaddr_in *cliaddr, char *buff) {
+    if (fast_strcmp(buff, DISCONNECT_MSG) == 0) {
+		if (r->cliA.connected && ft_memcmp(cliaddr, &r->cliA.addr, sizeof(struct sockaddr_in)) == 0) {
+			fast_bzero(&r->cliA.addr, sizeof(struct sockaddr_in));
+            r->cliA.connected = FALSE;
+        } else if (r->cliB.connected && ft_memcmp(cliaddr, &r->cliB.addr, sizeof(struct sockaddr_in)) == 0) {
+			fast_bzero(&r->cliA.addr, sizeof(struct sockaddr_in));
+            r->cliB.connected = FALSE;
+        }
+		ft_printf_fd(1, RED"Client disconnected: %s:%d\n"RESET, inet_ntoa(cliaddr->sin_addr), ntohs(cliaddr->sin_port));
+		return (TRUE);
+    }
+	return (FALSE);
+}
+
+void connect_client_together(int sockfd, ChessRoom *r) {
+	/* Send information from B to A */
+	sendto(sockfd, &r->cliB.addr, sizeof(r->cliB.addr), 0, (struct sockaddr *)&r->cliA.addr, sizeof(r->cliA.addr));
+	/* Send information from A to B */
+	sendto(sockfd, &r->cliA.addr, sizeof(r->cliA.addr), 0, (struct sockaddr *)&r->cliB.addr, sizeof(r->cliB.addr));
+}
+
+void handle_client_message(int sockfd, ChessRoom *r, struct sockaddr_in *cliaddr, char *buffer) {
+	
+	if (handle_client_disconect(r, cliaddr, buffer)) {
+		return ;
+	} else if (r->cliA.connected && r->cliB.connected) {
 		ft_printf_fd(1, YELLOW"Already 2 clients are connected, need to implement multiroom handling\n"RESET);
 		return ;
 	}
 
-
-	if (!clientA->connected) {
-		clientA->addr = *cliaddr;
-		clientA->connected = 1;
-		ft_printf_fd(1, GREEN"Client A connected: %s:%d\n"RESET, inet_ntoa(clientA->addr.sin_addr), ntohs(clientA->addr.sin_port));
-	} else if (!clientB->connected) {
-		clientB->addr = *cliaddr;
-		clientB->connected = 1;
-		ft_printf_fd(1, GREEN"Client B connected: %s:%d\n"RESET, inet_ntoa(clientB->addr.sin_addr), ntohs(clientB->addr.sin_port));
+	if (!r->cliA.connected) {
+		ft_memcpy(&r->cliA.addr, cliaddr, sizeof(struct sockaddr_in));
+		r->cliA.connected = TRUE;
+		ft_printf_fd(1, GREEN"Client A connected: %s:%d\n"RESET, inet_ntoa(r->cliA.addr.sin_addr), ntohs(r->cliA.addr.sin_port));
+	} else if (!r->cliB.connected) {
+		ft_memcpy(&r->cliB.addr, cliaddr, sizeof(struct sockaddr_in));
+		r->cliB.connected = TRUE;
+		ft_printf_fd(1, GREEN"Client B connected: %s:%d\n"RESET, inet_ntoa(r->cliB.addr.sin_addr), ntohs(r->cliB.addr.sin_port));
 	}
 
-	if (clientA->connected && clientB->connected) {
-		/* Send information from B to A */
-		sendto(sockfd, &clientB->addr, sizeof(clientB->addr), 0, (struct sockaddr *)&clientA->addr, sizeof(clientA->addr));
-		/* Send information from A to B */
-		sendto(sockfd, &clientA->addr, sizeof(clientA->addr), 0, (struct sockaddr *)&clientB->addr, sizeof(clientB->addr));
+	if (r->cliA.connected && r->cliB.connected) {
+		connect_client_together(sockfd, r);		
 	}
 }
 
 ChessServer *server_setup() {
 	ChessServer *server = ft_calloc(1, sizeof(ChessServer));
+	struct timeval timeout = {1, 0};
+
 	if (!server) {
 		ft_printf_fd(2, RED"Error: alloc %s\n"RESET, __func__);
 		return (NULL);
 	}
-
-	fast_bzero(&server->room, sizeof(ChessRoom));
 
     /* Create UDP socket */
     if ((server->sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
@@ -80,7 +112,6 @@ ChessServer *server_setup() {
     server->addr.sin_addr.s_addr = INADDR_ANY;
     server->addr.sin_port = htons(PORT);
 
-
 	/* Bind the socket */
     if (bind(server->sockfd, (struct sockaddr *)&server->addr, sizeof(server->addr)) < 0) {
         perror("Bind failed");
@@ -88,6 +119,14 @@ ChessServer *server_setup() {
         close(server->sockfd);
 		return (NULL);
     }
+
+	if (setsockopt(server->sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(struct timeval)) < 0) {
+		perror("setsockopt failed");
+		free(server);
+		close(server->sockfd);
+		return (NULL);
+	}
+
 	return (server);
 }
 
@@ -97,21 +136,31 @@ void server_routine(ChessServer *server) {
 	char				buffer[1024];
 	ssize_t				len = 0;
 
-	ft_memset(buffer, 0, sizeof(buffer));
-	ft_memset(&cliaddr, 0, sizeof(cliaddr));
+	fast_bzero(buffer, sizeof(buffer));
+	fast_bzero(&cliaddr, sizeof(cliaddr));
 
 	ft_printf_fd(1, ORANGE"Server waiting on port %d...\n"RESET, PORT);
+
+
+	ChessRoom *room = room_create(1);
+	if (!room) {
+		ft_printf_fd(2, RED"Error: %s\n"RESET, __func__);
+		return ;
+	}
+	room_list_add(&server->room_lst, room);
 
 	while (1) {
 		len = recvfrom(server->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&cliaddr, &addr_len);
 		if (len > 0) {
 			buffer[len] = '\0';
-			ft_printf_fd(1, CYAN"Server Received: %s\n"RESET, buffer);
-			handle_client_message(server->sockfd, &server->room.clientA, &server->room.clientB, &cliaddr, buffer);
-			ft_memset(buffer, 0, sizeof(buffer));
+			ft_printf_fd(1, CYAN"Server Received: %s from %s:%d\n"RESET, buffer, inet_ntoa(cliaddr.sin_addr), ntohs(cliaddr.sin_port));
+			handle_client_message(server->sockfd, room, &cliaddr, buffer);
+			fast_bzero(buffer, sizeof(buffer));
+			fast_bzero(&cliaddr, sizeof(cliaddr));
 		}
 	}
 
+	ft_lstclear(&server->room_lst, free);
     close(server->sockfd);
 	free(server);
 }
