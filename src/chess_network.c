@@ -48,7 +48,7 @@ static void player_color_set_info(PlayerInfo *info) {
  */
 s8 network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *server_ip) {
 	// struct timeval	timeout = {0, 500000}; /* 500000 microseconds = 0.5 seconds */
-	struct timeval	timeout = {0, 100}; /* 500000 microseconds = 0.5 seconds */
+	struct timeval	timeout = {0, 10000}; /* 10000 microseconds = 0.01 seconds */
 	s32				iter = 0;
 	s8				ret = FALSE;
 
@@ -58,9 +58,7 @@ s8 network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *ser
 		CHESS_LOG(LOG_INFO, "Listen for player...%s", "\n");
 		build_message(handle, player_info->msg_tosend, MSG_TYPE_COLOR, !player_info->color, 0, 0);
 		chess_msg_send(player_info->nt_info, player_info->msg_tosend);
-	}
-
-	if (has_flag(flag, FLAG_JOIN)) {
+	} else if (has_flag(flag, FLAG_JOIN)) {
 		while (ret == FALSE && iter < MAX_ITER) {
 			ret = chess_msg_receive(handle, player_info->nt_info, player_info->msg_receiv, player_info->last_msg);
 			iter++;
