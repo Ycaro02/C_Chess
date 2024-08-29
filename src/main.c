@@ -62,6 +62,12 @@ void chess_routine(SDLHandle *h){
 
 void chess_destroy(SDLHandle *h) {
 	CHESS_LOG(LOG_INFO, RED"Destroy chess game%s\n", RESET);
+
+
+	if (h->player_info.nt_info && h->player_info.nt_info->peer_conected) {
+		build_message(h, h->player_info.msg_tosend, MSG_TYPE_QUIT, 0, 0, 0);
+		chess_msg_send(h->player_info.nt_info, h->player_info.msg_tosend);
+	}
 	if (h->board->lst) {
 		ft_lstclear(&h->board->lst, free);
 	}
@@ -84,6 +90,7 @@ SDLHandle *get_SDL_handle() {
 void chess_game(SDLHandle *h) {
 	
 	INIT_SIGNAL_HANDLER();
+	
 	update_graphic_board(h);
 
 	if (has_flag(h->flag, FLAG_NETWORK)) {
@@ -108,9 +115,9 @@ int main(int argc, char **argv) {
 	s8			error = 0;
 
 
-	set_log_level(LOG_ERROR);
+	// set_log_level(LOG_ERROR);
 
-	// set_log_level(LOG_INFO);
+	set_log_level(LOG_INFO);
 
 
 	flag = handle_chess_flag(argc, argv, &error, &player_info);

@@ -48,18 +48,27 @@ enum e_msg_type {
 	MSG_TYPE_MOVE,
 	MSG_TYPE_PROMOTION,
 	MSG_TYPE_QUIT,
-}; 
+};
+
+enum e_msg_idx {
+	IDX_TYPE=0,
+	IDX_TURN,
+	IDX_FROM,
+	IDX_TO,
+	IDX_PIECE,
+	IDX_TIMER,
+	IDX_TIMER_END=IDX_TIMER+8,
+};
 
 typedef struct sockaddr_in SockaddrIn;
 
 struct s_network_info {
-    Socket	sockfd;
+    Socket		sockfd;
     SockaddrIn	localaddr;
     SockaddrIn	servaddr;
     SockaddrIn	peeraddr;
     SocketLen	addr_len;
-	fd_set		readfds;
-	struct		timeval timeout;
+	s8			peer_conected;			/* Peer connected */
 };
 
 

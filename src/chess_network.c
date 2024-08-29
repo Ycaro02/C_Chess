@@ -47,7 +47,8 @@ static void player_color_set_info(PlayerInfo *info) {
  * @return s8 TRUE if the network is setup, FALSE otherwise
  */
 s8 network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *server_ip) {
-	struct timeval	timeout = {0, 500000}; /* 500000 microseconds = 0.5 seconds */
+	// struct timeval	timeout = {0, 500000}; /* 500000 microseconds = 0.5 seconds */
+	struct timeval	timeout = {0, 100}; /* 500000 microseconds = 0.5 seconds */
 	s32				iter = 0;
 	s8				ret = FALSE;
 
@@ -166,6 +167,8 @@ NetworkInfo *init_network(char *server_ip, int local_port, struct timeval timeou
 		ret_rcv = recvfrom(info->sockfd, (char *)&info->peeraddr, sizeof(info->peeraddr), 0, (struct sockaddr *)&info->servaddr, &info->addr_len);
 		SDL_Delay(1000);
 	}
+
+	info->peer_conected = TRUE;
 	
 	// recvfrom(info->sockfd, (char *)&info->peeraddr, sizeof(info->peeraddr), 0, (struct sockaddr *)&info->servaddr, &info->addr_len);
 

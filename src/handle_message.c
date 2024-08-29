@@ -3,7 +3,7 @@
 #include "../include/chess_log.h"
 
 void display_message(char *msg) {
-	MsgType msg_type = msg[0];
+	MsgType msg_type = msg[IDX_TYPE];
 	ChessTile tile_from = 0, tile_to = 0;
 	ChessPiece piece_type = EMPTY;
 
@@ -11,8 +11,8 @@ void display_message(char *msg) {
 	CHESS_LOG(LOG_INFO, YELLOW"Message type: %s: "RESET, message_type_to_str(msg_type));
 
 	if (msg_type == MSG_TYPE_COLOR) {
-		CHESS_LOG(LOG_INFO, "turn: |%d| color |%d| -> ", msg[1], msg[2]);
-		CHESS_LOG(LOG_INFO, "Color: %s\n", (msg[1] - 1) == IS_WHITE ? "WHITE" : "BLACK");
+		CHESS_LOG(LOG_INFO, "turn: |%d| color |%d| -> ", msg[IDX_TURN], msg[IDX_FROM]);
+		CHESS_LOG(LOG_INFO, "Color: %s\n", (msg[IDX_TURN] - 1) == IS_WHITE ? "WHITE" : "BLACK");
 		return ;
 	} else if (msg_type == MSG_TYPE_QUIT) {
 		CHESS_LOG(LOG_INFO, "Opponent quit the game, msg type %d\n", msg[0]);
@@ -20,12 +20,13 @@ void display_message(char *msg) {
 	}	
 	
 	/* We need to decrement all value cause we send with +1 can't send 0, interpreted like '\0' */
-	tile_from = msg[2] - 1;
-	tile_to = msg[3] - 1;
-	piece_type = msg[4] - 1;
-	CHESS_LOG(LOG_INFO, PURPLE"brut data: |%d||%d||%d||%d|\n"RESET, msg[2], msg[3], msg[4], msg[5]);
+	tile_from = msg[IDX_FROM] - 1;
+	tile_to = msg[IDX_TO] - 1;
+	piece_type = msg[IDX_PIECE] - 1;
+	CHESS_LOG(LOG_INFO, PURPLE"brut data: |%d||%d||%d| Timer:|%lu|\n"RESET, msg[IDX_FROM], msg[IDX_TO], msg[IDX_PIECE], *(u64 *)&msg[IDX_TIMER]);
 	if (msg_type == MSG_TYPE_MOVE) {
 		CHESS_LOG(LOG_INFO, ORANGE"Move from %s to %s with piece %s\n"RESET, TILE_TO_STRING(tile_from), TILE_TO_STRING(tile_to), chess_piece_to_string(piece_type));
+
 	} else if (msg_type == MSG_TYPE_PROMOTION) {
 		CHESS_LOG(LOG_INFO, ORANGE"Promotion from %s to %s with piece %s\n"RESET, TILE_TO_STRING(tile_from), TILE_TO_STRING(tile_to), chess_piece_to_string(piece_type));
 	} 
@@ -116,7 +117,7 @@ s8 is_legal_move_pck(SDLHandle *handle, ChessTile tile_from, ChessTile tile_to, 
  * @param msg The message to process
 */
 void process_message_receive(SDLHandle *handle, char *msg) {
-	MsgType 	msg_type = msg[0];
+	MsgType 	msg_type = msg[IDX_TYPE];
 	ChessTile	tile_from = 0, tile_to = 0;
 	ChessPiece	piece_type = EMPTY, opponent_pawn = EMPTY;
 	
@@ -124,14 +125,15 @@ void process_message_receive(SDLHandle *handle, char *msg) {
 
 	/* If the message is a color message, set the player color */
 	if (msg_type == MSG_TYPE_COLOR) {
-		handle->player_info.color = msg[2] - 1;
+		handle->player_info.color = msg[IDX_FROM] - 1;
 	} else if (msg_type == MSG_TYPE_QUIT) {
 		CHESS_LOG(LOG_INFO, "%s\n", "Opponent quit the game");
+		handle->player_info.nt_info->peer_conected = FALSE;
 	} else if (msg_type == MSG_TYPE_MOVE || msg_type == MSG_TYPE_PROMOTION) {
 		/* We need to decrement all value cause we send with +1 can't send 0, interpreted like '\0' */
-		tile_from = msg[2] - 1;
-		tile_to = msg[3] - 1;
-		piece_type = msg[4] - 1;
+		tile_from = msg[IDX_FROM] - 1;
+		tile_to = msg[IDX_TO] - 1;
+		piece_type = msg[IDX_PIECE] - 1;
 		
 		if (msg_type == MSG_TYPE_MOVE) {
 			/* If the message is a move, just call move piece */
@@ -156,7 +158,7 @@ void process_message_receive(SDLHandle *handle, char *msg) {
 			update_piece_state(handle->board);
 		}
 		handle->player_info.turn = TRUE;
-		handle->enemy_remaining_time = *(u64 *)&msg[5];
+		handle->enemy_remaining_time = *(u64 *)&msg[IDX_TIMER];
 	} 
 	else {
 		display_unknow_msg(msg);
@@ -208,14 +210,14 @@ void build_message(SDLHandle *h, char *msg, MsgType msg_type, ChessTile tile_fro
 	fast_bzero(msg, MSG_SIZE);
 
 	/* Set the elapsed time */
-	ft_memcpy(&msg[5], &h->my_remaining_time, sizeof(u64));
+	ft_memcpy(&msg[IDX_TIMER], &h->my_remaining_time, sizeof(u64));
 
 	/* Set the message type */
-	msg[0] = (char)msg_type;
+	msg[IDX_TYPE] = msg_type;
 
 
 	/* Set the message turn counter */
-	msg[1] = (char)h->board->turn;
+	msg[IDX_TURN] = h->board->turn;
 
 	/* If the message is a quit message, return here */
 	if (msg_type == MSG_TYPE_QUIT) {
@@ -223,7 +225,7 @@ void build_message(SDLHandle *h, char *msg, MsgType msg_type, ChessTile tile_fro
 	}
 
 	/* Set the tile_from or color (1st data) */
-	msg[2] = (char)(tile_from_or_color + 1);
+	msg[IDX_FROM] = (tile_from_or_color + 1);
 
 	/* If the message is a color message, return here */
 	if (msg_type == MSG_TYPE_COLOR) {
@@ -231,10 +233,10 @@ void build_message(SDLHandle *h, char *msg, MsgType msg_type, ChessTile tile_fro
 	}
 
 	/* Set the tile_to (2nd data) */
-	msg[3] = (char)(tile_to + 1);
+	msg[IDX_TO] = (tile_to + 1);
 
 	/* Set the piece_type (3rd data) */
-	msg[4] = (char)(piece_type + 1);
+	msg[IDX_PIECE] = (piece_type + 1);
 }
 
 #define ACK_STR "ACK"
@@ -252,34 +254,35 @@ void build_message(SDLHandle *h, char *msg, MsgType msg_type, ChessTile tile_fro
 s8 is_illegal_packet(SDLHandle *h, char *buffer, int len) {
 	ChessTile	tile_from = INVALID_TILE, tile_to = INVALID_TILE;
 	ChessPiece	piece_type = EMPTY, piece_check_legal = EMPTY;
+	s8			msg_type = buffer[IDX_TYPE];
 	s8			color = -1;
 	
 	(void)len;
 
 	/* If the message is not a valid message type return here */
-	if (buffer[0] < MSG_TYPE_COLOR || buffer[0] > MSG_TYPE_QUIT) {
+	if (msg_type < MSG_TYPE_COLOR || msg_type > MSG_TYPE_QUIT) {
 		return (TRUE);
 	}
 
 	/* If the message is COLOR and not the right size return here */
-	if (buffer[0] == MSG_TYPE_COLOR) {
-		color = buffer[2] - 1;
+	if (msg_type == MSG_TYPE_COLOR) {
+		color = buffer[IDX_FROM] - 1;
 		if (color != IS_WHITE && color != IS_BLACK) {
 			CHESS_LOG(LOG_INFO, RED"Buffer color is not WHITE or BLACK%s\n", RESET);
 			return (TRUE);
 		}
 	}
 
-	if (buffer[0] == MSG_TYPE_MOVE || buffer[0] == MSG_TYPE_PROMOTION) {
+	if (msg_type == MSG_TYPE_MOVE || msg_type == MSG_TYPE_PROMOTION) {
 		
-		tile_from = buffer[2] - 1;
-		tile_to = buffer[3] - 1;
-		piece_type = buffer[4] - 1;
+		tile_from = buffer[IDX_FROM] - 1;
+		tile_to = buffer[IDX_TO] - 1;
+		piece_type = buffer[IDX_PIECE] - 1;
 
 		piece_check_legal = piece_type;
 
 		/* If the message is PROMOTION, we need to check for pawn move instead of piece receive */
-		if (buffer[0] == MSG_TYPE_PROMOTION) {
+		if (msg_type == MSG_TYPE_PROMOTION) {
 			piece_check_legal = h->player_info.color == IS_WHITE ? BLACK_PAWN : WHITE_PAWN;
 		}
 
@@ -289,7 +292,7 @@ s8 is_illegal_packet(SDLHandle *h, char *buffer, int len) {
 		}
 
 		/* If the message is PROMOTION and the data are not valid return here */
-		if (buffer[0] == MSG_TYPE_PROMOTION && is_legal_promotion_pck(h, piece_type, tile_to) == FALSE) {
+		if (msg_type == MSG_TYPE_PROMOTION && is_legal_promotion_pck(h, piece_type, tile_to) == FALSE) {
 			return (TRUE);
 		}
 	}
@@ -308,10 +311,10 @@ s8 ignore_msg(SDLHandle *h, char *buffer, char *last_msg_processed) {
 	int			len = fast_strlen(buffer);
 
 	/* If the message is not the right size return here */
-	if (len < 2) {
-		CHESS_LOG(LOG_INFO, RED"Buffer size is less than 2 %s\n", RESET);
-		return (TRUE);
-	}
+	// if (len < 2) {
+	// 	CHESS_LOG(LOG_INFO, RED"Buffer size is less than 2 %s\n", RESET);
+	// 	return (TRUE);
+	// }
 
 	/* If the message is a hello,ack message or same than last msg process return here */
 	if (fast_strcmp(buffer, HELLO_STR) == 0 || fast_strcmp(buffer, ACK_STR) == 0 

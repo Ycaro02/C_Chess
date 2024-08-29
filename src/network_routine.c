@@ -84,11 +84,11 @@ void network_chess_routine(SDLHandle *h) {
 		}
 
 		/* Receive message from the other player */
-		if (!h->player_info.turn) {
-			rcv_ret = chess_msg_receive(h, h->player_info.nt_info, h->player_info.msg_receiv, h->player_info.last_msg);
-			if (rcv_ret) {
-				process_message_receive(h, h->player_info.msg_receiv);
-			}
+		rcv_ret = chess_msg_receive(h, h->player_info.nt_info, h->player_info.msg_receiv, h->player_info.last_msg);
+		if (!h->player_info.turn && rcv_ret) {
+			process_message_receive(h, h->player_info.msg_receiv);
+		} else if (h->player_info.turn && rcv_ret && h->player_info.msg_receiv[0] == MSG_TYPE_QUIT) {
+			process_message_receive(h, h->player_info.msg_receiv);
 		}
 
 		/* Draw logic */
