@@ -137,11 +137,12 @@ static s8 local_socket_setup(NetworkInfo *info) {
 
 
 static s8 check_magic_value(char *buff) {
-	char magic[MAGIC_SIZE] = MAGIC_STRING;
+	// char magic[MAGIC_SIZE] = MAGIC_STRING;
+	static const char magic[MAGIC_SIZE] = MAGIC_STRING;
 	u64 i = 0;
 	while (i < MAGIC_SIZE) {
 		if (buff[i] != magic[i]) {
-			CHESS_LOG(LOG_INFO, "Magic value check failed buff |%d|, magic|%d| idx %lu\n", buff[i], magic[i], i);
+			CHESS_LOG(LOG_INFO, "Magic value check failed buff |%d|, magic|%d| idx %llu\n", buff[i], magic[i], i);
 			return (FALSE);
 		}
 		i++;

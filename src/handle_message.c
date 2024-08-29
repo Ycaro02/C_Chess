@@ -76,7 +76,7 @@ void display_message(char *msg) {
 	tile_from = msg[IDX_FROM] - 1;
 	tile_to = msg[IDX_TO] - 1;
 	piece_type = msg[IDX_PIECE] - 1;
-	CHESS_LOG(LOG_INFO, PURPLE"brut data: |%d||%d||%d| Timer:|%lu|\n"RESET, msg[IDX_FROM], msg[IDX_TO], msg[IDX_PIECE], *(u64 *)&msg[IDX_TIMER]);
+	// CHESS_LOG(LOG_INFO, PURPLE"brut data: |%d||%d||%d| Timer:|%lu|\n"RESET, msg[IDX_FROM], msg[IDX_TO], msg[IDX_PIECE], *(u64 *)&msg[IDX_TIMER]);
 	if (msg_type == MSG_TYPE_MOVE) {
 		CHESS_LOG(LOG_INFO, ORANGE"Move from %s to %s with piece %s\n"RESET, TILE_TO_STRING(tile_from), TILE_TO_STRING(tile_to), chess_piece_to_string(piece_type));
 
@@ -274,17 +274,17 @@ char *build_reconnect_message(SDLHandle *h, u16 *msg_size) {
 
 	/* Get the size of the move list */
 	u16 list_size = (u16)ft_lstsize(move_list);
-	printf("Move list size: %d\n", list_size);
+	// printf("Move list size: %d\n", list_size);
 
 	/* Get the size of the move list in byte */
 	u16 array_byte_size = list_size * sizeof(MoveSave);
 
-	printf("Array byte size: %d\n", array_byte_size);
+	// printf("Array byte size: %d\n", array_byte_size);
 
 	/* Transform the move list in array */
 	move_arr = list_to_array(move_list, list_size, sizeof(MoveSave));
 
-	printf("Sizeof move_arr %lu\n", sizeof(move_arr));
+	// printf("Sizeof move_arr %lu\n", sizeof(move_arr));
 
 	// 3 byte for msg_type, turn and color
 	// 4 byte for the size of the message and the size of the list
@@ -471,7 +471,7 @@ s8 chess_msg_receive(SDLHandle *h, NetworkInfo *info, char *rcv_buffer, char *la
 		}
 		buffer[rcv_len] = '\0';
 		sendto(info->sockfd, ACK_STR, ACK_LEN, 0, (struct sockaddr *)&info->peeraddr, info->addr_len);
-		CHESS_LOG(LOG_INFO, GREEN"Msg |%s| receive len : %lu -> ACK send\n"RESET, message_type_to_str(buffer[0]), rcv_len);
+		CHESS_LOG(LOG_INFO, GREEN"Msg |%s| receive len : %lld -> ACK send\n"RESET, message_type_to_str(buffer[0]), rcv_len);
 		ft_memcpy(rcv_buffer, buffer, rcv_len);
 		return (TRUE);
 	} 
