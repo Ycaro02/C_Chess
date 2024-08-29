@@ -471,7 +471,7 @@ s8 chess_msg_receive(SDLHandle *h, NetworkInfo *info, char *rcv_buffer, char *la
 		}
 		buffer[rcv_len] = '\0';
 		sendto(info->sockfd, ACK_STR, ACK_LEN, 0, (struct sockaddr *)&info->peeraddr, info->addr_len);
-		CHESS_LOG(LOG_INFO, GREEN"Msg |%s| receive len : %lld -> ACK send\n"RESET, message_type_to_str(buffer[0]), rcv_len);
+		CHESS_LOG(LOG_INFO, GREEN"Msg |%s| receive len : %zd -> ACK send\n"RESET, message_type_to_str(buffer[0]), rcv_len);
 		ft_memcpy(rcv_buffer, buffer, rcv_len);
 		return (TRUE);
 	} 
