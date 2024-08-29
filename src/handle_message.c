@@ -25,15 +25,15 @@ void process_reconnect_message(SDLHandle *h, char *msg) {
 	ft_memcpy(&array_byte_size, &msg[7], sizeof(u16));
 	ft_memcpy(&remaining_time, &msg[9 + array_byte_size], sizeof(u64));
 
-	printf("receive Size of the list: %d\n", list_size);
-	printf("receive Size of the list in byte: %d\n", array_byte_size);
-	printf("receive Remaining time: %lu\n", remaining_time);
+	// printf("receive Size of the list: %d\n", list_size);
+	// printf("receive Size of the list in byte: %d\n", array_byte_size);
+	// printf("receive Remaining time: %lu\n", remaining_time);
 
 	/* Transform the array in list */
 	move_arr = (MoveSave *)&msg[9];
 	for (int i = 0; i < list_size; i++) {
-		printf(ORANGE"Array Move Tile: %s to %s\n"RESET, TILE_TO_STRING(move_arr[i].tile_from), TILE_TO_STRING(move_arr[i].tile_to));
-		printf(ORANGE"Array Move Piece: %s to %s\n"RESET, chess_piece_to_string(move_arr[i].piece_from), chess_piece_to_string(move_arr[i].piece_to));
+		// printf(ORANGE"Array Move Tile: %s to %s\n"RESET, TILE_TO_STRING(move_arr[i].tile_from), TILE_TO_STRING(move_arr[i].tile_to));
+		// printf(ORANGE"Array Move Piece: %s to %s\n"RESET, chess_piece_to_string(move_arr[i].piece_from), chess_piece_to_string(move_arr[i].piece_to));
 		move_piece(h, move_arr[i].tile_from, move_arr[i].tile_to, move_arr[i].piece_from);
 	}
 
@@ -43,6 +43,21 @@ void process_reconnect_message(SDLHandle *h, char *msg) {
 	h->player_info.color = msg[2];
 	h->my_remaining_time = remaining_time;
 	h->enemy_remaining_time = remaining_time;
+
+	ChessPiece piece = get_piece_from_tile(h->board, move_arr[list_size - 1].tile_to);
+	s8 is_black_last = piece >= BLACK_PAWN;
+	if (piece == EMPTY) {
+		h->player_info.turn = !(h->player_info.color);
+	} else {
+		h->player_info.turn = !(is_black_last == h->player_info.color);
+		// printf("Last piece: %s -> black_last: %d: color: %s\n", chess_piece_to_string(piece), is_black_last, h->player_info.color ? "BLACK" : "WHITE");
+		// printf("Player Turn: %d\n", h->player_info.turn);
+	}
+
+	/* 5 * 0 for white, and 5 * 1 for black */
+	h->player_info.piece_start = BLACK_PAWN * h->player_info.color;
+	/* 5 * 0 for white, and 5 * 1 for black, + 5 */
+	h->player_info.piece_end = BLACK_KING * h->player_info.color + 5;
 }
 
 

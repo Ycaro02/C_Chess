@@ -78,6 +78,8 @@ s8 network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *ser
 		}
 		printf("Reconnect to server %d buffer\n", fast_strlen(buffer));
 		process_message_receive(handle, buffer);
+		update_graphic_board(handle);
+		return (TRUE);
 	}
 	player_color_set_info(player_info);
 
