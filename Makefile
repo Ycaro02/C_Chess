@@ -96,7 +96,7 @@ test_server: $(SERVER_EXE)
 	@ ./$(SERVER_EXE)
 
 test_listen: $(NAME)
-	@./$(NAME) -n -l -p 54321 -i $(IP_SERVER)
+	@./$(NAME) -n -l -i $(IP_SERVER)
 
 test_local: $(NAME)
 	@./rsc/sh/chess_local_test.sh

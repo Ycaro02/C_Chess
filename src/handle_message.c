@@ -261,6 +261,11 @@ s8 is_illegal_packet(SDLHandle *h, char *buffer, int len) {
 
 	/* If the message is not a valid message type return here */
 	if (msg_type < MSG_TYPE_COLOR || msg_type > MSG_TYPE_QUIT) {
+		CHESS_LOG(LOG_INFO, RED"Buffer message type is not valid %s\n", RESET);
+		return (TRUE);
+	}
+
+	if (msg_type != MSG_TYPE_QUIT && fast_strcmp(buffer, h->player_info.last_msg) == 0) {
 		return (TRUE);
 	}
 
@@ -316,9 +321,10 @@ s8 ignore_msg(SDLHandle *h, char *buffer, char *last_msg_processed) {
 	// 	return (TRUE);
 	// }
 
+	(void)last_msg_processed;
 	/* If the message is a hello,ack message or same than last msg process return here */
-	if (fast_strcmp(buffer, HELLO_STR) == 0 || fast_strcmp(buffer, ACK_STR) == 0 
-		|| fast_strcmp(buffer, last_msg_processed) == 0) {
+	if (fast_strcmp(buffer, HELLO_STR) == 0 || fast_strcmp(buffer, ACK_STR) == 0) {
+		// || fast_strcmp(buffer, last_msg_processed) == 0) {
 		return (TRUE);
 	}
 

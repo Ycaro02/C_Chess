@@ -95,6 +95,7 @@ FT_INLINE char *message_type_to_str(MsgType msg_type) {
 NetworkInfo	*init_network(char *server_ip, int local_port, struct timeval timeout);
 s8			network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *server_ip);
 void		send_disconnect_to_server(int sockfd, struct sockaddr_in servaddr);
+s8			wait_peer_info(NetworkInfo *info, const char *msg);
 
 /* src/handle_message.c */
 void	process_message_receive(SDLHandle *handle, char *msg);

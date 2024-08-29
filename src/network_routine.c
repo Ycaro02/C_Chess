@@ -66,32 +66,46 @@ static s32 network_move_piece(SDLHandle *h, ChessTile last_tile_click) {
  */
 void network_chess_routine(SDLHandle *h) {
 	s32			ret = FALSE, event = 0;
-	s8			rcv_ret = FALSE;
+	s8			msg_recv = FALSE;
 	
 	h->game_start = TRUE;
 
 	while (1) {
+
+		/* Event handler */
 		event = event_handler(h, h->player_info.color);
 		/* If the quit button is pressed */
 		if (event == CHESS_QUIT) { break ; } // Send quit message to the other player
 		
-		/* If tile is selected and is player turn, try to send move piece and move it */
-		if (h->player_info.turn == TRUE && h->board->last_clicked_tile != INVALID_TILE) {
-			ret = network_move_piece(h, h->board->last_clicked_tile);
-			if (ret == CHESS_QUIT || ret == FALSE) {
-				break ;
+		if (h->player_info.nt_info->peer_conected == FALSE) {
+			msg_recv = wait_peer_info(h->player_info.nt_info, "Wait reconnect peer info");
+			if (msg_recv) {
+				build_message(h, h->player_info.msg_tosend, MSG_TYPE_COLOR, !h->player_info.color, 0, 0);
+				chess_msg_send(h->player_info.nt_info, h->player_info.msg_tosend);
+				h->player_info.nt_info->peer_conected = TRUE;
 			}
-		}
+		} else {
+			/* If tile is selected and is player turn, try to send move piece and move it */
+			if (h->player_info.turn == TRUE && h->board->last_clicked_tile != INVALID_TILE) {
+				ret = network_move_piece(h, h->board->last_clicked_tile);
+				if (ret == CHESS_QUIT || ret == FALSE) { break ; }
+			}
 
-		/* Receive message from the other player */
-		rcv_ret = chess_msg_receive(h, h->player_info.nt_info, h->player_info.msg_receiv, h->player_info.last_msg);
-		if (!h->player_info.turn && rcv_ret) {
-			process_message_receive(h, h->player_info.msg_receiv);
-		} else if (h->player_info.turn && rcv_ret && h->player_info.msg_receiv[0] == MSG_TYPE_QUIT) {
-			process_message_receive(h, h->player_info.msg_receiv);
+			/* Receive message from the other player */
+			msg_recv = chess_msg_receive(h, h->player_info.nt_info, h->player_info.msg_receiv, h->player_info.last_msg);
+			// if ((!h->player_info.turn && msg_recv) || (h->player_info.turn && msg_recv && h->player_info.msg_receiv[IDX_TYPE] == MSG_TYPE_QUIT)) {
+			// 	process_message_receive(h, h->player_info.msg_receiv);
+			// } 
+			if (msg_recv) {
+				process_message_receive(h, h->player_info.msg_receiv);
+			}
+			// process_message_receive(h, h->player_info.msg_receiv);
 		}
 
 		/* Draw logic */
 		update_graphic_board(h);
+
+		SDL_Delay(16);
+
 	}
 }

@@ -54,7 +54,7 @@ s8 handle_client_disconect(ChessRoom *r, struct sockaddr_in *cliaddr, char *buff
 			fast_bzero(&r->cliA.addr, sizeof(struct sockaddr_in));
             r->cliA.connected = FALSE;
         } else if (r->cliB.connected && ft_memcmp(cliaddr, &r->cliB.addr, sizeof(struct sockaddr_in)) == 0) {
-			fast_bzero(&r->cliA.addr, sizeof(struct sockaddr_in));
+			fast_bzero(&r->cliB.addr, sizeof(struct sockaddr_in));
             r->cliB.connected = FALSE;
         }
 		ft_printf_fd(1, RED"Client disconnected: %s:%d\n"RESET, inet_ntoa(cliaddr->sin_addr), ntohs(cliaddr->sin_port));
@@ -64,10 +64,14 @@ s8 handle_client_disconect(ChessRoom *r, struct sockaddr_in *cliaddr, char *buff
 }
 
 void connect_client_together(int sockfd, ChessRoom *r) {
+	ft_printf_fd(1, PURPLE"Room is Ready send info: ClientA : %s:%d, ClientB : %s:%d\n"RESET, inet_ntoa(r->cliA.addr.sin_addr), ntohs(r->cliA.addr.sin_port), inet_ntoa(r->cliB.addr.sin_addr), ntohs(r->cliB.addr.sin_port));
+	
 	/* Send information from B to A */
-	sendto(sockfd, &r->cliB.addr, sizeof(r->cliB.addr), 0, (struct sockaddr *)&r->cliA.addr, sizeof(r->cliA.addr));
+	ft_printf_fd(1, PURPLE"Send information from B to A\n"RESET);
+	sendto(sockfd, (char *)&r->cliB.addr, sizeof(r->cliB.addr), 0, (struct sockaddr *)&r->cliA.addr, sizeof(r->cliA.addr));
 	/* Send information from A to B */
-	sendto(sockfd, &r->cliA.addr, sizeof(r->cliA.addr), 0, (struct sockaddr *)&r->cliB.addr, sizeof(r->cliB.addr));
+	ft_printf_fd(1, PURPLE"Send information from A to B\n"RESET);
+	sendto(sockfd, (char *)&r->cliA.addr, sizeof(r->cliA.addr), 0, (struct sockaddr *)&r->cliB.addr, sizeof(r->cliB.addr));
 }
 
 void handle_client_message(int sockfd, ChessRoom *r, struct sockaddr_in *cliaddr, char *buffer) {
