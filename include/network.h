@@ -104,8 +104,9 @@ s8			wait_peer_info(NetworkInfo *info, const char *msg);
 void	process_message_receive(SDLHandle *handle, char *msg);
 void	display_message(char *msg);
 void	build_message(SDLHandle *h, char *msg, MsgType msg_type, ChessTile tile_from_or_color, ChessTile tile_to, ChessPiece piece_type);
+char	*build_reconnect_message(SDLHandle *h, u16 *msg_size);
 s8		chess_msg_receive(SDLHandle *h, NetworkInfo *info, char *rcv_buffer, char *last_msg_processed);
-s8		chess_msg_send(NetworkInfo *info, char *msg);
+s8		chess_msg_send(NetworkInfo *info, char *msg, u16 msg_size);
 s8		safe_msg_send(SDLHandle *h);
 
 /* src/network_routine.c */

@@ -58,7 +58,7 @@ s8 network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *ser
 		player_info->color = IS_WHITE;
 		CHESS_LOG(LOG_INFO, "Listen for player...%s", "\n");
 		build_message(handle, player_info->msg_tosend, MSG_TYPE_COLOR, !player_info->color, 0, 0);
-		chess_msg_send(player_info->nt_info, player_info->msg_tosend);
+		chess_msg_send(player_info->nt_info, player_info->msg_tosend, MSG_SIZE);
 	} else if (has_flag(flag, FLAG_JOIN)) {
 		while (ret == FALSE && iter < MAX_ITER) {
 			ret = chess_msg_receive(handle, player_info->nt_info, player_info->msg_receiv, player_info->last_msg);
@@ -67,6 +67,17 @@ s8 network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *ser
 		}
 		/* Process message receive, here set color  */
 		process_message_receive(handle, player_info->msg_receiv);
+	} else if (has_flag(flag, FLAG_RECONNECT)) {
+		char buffer[4096];
+		fast_bzero(buffer, 4096);
+		printf("Reconnect to server, get game state\n");
+		while (ret == FALSE && iter < MAX_ITER) {
+			ret = chess_msg_receive(handle, player_info->nt_info, buffer, player_info->last_msg);
+			iter++;
+			SDL_Delay(1000);
+		}
+		printf("Reconnect to server %d buffer\n", fast_strlen(buffer));
+		process_message_receive(handle, buffer);
 	}
 	player_color_set_info(player_info);
 

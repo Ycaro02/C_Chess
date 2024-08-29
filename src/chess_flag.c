@@ -21,7 +21,25 @@
 */
 
 
+s8 is_power_of_two(int x) {
+    return (x & (x - 1)) == 0 && x != 0;
+}
 
+s8 check_single_flag(u32 flag_value) {
+    u32 combined_flags = 0;
+
+    if (has_flag(flag_value, FLAG_LISTEN)) {
+        combined_flags += FLAG_LISTEN;
+    }
+    if (has_flag(flag_value, FLAG_JOIN)) {
+        combined_flags += FLAG_JOIN;
+    }
+    if (has_flag(flag_value, FLAG_RECONNECT)) {
+        combined_flags += FLAG_RECONNECT;
+    }
+
+    return is_power_of_two(combined_flags);
+}
 
 u32 handle_chess_flag(int argc, char **argv, s8 *error, PlayerInfo *player_info) {
 	ChessFlagContext	flag_ctx;
@@ -69,10 +87,10 @@ u32 handle_chess_flag(int argc, char **argv, s8 *error, PlayerInfo *player_info)
 			player_info->dest_ip = ft_strdup("127.0.0.1");
 		}
 		
-		if (has_flag(flag_value, FLAG_LISTEN) && has_flag(flag_value, FLAG_JOIN)) {
-			CHESS_LOG(LOG_ERROR, "Can't have listen and join flag at the same time\n");
+		if (has_flag(flag_value, FLAG_LISTEN) && has_flag(flag_value, FLAG_JOIN) && has_flag(flag_value, FLAG_RECONNECT)) {
+			CHESS_LOG(LOG_ERROR, "Can't have listen join and reconnect flag at the same time\n");
 			goto flag_error;
-		} else if (!has_flag(flag_value, FLAG_LISTEN) && !has_flag(flag_value, FLAG_JOIN)) {
+		} else if (check_single_flag(flag_value) == 0) {
 			CHESS_LOG(LOG_ERROR, "Need to have listen or join flag\n");
 			goto flag_error;
 		}
