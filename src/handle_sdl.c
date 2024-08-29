@@ -214,7 +214,7 @@ static SDL_Rect build_timer_rect(SDLHandle *h, s8 is_bot_band) {
  * @return The SDLHandle pointer
 */
 SDLHandle *create_sdl_handle(const char* title) {
-	SDLHandle *handle = malloc(sizeof(SDLHandle));
+	SDLHandle *handle = ft_calloc(sizeof(SDLHandle),1);
 	if (!handle) {
 		CHESS_LOG(LOG_ERROR, "%s : malloc failed\n", __func__);
 		return (NULL);
@@ -241,7 +241,7 @@ SDLHandle *create_sdl_handle(const char* title) {
 	handle->player_info.turn = FALSE;
 	handle->player_info.color = IS_WHITE;
 	handle->over_piece_select = EMPTY;
-
+	handle->game_start = FALSE;
 	handle->timer_rect_bot = build_timer_rect(handle, TRUE);
 	handle->timer_rect_top = build_timer_rect(handle, FALSE);
 

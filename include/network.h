@@ -43,6 +43,11 @@ void cleanup_network_windows();
 /* Message disconect */
 #define DISCONNECT_MSG "DISCONNECT"
 
+/* Magic string for sending addr */
+// #define MAGIC_STRING "\x7ACHESSMAGIC\x7A\x7B\x42\x80\x7A"
+#define MAGIC_STRING ((char[]){0x7F, 0x42, 'C', 'H', 'E', 'S', 'S', 'M', 'A', 'G', 'I', 'C', 0x7A, 0x7B, 0x42, 0x7F})
+#define MAGIC_SIZE 16ULL
+
 enum e_msg_type {
 	MSG_TYPE_COLOR=1,
 	MSG_TYPE_MOVE,

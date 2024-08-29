@@ -132,24 +132,45 @@ static s8 local_socket_setup(NetworkInfo *info) {
 	return (TRUE);
 }
 
+
+
+static s8 check_magic_value(char *buff) {
+	char magic[MAGIC_SIZE] = MAGIC_STRING;
+	u64 i = 0;
+	while (i < MAGIC_SIZE) {
+		if (buff[i] != magic[i]) {
+			CHESS_LOG(LOG_INFO, "Magic value check failed buff |%d|, magic|%d| idx %lu\n", buff[i], magic[i], i);
+			return (FALSE);
+		}
+		i++;
+	}
+	return (TRUE);
+}
+
 s8 wait_peer_info(NetworkInfo *info, const char *msg) {
 	ssize_t ret = 0;
 
 	// CHESS_LOG(LOG_INFO, "%s...\n", msg);
 	(void)msg;
+
+	char buff[1024];
+	fast_bzero(buff, 1024);
 	
 	/* Receive the peer information */
-	ret = recvfrom(info->sockfd, (char *)&info->peeraddr, sizeof(info->peeraddr), 0, (struct sockaddr *)&info->servaddr, &info->addr_len);
-	// if ret == 16, we have the peer information
-	if (ret == 16) {
+	ret = recvfrom(info->sockfd, buff, sizeof(buff), 0, (struct sockaddr *)&info->servaddr, &info->addr_len);
+	if (ret == 16 + MAGIC_SIZE) {
 		info->peer_conected = TRUE;
+		s8 check = check_magic_value(buff);
+		if (check == FALSE) {
+			CHESS_LOG(LOG_ERROR, "Magic value check failed %s\n", buff);
+			return (FALSE);
+		}
+		ft_memcpy(&info->peeraddr, buff + MAGIC_SIZE, sizeof(info->peeraddr));
 		CHESS_LOG(LOG_INFO, "Peer info : %s:%d, addr_len %d\n", inet_ntoa(info->peeraddr.sin_addr), ntohs(info->peeraddr.sin_port), info->addr_len);
 		/* Send a first message to the peer (handshake) */
 		sendto(info->sockfd, "Hello", fast_strlen("Hello"), 0, (struct sockaddr *)&info->peeraddr, info->addr_len);
 		return (TRUE);
 	} 
-
-
 	return (FALSE);
 }
 

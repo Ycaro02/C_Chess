@@ -2,10 +2,10 @@
 #include <arpa/inet.h>
 
 #include "../include/chess.h"
+#include "../include/network.h"
 #include <signal.h>
 
 #define PORT 24242
-#define DISCONNECT_MSG "DISCONNECT"
 
 typedef t_list RoomList;
 
@@ -65,11 +65,26 @@ s8 handle_client_disconect(ChessRoom *r, struct sockaddr_in *cliaddr, char *buff
 
 void connect_client_together(int sockfd, ChessRoom *r) {
 	ft_printf_fd(1, PURPLE"Room is Ready send info: ClientA : %s:%d, ClientB : %s:%d\n"RESET, inet_ntoa(r->cliA.addr.sin_addr), ntohs(r->cliA.addr.sin_port), inet_ntoa(r->cliB.addr.sin_addr), ntohs(r->cliB.addr.sin_port));
-	
+
+	char *dataClientA = ft_calloc(1, MAGIC_SIZE + sizeof(r->cliA.addr));
+	ft_memcpy(dataClientA, MAGIC_STRING, MAGIC_SIZE);
+	ft_memcpy(dataClientA + MAGIC_SIZE, &r->cliA.addr, sizeof(r->cliA.addr));
+
+	char *dataClientB = ft_calloc(1, MAGIC_SIZE + sizeof(r->cliB.addr));
+	ft_memcpy(dataClientB, MAGIC_STRING, MAGIC_SIZE);
+	ft_memcpy(dataClientB + MAGIC_SIZE, &r->cliB.addr, sizeof(r->cliB.addr));
+
 	/* Send information from B to A */
-	sendto(sockfd, (char *)&r->cliB.addr, sizeof(r->cliB.addr), 0, (struct sockaddr *)&r->cliA.addr, sizeof(r->cliA.addr));
+	// sendto(sockfd, (char *)&r->cliB.addr, MAGIC_SIZE + sizeof(r->cliB.addr), 0, (struct sockaddr *)&r->cliA.addr, sizeof(r->cliA.addr));
+	sendto(sockfd, dataClientB, MAGIC_SIZE + sizeof(r->cliB.addr), 0, (struct sockaddr *)&r->cliA.addr, sizeof(r->cliA.addr));
 	/* Send information from A to B */
-	sendto(sockfd, (char *)&r->cliA.addr, sizeof(r->cliA.addr), 0, (struct sockaddr *)&r->cliB.addr, sizeof(r->cliB.addr));
+	// sendto(sockfd, (char *)&r->cliA.addr, MAGIC_SIZE + sizeof(r->cliA.addr), 0, (struct sockaddr *)&r->cliB.addr, sizeof(r->cliB.addr));
+	sendto(sockfd, dataClientA, MAGIC_SIZE + sizeof(r->cliA.addr), 0, (struct sockaddr *)&r->cliB.addr, sizeof(r->cliB.addr));
+
+	free(dataClientA);
+	free(dataClientB);
+
+	printf("Data sent\n");
 }
 
 void handle_client_message(int sockfd, ChessRoom *r, struct sockaddr_in *cliaddr, char *buffer) {
@@ -98,7 +113,7 @@ void handle_client_message(int sockfd, ChessRoom *r, struct sockaddr_in *cliaddr
 
 ChessServer *server_setup() {
 	ChessServer *server = ft_calloc(1, sizeof(ChessServer));
-	struct timeval timeout = {1, 0};
+	// struct timeval timeout = {1, 0};
 
 	if (!server) {
 		ft_printf_fd(2, RED"Error: alloc %s\n"RESET, __func__);
@@ -126,12 +141,12 @@ ChessServer *server_setup() {
 		return (NULL);
     }
 
-	if (setsockopt(server->sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(struct timeval)) < 0) {
-		perror("setsockopt failed");
-		free(server);
-		close(server->sockfd);
-		return (NULL);
-	}
+	// if (setsockopt(server->sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(struct timeval)) < 0) {
+	// 	perror("setsockopt failed");
+	// 	free(server);
+	// 	close(server->sockfd);
+	// 	return (NULL);
+	// }
 
 	return (server);
 }

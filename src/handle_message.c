@@ -34,6 +34,7 @@ void process_reconnect_message(SDLHandle *h, char *msg) {
 	for (int i = 0; i < list_size; i++) {
 		printf(ORANGE"Array Move Tile: %s to %s\n"RESET, TILE_TO_STRING(move_arr[i].tile_from), TILE_TO_STRING(move_arr[i].tile_to));
 		printf(ORANGE"Array Move Piece: %s to %s\n"RESET, chess_piece_to_string(move_arr[i].piece_from), chess_piece_to_string(move_arr[i].piece_to));
+		move_piece(h, move_arr[i].tile_from, move_arr[i].tile_to, move_arr[i].piece_from);
 	}
 
 	/* Set the move list */
