@@ -142,7 +142,7 @@ static s8 check_magic_value(char *buff) {
 	u64 i = 0;
 	while (i < MAGIC_SIZE) {
 		if (buff[i] != magic[i]) {
-			CHESS_LOG(LOG_INFO, "Magic value check failed buff |%d|, magic|%d| idx %llu\n", buff[i], magic[i], i);
+			// CHESS_LOG(LOG_INFO, "Magic value check failed buff |%d|, magic|%d| idx %llu\n", buff[i], magic[i], i);
 			return (FALSE);
 		}
 		i++;
