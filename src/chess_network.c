@@ -70,13 +70,12 @@ s8 network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *ser
 	} else if (has_flag(flag, FLAG_RECONNECT)) {
 		char buffer[4096];
 		fast_bzero(buffer, 4096);
-		printf("Reconnect to server, get game state\n");
+		CHESS_LOG(LOG_INFO, "Reconnect to server, get game state\n");
 		while (ret == FALSE && iter < MAX_ITER) {
 			ret = chess_msg_receive(handle, player_info->nt_info, buffer, player_info->last_msg);
 			iter++;
 			SDL_Delay(1000);
 		}
-		printf("Reconnect to server %d buffer\n", fast_strlen(buffer));
 		process_message_receive(handle, buffer);
 		update_graphic_board(handle);
 		return (TRUE);

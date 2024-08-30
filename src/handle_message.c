@@ -2,6 +2,7 @@
 #include "../include/handle_sdl.h"
 #include "../include/chess_log.h"
 
+/*To move in list API */
 t_list *array_to_list(MoveSave *arr, u16 size, u16 size_of_elem) {
 	t_list *lst = NULL;
 	MoveSave *move = NULL;
@@ -14,44 +15,73 @@ t_list *array_to_list(MoveSave *arr, u16 size, u16 size_of_elem) {
 	return (lst);
 }
 
-void process_reconnect_message(SDLHandle *h, char *msg) {
-	// ChessMoveList *move_list = h->board->lst;
-	MoveSave *move_arr = NULL;
-	u16 list_size = 0, array_byte_size = 0;
-	u64 my_remaining_time = 0;
-	u64 enemy_remaining_time = 0;
+static void detect_player_turn(SDLHandle *h, ChessPiece last_piece_move, s8 is_player_black) {
+	s8 last_move_is_black = last_piece_move >= BLACK_PAWN;
+	if (last_piece_move == EMPTY) {
+		h->player_info.turn = !(is_player_black);
+	} else {
+		h->player_info.turn = !(last_move_is_black == is_player_black);
+	}
+}
 
-	/* Get the size of the move list */
+void process_reconnect_message(SDLHandle *h, char *msg) {
+	MoveSave	*move_arr = NULL;
+	ChessTile	tile_from = INVALID_TILE, tile_to = INVALID_TILE;
+	ChessPiece	piece_from = EMPTY, piece_to = EMPTY, last_piece_moved = EMPTY, enemy_piece = EMPTY;
+	u64			my_remaining_time = 0, enemy_remaining_time = 0;
+	u16			list_size = 0, array_byte_size = 0;
+
+	/* Get size and time */
 	ft_memcpy(&list_size, &msg[5], sizeof(u16));
 	ft_memcpy(&array_byte_size, &msg[7], sizeof(u16));
 	ft_memcpy(&my_remaining_time, &msg[9 + array_byte_size], sizeof(u64));
 	ft_memcpy(&enemy_remaining_time, &msg[9 + array_byte_size + 8], sizeof(u64));
 
-	/* Transform the array in list */
-	move_arr = (MoveSave *)&msg[9];
-	for (int i = 0; i < list_size; i++) {
-		move_piece(h, move_arr[i].tile_from, move_arr[i].tile_to, move_arr[i].piece_from);
-	}
-
-	/* Set the move list */
-	h->board->lst = array_to_list(move_arr, list_size, sizeof(MoveSave));
+	/* Set the turn and player color */
 	h->board->turn = msg[1];
 	h->player_info.color = msg[2];
-	h->my_remaining_time = my_remaining_time;
-	h->enemy_remaining_time = enemy_remaining_time;
-
-	ChessPiece piece = get_piece_from_tile(h->board, move_arr[list_size - 1].tile_to);
-	s8 is_black_last = piece >= BLACK_PAWN;
-	if (piece == EMPTY) {
-		h->player_info.turn = !(h->player_info.color);
-	} else {
-		h->player_info.turn = !(is_black_last == h->player_info.color);
-	}
-
 	/* 5 * 0 for white, and 5 * 1 for black */
 	h->player_info.piece_start = BLACK_PAWN * h->player_info.color;
 	/* 5 * 0 for white, and 5 * 1 for black, + 5 */
 	h->player_info.piece_end = BLACK_KING * h->player_info.color + 5;
+
+	/* Set the remaining time */
+	h->my_remaining_time = my_remaining_time;
+	h->enemy_remaining_time = enemy_remaining_time;
+
+	/* Transform the array in list */
+	move_arr = (MoveSave *)&msg[9];
+	for (int i = 0; i < list_size; i++) {
+		tile_from = move_arr[i].tile_from; tile_to = move_arr[i].tile_to;
+		piece_from = move_arr[i].piece_from; piece_to = move_arr[i].piece_to;
+		if (piece_from == piece_to) {
+			move_piece(h, tile_from, tile_to, piece_from);
+		} else {
+			/* Is promotion message */
+			h->board->piece[piece_from] &= ~(1ULL << tile_from);
+
+			/* Remove enemy the piece if there is one on the tile */
+			enemy_piece = get_piece_from_tile(h->board, tile_to);
+			if (enemy_piece != EMPTY) {
+				h->board->piece[enemy_piece] &= ~(1ULL << tile_to);
+			}
+
+			/* Add the new piece */
+			h->board->piece[piece_to] |= (1ULL << tile_to);
+			
+			/* Update the last move */
+			h->board->last_tile_from = tile_from;
+			h->board->last_tile_to = tile_to;
+			update_piece_state(h->board);
+		}
+		last_piece_moved = piece_from;
+	}
+
+	/* Set the move list */
+	h->board->lst = array_to_list(move_arr, list_size, sizeof(MoveSave));
+
+	/* Detect player turn */
+	detect_player_turn(h, last_piece_moved, h->player_info.color);
 }
 
 
@@ -165,6 +195,30 @@ s8 is_legal_move_pck(SDLHandle *handle, ChessTile tile_from, ChessTile tile_to, 
 	return (TRUE);
 }
 
+void do_promotion_move(SDLHandle *h, ChessTile tile_from, ChessTile tile_to, ChessPiece new_piece_type) {
+	/* If the message is a promotion message, promote the pawn */
+	ChessPiece opponent_pawn = h->player_info.color == IS_BLACK ? WHITE_PAWN : BLACK_PAWN;
+	
+	/* Remove opponent the pawn */
+	h->board->piece[opponent_pawn] &= ~(1ULL << tile_from);
+
+	/* Remove the piece if there is one on the tile */
+	ChessPiece piece_to_remove = get_piece_from_tile(h->board, tile_to);
+	if (piece_to_remove != EMPTY) {
+		h->board->piece[piece_to_remove] &= ~(1ULL << tile_to);
+	}
+
+	/* Add the new piece */
+	h->board->piece[new_piece_type] |= (1ULL << tile_to);
+	
+	/* Update the last move */
+	h->board->last_tile_from = tile_from;
+	h->board->last_tile_to = tile_to;
+
+	move_save_add(&h->board->lst, tile_from, tile_to, opponent_pawn, new_piece_type);
+	update_piece_state(h->board);
+}
+
 /* @brief Process the message receive
  * @param handle The SDLHandle pointer
  * @param msg The message to process
@@ -172,11 +226,9 @@ s8 is_legal_move_pck(SDLHandle *handle, ChessTile tile_from, ChessTile tile_to, 
 void process_message_receive(SDLHandle *handle, char *msg) {
 	MsgType 	msg_type = msg[IDX_TYPE];
 	ChessTile	tile_from = 0, tile_to = 0;
-	ChessPiece	piece_type = EMPTY, opponent_pawn = EMPTY;
+	ChessPiece	piece_type = EMPTY;
+	// opponent_pawn = EMPTY;
 	
-	// display_message(msg);
-	printf("In process Message type: %s\n", message_type_to_str(msg_type));
-
 	/* If the message is a color message, set the player color */
 	if (msg_type == MSG_TYPE_COLOR) {
 		handle->player_info.color = msg[IDX_FROM] - 1;
@@ -191,25 +243,9 @@ void process_message_receive(SDLHandle *handle, char *msg) {
 		
 		if (msg_type == MSG_TYPE_MOVE) {
 			/* If the message is a move, just call move piece */
-
 			move_piece(handle, tile_from, tile_to, piece_type);
 		}  else if (msg_type == MSG_TYPE_PROMOTION) {
-			
-			/* If the message is a promotion message, promote the pawn */
-			opponent_pawn = handle->player_info.color == IS_BLACK ? WHITE_PAWN : BLACK_PAWN;
-			
-			/* Remove opponent the pawn */
-			handle->board->piece[opponent_pawn] &= ~(1ULL << tile_from);
-
-			/* Remove the piece if there is one on the tile */
-			ChessPiece piece_to_remove = get_piece_from_tile(handle->board, tile_to);
-			if (piece_to_remove != EMPTY) {
-				handle->board->piece[piece_to_remove] &= ~(1ULL << tile_to);
-			}
-
-			/* Add the new piece */
-			handle->board->piece[piece_type] |= (1ULL << tile_to);
-			update_piece_state(handle->board);
+			do_promotion_move(handle, tile_from, tile_to, piece_type);			
 		}
 		handle->player_info.turn = TRUE;
 		handle->enemy_remaining_time = *(u64 *)&msg[IDX_TIMER];
@@ -263,7 +299,7 @@ void process_message_receive(SDLHandle *handle, char *msg) {
  * - 4-5: msg_size: Len of the MESSAGE (u16)
  * - 5-6: list_size: Len of the move list (u16), is the number of element in the move list transmitted
  * - 6-7: list_byte_size: The len of the list is the list_size * sizeof(MoveSave) (u16)
- * - After we store the move list in array format to be send
+ * 	- After this we store the move list in array format to be send
  * - list_byte_size-(list_byte_size + 8): enemy_remaining_time (u64)
  * - list_byte_size + 8 - end: my_remaining_time (u64)
  */
