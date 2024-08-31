@@ -46,7 +46,16 @@ void search_game(SDLHandle *h) {
 
 void reconnect_game(SDLHandle *h) {
 	(void)h;
-	CHESS_LOG(LOG_INFO, "Reconnect game\n");
+	CHESS_LOG(LOG_INFO, "Reconnect to game\n");
+	if (!has_flag(h->flag, FLAG_NETWORK)) {
+		set_flag(&h->flag, FLAG_NETWORK);
+		set_flag(&h->flag, FLAG_RECONNECT);
+		h->menu.is_open = FALSE;
+		h->player_info.dest_ip = ft_strdup("127.0.0.1");
+		network_setup(h, h->flag, &h->player_info, h->player_info.dest_ip);
+		network_chess_routine(h);
+	}
+	chess_destroy(h);
 }
 
 void quit_game(SDLHandle *h) {

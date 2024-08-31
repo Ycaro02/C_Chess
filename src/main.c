@@ -89,6 +89,22 @@ SDLHandle *get_SDL_handle() {
 	return (stat);
 }
 
+/**
+ * When player click on search game button : we enable the flag network (if not already set)
+ *	- We need to send a message to the server to search for a game
+ *	- We need to wait for the server to send us if we are the first player or the second player
+ * 		- If he is the first player, he will wait for the second player (flag_listen)
+ * 		- If he is the second player, the first player will send him the color (flag_join)
+ 
+ *	When player click on reconnect game button : we enable the flag network (if not already set)
+ *	- We enable the reconnect flag too
+ *	- Then we send a message to the server to get the game state from the first player
+ */
+
+
+
+
+
 void chess_game(SDLHandle *h) {
 	
 	INIT_SIGNAL_HANDLER();
