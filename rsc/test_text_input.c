@@ -1,10 +1,10 @@
 /* Basic SDL include */
-#include "rsc/lib/install/include/SDL2/SDL.h"
-#include "rsc/lib/install/include/SDL2/SDL_video.h"
-#include "rsc/lib/install/include/SDL2/SDL_render.h"
+#include "../rsc/lib/install/include/SDL2/SDL.h"
+#include "../rsc/lib/install/include/SDL2/SDL_video.h"
+#include "../rsc/lib/install/include/SDL2/SDL_render.h"
 
 /* TTF include */
-#include "rsc/lib/install/include/SDL2/SDL_ttf.h"
+#include "../rsc/lib/install/include/SDL2/SDL_ttf.h"
 #include <string.h>
 
 #define BUFF_TEXT_SIZE 16
@@ -78,12 +78,9 @@ int main(int argc, char *argv[]) {
 
     SDL_Window *window = SDL_CreateWindow("Text Input", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 800, 600, 0);
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-
     SDL_Rect rect = {100, 100, 200, 50};
-
     TextField *text_field = init_text_field(rect, BUFF_TEXT_SIZE, 24, (SDL_Color){255, 255, 255, 255});
 
-    SDL_StartTextInput();
 
     SDL_Event event;
     int running = 1;
@@ -107,7 +104,6 @@ int main(int argc, char *argv[]) {
         SDL_RenderPresent(renderer);
     }
 
-    SDL_StopTextInput();
     TTF_CloseFont(text_field->font);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
