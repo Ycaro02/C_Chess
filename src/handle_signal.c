@@ -63,6 +63,12 @@ static void signal_handler(int signum)
 			return (FALSE);
 		}
 		
+		/* Handle SIGTERM */
+		if (sigaction(SIGTERM, &sa, NULL) == -1) {
+			perror("Can't catch SIGTERM");
+			return (FALSE);
+		}
+
 		return (TRUE);
 	}
 #endif
