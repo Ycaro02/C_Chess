@@ -262,8 +262,6 @@ void draw_menu(SDLHandle *h) {
 	/* Draw the server info string */
 	write_text(h, SERVER_INFO_STR, h->menu.btn_text_font, h->menu.server_info_str_pos, RGBA_TO_UINT32(255, 255, 255, 255));
 	write_text(h, h->player_info.dest_ip, h->menu.btn_text_font, h->menu.server_ip_pos, RGBA_TO_UINT32(255, 255, 255, 255));
-	// draw_button(h, h->menu.server_ip_btn, h->menu.server_ip_btn.state);	
-
 
 	/* Draw the menu button */
 	for (s32 i = 0; i < h->menu.nb_btn; i++) {
