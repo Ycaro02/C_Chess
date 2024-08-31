@@ -43,6 +43,11 @@ void cleanup_network_windows();
 /* Message disconect */
 #define DISCONNECT_MSG "DISCONNECT"
 
+#define ACK_STR "ACK"
+#define HELLO_STR "Hello"
+#define ACK_LEN 3
+#define HELLO_LEN 5
+
 /* Magic string for sending addr */
 // #define MAGIC_STRING "\x7ACHESSMAGIC\x7A\x7B\x42\x80\x7A"
 #define MAGIC_STRING ((const char[]){0x7F, 0x42, 'C', 'H', 'E', 'S', 'S', 'M', 'A', 'G', 'I', 'C', 0x7A, 0x7B, 0x42, 0x7F})
@@ -110,7 +115,7 @@ void	process_message_receive(SDLHandle *handle, char *msg);
 void	display_message(char *msg);
 void	build_message(SDLHandle *h, char *msg, MsgType msg_type, ChessTile tile_from_or_color, ChessTile tile_to, ChessPiece piece_type);
 char	*build_reconnect_message(SDLHandle *h, u16 *msg_size);
-s8		chess_msg_receive(SDLHandle *h, NetworkInfo *info, char *rcv_buffer, char *last_msg_processed);
+s8		chess_msg_receive(SDLHandle *h, NetworkInfo *info, char *rcv_buffer);
 s8		chess_msg_send(NetworkInfo *info, char *msg, u16 msg_size);
 s8		safe_msg_send(SDLHandle *h);
 

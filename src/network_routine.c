@@ -95,7 +95,7 @@ void network_chess_routine(SDLHandle *h) {
 			}
 
 			/* Receive message from the other player */
-			msg_recv = chess_msg_receive(h, h->player_info.nt_info, h->player_info.msg_receiv, h->player_info.last_msg);
+			msg_recv = chess_msg_receive(h, h->player_info.nt_info, h->player_info.msg_receiv);
 			if ((!h->player_info.turn && msg_recv) || (h->player_info.turn && msg_recv && h->player_info.msg_receiv[IDX_TYPE] == MSG_TYPE_QUIT)) {
 				process_message_receive(h, h->player_info.msg_receiv);
 			}

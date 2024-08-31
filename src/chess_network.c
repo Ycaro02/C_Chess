@@ -61,7 +61,7 @@ s8 network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *ser
 		chess_msg_send(player_info->nt_info, player_info->msg_tosend, MSG_SIZE);
 	} else if (has_flag(flag, FLAG_JOIN)) {
 		while (ret == FALSE && iter < MAX_ITER) {
-			ret = chess_msg_receive(handle, player_info->nt_info, player_info->msg_receiv, player_info->last_msg);
+			ret = chess_msg_receive(handle, player_info->nt_info, player_info->msg_receiv);
 			iter++;
 			SDL_Delay(1000);
 		}
@@ -72,7 +72,7 @@ s8 network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *ser
 		fast_bzero(buffer, 4096);
 		CHESS_LOG(LOG_INFO, "Reconnect to server, get game state\n");
 		while (ret == FALSE && iter < MAX_ITER) {
-			ret = chess_msg_receive(handle, player_info->nt_info, buffer, player_info->last_msg);
+			ret = chess_msg_receive(handle, player_info->nt_info, buffer);
 			iter++;
 			SDL_Delay(1000);
 		}

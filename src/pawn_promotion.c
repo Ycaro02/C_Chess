@@ -2,6 +2,7 @@
 #include "../include/network.h"
 #include "../include/handle_sdl.h"
 
+
 /* @brief Promot the pawn
  * @param board The ChessBoard structure
  * @param tile The tile to promote
@@ -89,6 +90,42 @@ static s32 display_promotion_selection(SDLHandle *h, ChessTile tile_from, ChessT
 	}
 	return (TRUE);
 }
+
+
+/* @brief Do the promotion move
+ * @param h The SDLHandle pointer
+ * @param tile_from The tile from
+ * @param tile_to The tile to
+ * @param new_piece_type The new piece type
+ * @param add_list Add the move to the list
+ */
+void do_promotion_move(SDLHandle *h, ChessTile tile_from, ChessTile tile_to, ChessPiece new_piece_type, s8 add_list) {
+	/* If the message is a promotion message, promote the pawn */
+	ChessPiece	opponent_pawn = new_piece_type >= BLACK_KNIGHT ? BLACK_PAWN : WHITE_PAWN;
+	ChessPiece	piece_to_remove = get_piece_from_tile(h->board, tile_to);
+	
+	/* Remove the opponent pawn */
+	h->board->piece[opponent_pawn] &= ~(1ULL << tile_from);
+
+	/* Remove the piece if there is one on the tile */
+	if (piece_to_remove != EMPTY) {
+		h->board->piece[piece_to_remove] &= ~(1ULL << tile_to);
+	}
+
+	/* Add the new piece */
+	h->board->piece[new_piece_type] |= (1ULL << tile_to);
+	
+	/* Update the last move */
+	h->board->last_tile_from = tile_from;
+	h->board->last_tile_to = tile_to;
+
+	if (add_list) {
+		move_save_add(&h->board->lst, tile_from, tile_to, opponent_pawn, new_piece_type);
+	}
+
+	update_piece_state(h->board);
+}
+
 
 
 /* @brief Check for pawn promotion

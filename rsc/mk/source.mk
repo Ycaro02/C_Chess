@@ -22,6 +22,8 @@ SRCS			=	chess_board.c \
 					chess_log.c \
 					text_display.c \
 					move_save.c \
+					handle_reconnect.c \
+					parse_message_receive.c \
 					timer.c \
 
 # SRCS_BONUS		=	main_bonus.c
