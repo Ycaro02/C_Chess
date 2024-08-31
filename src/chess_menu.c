@@ -34,6 +34,18 @@ s32 detect_button_click(Button *btn, s32 nb_btn, iVec2 mouse_pos) {
 	return (BTN_INVALID);
 }
 
+// s32 detect_menu_btn_click(SDLHandle *h, iVec2 mouse_pos) {
+// 	s32 btn_idx = detect_button_click(h->menu.btn, h->menu.nb_btn, mouse_pos);
+	
+// 	if (btn_idx == BTN_INVALID) {
+// 		btn_idx = detect_button_click(&h->menu.server_ip_btn, 1, mouse_pos);
+// 		if (btn_idx != BTN_INVALID) {
+// 			btn_idx = BTN_SERVER_IP;
+// 		}
+// 	} 
+// 	return (btn_idx);
+// }
+
 /**
  * @brief Wrapper to handle the button click
  * @param h The SDLHandle
@@ -61,6 +73,11 @@ void quit_game(SDLHandle *h) {
 	(void)h;
 	CHESS_LOG(LOG_INFO, "Quit game\n");
 	chess_destroy(h);
+}
+
+void change_ip_click(SDLHandle *h) {
+	(void)h;
+	CHESS_LOG(LOG_INFO, "Change ip\n");
 }
 
 /**
@@ -135,8 +152,11 @@ void init_button(SDLHandle *h, ChessMenu *menu, s32 nb_btn) {
  * @param h The SDLHandle
  * @param nb_btn The number of button
 */
-void init_menu(SDLHandle *h, s32 nb_btn) {
+void init_menu(SDLHandle *h, s32 total_btn) {
 	
+	/* The last button is the server ip button */
+	s32 menu_btn = total_btn - 1;
+
 	/* Set menu rect data */
 	h->menu.start.x = h->band_size.left + (h->tile_size.x << 1);
 	h->menu.start.y = h->band_size.top + (h->tile_size.x << 1);
@@ -152,25 +172,43 @@ void init_menu(SDLHandle *h, s32 nb_btn) {
 	h->menu.server_info.h = h->tile_size.x;
 
 	/* Set server info string position */
+	s32 server_info_pad = (h->tile_size.x >> 3);
 	h->menu.server_info_str_pos.x = h->menu.server_info.x + (h->tile_size.x >> 1);
-	h->menu.server_info_str_pos.y = h->menu.server_info.y + (h->tile_size.x >> 2);
-
+	h->menu.server_info_str_pos.y = h->menu.server_info.y + server_info_pad;
 
 
 	/* Set main button info */
-	h->menu.nb_btn = nb_btn;
-	h->menu.btn = ft_calloc(sizeof(Button), nb_btn);
+	h->menu.nb_btn = total_btn;
+	h->menu.btn = ft_calloc(sizeof(Button), total_btn);
 	if (h->menu.btn == NULL) {
 		CHESS_LOG(LOG_ERROR, "Failed to allocate memory for buttons\n");
 		return ;
 	}
-	init_button(h, &h->menu, nb_btn);
+	init_button(h, &h->menu, menu_btn);
+
+
+	/* Set server ip button info */
+	Button *server_ip_btn = &h->menu.btn[BTN_SERVER_IP];
+
+	server_ip_btn->width = h->tile_size.x << 1;
+	server_ip_btn->height = (h->tile_size.x >> 1) - server_info_pad;
+	server_ip_btn->start.x = h->menu.server_info.x + (h->menu.server_info.w >> 1) - (server_ip_btn->width >> 1);
+	server_ip_btn->start.y = h->menu.server_info_str_pos.y + (h->tile_size.x >> 2) + server_info_pad;
+	server_ip_btn->end.x = server_ip_btn->start.x + server_ip_btn->width;
+	server_ip_btn->end.y = server_ip_btn->start.y + server_ip_btn->height;
+	
+	server_ip_btn->text = ft_strdup("Change");
+	button_center_text(server_ip_btn, h->menu.btn_text_font);
+	server_ip_btn->state = BTN_RELEASED;
+	server_ip_btn->func = change_ip_click;
+
 
 	/* Set server ip position */
 	iVec2 text_size = {0, 0};
 	TTF_SizeText(h->menu.btn_text_font, SERVER_INFO_STR, &text_size.x, &text_size.y);
 	h->menu.server_ip_pos.x = h->menu.server_info_str_pos.x + text_size.x;
 	h->menu.server_ip_pos.y = h->menu.server_info_str_pos.y;
+
 
 }
 
@@ -224,6 +262,8 @@ void draw_menu(SDLHandle *h) {
 	/* Draw the server info string */
 	write_text(h, SERVER_INFO_STR, h->menu.btn_text_font, h->menu.server_info_str_pos, RGBA_TO_UINT32(255, 255, 255, 255));
 	write_text(h, h->player_info.dest_ip, h->menu.btn_text_font, h->menu.server_ip_pos, RGBA_TO_UINT32(255, 255, 255, 255));
+	// draw_button(h, h->menu.server_ip_btn, h->menu.server_ip_btn.state);	
+
 
 	/* Draw the menu button */
 	for (s32 i = 0; i < h->menu.nb_btn; i++) {

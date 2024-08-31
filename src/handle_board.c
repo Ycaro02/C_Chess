@@ -227,11 +227,12 @@ void menu_event_handling(SDLHandle *h, SDL_Event event) {
 		btn_click = detect_button_click(h->menu.btn, h->menu.nb_btn, pos);
 		h->menu.btn[h->menu.current_btn_clicked].state = BTN_RELEASED;
 		if (btn_click == h->menu.current_btn_clicked) {
-			// need to call funct here
 			if (h->menu.btn[btn_click].func) {
 				h->menu.btn[btn_click].func(h);
 			}
-			h->menu.is_open = FALSE;
+			if (btn_click != BTN_SERVER_IP) {
+				h->menu.is_open = FALSE;
+			}
 		}
 	} else if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_p) {
 		h->menu.is_open = FALSE;

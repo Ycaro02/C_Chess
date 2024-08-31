@@ -103,7 +103,7 @@ SDL_Window* create_sdl_windows(SDLHandle *h, const char* title) {
 	}
 
 	compute_win_size(h);
-	init_menu(h, 4);
+	init_menu(h, BTN_MAX);
 
 	window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, h->window_size.x, h->window_size.y, SDL_WINDOW_SHOWN);
 	if (!window) {

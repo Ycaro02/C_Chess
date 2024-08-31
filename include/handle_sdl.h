@@ -75,6 +75,8 @@ typedef enum e_btn_type {
 	BTN_SEARCH,
 	BTN_RECONNECT,
 	BTN_QUIT,
+	BTN_SERVER_IP,
+	BTN_MAX,
 } BtnType;
 
 typedef void (*ButtonFunc)(SDLHandle*);
