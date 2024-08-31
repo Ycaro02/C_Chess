@@ -23,16 +23,37 @@ s32 detect_button_click(Button *btn, s32 nb_btn, iVec2 mouse_pos) {
 	return (BTN_INVALID);
 }
 
-void set_btn_text(SDLHandle *h, s32 idx, BtnType type) {
+
+void search_game(SDLHandle *h) {
+	(void)h;
+	CHESS_LOG(LOG_INFO, "Search game\n");
+}
+
+void reconnect_game(SDLHandle *h) {
+	(void)h;
+	CHESS_LOG(LOG_INFO, "Reconnect game\n");
+}
+
+void quit_game(SDLHandle *h) {
+	(void)h;
+	CHESS_LOG(LOG_INFO, "Quit game\n");
+	chess_destroy(h);
+}
+
+void set_btn_text_func(SDLHandle *h, s32 idx, BtnType type) {
 	
 	if (type == BTN_RESUME) {
 		h->menu.btn[idx].text = ft_strdup("Resume");
+		h->menu.btn[idx].func = NULL;
 	} else if (type == BTN_SEARCH) {
 		h->menu.btn[idx].text = ft_strdup("Search");
+		h->menu.btn[idx].func = search_game;
 	} else if (type == BTN_RECONNECT) {
 		h->menu.btn[idx].text = ft_strdup("Reconnect");
+		h->menu.btn[idx].func = reconnect_game;
 	} else if (type == BTN_QUIT) {
 		h->menu.btn[idx].text = ft_strdup("Quit");
+		h->menu.btn[idx].func = quit_game;
 	}
 }
 
@@ -62,7 +83,7 @@ void init_button(SDLHandle *h, s32 nb_btn) {
 		h->menu.btn[i].height = btn_height;
 		h->menu.btn[i].end.x = h->menu.btn[i].start.x + btn_width;
 		h->menu.btn[i].end.y = h->menu.btn[i].start.y + btn_height;
-		set_btn_text(h, i, i);
+		set_btn_text_func(h, i, i);
 		h->menu.btn[i].state = BTN_RELEASED;
 		button_center_text(&h->menu.btn[i], h->menu.btn_text_font);
 	}

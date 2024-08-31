@@ -77,14 +77,17 @@ typedef enum e_btn_type {
 	BTN_QUIT,
 } BtnType;
 
+typedef void (*ButtonFunc)(SDLHandle*);
+
 typedef struct s_button {
-	iVec2	start;
-	iVec2	end;
-	s32		width;
-	s32		height;
-	char	*text;
-	iVec2	text_pos;
-	s8		state;
+	ButtonFunc	func;
+	iVec2		start;
+	iVec2		end;
+	s32			width;
+	s32			height;
+	char		*text;
+	iVec2		text_pos;
+	s8			state;
 } Button;
 
 typedef struct s_chess_menu {

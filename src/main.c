@@ -73,6 +73,7 @@ void chess_destroy(SDLHandle *h) {
 	destroy_sdl_handle(h);
 	free(h);
 	CLEANUP_NETWORK();
+	exit(0);
 }
 
 /* Singleton to get the SDL handle pointer structure */
