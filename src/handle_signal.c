@@ -56,6 +56,13 @@ static void signal_handler(int signum)
 			perror("Can't catch SIGHUP");
 			return (FALSE);
 		}
+
+		/* Handle SIGSEV */
+		if (sigaction(SIGSEGV, &sa, NULL) == -1) {
+			perror("Can't catch SIGSEGV");
+			return (FALSE);
+		}
+		
 		return (TRUE);
 	}
 #endif
