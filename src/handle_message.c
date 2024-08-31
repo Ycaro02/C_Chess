@@ -2,7 +2,6 @@
 #include "../include/handle_sdl.h"
 #include "../include/chess_log.h"
 
-
 /*
  * Packet format: 5 char + 8 char (for u64) = 13 char
  * 

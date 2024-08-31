@@ -395,4 +395,9 @@ s8 ignore_msg(SDLHandle *h, char *buffer);
 /* src/timer.c */
 void		draw_timer_rect(SDLHandle *h);
 
+
+/* src/chess_menu.c */
+void set_menu_size(SDLHandle *h, s32 nb_btn);
+void draw_menu(SDLHandle *h);
+
 #endif /* CHESS_H */

@@ -64,6 +64,31 @@ typedef struct s_window_band {
 	s32 bot;
 } WinBand;
 
+#define CLEAR_COLOR 70, 70, 70, 255
+
+
+typedef struct s_button {
+	iVec2	start;
+	iVec2	end;
+	s32		width;
+	s32		height;
+	char	*text;
+	iVec2	text_pos;
+	s8		state;
+} Button;
+
+typedef struct s_chess_menu {
+	iVec2		start;
+	iVec2		end;
+	s32			width;
+	s32			height;
+	s32			nb_btn;
+	Button		*btn;
+	TTF_Font 	*btn_text_font;
+	s8			is_open;
+} ChessMenu;
+
+
 #define TIME_STR_SIZE 16
 
 typedef struct s_sdl_handle {
@@ -73,6 +98,7 @@ typedef struct s_sdl_handle {
 	ChessBoard		*board;				/* The chess board */
 
 	/* GUI */
+	ChessMenu		menu;				/* The menu */
 	TTF_Font		*tile_font;			/* The font for tile number/letters */
 	TTF_Font		*timer_font;		/* The font */
 	char			timer_str[TIME_STR_SIZE];	/* Timer string */

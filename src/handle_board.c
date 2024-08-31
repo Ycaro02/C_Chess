@@ -163,6 +163,10 @@ void draw_board(SDLHandle *handle, s8 player_color) {
 	/* Draw the letter and number for raw/column */
 	draw_letter_number(handle, player_color);
 
+	/* Draw the menu */
+	// handle->menu.is_open = TRUE;
+	draw_menu(handle);
+
 	/* Draw the selected piece over the board */
 	if (handle->over_piece_select != EMPTY) {
 		draw_piece_over_board(handle, handle->mouse_pos.x - (handle->tile_size.x >> 1), handle->mouse_pos.y - (handle->tile_size.x >> 1));
@@ -207,6 +211,37 @@ void update_mouse_pos(SDLHandle *h, s32 x, s32 y) {
 	h->mouse_pos.y = y;
 }
 
+void game_event_handling(SDLHandle *h, SDL_Event event, s8 player_color) {
+	ChessPiece piece_select = EMPTY;
+	Bitboard aly_pos = h->over_piece_select >= BLACK_PAWN ? h->board->black : h->board->white;;
+	s32 x = 0, y = 0;
+
+	
+	/* For local mode, aly is all occupied tile */
+	if (!has_flag(h->flag, FLAG_NETWORK)) {
+		aly_pos = h->board->occupied;
+	}
+
+	if (h->player_info.turn == FALSE) { return ; }
+	SDL_GetMouseState(&x, &y);
+	if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+		h->board->last_clicked_tile = detect_tile_click(x, y, h->tile_size.x, h->band_size, player_color);
+		piece_select = get_piece_from_tile(h->board, h->board->last_clicked_tile);
+		if (piece_select >= h->player_info.piece_start && piece_select <= h->player_info.piece_end) {
+			h->over_piece_select = piece_select;
+		}
+	} else if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {
+		if (h->over_piece_select != EMPTY) {
+			h->board->last_clicked_tile = detect_tile_click(x, y, h->tile_size.x, h->band_size, player_color);
+			if (h->board->last_clicked_tile == h->board->selected_tile || ((1ULL << h->board->last_clicked_tile) & aly_pos) != 0) {
+				h->over_piece_select = EMPTY;
+			} 
+		}
+	} else if (event.type == SDL_MOUSEMOTION) {
+		update_mouse_pos(h, x, y);
+	}
+}
+
 /**
  * @brief Chess event handler
  * @return The tile clicked, or CHESS_QUIT if the user want to quit
@@ -214,40 +249,27 @@ void update_mouse_pos(SDLHandle *h, s32 x, s32 y) {
 */
 s32 event_handler(SDLHandle *h, s8 player_color) {
 	SDL_Event event;
-	Bitboard aly_pos = h->over_piece_select >= BLACK_PAWN ? h->board->black : h->board->white;;
-	ChessPiece piece_select = EMPTY;
-	s32 x = 0, y = 0;
+	// Bitboard aly_pos = h->over_piece_select >= BLACK_PAWN ? h->board->black : h->board->white;;
+	// ChessPiece piece_select = EMPTY;
+	// s32 x = 0, y = 0;
 
 	/* For local mode, aly is all occupied tile */
-	if (!has_flag(h->flag, FLAG_NETWORK)) {
-		aly_pos = h->board->occupied;
-	}
+	// if (!has_flag(h->flag, FLAG_NETWORK)) {
+	// 	aly_pos = h->board->occupied;
+	// }
 
 	while (SDL_PollEvent(&event)) {
 		if (event.type == SDL_QUIT \
 			|| (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE)) {
 			return (CHESS_QUIT);
 		}
-		if (h->player_info.turn == FALSE) {
-			continue ;
-		}
-		SDL_GetMouseState(&x, &y);
-		if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
-			h->board->last_clicked_tile = detect_tile_click(x, y, h->tile_size.x, h->band_size, player_color);
-			piece_select = get_piece_from_tile(h->board, h->board->last_clicked_tile);
-			if (piece_select >= h->player_info.piece_start && piece_select <= h->player_info.piece_end) {
-				h->over_piece_select = piece_select;
-			}
-		} else if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {
-			if (h->over_piece_select != EMPTY) {
-				h->board->last_clicked_tile = detect_tile_click(x, y, h->tile_size.x, h->band_size, player_color);
-				if (h->board->last_clicked_tile == h->board->selected_tile || ((1ULL << h->board->last_clicked_tile) & aly_pos) != 0) {
-					h->over_piece_select = EMPTY;
-				} 
-			}
-		} else if (event.type == SDL_MOUSEMOTION) {
-			update_mouse_pos(h, x, y);
-		}
+		if (!h->menu.is_open) {
+			game_event_handling(h, event, player_color);
+		} 
+		// else {
+		// 	menu_event_handling(h, event);
+		// }
+		
 	}
 	return (TRUE);
 }

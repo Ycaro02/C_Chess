@@ -76,8 +76,8 @@ void compute_win_size(SDLHandle *h) {
 
 	h->window_size.x = width;
 	h->window_size.y = height;
-
 }
+
 
 /**
  * @brief Create a window with SDL2
@@ -103,6 +103,7 @@ SDL_Window* create_sdl_windows(SDLHandle *h, const char* title) {
 	}
 
 	compute_win_size(h);
+	set_menu_size(h, 4);
 
 	window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, h->window_size.x, h->window_size.y, SDL_WINDOW_SHOWN);
 	if (!window) {
@@ -261,13 +262,14 @@ SDLHandle *create_sdl_handle(const char* title) {
 	return (handle);
 }
 
+
 /**
  * @brief Clear the window with SDL2
  * @param window The window pointers
 */
 void window_clear(SDL_Renderer* renderer) {
 	// SDL_SetRenderDrawColor(renderer, 0, 0, 120, 255);
-	SDL_SetRenderDrawColor(renderer, 70, 70, 70, 255);
+	SDL_SetRenderDrawColor(renderer, CLEAR_COLOR);
 	SDL_RenderClear(renderer);
 }
 
