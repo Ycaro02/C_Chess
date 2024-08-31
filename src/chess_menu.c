@@ -2,16 +2,6 @@
 #include "../include/handle_sdl.h"
 #include "../include/chess_log.h"
 
-#define BTN_RELEASED 0
-#define BTN_PRESSED 1
-
-typedef enum e_btn_type {
-	BTN_INVALID = -1,
-	BTN_RESUME,
-	BTN_SEARCH,
-	BTN_RECONNECT,
-	BTN_QUIT,
-} BtnType;
 
 void destroy_menu(SDLHandle *h) {
 	for (s32 i = 0; i < h->menu.nb_btn; i++) {
@@ -21,15 +11,15 @@ void destroy_menu(SDLHandle *h) {
 	unload_font(h->menu.btn_text_font);
 }
 
-BtnType detect_button_click(SDLHandle *h, iVec2 pos) {
-	for (s32 i = 0; i < h->menu.nb_btn; i++) {
-		if (pos.x >= h->menu.btn[i].start.x && pos.x <= h->menu.btn[i].end.x &&
-			pos.y >= h->menu.btn[i].start.y && pos.y <= h->menu.btn[i].end.y) {
+s32 detect_button_click(Button *btn, s32 nb_btn, iVec2 mouse_pos) {
+	for (s32 i = 0; i < nb_btn; i++) {
+		if (mouse_pos.x >= btn[i].start.x && mouse_pos.x <= btn[i].end.x &&
+			mouse_pos.y >= btn[i].start.y && mouse_pos.y <= btn[i].end.y) {
 			printf("Button %d clicked\n", i);
 			return (i);
 		}
 	}
-	printf("No button clicked\n");
+	printf("No button clicked\n");	
 	return (BTN_INVALID);
 }
 

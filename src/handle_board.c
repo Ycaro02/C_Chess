@@ -165,8 +165,9 @@ void draw_board(SDLHandle *handle, s8 player_color) {
 
 	/* Draw the menu */
 	// handle->menu.is_open = TRUE;
-	draw_menu(handle);
-
+	if (handle->menu.is_open) {
+		draw_menu(handle);
+	}
 	/* Draw the selected piece over the board */
 	if (handle->over_piece_select != EMPTY) {
 		draw_piece_over_board(handle, handle->mouse_pos.x - (handle->tile_size.x >> 1), handle->mouse_pos.y - (handle->tile_size.x >> 1));
@@ -211,6 +212,29 @@ void update_mouse_pos(SDLHandle *h, s32 x, s32 y) {
 	h->mouse_pos.y = y;
 }
 
+void menu_event_handling(SDLHandle *h, SDL_Event event) {
+	iVec2 pos = {0, 0};
+	BtnType btn_click = BTN_INVALID;
+
+	SDL_GetMouseState(&pos.x, &pos.y);
+	if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+		btn_click = detect_button_click(h->menu.btn, h->menu.nb_btn, pos);
+		if (btn_click != BTN_INVALID) {
+			h->menu.btn[btn_click].state = BTN_PRESSED;
+			h->menu.current_btn_clicked = btn_click;
+		}
+	} else if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {
+		btn_click = detect_button_click(h->menu.btn, h->menu.nb_btn, pos);
+		h->menu.btn[h->menu.current_btn_clicked].state = BTN_RELEASED;
+		if (btn_click == h->menu.current_btn_clicked) {
+			// need to call funct here
+			h->menu.is_open = FALSE;
+		}
+	} else if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_p) {
+		h->menu.is_open = FALSE;
+	}
+}
+
 void game_event_handling(SDLHandle *h, SDL_Event event, s8 player_color) {
 	ChessPiece piece_select = EMPTY;
 	Bitboard aly_pos = h->over_piece_select >= BLACK_PAWN ? h->board->black : h->board->white;;
@@ -239,6 +263,8 @@ void game_event_handling(SDLHandle *h, SDL_Event event, s8 player_color) {
 		}
 	} else if (event.type == SDL_MOUSEMOTION) {
 		update_mouse_pos(h, x, y);
+	} else if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_p) {
+		h->menu.is_open = TRUE;
 	}
 }
 
@@ -249,14 +275,6 @@ void game_event_handling(SDLHandle *h, SDL_Event event, s8 player_color) {
 */
 s32 event_handler(SDLHandle *h, s8 player_color) {
 	SDL_Event event;
-	// Bitboard aly_pos = h->over_piece_select >= BLACK_PAWN ? h->board->black : h->board->white;;
-	// ChessPiece piece_select = EMPTY;
-	// s32 x = 0, y = 0;
-
-	/* For local mode, aly is all occupied tile */
-	// if (!has_flag(h->flag, FLAG_NETWORK)) {
-	// 	aly_pos = h->board->occupied;
-	// }
 
 	while (SDL_PollEvent(&event)) {
 		if (event.type == SDL_QUIT \
@@ -265,10 +283,9 @@ s32 event_handler(SDLHandle *h, s8 player_color) {
 		}
 		if (!h->menu.is_open) {
 			game_event_handling(h, event, player_color);
-		} 
-		// else {
-		// 	menu_event_handling(h, event);
-		// }
+		} else {
+			menu_event_handling(h, event);
+		}
 		
 	}
 	return (TRUE);

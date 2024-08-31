@@ -66,6 +66,16 @@ typedef struct s_window_band {
 
 #define CLEAR_COLOR 70, 70, 70, 255
 
+#define BTN_RELEASED 0
+#define BTN_PRESSED 1
+
+typedef enum e_btn_type {
+	BTN_INVALID = -1,
+	BTN_RESUME,
+	BTN_SEARCH,
+	BTN_RECONNECT,
+	BTN_QUIT,
+} BtnType;
 
 typedef struct s_button {
 	iVec2	start;
@@ -85,6 +95,7 @@ typedef struct s_chess_menu {
 	s32			nb_btn;
 	Button		*btn;
 	TTF_Font 	*btn_text_font;
+	BtnType		current_btn_clicked;
 	s8			is_open;
 } ChessMenu;
 
@@ -160,5 +171,14 @@ void		left_band_center_text(iVec2 *char_pos, char *text, TTF_Font *font, s32 til
 void		bot_band_center_text(iVec2 *char_pos, char *text, TTF_Font *font, s32 tile_size, s32 band_bot_size);
 void		draw_letter_number(SDLHandle *handle, s8 player_color);
 
+
+
+
+/* src/chess_menu.c */
+void 	set_menu_size(SDLHandle *h, s32 nb_btn);
+void 	draw_menu(SDLHandle *h);
+
+s32		detect_button_click(Button *btn, s32 nb_btn, iVec2 mouse_pos);
+void	destroy_menu(SDLHandle *h);
 
 #endif /* HANDLE_SDL_H */
