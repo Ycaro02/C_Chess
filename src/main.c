@@ -70,6 +70,8 @@ void chess_destroy(SDLHandle *h) {
 	if (h->board->lst) {
 		ft_lstclear(&h->board->lst, free);
 	}
+
+	destroy_menu(h);
 	destroy_sdl_handle(h);
 	free(h);
 	CLEANUP_NETWORK();

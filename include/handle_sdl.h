@@ -178,7 +178,7 @@ void		draw_letter_number(SDLHandle *handle, s8 player_color);
 
 
 /* src/chess_menu.c */
-void 	set_menu_size(SDLHandle *h, s32 nb_btn);
+void 	init_menu(SDLHandle *h, s32 nb_btn);
 void 	draw_menu(SDLHandle *h);
 
 s32		detect_button_click(Button *btn, s32 nb_btn, iVec2 mouse_pos);

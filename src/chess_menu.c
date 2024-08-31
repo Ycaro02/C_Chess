@@ -3,6 +3,10 @@
 #include "../include/chess_log.h"
 
 
+/**
+ * @brief Destroy the menu
+ * @param h The SDLHandle
+*/
 void destroy_menu(SDLHandle *h) {
 	for (s32 i = 0; i < h->menu.nb_btn; i++) {
 		free(h->menu.btn[i].text);
@@ -11,19 +15,30 @@ void destroy_menu(SDLHandle *h) {
 	unload_font(h->menu.btn_text_font);
 }
 
+/**
+ * @brief Detect if a button is clicked
+ * @param btn The button
+ * @param nb_btn The number of button
+ * @param mouse_pos The mouse position
+ * @return The index of the button clicked
+*/
 s32 detect_button_click(Button *btn, s32 nb_btn, iVec2 mouse_pos) {
 	for (s32 i = 0; i < nb_btn; i++) {
 		if (mouse_pos.x >= btn[i].start.x && mouse_pos.x <= btn[i].end.x &&
 			mouse_pos.y >= btn[i].start.y && mouse_pos.y <= btn[i].end.y) {
-			printf("Button %d clicked\n", i);
+			CHESS_LOG(LOG_INFO, "Button %d clicked\n", i);
 			return (i);
 		}
 	}
-	printf("No button clicked\n");	
+	CHESS_LOG(LOG_INFO, "No button clicked\n");	
 	return (BTN_INVALID);
 }
 
-
+/**
+ * @brief Wrapper to handle the button click
+ * @param h The SDLHandle
+ * @param mouse_pos The mouse position
+*/
 void search_game(SDLHandle *h) {
 	(void)h;
 	CHESS_LOG(LOG_INFO, "Search game\n");
@@ -40,13 +55,19 @@ void quit_game(SDLHandle *h) {
 	chess_destroy(h);
 }
 
+/**
+ * @brief Set the button text and function
+ * @param h The SDLHandle
+ * @param idx The index of the button
+ * @param type The type of the button
+*/
 void set_btn_text_func(SDLHandle *h, s32 idx, BtnType type) {
 	
 	if (type == BTN_RESUME) {
 		h->menu.btn[idx].text = ft_strdup("Resume");
 		h->menu.btn[idx].func = NULL;
 	} else if (type == BTN_SEARCH) {
-		h->menu.btn[idx].text = ft_strdup("Search");
+		h->menu.btn[idx].text = ft_strdup("Search game");
 		h->menu.btn[idx].func = search_game;
 	} else if (type == BTN_RECONNECT) {
 		h->menu.btn[idx].text = ft_strdup("Reconnect");
@@ -57,6 +78,11 @@ void set_btn_text_func(SDLHandle *h, s32 idx, BtnType type) {
 	}
 }
 
+/**
+ * @brief Center the text in the button
+ * @param btn The button
+ * @param font The font
+*/
 void button_center_text(Button *btn, TTF_Font *font) {
 	iVec2		text_size = {0, 0};
 	iVec2		text_pos = {0, 0};
@@ -69,6 +95,11 @@ void button_center_text(Button *btn, TTF_Font *font) {
 	btn->text_pos = text_pos;
 }
 
+/**
+ * @brief Initialize the button
+ * @param h The SDLHandle
+ * @param nb_btn The number of button
+*/
 void init_button(SDLHandle *h, s32 nb_btn) {
 	s32 btn_pad = h->menu.height / 10;
 	s32 btn_width = h->menu.width >> 1;
@@ -89,7 +120,12 @@ void init_button(SDLHandle *h, s32 nb_btn) {
 	}
 }
 
-void set_menu_size(SDLHandle *h, s32 nb_btn) {
+/**
+ * @brief Set the menu size
+ * @param h The SDLHandle
+ * @param nb_btn The number of button
+*/
+void init_menu(SDLHandle *h, s32 nb_btn) {
 	h->menu.start.x = h->band_size.left + (h->tile_size.x << 1);
 	h->menu.start.y = h->band_size.top + (h->tile_size.x << 1);
 	h->menu.width = h->tile_size.x << 2;
@@ -107,6 +143,12 @@ void set_menu_size(SDLHandle *h, s32 nb_btn) {
 	init_button(h, nb_btn);
 }
 
+/**
+ * @brief Draw a button
+ * @param h The SDLHandle
+ * @param btn The button to draw
+ * @param state The state of the button
+*/
 void draw_button(SDLHandle *h, Button btn, s8 state) {
 	SDL_Rect		rect = {0,0,0,0};
 
@@ -126,6 +168,11 @@ void draw_button(SDLHandle *h, Button btn, s8 state) {
 	
 }
 
+
+/**
+ * @brief Draw the menu
+ * @param h The SDLHandle
+*/
 void draw_menu(SDLHandle *h) {
 	SDL_Rect		rect = {0,0,0,0};
 	iVec2			start = h->menu.start;
@@ -141,5 +188,4 @@ void draw_menu(SDLHandle *h) {
 	for (s32 i = 0; i < h->menu.nb_btn; i++) {
 		draw_button(h, h->menu.btn[i], h->menu.btn[i].state);
 	}
-
 }
