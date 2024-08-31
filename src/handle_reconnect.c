@@ -43,18 +43,21 @@ void process_reconnect_message(SDLHandle *h, char *msg) {
 	/* Transform the array in list */
 	move_arr = (MoveSave *)&msg[9];
 	for (int i = 0; i < list_size; i++) {
-		tile_from = move_arr[i].tile_from; tile_to = move_arr[i].tile_to;
-		piece_from = move_arr[i].piece_from; piece_to = move_arr[i].piece_to;
-
+		tile_from = move_arr[i].tile_from;
+		tile_to = move_arr[i].tile_to;
+		piece_from = move_arr[i].piece_from;
+		piece_to = move_arr[i].piece_to;
 		// printf(ORANGE"tile_from: %d, tile_to: %d, piece_from: %d, piece_to: %d\n", tile_from, tile_to, piece_from, piece_to);
 		// printf(GREEN"Move from %s to %s\n", TILE_TO_STRING(tile_from), TILE_TO_STRING(tile_to));
 		// printf(PURPLE"Piece from %s to %s\n"RESET, chess_piece_to_string(piece_from), chess_piece_to_string(piece_to));
-
 		/* If the piece is the same */
 		if (piece_from == piece_to) {
+			// is_legal_move_packet
 			move_piece(h, tile_from, tile_to, piece_from);
 		} else {
 			/* Is promotion move */
+			// is_legal_move_packet // send pawn here
+			// is_legal_promotion // send new piece here
 			do_promotion_move(h, tile_from, tile_to, piece_to, FALSE);
 		}
 		last_piece_moved = piece_from;

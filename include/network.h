@@ -82,7 +82,6 @@ struct s_network_info {
 	s8			peer_conected;			/* Peer connected */
 };
 
-
 typedef enum e_msg_type MsgType;
 typedef struct s_network_info NetworkInfo;
 

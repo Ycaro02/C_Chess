@@ -202,9 +202,9 @@ s8 chess_msg_receive(SDLHandle *h, NetworkInfo *info, char *rcv_buffer) {
 s8 chess_msg_send(NetworkInfo *info, char *msg, u16 msg_len) {
 	ssize_t	rcv_len = 0;
 	int		ack_received = 0, attempts = 0;
-	char	buffer[1024];
+	char	buffer[4096];
 
-	fast_bzero(buffer, 1024);
+	fast_bzero(buffer, 4096);
 	CHESS_LOG(LOG_INFO, CYAN"Try to send %s len %u -> "RESET, message_type_to_str(msg[0]), msg_len);
 	while (attempts < MAX_ATTEMPTS && !ack_received) {
 		sendto(info->sockfd, msg, msg_len, 0, (struct sockaddr *)&info->peeraddr, info->addr_len);
