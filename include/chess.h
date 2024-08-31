@@ -268,7 +268,8 @@ struct s_player_info {
 	char		msg_tosend[MSG_SIZE];	/* Message to send */
 	char		msg_receiv[MSG_SIZE];	/* Message received */
 	char		last_msg[MSG_SIZE];		/* Last message process */
-	char		*dest_ip;				/* destination ip, NULL if we are the listener */
+	char		*dest_ip;				/* destination ip, server ip */
+	u16			dest_port;				/* port server port */
 	ChessPiece	piece_start;			/* ChessPiece color start */
 	ChessPiece	piece_end;				/* ChessPiece color end */
 	s8			color;					/* player color */

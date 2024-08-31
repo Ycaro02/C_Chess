@@ -51,7 +51,6 @@ void reconnect_game(SDLHandle *h) {
 		set_flag(&h->flag, FLAG_NETWORK);
 		set_flag(&h->flag, FLAG_RECONNECT);
 		h->menu.is_open = FALSE;
-		h->player_info.dest_ip = ft_strdup("127.0.0.1");
 		network_setup(h, h->flag, &h->player_info, h->player_info.dest_ip);
 		network_chess_routine(h);
 	}
@@ -109,25 +108,27 @@ void button_center_text(Button *btn, TTF_Font *font) {
  * @param h The SDLHandle
  * @param nb_btn The number of button
 */
-void init_button(SDLHandle *h, s32 nb_btn) {
-	s32 btn_pad = h->menu.height / 10;
-	s32 btn_width = h->menu.width >> 1;
-	s32 btn_height = (h->menu.height - (btn_pad * (nb_btn + 1))) / nb_btn;
+void init_button(SDLHandle *h, ChessMenu *menu, s32 nb_btn) {
+	s32 btn_pad = menu->height / 10;
+	s32 btn_width = menu->width >> 1;
+	s32 btn_height = (menu->height - (btn_pad * (nb_btn + 1))) / nb_btn;
 
-	h->menu.btn_text_font = TTF_OpenFont(FONT_PATH, btn_height >> 1);
+	menu->btn_text_font = TTF_OpenFont(FONT_PATH, btn_height >> 1);
 
 	for (s32 i = 0; i < nb_btn; i++) {
-		h->menu.btn[i].start.x = h->menu.start.x + (h->menu.width >> 2);
-		h->menu.btn[i].start.y = h->menu.start.y + ((i * btn_pad) + btn_pad) + (i * btn_height);
-		h->menu.btn[i].width = btn_width;
-		h->menu.btn[i].height = btn_height;
-		h->menu.btn[i].end.x = h->menu.btn[i].start.x + btn_width;
-		h->menu.btn[i].end.y = h->menu.btn[i].start.y + btn_height;
+		menu->btn[i].start.x = menu->start.x + (menu->width >> 2);
+		menu->btn[i].start.y = menu->start.y + ((i * btn_pad) + btn_pad) + (i * btn_height);
+		menu->btn[i].width = btn_width;
+		menu->btn[i].height = btn_height;
+		menu->btn[i].end.x = menu->btn[i].start.x + btn_width;
+		menu->btn[i].end.y = menu->btn[i].start.y + btn_height;
 		set_btn_text_func(h, i, i);
-		h->menu.btn[i].state = BTN_RELEASED;
-		button_center_text(&h->menu.btn[i], h->menu.btn_text_font);
+		menu->btn[i].state = BTN_RELEASED;
+		button_center_text(&menu->btn[i], menu->btn_text_font);
 	}
 }
+
+#define SERVER_INFO_STR "Server IP: "
 
 /**
  * @brief Set the menu size
@@ -135,12 +136,26 @@ void init_button(SDLHandle *h, s32 nb_btn) {
  * @param nb_btn The number of button
 */
 void init_menu(SDLHandle *h, s32 nb_btn) {
+	
+	/* Set menu rect data */
 	h->menu.start.x = h->band_size.left + (h->tile_size.x << 1);
 	h->menu.start.y = h->band_size.top + (h->tile_size.x << 1);
 	h->menu.width = h->tile_size.x << 2;
 	h->menu.height = h->tile_size.x << 2;
 	h->menu.end.x = h->menu.start.x + h->menu.width;
 	h->menu.end.y = h->menu.start.y + h->menu.height;
+
+	/* Set server info rect */
+	h->menu.server_info.x = h->menu.start.x;
+	h->menu.server_info.y = h->menu.start.y - ((h->tile_size.x >> 1) + h->tile_size.x);
+	h->menu.server_info.w = h->menu.width;
+	h->menu.server_info.h = h->tile_size.x;
+
+	/* Set server info string position */
+	h->menu.server_info_str_pos.x = h->menu.server_info.x + (h->tile_size.x >> 1);
+	h->menu.server_info_str_pos.y = h->menu.server_info.y + (h->tile_size.x >> 2);
+
+
 
 	/* Set main button info */
 	h->menu.nb_btn = nb_btn;
@@ -149,7 +164,14 @@ void init_menu(SDLHandle *h, s32 nb_btn) {
 		CHESS_LOG(LOG_ERROR, "Failed to allocate memory for buttons\n");
 		return ;
 	}
-	init_button(h, nb_btn);
+	init_button(h, &h->menu, nb_btn);
+
+	/* Set server ip position */
+	iVec2 text_size = {0, 0};
+	TTF_SizeText(h->menu.btn_text_font, SERVER_INFO_STR, &text_size.x, &text_size.y);
+	h->menu.server_ip_pos.x = h->menu.server_info_str_pos.x + text_size.x;
+	h->menu.server_ip_pos.y = h->menu.server_info_str_pos.y;
+
 }
 
 /**
@@ -191,9 +213,19 @@ void draw_menu(SDLHandle *h) {
 	rect.w = h->menu.width;
 	rect.h = h->menu.height;
 
+	/* Draw the menu rect */
 	SDL_SetRenderDrawColor(h->renderer, 70,70,70,220);
 	SDL_RenderFillRect(h->renderer, &rect);
 
+	/* Draw the server info rect */
+	SDL_SetRenderDrawColor(h->renderer, 70,70,70,255);
+	SDL_RenderFillRect(h->renderer, &h->menu.server_info);
+
+	/* Draw the server info string */
+	write_text(h, SERVER_INFO_STR, h->menu.btn_text_font, h->menu.server_info_str_pos, RGBA_TO_UINT32(255, 255, 255, 255));
+	write_text(h, h->player_info.dest_ip, h->menu.btn_text_font, h->menu.server_ip_pos, RGBA_TO_UINT32(255, 255, 255, 255));
+
+	/* Draw the menu button */
 	for (s32 i = 0; i < h->menu.nb_btn; i++) {
 		draw_button(h, h->menu.btn[i], h->menu.btn[i].state);
 	}

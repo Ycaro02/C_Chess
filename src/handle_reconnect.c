@@ -46,9 +46,9 @@ void process_reconnect_message(SDLHandle *h, char *msg) {
 		tile_from = move_arr[i].tile_from; tile_to = move_arr[i].tile_to;
 		piece_from = move_arr[i].piece_from; piece_to = move_arr[i].piece_to;
 
-		printf(ORANGE"tile_from: %d, tile_to: %d, piece_from: %d, piece_to: %d\n", tile_from, tile_to, piece_from, piece_to);
-		printf(GREEN"Move from %s to %s\n", TILE_TO_STRING(tile_from), TILE_TO_STRING(tile_to));
-		printf(PURPLE"Piece from %s to %s\n"RESET, chess_piece_to_string(piece_from), chess_piece_to_string(piece_to));
+		// printf(ORANGE"tile_from: %d, tile_to: %d, piece_from: %d, piece_to: %d\n", tile_from, tile_to, piece_from, piece_to);
+		// printf(GREEN"Move from %s to %s\n", TILE_TO_STRING(tile_from), TILE_TO_STRING(tile_to));
+		// printf(PURPLE"Piece from %s to %s\n"RESET, chess_piece_to_string(piece_from), chess_piece_to_string(piece_to));
 
 		/* If the piece is the same */
 		if (piece_from == piece_to) {

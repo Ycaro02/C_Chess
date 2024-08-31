@@ -80,25 +80,35 @@ typedef enum e_btn_type {
 typedef void (*ButtonFunc)(SDLHandle*);
 
 typedef struct s_button {
-	ButtonFunc	func;
-	iVec2		start;
-	iVec2		end;
-	s32			width;
-	s32			height;
-	char		*text;
-	iVec2		text_pos;
-	s8			state;
+	ButtonFunc	func;		/* The button function */
+	iVec2		start;		/* The start position */
+	iVec2		end;		/* The end position */
+	s32			width;		/* The width */
+	s32			height;		/* The height */
+	char		*text;		/* The button text */
+	iVec2		text_pos;	/* The text position */
+	s8			state;		/* The button state */
 } Button;
 
 typedef struct s_chess_menu {
+	/* Server info rect */
+	SDL_Rect	server_info;
+	iVec2		server_info_str_pos;
+	iVec2		server_ip_pos;
+
+	/* Menu rect data  */
 	iVec2		start;
 	iVec2		end;
 	s32			width;
 	s32			height;
+
+	/* Button data */
 	s32			nb_btn;
 	Button		*btn;
 	TTF_Font 	*btn_text_font;
 	BtnType		current_btn_clicked;
+
+	/* Menu is open */
 	s8			is_open;
 } ChessMenu;
 

@@ -20,6 +20,7 @@ SDLHandle *init_game() {
 	}
 	init_board(handle->board);
 	handle->board->turn = 1;
+
 	return (handle);
 }
 
@@ -142,6 +143,7 @@ int main(int argc, char **argv) {
 	if (error == -1) {
 		return (1);
 	}
+	
 
 	handle = get_SDL_handle();
 	if (!handle) {

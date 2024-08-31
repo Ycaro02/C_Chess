@@ -1,5 +1,6 @@
 #include "../include/chess.h"
 #include "../include/chess_log.h"
+#include "../include/network.h"
 
 /*
 	@Brief Parser flag to handle listen and join mode
@@ -59,6 +60,10 @@ u32 handle_chess_flag(int argc, char **argv, s8 *error, PlayerInfo *player_info)
 	add_flag_option(&flag_ctx, HELP_OPT_CHAR, FLAG_HELP, OPT_NO_VALUE, OPT_NO_VALUE, HELP_STR);
 
 
+	player_info->dest_ip = ft_strdup("127.0.0.1");
+	player_info->dest_port = SERVER_PORT;
+
+
 	/* Parse flag in argv */
 	flag_value = parse_flag(argc, argv, &flag_ctx, error);
 	
@@ -77,7 +82,6 @@ u32 handle_chess_flag(int argc, char **argv, s8 *error, PlayerInfo *player_info)
 	if (has_flag(flag_value, FLAG_NETWORK)) {
 		CHESS_LOG(LOG_INFO, "Network mode\n");
 
-		player_info->dest_ip = NULL;
 
 		/* Get ip if needed */
 		if (has_flag(flag_value, FLAG_SERVER_IP)) {
