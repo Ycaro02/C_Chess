@@ -22,9 +22,6 @@ void process_reconnect_message(SDLHandle *h, char *msg) {
 	u64			my_remaining_time = 0, enemy_remaining_time = 0;
 	u16			list_size = 0, array_byte_size = 0;
 
-	printf(RED"Process reconnect message %s\n"RESET, message_type_to_str(msg[IDX_TYPE]));
-	printf(RED"Process reconnect message + 16 %s\n"RESET, message_type_to_str(msg[IDX_TYPE + 16]));
-
 	/* Get size and time */
 	ft_memcpy(&list_size, &msg[5], sizeof(u16));
 	ft_memcpy(&array_byte_size, &msg[7], sizeof(u16));
@@ -69,12 +66,12 @@ void process_reconnect_message(SDLHandle *h, char *msg) {
 	/* Set the move list */
 	h->board->lst = array_to_list(move_arr, list_size, sizeof(MoveSave));
 
-	t_list *tmp = h->board->lst;
-	while (tmp) {
-		MoveSave *move = tmp->content;
-		printf(ORANGE"After list cpy: tile_from: %d, tile_to: %d, piece_from: %d, piece_to: %d\n", move->tile_from, move->tile_to, move->piece_from, move->piece_to);
-		tmp = tmp->next;
-	}
+	// t_list *tmp = h->board->lst;
+	// while (tmp) {
+		// MoveSave *move = tmp->content;
+		// printf(ORANGE"After list cpy: tile_from: %d, tile_to: %d, piece_from: %d, piece_to: %d\n", move->tile_from, move->tile_to, move->piece_from, move->piece_to);
+		// tmp = tmp->next;
+	// }
 
 	/* Detect player turn */
 	detect_player_turn(h, last_piece_moved, h->player_info.color);

@@ -290,7 +290,11 @@ s32 event_handler(SDLHandle *h, s8 player_color) {
 		if (!h->menu.is_open) {
 			game_event_handling(h, event, player_color);
 		} else {
-			menu_event_handling(h, event);
+			if (h->menu.ip_field.is_active) {
+				handle_text_input(h, &event);
+			} else { 
+				menu_event_handling(h, event);
+			}
 		}
 		
 	}

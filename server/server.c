@@ -10,16 +10,16 @@
 
 typedef t_list RoomList;
 
-typedef struct s_client_info {
+typedef struct s_chess_client {
     SockaddrIn		addr;
 	struct timeval 	last_alive;
     s8				connected;
-} ClientInfo;
+} ChessClient;
 
 typedef struct s_chess_room {
 	u32			room_id;
-	ClientInfo	cliA;
-	ClientInfo	cliB;
+	ChessClient	cliA;
+	ChessClient	cliB;
 } ChessRoom;
 
 typedef struct s_chess_server {
@@ -28,8 +28,7 @@ typedef struct s_chess_server {
 	RoomList	*room_lst;
 } ChessServer;
 
-void send_quit_msg(int sockfd, ClientInfo *client);
-
+void send_quit_msg(int sockfd, ChessClient *client);
 
 ChessServer *g_server = NULL;
 
@@ -40,8 +39,8 @@ ChessRoom *room_create(u32 id) {
 		return (NULL);
 	}
 	room->room_id = id;
-	fast_bzero(&room->cliA, sizeof(ClientInfo));
-	fast_bzero(&room->cliB, sizeof(ClientInfo));
+	fast_bzero(&room->cliA, sizeof(ChessClient));
+	fast_bzero(&room->cliB, sizeof(ChessClient));
 	return (room);
 }
 
@@ -65,10 +64,10 @@ s8 client_disconnect_msg(ChessRoom *r, SockaddrIn *cliaddr, char *buff) {
 	if (fast_strcmp(buff, DISCONNECT_MSG) == 0) {
 		if (r->cliA.connected && addr_cmp(cliaddr, &r->cliA.addr)) {
 			send_quit_msg(g_server->sockfd, &r->cliB);
-			fast_bzero(&r->cliA, sizeof(ClientInfo));
+			fast_bzero(&r->cliA, sizeof(ChessClient));
         } else if (r->cliB.connected && addr_cmp(cliaddr, &r->cliB.addr)) {
 			send_quit_msg(g_server->sockfd, &r->cliA);
-			fast_bzero(&r->cliB, sizeof(ClientInfo));
+			fast_bzero(&r->cliB, sizeof(ChessClient));
         }
 		ft_printf_fd(1, RED"Client disconnected: %s:%d\n"RESET, inet_ntoa(cliaddr->sin_addr), ntohs(cliaddr->sin_port));
 		return (TRUE);
@@ -152,7 +151,7 @@ s8 is_alive_message(ChessRoom *r, SockaddrIn *addr, char *buffer, ssize_t msg_si
 	} else if (r->cliB.connected && addr_cmp(addr, &r->cliB.addr)) {
 		ft_memcpy(&r->cliB.last_alive, &now, sizeof(struct timeval));
 	}
-	printf("Receive alive packet from %s:%hu\n", inet_ntoa(addr->sin_addr), ntohs(addr->sin_port));
+	// printf("Receive alive packet from %s:%hu\n", inet_ntoa(addr->sin_addr), ntohs(addr->sin_port));
 	return (TRUE);
 }
 
@@ -182,7 +181,7 @@ char *build_client_msg_quit() {
 	return (data);
 }
 
-void send_quit_msg(int sockfd, ClientInfo *client) {
+void send_quit_msg(int sockfd, ChessClient *client) {
 	char	*quit_msg = NULL; 
 	size_t	len = MAGIC_SIZE + MSG_SIZE;
 
@@ -201,11 +200,11 @@ void handle_client_timeout(ChessRoom *r) {
 	if (r->cliA.connected && client_timeout_alive(&r->cliA.last_alive)) {
 		ft_printf_fd(1, RED"Client A timeout: %s:%d\n"RESET, inet_ntoa(r->cliA.addr.sin_addr), ntohs(r->cliA.addr.sin_port));
 		send_quit_msg(g_server->sockfd, &r->cliB);
-		fast_bzero(&r->cliA, sizeof(ClientInfo));
+		fast_bzero(&r->cliA, sizeof(ChessClient));
 	} else if (r->cliB.connected && client_timeout_alive(&r->cliB.last_alive)) {
 		ft_printf_fd(1, RED"Client B timeout: %s:%d\n"RESET, inet_ntoa(r->cliB.addr.sin_addr), ntohs(r->cliB.addr.sin_port));
 		send_quit_msg(g_server->sockfd, &r->cliA);
-		fast_bzero(&r->cliB, sizeof(ClientInfo));
+		fast_bzero(&r->cliB, sizeof(ChessClient));
 	}
 }
 

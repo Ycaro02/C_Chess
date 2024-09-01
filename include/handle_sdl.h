@@ -81,6 +81,17 @@ typedef enum e_btn_type {
 
 typedef void (*ButtonFunc)(SDLHandle*);
 
+#define TEXT_INPUT_SIZE 16
+
+typedef struct {
+    SDL_Rect	rect;					/* The rect of the text input */
+    char		text[TEXT_INPUT_SIZE];	/* The text buffer */
+    TTF_Font	*font;					/* The font */
+	int			buffer_size;			/* The buffer size */
+    int			cursor;					/* The cursor position */
+	s8			is_active;
+} TextField;
+
 typedef struct s_button {
 	ButtonFunc	func;		/* The button function */
 	iVec2		start;		/* The start position */
@@ -96,7 +107,7 @@ typedef struct s_chess_menu {
 	/* Server info rect */
 	SDL_Rect	server_info;
 	iVec2		server_info_str_pos;
-	iVec2		server_ip_pos;
+	TextField	ip_field;
 
 	/* Menu rect data  */
 	iVec2		start;
@@ -187,7 +198,10 @@ void		bot_band_center_text(iVec2 *char_pos, char *text, TTF_Font *font, s32 tile
 void		draw_letter_number(SDLHandle *handle, s8 player_color);
 
 
-
+/* src/text_input.c */
+TextField	init_text_field(SDL_Rect rect, int buff_size_max, TTF_Font *font, char *initial_text);
+void		handle_text_input(SDLHandle *h, SDL_Event *event);
+void		render_text_field(SDL_Renderer *renderer, TextField *text_field, SDL_Color text_color, SDL_Color bg_color);
 
 /* src/chess_menu.c */
 void 	init_menu(SDLHandle *h, s32 nb_btn);

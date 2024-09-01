@@ -77,6 +77,7 @@ void quit_game(SDLHandle *h) {
 
 void change_ip_click(SDLHandle *h) {
 	(void)h;
+	h->menu.ip_field.is_active = TRUE;
 	CHESS_LOG(LOG_INFO, "Change ip\n");
 }
 
@@ -173,7 +174,7 @@ void init_menu(SDLHandle *h, s32 total_btn) {
 
 	/* Set server info string position */
 	s32 server_info_pad = (h->tile_size.x >> 3);
-	h->menu.server_info_str_pos.x = h->menu.server_info.x + (h->tile_size.x >> 1);
+	h->menu.server_info_str_pos.x = h->menu.server_info.x + (h->tile_size.x >> 2);
 	h->menu.server_info_str_pos.y = h->menu.server_info.y + server_info_pad;
 
 
@@ -206,10 +207,14 @@ void init_menu(SDLHandle *h, s32 total_btn) {
 	/* Set server ip position */
 	iVec2 text_size = {0, 0};
 	TTF_SizeText(h->menu.btn_text_font, SERVER_INFO_STR, &text_size.x, &text_size.y);
-	h->menu.server_ip_pos.x = h->menu.server_info_str_pos.x + text_size.x;
-	h->menu.server_ip_pos.y = h->menu.server_info_str_pos.y;
 
+	SDL_Rect rect = {0,0,0,0};
+	rect.x = h->menu.server_info_str_pos.x + text_size.x;
+	rect.y = h->menu.server_info_str_pos.y;
+	rect.w = (h->menu.width >> 1) + (h->menu.width >> 4);
+	rect.h = text_size.y;
 
+	h->menu.ip_field = init_text_field(rect, TEXT_INPUT_SIZE, h->menu.btn_text_font, "127.0.0.1");
 }
 
 /**
@@ -261,7 +266,13 @@ void draw_menu(SDLHandle *h) {
 
 	/* Draw the server info string */
 	write_text(h, SERVER_INFO_STR, h->menu.btn_text_font, h->menu.server_info_str_pos, RGBA_TO_UINT32(255, 255, 255, 255));
-	write_text(h, h->player_info.dest_ip, h->menu.btn_text_font, h->menu.server_ip_pos, RGBA_TO_UINT32(255, 255, 255, 255));
+	
+	SDL_Color bg_color = {70, 70, 70, 255};
+	/* Draw the server ip text input */
+	if (h->menu.ip_field.is_active) {
+		bg_color = (SDL_Color){255, 255, 255, 255};
+	}
+	render_text_field(h->renderer, &h->menu.ip_field, (SDL_Color){255, 0, 0, 255}, bg_color);
 
 	/* Draw the menu button */
 	for (s32 i = 0; i < h->menu.nb_btn; i++) {

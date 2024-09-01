@@ -63,7 +63,6 @@ u32 handle_chess_flag(int argc, char **argv, s8 *error, PlayerInfo *player_info)
 	player_info->dest_ip = ft_strdup("127.0.0.1");
 	player_info->dest_port = SERVER_PORT;
 
-
 	/* Parse flag in argv */
 	flag_value = parse_flag(argc, argv, &flag_ctx, error);
 	
