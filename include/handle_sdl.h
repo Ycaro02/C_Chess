@@ -193,7 +193,7 @@ TTF_Font	*load_font(const char *path, s32 size);
 void		unload_font(TTF_Font *font);
 void 		write_text(SDLHandle *h, char *text, TTF_Font *font, iVec2 pos, u32 color);
 void		draw_filled_circle(SDL_Renderer *renderer, int x, int y, int radius);
-void		draw_circle(SDL_Renderer *renderer, int x, int y, int radius);
+void		draw_circle_outline(SDL_Renderer *renderer, int x, int y, int radius);
 
 
 /* src/text_display.c */
