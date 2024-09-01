@@ -48,12 +48,20 @@ void room_list_add(RoomList **lst, ChessRoom *room) {
 	ft_lstadd_back(lst, new);
 }
 
+s8 addr_cmp(SockaddrIn *client, SockaddrIn *receive) {
+	if (client->sin_addr.s_addr == receive->sin_addr.s_addr && client->sin_port == receive->sin_port && client->sin_family == receive->sin_family) {
+		return (TRUE);
+	}
+	return (FALSE);
+}
+
+
 s8 handle_client_disconect(ChessRoom *r, struct sockaddr_in *cliaddr, char *buff) {
     if (fast_strcmp(buff, DISCONNECT_MSG) == 0) {
-		if (r->cliA.connected && ft_memcmp(cliaddr, &r->cliA.addr, sizeof(struct sockaddr_in)) == 0) {
+		if (r->cliA.connected && addr_cmp(cliaddr, &r->cliA.addr)) {
 			fast_bzero(&r->cliA.addr, sizeof(struct sockaddr_in));
             r->cliA.connected = FALSE;
-        } else if (r->cliB.connected && ft_memcmp(cliaddr, &r->cliB.addr, sizeof(struct sockaddr_in)) == 0) {
+        } else if (r->cliB.connected && addr_cmp(cliaddr, &r->cliB.addr)) {
 			fast_bzero(&r->cliB.addr, sizeof(struct sockaddr_in));
             r->cliB.connected = FALSE;
         }
@@ -91,7 +99,12 @@ void handle_client_message(int sockfd, ChessRoom *r, struct sockaddr_in *cliaddr
 	if (handle_client_disconect(r, cliaddr, buffer)) {
 		return ;
 	} else if (r->cliA.connected && r->cliB.connected) {
-		ft_printf_fd(1, YELLOW"Already 2 clients are connected, need to implement multiroom handling\n"RESET);
+		/* Send message to the other client */
+		if (addr_cmp(cliaddr, &r->cliA.addr)) {
+			sendto(sockfd, buffer, ft_strlen(buffer), 0, (struct sockaddr *)&r->cliB.addr, sizeof(r->cliB.addr));
+		} else {
+			sendto(sockfd, buffer, ft_strlen(buffer), 0, (struct sockaddr *)&r->cliA.addr, sizeof(r->cliA.addr));
+		}
 		return ;
 	}
 

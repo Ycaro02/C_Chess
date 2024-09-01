@@ -250,6 +250,10 @@ void game_event_handling(SDLHandle *h, SDL_Event event, s8 player_color) {
 		aly_pos = h->board->occupied;
 	}
 
+	if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_p) {
+		h->menu.is_open = TRUE;
+	}
+
 	if (h->player_info.turn == FALSE) { return ; }
 	SDL_GetMouseState(&x, &y);
 	if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
@@ -267,8 +271,6 @@ void game_event_handling(SDLHandle *h, SDL_Event event, s8 player_color) {
 		}
 	} else if (event.type == SDL_MOUSEMOTION) {
 		update_mouse_pos(h, x, y);
-	} else if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_p) {
-		h->menu.is_open = TRUE;
 	}
 }
 
