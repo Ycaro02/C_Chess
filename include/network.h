@@ -73,6 +73,8 @@ enum e_msg_idx {
 
 typedef struct sockaddr_in SockaddrIn;
 
+typedef struct sockaddr Sockaddr;
+
 struct s_network_info {
     Socket		sockfd;
     SockaddrIn	localaddr;
