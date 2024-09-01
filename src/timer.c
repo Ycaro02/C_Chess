@@ -55,7 +55,7 @@ void draw_timer_rect(SDLHandle *h) {
 
 		/* Update timer every second */
 		if (elapsed_time >= 1) {
-			(*timer_to_update)--;
+			if (*timer_to_update >0) { (*timer_to_update)-- ; }
 			prev_tick = now;
 		}
 
