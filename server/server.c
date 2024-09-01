@@ -36,6 +36,8 @@ ChessRoom *room_create(u32 id) {
 		return (NULL);
 	}
 	room->room_id = id;
+	fast_bzero(&room->cliA, sizeof(ClientInfo));
+	fast_bzero(&room->cliB, sizeof(ClientInfo));
 	return (room);
 }
 
@@ -82,10 +84,21 @@ char *format_client_message(char *msg, u64 message_size){
 	return (data);
 }
 
+char *format_connect_packet(char *msg, u64 message_size){
+	char *data = ft_calloc(1, MAGIC_SIZE + message_size);
+	if (!data) {
+		ft_printf_fd(2, RED"Error: %s\n"RESET, __func__);
+		return (NULL);
+	}
+	ft_memcpy(data, MAGIC_RECONNECT_STR, MAGIC_SIZE);
+	ft_memcpy(data + MAGIC_SIZE, msg, message_size);
+	return (data);
+}
+
 void connect_client_together(int sockfd, ChessRoom *r) {
 
-	char *dataClientA = format_client_message((char *)&r->cliA.addr, sizeof(r->cliA.addr));
-	char *dataClientB = format_client_message((char *)&r->cliB.addr, sizeof(r->cliB.addr));
+	char *dataClientA = format_connect_packet((char *)&r->cliA.addr, sizeof(r->cliA.addr));
+	char *dataClientB = format_connect_packet((char *)&r->cliB.addr, sizeof(r->cliB.addr));
 
 	if (!dataClientA || !dataClientB) {
 		ft_printf_fd(2, RED"Error: %s\n"RESET, __func__);
@@ -105,25 +118,47 @@ void connect_client_together(int sockfd, ChessRoom *r) {
 	free(dataClientB);
 }
 
-void handle_client_message(int sockfd, ChessRoom *r, SockaddrIn *cliaddr, char *buffer) {
+void transmit_message(int sockfd, ChessRoom *r, SockaddrIn *addr_from, char *buffer, ssize_t msg_size) {
+	s8 is_client_a = addr_cmp(addr_from, &r->cliA.addr);
+	s8 is_client_b = addr_cmp(addr_from, &r->cliB.addr);
+
+	char *data = format_client_message(buffer, msg_size);
+	if (!data) {
+		ft_printf_fd(2, RED"Error: %s\n"RESET, __func__);
+		return ;
+	}
+	if (is_client_a) {
+		sendto(sockfd, data, msg_size + MAGIC_SIZE, 0, (Sockaddr *)&r->cliB.addr, sizeof(r->cliB.addr));
+	} else if (is_client_b) {
+		sendto(sockfd, data, msg_size + MAGIC_SIZE, 0, (Sockaddr *)&r->cliA.addr, sizeof(r->cliA.addr));
+	} else {
+		ft_printf_fd(2, RED"Error not a valid client: %s:%s\n"RESET, inet_ntoa(addr_from->sin_addr), ntohs(addr_from->sin_port));
+	}
+	free(data);
+}
+
+void handle_client_message(int sockfd, ChessRoom *r, SockaddrIn *cliaddr, char *buffer, ssize_t msg_size) {
 	
+	s8 is_hello = FALSE;
+
+	if (msg_size == HELLO_LEN && ft_strlcpy(buffer, HELLO_STR, HELLO_LEN + 1) == HELLO_LEN) {
+		ft_printf_fd(1, "Don't send hello message\n");
+		is_hello = TRUE;
+	}
+
 	if (handle_client_disconect(r, cliaddr, buffer)) {
 		return ;
-	} else if (r->cliA.connected && r->cliB.connected) {
+	} else if (r->cliA.connected && r->cliB.connected && !is_hello) {
 		/* Send message to the other client */
-		// if (addr_cmp(cliaddr, &r->cliA.addr)) {
-		// 	sendto(sockfd, buffer, ft_strlen(buffer), 0, (Sockaddr *)&r->cliB.addr, sizeof(r->cliB.addr));
-		// } else {
-		// 	sendto(sockfd, buffer, ft_strlen(buffer), 0, (Sockaddr *)&r->cliA.addr, sizeof(r->cliA.addr));
-		// }
+		transmit_message(sockfd, r, cliaddr, buffer, msg_size);
 		return ;
 	}
 
-	if (!r->cliA.connected) {
+	if (!r->cliA.connected && !addr_cmp(cliaddr, &r->cliB.addr)) {
 		ft_memcpy(&r->cliA.addr, cliaddr, sizeof(SockaddrIn));
 		r->cliA.connected = TRUE;
 		ft_printf_fd(1, GREEN"Client A connected: %s:%d\n"RESET, inet_ntoa(r->cliA.addr.sin_addr), ntohs(r->cliA.addr.sin_port));
-	} else if (!r->cliB.connected) {
+	} else if (!r->cliB.connected && !addr_cmp(cliaddr, &r->cliA.addr)) {
 		ft_memcpy(&r->cliB.addr, cliaddr, sizeof(SockaddrIn));
 		r->cliB.connected = TRUE;
 		ft_printf_fd(1, GREEN"Client B connected: %s:%d\n"RESET, inet_ntoa(r->cliB.addr.sin_addr), ntohs(r->cliB.addr.sin_port));
@@ -136,7 +171,7 @@ void handle_client_message(int sockfd, ChessRoom *r, SockaddrIn *cliaddr, char *
 
 ChessServer *server_setup() {
 	ChessServer *server = ft_calloc(1, sizeof(ChessServer));
-	// struct timeval timeout = {1, 0};
+	struct timeval timeout = {1, 0};
 
 	if (!server) {
 		ft_printf_fd(2, RED"Error: alloc %s\n"RESET, __func__);
@@ -164,12 +199,12 @@ ChessServer *server_setup() {
 		return (NULL);
     }
 
-	// if (setsockopt(server->sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(struct timeval)) < 0) {
-	// 	perror("setsockopt failed");
-	// 	free(server);
-	// 	close(server->sockfd);
-	// 	return (NULL);
-	// }
+	if (setsockopt(server->sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(struct timeval)) < 0) {
+		perror("setsockopt failed");
+		free(server);
+		close(server->sockfd);
+		return (NULL);
+	}
 
 	return (server);
 }
@@ -181,9 +216,9 @@ void server_destroy(ChessServer *server) {
 }
 
 void server_routine(ChessServer *server) {
-	SockaddrIn	cliaddr;
+	SockaddrIn			cliaddr;
 	socklen_t			addr_len = sizeof(cliaddr);
-	char				buffer[1024];
+	char				buffer[4096];
 	ssize_t				len = 0;
 
 	fast_bzero(buffer, sizeof(buffer));
@@ -202,8 +237,8 @@ void server_routine(ChessServer *server) {
 		len = recvfrom(server->sockfd, buffer, sizeof(buffer), 0, (Sockaddr *)&cliaddr, &addr_len);
 		if (len > 0) {
 			buffer[len] = '\0';
-			ft_printf_fd(1, CYAN"Server Received: %s from %s:%d\n"RESET, buffer, inet_ntoa(cliaddr.sin_addr), ntohs(cliaddr.sin_port));
-			handle_client_message(server->sockfd, room, &cliaddr, buffer);
+			ft_printf_fd(1, CYAN"Server Received: %s from %s:%d\n"RESET, message_type_to_str(buffer[0]), inet_ntoa(cliaddr.sin_addr), ntohs(cliaddr.sin_port));
+			handle_client_message(server->sockfd, room, &cliaddr, buffer, len);
 			fast_bzero(buffer, sizeof(buffer));
 			fast_bzero(&cliaddr, sizeof(cliaddr));
 		}

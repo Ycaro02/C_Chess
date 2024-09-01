@@ -51,6 +51,7 @@ void cleanup_network_windows();
 /* Magic string for sending addr */
 // #define MAGIC_STRING "\x7ACHESSMAGIC\x7A\x7B\x42\x80\x7A"
 #define MAGIC_STRING ((const char[]){0x7F, 0x42, 'C', 'H', 'E', 'S', 'S', 'M', 'A', 'G', 'I', 'C', 0x7A, 0x7B, 0x42, 0x7F})
+#define MAGIC_RECONNECT_STR ((const char[]){0x42, 'C', 'H', 'E', 'S', 'S', 'R', 'E', 'C', 'O', 'N', 'N', 'E', 'C', 'T', 0x42})
 #define MAGIC_SIZE 16ULL
 
 enum e_msg_type {
@@ -98,6 +99,12 @@ FT_INLINE char *message_type_to_str(MsgType msg_type) {
 		return ("QUIT");
 	} else if (msg_type == MSG_TYPE_RECONNECT) {
 		return ("RECONNECT");
+	} else if (msg_type == 'A') {
+		return ("ACK");
+	} else if (msg_type == 'H') {
+		return ("HELLO");
+	} else if (msg_type == 'D') {
+		return ("DISCONNECT");
 	}
 	return ("UNKNOWN");
 }
@@ -110,6 +117,7 @@ NetworkInfo	*init_network(char *server_ip, struct timeval timeout);
 s8			network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *server_ip);
 void		send_disconnect_to_server(int sockfd, struct sockaddr_in servaddr);
 s8			wait_peer_info(NetworkInfo *info, const char *msg);
+s8			check_magic_value(char *buff);
 
 /* src/handle_message.c */
 void	process_message_receive(SDLHandle *handle, char *msg);

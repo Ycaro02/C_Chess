@@ -81,7 +81,6 @@ void network_chess_routine(SDLHandle *h) {
 			msg_recv = wait_peer_info(h->player_info.nt_info, "Wait reconnect peer info");
 			if (msg_recv) {
 				/* Here we need to build MSG_TYPE_RECONECT and while on the list of move to give them to the reconnected client */
-				build_message(h, h->player_info.msg_tosend, MSG_TYPE_COLOR, !h->player_info.color, 0, 0);
 				u16 msg_size = 0;
 				char *buff = build_reconnect_message(h, &msg_size);
 				chess_msg_send(h->player_info.nt_info, buff, msg_size);

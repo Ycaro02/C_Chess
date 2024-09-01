@@ -22,6 +22,9 @@ void process_reconnect_message(SDLHandle *h, char *msg) {
 	u64			my_remaining_time = 0, enemy_remaining_time = 0;
 	u16			list_size = 0, array_byte_size = 0;
 
+	printf(RED"Process reconnect message %s\n"RESET, message_type_to_str(msg[IDX_TYPE]));
+	printf(RED"Process reconnect message + 16 %s\n"RESET, message_type_to_str(msg[IDX_TYPE + 16]));
+
 	/* Get size and time */
 	ft_memcpy(&list_size, &msg[5], sizeof(u16));
 	ft_memcpy(&array_byte_size, &msg[7], sizeof(u16));

@@ -144,6 +144,7 @@ void process_message_receive(SDLHandle *handle, char *msg) {
 	MsgType 	msg_type = msg[IDX_TYPE];
 	ChessTile	tile_from = 0, tile_to = 0;
 	ChessPiece	piece_type = EMPTY;
+	// char		*real_msg = msg + MAGIC_SIZE;
 	
 	/* If the message is a color message, set the player color */
 	if (msg_type == MSG_TYPE_COLOR) {
@@ -166,6 +167,10 @@ void process_message_receive(SDLHandle *handle, char *msg) {
 		handle->player_info.turn = TRUE;
 		handle->enemy_remaining_time = *(u64 *)&msg[IDX_TIMER];
 	} else if (msg_type == MSG_TYPE_RECONNECT)  {
+		// if (check_magic_value(msg) == FALSE) {
+		// 	CHESS_LOG(LOG_ERROR, "Reconnect ACK Magic value check failed %s\n", msg);
+		// 	return ;
+		// }
 		process_reconnect_message(handle, msg);
 		update_msg_store(handle->player_info.last_msg, msg);
 		return ;	
@@ -185,15 +190,17 @@ s8 chess_msg_receive(SDLHandle *h, NetworkInfo *info, char *rcv_buffer) {
 
 	// (void)last_msg_processed;
 	fast_bzero(buffer, 4096);
-	rcv_len = recvfrom(info->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&info->peeraddr, &info->addr_len);
+	// rcv_len = recvfrom(info->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&info->peeraddr, &info->addr_len);
+	rcv_len = recvfrom(info->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&info->servaddr, &info->addr_len);
 	if (rcv_len > 0) {
-		if (ignore_msg(h, buffer)) {
+		if (check_magic_value(buffer) == FALSE || ignore_msg(h, buffer + MAGIC_SIZE)) {
 			return (FALSE);
 		}
 		buffer[rcv_len] = '\0';
-		sendto(info->sockfd, ACK_STR, ACK_LEN, 0, (struct sockaddr *)&info->peeraddr, info->addr_len);
-		CHESS_LOG(LOG_INFO, GREEN"Msg |%s| receive len : %zd -> ACK send\n"RESET, message_type_to_str(buffer[0]), rcv_len);
-		ft_memcpy(rcv_buffer, buffer, rcv_len);
+		// sendto(info->sockfd, ACK_STR, ACK_LEN, 0, (struct sockaddr *)&info->peeraddr, info->addr_len);
+		sendto(info->sockfd, ACK_STR, ACK_LEN, 0, (struct sockaddr *)&info->servaddr, info->addr_len);
+		CHESS_LOG(LOG_INFO, GREEN"Msg |%s| receive len : %zd -> ACK send\n"RESET, message_type_to_str(buffer[0 + MAGIC_SIZE]), rcv_len);
+		ft_memcpy(rcv_buffer, buffer + MAGIC_SIZE, rcv_len - MAGIC_SIZE);
 		return (TRUE);
 	} 
 	return (FALSE);
@@ -207,11 +214,20 @@ s8 chess_msg_send(NetworkInfo *info, char *msg, u16 msg_len) {
 	fast_bzero(buffer, 4096);
 	CHESS_LOG(LOG_INFO, CYAN"Try to send %s len %u -> "RESET, message_type_to_str(msg[0]), msg_len);
 	while (attempts < MAX_ATTEMPTS && !ack_received) {
-		sendto(info->sockfd, msg, msg_len, 0, (struct sockaddr *)&info->peeraddr, info->addr_len);
-		rcv_len = recvfrom(info->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&info->peeraddr, &info->addr_len);
+		// sendto(info->sockfd, msg, msg_len, 0, (struct sockaddr *)&info->peeraddr, info->addr_len);
+		sendto(info->sockfd, msg, msg_len, 0, (struct sockaddr *)&info->servaddr, info->addr_len);
+		// rcv_len = recvfrom(info->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&info->peeraddr, &info->addr_len);
+		rcv_len = recvfrom(info->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&info->servaddr, &info->addr_len);
 		if (rcv_len > 0) {
 			buffer[rcv_len] = '\0';
-			if (fast_strcmp(buffer, ACK_STR) == 0) {
+			// if (fast_strcmp(buffer, ACK_STR) == 0) {
+			if (check_magic_value(buffer) == FALSE) {
+				CHESS_LOG(LOG_ERROR, "ACK Magic value check failed %s\n", buffer);
+				// return (FALSE);
+				continue ;
+			}
+
+			if (fast_strcmp(buffer + MAGIC_SIZE, ACK_STR) == 0) {
 				CHESS_LOG(LOG_INFO, CYAN"ACK receive\n%s", RESET);
 				ack_received = 1;
 				break ;
