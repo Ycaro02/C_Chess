@@ -190,14 +190,12 @@ s8 chess_msg_receive(SDLHandle *h, NetworkInfo *info, char *rcv_buffer) {
 
 	// (void)last_msg_processed;
 	fast_bzero(buffer, 4096);
-	// rcv_len = recvfrom(info->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&info->peeraddr, &info->addr_len);
 	rcv_len = recvfrom(info->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&info->servaddr, &info->addr_len);
 	if (rcv_len > 0) {
 		if (check_magic_value(buffer) == FALSE || ignore_msg(h, buffer + MAGIC_SIZE)) {
 			return (FALSE);
 		}
 		buffer[rcv_len] = '\0';
-		// sendto(info->sockfd, ACK_STR, ACK_LEN, 0, (struct sockaddr *)&info->peeraddr, info->addr_len);
 		sendto(info->sockfd, ACK_STR, ACK_LEN, 0, (struct sockaddr *)&info->servaddr, info->addr_len);
 		CHESS_LOG(LOG_INFO, GREEN"Msg |%s| receive len : %zd -> ACK send\n"RESET, message_type_to_str(buffer[0 + MAGIC_SIZE]), rcv_len);
 		ft_memcpy(rcv_buffer, buffer + MAGIC_SIZE, rcv_len - MAGIC_SIZE);
@@ -214,24 +212,15 @@ s8 chess_msg_send(NetworkInfo *info, char *msg, u16 msg_len) {
 	fast_bzero(buffer, 4096);
 	CHESS_LOG(LOG_INFO, CYAN"Try to send %s len %u -> "RESET, message_type_to_str(msg[0]), msg_len);
 	while (attempts < MAX_ATTEMPTS && !ack_received) {
-		// sendto(info->sockfd, msg, msg_len, 0, (struct sockaddr *)&info->peeraddr, info->addr_len);
 		sendto(info->sockfd, msg, msg_len, 0, (struct sockaddr *)&info->servaddr, info->addr_len);
-		// rcv_len = recvfrom(info->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&info->peeraddr, &info->addr_len);
 		rcv_len = recvfrom(info->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&info->servaddr, &info->addr_len);
 		if (rcv_len > 0) {
 			buffer[rcv_len] = '\0';
-			// if (fast_strcmp(buffer, ACK_STR) == 0) {
-			if (check_magic_value(buffer) == FALSE) {
-				CHESS_LOG(LOG_ERROR, "ACK Magic value check failed %s\n", buffer);
-				// return (FALSE);
-				continue ;
-			}
-
-			if (fast_strcmp(buffer + MAGIC_SIZE, ACK_STR) == 0) {
+			if (check_magic_value(buffer) == TRUE && fast_strcmp(buffer + MAGIC_SIZE, ACK_STR) == 0) {
 				CHESS_LOG(LOG_INFO, CYAN"ACK receive\n%s", RESET);
 				ack_received = 1;
 				break ;
-			} 
+			}
 		} 
 		attempts++;
 		SDL_Delay(1000);

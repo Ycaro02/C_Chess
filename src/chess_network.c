@@ -162,7 +162,8 @@ s8 check_reconnect_magic_value(char *buff) {
 s8 wait_peer_info(NetworkInfo *info, const char *msg) {
 	ssize_t ret = 0;
 
-	CHESS_LOG(LOG_INFO, "%s...\n", msg);
+	// CHESS_LOG(LOG_INFO, "%s...\n", msg);
+	(void)msg;
 
 	char buff[1024];
 	fast_bzero(buff, 1024);
@@ -178,8 +179,6 @@ s8 wait_peer_info(NetworkInfo *info, const char *msg) {
 		info->peer_conected = TRUE;
 		ft_memcpy(&info->peeraddr, buff + MAGIC_SIZE, sizeof(info->peeraddr));
 		CHESS_LOG(LOG_INFO, "Peer info : %s:%d, addr_len %d\n", inet_ntoa(info->peeraddr.sin_addr), ntohs(info->peeraddr.sin_port), info->addr_len);
-		/* Send a first message to the peer (handshake) */
-		// sendto(info->sockfd, "Hello", fast_strlen("Hello"), 0, (struct sockaddr *)&info->peeraddr, info->addr_len);
 		return (TRUE);
 	} 
 	return (FALSE);
