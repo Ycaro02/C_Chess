@@ -170,12 +170,12 @@ s8 wait_peer_info(NetworkInfo *info, const char *msg) {
 	/* Receive the peer information */
 	ret = recvfrom(info->sockfd, buff, sizeof(buff), 0, (struct sockaddr *)&info->servaddr, &info->addr_len);
 	if (ret == 16 + MAGIC_SIZE) {
-		info->peer_conected = TRUE;
 		s8 check = check_reconnect_magic_value(buff);
 		if (check == FALSE) {
-			CHESS_LOG(LOG_ERROR, "Magic value reconnect check failed %s\n", buff);
+			CHESS_LOG(LOG_ERROR, "Magic value reconnect check failed\n");
 			return (FALSE);
 		}
+		info->peer_conected = TRUE;
 		ft_memcpy(&info->peeraddr, buff + MAGIC_SIZE, sizeof(info->peeraddr));
 		CHESS_LOG(LOG_INFO, "Peer info : %s:%d, addr_len %d\n", inet_ntoa(info->peeraddr.sin_addr), ntohs(info->peeraddr.sin_port), info->addr_len);
 		/* Send a first message to the peer (handshake) */
