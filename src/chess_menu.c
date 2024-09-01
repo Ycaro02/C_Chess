@@ -26,11 +26,11 @@ s32 detect_button_click(Button *btn, s32 nb_btn, iVec2 mouse_pos) {
 	for (s32 i = 0; i < nb_btn; i++) {
 		if (mouse_pos.x >= btn[i].start.x && mouse_pos.x <= btn[i].end.x &&
 			mouse_pos.y >= btn[i].start.y && mouse_pos.y <= btn[i].end.y) {
-			CHESS_LOG(LOG_INFO, "Button %d clicked\n", i);
+			// CHESS_LOG(LOG_INFO, "Button %d clicked\n", i);
 			return (i);
 		}
 	}
-	CHESS_LOG(LOG_INFO, "No button clicked\n");	
+	// CHESS_LOG(LOG_INFO, "No button clicked\n");	
 	return (BTN_INVALID);
 }
 
@@ -158,6 +158,9 @@ void init_menu(SDLHandle *h, s32 total_btn) {
 	/* The last button is the server ip button */
 	s32 menu_btn = total_btn - 1;
 
+	h->menu.is_open = FALSE;
+	h->menu.btn_hover = BTN_INVALID;
+
 	/* Set menu rect data */
 	h->menu.start.x = h->band_size.left + (h->tile_size.x << 1);
 	h->menu.start.y = h->band_size.top + (h->tile_size.x << 1);
@@ -223,7 +226,7 @@ void init_menu(SDLHandle *h, s32 total_btn) {
  * @param btn The button to draw
  * @param state The state of the button
 */
-void draw_button(SDLHandle *h, Button btn, s8 state) {
+void draw_button(SDLHandle *h, Button btn, SDL_Color c) {
 	SDL_Rect		rect = {0,0,0,0};
 
 	rect.x = btn.start.x;
@@ -231,15 +234,9 @@ void draw_button(SDLHandle *h, Button btn, s8 state) {
 	rect.w = btn.width;
 	rect.h = btn.height;
 
-	if (state == BTN_PRESSED) {
-		SDL_SetRenderDrawColor(h->renderer, 100, 10, 10, 255);
-	} else {
-		SDL_SetRenderDrawColor(h->renderer, 10, 10, 10, 255);
-	}
+	SDL_SetRenderDrawColor(h->renderer, c.r, c.g, c.b, c.a);
 	SDL_RenderFillRect(h->renderer, &rect);
-
 	write_text(h, btn.text, h->menu.btn_text_font, btn.text_pos, RGBA_TO_UINT32(255, 255, 255, 255));
-	
 }
 
 
@@ -274,8 +271,15 @@ void draw_menu(SDLHandle *h) {
 	}
 	render_text_field(h->renderer, &h->menu.ip_field, (SDL_Color){255, 0, 0, 255}, bg_color);
 
+	SDL_Color btn_color = {10, 10, 10, 255};
+
 	/* Draw the menu button */
 	for (s32 i = 0; i < h->menu.nb_btn; i++) {
-		draw_button(h, h->menu.btn[i], h->menu.btn[i].state);
+		if (i == h->menu.btn_hover) {
+			btn_color = (SDL_Color){100, 10, 10, 255};
+		} else {
+			btn_color = (SDL_Color){10, 10, 10, 255};
+		}
+		draw_button(h, h->menu.btn[i], btn_color);
 	}
 }

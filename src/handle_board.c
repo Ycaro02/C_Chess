@@ -212,6 +212,13 @@ void update_mouse_pos(SDLHandle *h, s32 x, s32 y) {
 	h->mouse_pos.y = y;
 }
 
+void menu_close(ChessMenu *menu) {
+	menu->is_open = FALSE;
+	menu->btn_hover = BTN_INVALID;
+	menu->ip_field.is_active = FALSE;
+}
+
+
 void menu_event_handling(SDLHandle *h, SDL_Event event) {
 	iVec2 pos = {0, 0};
 	BtnType btn_click = BTN_INVALID;
@@ -231,11 +238,14 @@ void menu_event_handling(SDLHandle *h, SDL_Event event) {
 				h->menu.btn[btn_click].func(h);
 			}
 			if (btn_click != BTN_SERVER_IP) {
-				h->menu.is_open = FALSE;
+				menu_close(&h->menu);
 			}
 		}
 	} else if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_p) {
-		h->menu.is_open = FALSE;
+		menu_close(&h->menu);
+	} else if (event.type == SDL_MOUSEMOTION) {
+		update_mouse_pos(h, pos.x, pos.y);
+		h->menu.btn_hover = detect_button_click(h->menu.btn, h->menu.nb_btn, pos);
 	}
 }
 
@@ -292,9 +302,8 @@ s32 event_handler(SDLHandle *h, s8 player_color) {
 		} else {
 			if (h->menu.ip_field.is_active) {
 				handle_text_input(h, &event);
-			} else { 
-				menu_event_handling(h, event);
 			}
+			menu_event_handling(h, event);
 		}
 		
 	}

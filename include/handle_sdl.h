@@ -120,6 +120,7 @@ typedef struct s_chess_menu {
 	Button		*btn;
 	TTF_Font 	*btn_text_font;
 	BtnType		current_btn_clicked;
+	BtnType		btn_hover;
 
 	/* Menu is open */
 	s8			is_open;
