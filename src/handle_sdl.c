@@ -519,3 +519,30 @@ void write_text(SDLHandle *h, char *text, TTF_Font *font, iVec2 pos, u32 color) 
 	SDL_FreeSurface(surface);
 	SDL_DestroyTexture(texture);
 }
+
+/* Function to draw a filled circle */
+void draw_filled_circle(SDL_Renderer *renderer, int x, int y, int radius) {
+    for (int w = 0; w < radius * 2; w++) {
+        for (int h = 0; h < radius * 2; h++) {
+            int dx = radius - w; // horizontal offset
+            int dy = radius - h; // vertical offset
+            if ((dx * dx + dy * dy) <= (radius * radius)) {
+                SDL_RenderDrawPoint(renderer, x + dx, y + dy);
+            }
+        }
+    }
+}
+
+/* Function to draw a circle outline */
+void draw_circle_outline(SDL_Renderer *renderer, int x, int y, int radius) {
+    for (int w = 0; w < radius * 2; w++) {
+        for (int h = 0; h < radius * 2; h++) {
+            int dx = radius - w; // horizontal offset
+            int dy = radius - h; // vertical offset
+            int distance_squared = dx * dx + dy * dy;
+            if (distance_squared <= (radius * radius) && distance_squared >= ((radius - 5) * (radius - 5))) {
+                SDL_RenderDrawPoint(renderer, x + dx, y + dy);
+            }
+        }
+    }
+}

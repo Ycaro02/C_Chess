@@ -136,24 +136,24 @@ typedef struct s_sdl_handle {
 	ChessBoard		*board;				/* The chess board */
 
 	/* GUI */
-	ChessMenu		menu;				/* The menu */
-	TTF_Font		*tile_font;			/* The font for tile number/letters */
-	TTF_Font		*timer_font;		/* The font */
+	ChessMenu		menu;						/* The menu */
+	TTF_Font		*tile_font;					/* The font for tile number/letters */
+	TTF_Font		*timer_font;				/* The font */
 	char			timer_str[TIME_STR_SIZE];	/* Timer string */
-	iVec2			window_size;		/* The size of the window */
-	iVec2			tile_size;			/* The size of the tile */
-	iVec2			mouse_pos;			/* Mouse position */
-	WinBand			band_size;			/* The band size */
-	SDL_Rect		timer_rect_bot;		/* Timer rect */
-	SDL_Rect		timer_rect_top;		/* Timer rect */
-	ChessPiece		over_piece_select;	/* The piece selected (over display) */
+	iVec2			window_size;				/* The size of the window */
+	iVec2			tile_size;					/* The size of the tile */
+	iVec2			mouse_pos;					/* Mouse position */
+	WinBand			band_size;					/* The band size */
+	SDL_Rect		timer_rect_bot;				/* Timer rect */
+	SDL_Rect		timer_rect_top;				/* Timer rect */
+	ChessPiece		over_piece_select;			/* The piece selected (over display) */
 
 	/* Player info */
-	u64				my_remaining_time;	/* Black Elapsed time */
-	u64				enemy_remaining_time;	/* White Elapsed time */
-	PlayerInfo		player_info;		/* Player info */
-	u32				flag;				/* App Flag */
-	s8				game_start;			/* Game start flag */
+	u64				my_remaining_time;		/* Current player ramaining time */
+	u64				enemy_remaining_time;	/* Enemy player ramaining time */
+	PlayerInfo		player_info;			/* Player info */
+	u32				flag;					/* App Flag */
+	s8				game_start;				/* Game start flag */
 }	SDLHandle ;
 
 #define	FONT_PATH "rsc/font/arial.ttf"
@@ -192,6 +192,9 @@ void		destroy_sdl_handle(SDLHandle *handle);
 TTF_Font	*load_font(const char *path, s32 size);
 void		unload_font(TTF_Font *font);
 void 		write_text(SDLHandle *h, char *text, TTF_Font *font, iVec2 pos, u32 color);
+void		draw_filled_circle(SDL_Renderer *renderer, int x, int y, int radius);
+void		draw_circle(SDL_Renderer *renderer, int x, int y, int radius);
+
 
 /* src/text_display.c */
 void		left_band_center_text(iVec2 *char_pos, char *text, TTF_Font *font, s32 tile_size, s32 band_left_size);

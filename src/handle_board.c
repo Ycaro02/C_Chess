@@ -34,33 +34,12 @@ static ChessTile handle_tile(ChessTile tile, s32 player_color) {
 	return (tile + 1);
 }
 
-/* Function to draw a filled circle */
-static void draw_filled_circle(SDL_Renderer *renderer, int x, int y, int radius) {
-    for (int w = 0; w < radius * 2; w++) {
-        for (int h = 0; h < radius * 2; h++) {
-            int dx = radius - w; // horizontal offset
-            int dy = radius - h; // vertical offset
-            if ((dx * dx + dy * dy) <= (radius * radius)) {
-                SDL_RenderDrawPoint(renderer, x + dx, y + dy);
-            }
-        }
-    }
-}
-
-/* Function to draw a circle outline */
-static void draw_circle_outline(SDL_Renderer *renderer, int x, int y, int radius) {
-    for (int w = 0; w < radius * 2; w++) {
-        for (int h = 0; h < radius * 2; h++) {
-            int dx = radius - w; // horizontal offset
-            int dy = radius - h; // vertical offset
-            int distance_squared = dx * dx + dy * dy;
-            if (distance_squared <= (radius * radius) && distance_squared >= ((radius - 5) * (radius - 5))) {
-                SDL_RenderDrawPoint(renderer, x + dx, y + dy);
-            }
-        }
-    }
-}
-
+/**
+ * @brief Draw piece possible move
+ * @param handle The SDLHandle pointer
+ * @param tile_pos The tile position
+ * @param tile The tile
+ */
 void draw_possible_move(SDLHandle *handle, iVec2 tile_pos, ChessTile tile) {
 	ChessPiece	tile_piece = EMPTY, selected_piece = EMPTY;
 	iVec2		center = {0, 0};
@@ -164,7 +143,6 @@ void draw_board(SDLHandle *handle, s8 player_color) {
 	draw_letter_number(handle, player_color);
 
 	/* Draw the menu */
-	// handle->menu.is_open = TRUE;
 	if (handle->menu.is_open) {
 		draw_menu(handle);
 	}
