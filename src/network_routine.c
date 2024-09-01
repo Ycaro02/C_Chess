@@ -60,6 +60,17 @@ static s32 network_move_piece(SDLHandle *h, ChessTile last_tile_click) {
 	return (TRUE);
 }
 
+void send_alive_packet(NetworkInfo *info) {
+	static		u64 last_alive_send = 0;
+	u64			now = get_time_sec();
+	u64			elapsed_time = now - last_alive_send;
+
+	if (elapsed_time >= SEND_ALIVE_DELAY) {
+		send_alive_to_server(info->sockfd, info->servaddr);
+		last_alive_send = now;
+	}
+}
+
 /**
  * @brief Network chess routine
  * @param h The SDLHandle pointer
@@ -102,6 +113,9 @@ void network_chess_routine(SDLHandle *h) {
 
 		/* Draw logic */
 		update_graphic_board(h);
+
+		/* Send alive message to the server */
+		send_alive_packet(h->player_info.nt_info);
 
 		SDL_Delay(16);
 

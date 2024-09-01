@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <arpa/inet.h>
+#include <time.h>
 
 #include "../include/chess.h"
 #include "../include/network.h"
@@ -10,8 +11,9 @@
 typedef t_list RoomList;
 
 typedef struct s_client_info {
-    SockaddrIn	addr;
-    s8					connected;
+    SockaddrIn		addr;
+	struct timeval 	last_alive;
+    s8				connected;
 } ClientInfo;
 
 typedef struct s_chess_room {
@@ -21,10 +23,12 @@ typedef struct s_chess_room {
 } ChessRoom;
 
 typedef struct s_chess_server {
-	int					sockfd;
+	int			sockfd;
 	SockaddrIn	addr;
-	RoomList			*room_lst;
+	RoomList	*room_lst;
 } ChessServer;
+
+void send_quit_msg(int sockfd, ClientInfo *client);
 
 
 ChessServer *g_server = NULL;
@@ -57,15 +61,14 @@ s8 addr_cmp(SockaddrIn *client, SockaddrIn *receive) {
 	return (FALSE);
 }
 
-
-s8 handle_client_disconect(ChessRoom *r, SockaddrIn *cliaddr, char *buff) {
-    if (fast_strcmp(buff, DISCONNECT_MSG) == 0) {
+s8 client_disconnect_msg(ChessRoom *r, SockaddrIn *cliaddr, char *buff) {
+	if (fast_strcmp(buff, DISCONNECT_MSG) == 0) {
 		if (r->cliA.connected && addr_cmp(cliaddr, &r->cliA.addr)) {
-			fast_bzero(&r->cliA.addr, sizeof(SockaddrIn));
-            r->cliA.connected = FALSE;
+			send_quit_msg(g_server->sockfd, &r->cliB);
+			fast_bzero(&r->cliA, sizeof(ClientInfo));
         } else if (r->cliB.connected && addr_cmp(cliaddr, &r->cliB.addr)) {
-			fast_bzero(&r->cliB.addr, sizeof(SockaddrIn));
-            r->cliB.connected = FALSE;
+			send_quit_msg(g_server->sockfd, &r->cliA);
+			fast_bzero(&r->cliB, sizeof(ClientInfo));
         }
 		ft_printf_fd(1, RED"Client disconnected: %s:%d\n"RESET, inet_ntoa(cliaddr->sin_addr), ntohs(cliaddr->sin_port));
 		return (TRUE);
@@ -131,41 +134,127 @@ void transmit_message(int sockfd, ChessRoom *r, SockaddrIn *addr_from, char *buf
 		sendto(sockfd, data, msg_size + MAGIC_SIZE, 0, (Sockaddr *)&r->cliB.addr, sizeof(r->cliB.addr));
 	} else if (is_client_b) {
 		sendto(sockfd, data, msg_size + MAGIC_SIZE, 0, (Sockaddr *)&r->cliA.addr, sizeof(r->cliA.addr));
-	} else {
-		ft_printf_fd(2, RED"Error not a valid client: %s:%s\n"RESET, inet_ntoa(addr_from->sin_addr), ntohs(addr_from->sin_port));
 	}
 	free(data);
 }
 
-void handle_client_message(int sockfd, ChessRoom *r, SockaddrIn *cliaddr, char *buffer, ssize_t msg_size) {
+s8 is_alive_message(ChessRoom *r, SockaddrIn *addr, char *buffer, ssize_t msg_size) {
+	struct timeval now;
 	
-	s8 is_hello = FALSE;
-
-	if (msg_size == HELLO_LEN && ft_strlcpy(buffer, HELLO_STR, HELLO_LEN + 1) == HELLO_LEN) {
-		ft_printf_fd(1, "Don't send hello message\n");
-		is_hello = TRUE;
+	if (msg_size != ALIVE_LEN || ft_memcmp(buffer, ALIVE_MSG, ALIVE_LEN) != 0) {
+		return (FALSE);
 	}
 
-	if (handle_client_disconect(r, cliaddr, buffer)) {
-		return ;
-	} else if (r->cliA.connected && r->cliB.connected && !is_hello) {
-		/* Send message to the other client */
-		transmit_message(sockfd, r, cliaddr, buffer, msg_size);
-		return ;
-	}
+	gettimeofday(&now, NULL);
 
+	if (r->cliA.connected && addr_cmp(addr, &r->cliA.addr)) {
+		ft_memcpy(&r->cliA.last_alive, &now, sizeof(struct timeval));
+	} else if (r->cliB.connected && addr_cmp(addr, &r->cliB.addr)) {
+		ft_memcpy(&r->cliB.last_alive, &now, sizeof(struct timeval));
+	}
+	printf("Receive alive packet from %s:%hu\n", inet_ntoa(addr->sin_addr), ntohs(addr->sin_port));
+	return (TRUE);
+}
+
+
+s8 client_timeout_alive(struct timeval *last_alive) {
+	struct timeval now;
+	gettimeofday(&now, NULL);
+	
+	s64 diff = (now.tv_sec - last_alive->tv_sec);
+	if (diff > CLIENT_NOT_ALIVE_TIMEOUT) {
+		printf("Client timeout: %ld\n", diff);
+		printf("Last alive: %ld\n", last_alive->tv_sec);
+		printf("Now: %ld\n", now.tv_sec);
+		return (TRUE);
+	}
+	return (FALSE);
+}
+
+char *build_client_msg_quit() {
+	char *data = ft_calloc(1, MAGIC_SIZE + MSG_SIZE);
+	if (!data) {
+		ft_printf_fd(2, RED"Error: %s\n"RESET, __func__);
+		return (NULL);
+	}
+	ft_memcpy(data, MAGIC_STRING, MAGIC_SIZE);
+	data[MAGIC_SIZE] = MSG_TYPE_QUIT;
+	return (data);
+}
+
+void send_quit_msg(int sockfd, ClientInfo *client) {
+	char	*quit_msg = NULL; 
+	size_t	len = MAGIC_SIZE + MSG_SIZE;
+
+	if (client->connected) {
+		quit_msg = build_client_msg_quit();
+		if (!quit_msg) {
+			ft_printf_fd(2, RED"Error: %s\n"RESET, __func__);
+			return ;
+		}
+		sendto(sockfd, quit_msg, len, 0, (Sockaddr *)&client->addr, sizeof(client->addr));
+		free(quit_msg);
+	}
+}
+
+void handle_client_timeout(ChessRoom *r) {
+	if (r->cliA.connected && client_timeout_alive(&r->cliA.last_alive)) {
+		ft_printf_fd(1, RED"Client A timeout: %s:%d\n"RESET, inet_ntoa(r->cliA.addr.sin_addr), ntohs(r->cliA.addr.sin_port));
+		send_quit_msg(g_server->sockfd, &r->cliB);
+		fast_bzero(&r->cliA, sizeof(ClientInfo));
+	} else if (r->cliB.connected && client_timeout_alive(&r->cliB.last_alive)) {
+		ft_printf_fd(1, RED"Client B timeout: %s:%d\n"RESET, inet_ntoa(r->cliB.addr.sin_addr), ntohs(r->cliB.addr.sin_port));
+		send_quit_msg(g_server->sockfd, &r->cliA);
+		fast_bzero(&r->cliB, sizeof(ClientInfo));
+	}
+}
+
+void handle_client_connect(ChessRoom *r, SockaddrIn *cliaddr, int sockfd) {
+	struct timeval now;
+	gettimeofday(&now, NULL);
+	
 	if (!r->cliA.connected && !addr_cmp(cliaddr, &r->cliB.addr)) {
 		ft_memcpy(&r->cliA.addr, cliaddr, sizeof(SockaddrIn));
 		r->cliA.connected = TRUE;
+		ft_memcpy(&r->cliA.last_alive, &now, sizeof(struct timeval));
 		ft_printf_fd(1, GREEN"Client A connected: %s:%d\n"RESET, inet_ntoa(r->cliA.addr.sin_addr), ntohs(r->cliA.addr.sin_port));
 	} else if (!r->cliB.connected && !addr_cmp(cliaddr, &r->cliA.addr)) {
 		ft_memcpy(&r->cliB.addr, cliaddr, sizeof(SockaddrIn));
 		r->cliB.connected = TRUE;
+		ft_memcpy(&r->cliB.last_alive, &now, sizeof(struct timeval));
 		ft_printf_fd(1, GREEN"Client B connected: %s:%d\n"RESET, inet_ntoa(r->cliB.addr.sin_addr), ntohs(r->cliB.addr.sin_port));
 	}
-
 	if (r->cliA.connected && r->cliB.connected) {
 		connect_client_together(sockfd, r);		
+	}
+}
+
+void handle_client_message(int sockfd, ChessRoom *r, SockaddrIn *cliaddr, char *buffer, ssize_t msg_size) {
+
+	if (r->cliA.connected && r->cliB.connected && !addr_cmp(cliaddr, &r->cliA.addr) && !addr_cmp(cliaddr, &r->cliB.addr)) {
+		ft_printf_fd(2, RED"Error: not a valid client: %s:%d\n"RESET, inet_ntoa(cliaddr->sin_addr), ntohs(cliaddr->sin_port));
+		return ;
+	}
+
+	/* Check if the message is a hello message */
+	if (msg_size == HELLO_LEN && ft_memcmp(buffer, HELLO_STR, HELLO_LEN) == 0) {
+		/* Handle client connection */
+		handle_client_connect(r, cliaddr, sockfd);
+		return ;
+	}
+
+	/* Check if the message is an alive message */
+	if (is_alive_message(r, cliaddr, buffer, msg_size)) {
+		return ;
+	}
+
+	/* Check if the message is a disconnect message */
+	if (client_disconnect_msg(r, cliaddr, buffer)) {
+		return ;
+	} else if (r->cliA.connected && r->cliB.connected) {
+		/* Send message to the other client */
+		transmit_message(sockfd, r, cliaddr, buffer, msg_size);
+		return ;
 	}
 }
 
@@ -242,6 +331,8 @@ void server_routine(ChessServer *server) {
 			fast_bzero(buffer, sizeof(buffer));
 			fast_bzero(&cliaddr, sizeof(cliaddr));
 		}
+		/* Check if the client is timeout */
+		handle_client_timeout(room);
 	}
 	server_destroy(server);
 }

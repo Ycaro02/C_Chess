@@ -394,6 +394,7 @@ char *build_reconnect_message(SDLHandle *h, u16 *msg_size);
 s8 ignore_msg(SDLHandle *h, char *buffer);
 
 /* src/timer.c */
+u64 		get_time_sec();
 void		draw_timer_rect(SDLHandle *h);
 
 #endif /* CHESS_H */

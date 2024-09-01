@@ -28,10 +28,14 @@ void wite_timer_in_rect(SDLHandle *h, SDL_Rect rect, u64 time) {
 
 }
 
+u64 get_time_sec() {
+	return (SDL_GetTicks64() / 1000ULL);
+}
+
 void draw_timer_rect(SDLHandle *h) {
 	static u64	prev_tick = 0;
 	u64 		*timer_to_update = NULL;
-	u64 		now = SDL_GetTicks() / 1000;
+	u64 		now = get_time_sec();
 	u64 		elapsed_time = now - prev_tick;
 
 	/* Draw timer rect */

@@ -43,9 +43,16 @@ void cleanup_network_windows();
 /* Message disconect */
 #define DISCONNECT_MSG "DISCONNECT"
 
+/* Message alive */
+#define ALIVE_MSG "CLIENT_ALIVE"
+#define ALIVE_LEN 12
+
+/* Message ack */
 #define ACK_STR "ACK"
-#define HELLO_STR "Hello"
 #define ACK_LEN 3
+
+/* Message hello */
+#define HELLO_STR "Hello"
 #define HELLO_LEN 5
 
 /* Magic string for sending addr */
@@ -105,6 +112,8 @@ FT_INLINE char *message_type_to_str(MsgType msg_type) {
 		return ("HELLO");
 	} else if (msg_type == 'D') {
 		return ("DISCONNECT");
+	} else if (msg_type == 'C') {
+		return ("CLIENT_ALIVE");
 	}
 	return ("UNKNOWN");
 }
@@ -112,10 +121,18 @@ FT_INLINE char *message_type_to_str(MsgType msg_type) {
 /* Max iteration for sending message */
 #define	MAX_ITER 50
 
+
+/* Alive packet sent to server delay (in seconde)*/
+#define SEND_ALIVE_DELAY 5ULL
+
+/* Time before server disconect client for timeout ( in seconde )*/
+#define CLIENT_NOT_ALIVE_TIMEOUT 12L
+
 /* src/chess_network.c */
 NetworkInfo	*init_network(char *server_ip, struct timeval timeout);
 s8			network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *server_ip);
 void		send_disconnect_to_server(int sockfd, struct sockaddr_in servaddr);
+void		send_alive_to_server(int sockfd, struct sockaddr_in servaddr);
 s8			wait_peer_info(NetworkInfo *info, const char *msg);
 s8			check_magic_value(char *buff);
 
@@ -130,5 +147,6 @@ s8		safe_msg_send(SDLHandle *h);
 
 /* src/network_routine.c */
 void	network_chess_routine(SDLHandle *h);
+void 	send_alive_packet(NetworkInfo *info);
 
 #endif /* CHESS_NETWORK_H */

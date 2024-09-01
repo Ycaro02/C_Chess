@@ -168,6 +168,8 @@ s8 wait_peer_info(NetworkInfo *info, const char *msg) {
 	char buff[1024];
 	fast_bzero(buff, 1024);
 	
+	send_alive_packet(info);
+
 	/* Receive the peer information */
 	ret = recvfrom(info->sockfd, buff, sizeof(buff), 0, (struct sockaddr *)&info->servaddr, &info->addr_len);
 	if (ret == 16 + MAGIC_SIZE) {
@@ -233,4 +235,9 @@ NetworkInfo *init_network(char *server_ip, struct timeval timeout) {
 
 void send_disconnect_to_server(int sockfd, struct sockaddr_in servaddr) {
 	sendto(sockfd, DISCONNECT_MSG, fast_strlen(DISCONNECT_MSG), 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
+}
+
+void send_alive_to_server(int sockfd, struct sockaddr_in servaddr) {
+	CHESS_LOG(LOG_INFO, ORANGE"Send alive message\n"RESET);
+	sendto(sockfd, ALIVE_MSG, ALIVE_LEN, 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
 }

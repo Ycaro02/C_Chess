@@ -150,7 +150,7 @@ void process_message_receive(SDLHandle *handle, char *msg) {
 	if (msg_type == MSG_TYPE_COLOR) {
 		handle->player_info.color = msg[IDX_FROM] - 1;
 	} else if (msg_type == MSG_TYPE_QUIT) {
-		CHESS_LOG(LOG_INFO, "%s\n", "Opponent quit the game");
+		CHESS_LOG(LOG_INFO, "%s\n", RED"Opponent quit the game"RESET);
 		handle->player_info.nt_info->peer_conected = FALSE;
 	} else if (msg_type == MSG_TYPE_MOVE || msg_type == MSG_TYPE_PROMOTION) {
 		/* We need to decrement all value cause we send with +1 can't send 0, interpreted like '\0' */

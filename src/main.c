@@ -64,10 +64,10 @@ void chess_routine(SDLHandle *h){
 void chess_destroy(SDLHandle *h) {
 	CHESS_LOG(LOG_INFO, RED"Destroy chess game%s\n", RESET);
 
-	if (h->player_info.nt_info && h->player_info.nt_info->peer_conected) {
-		build_message(h, h->player_info.msg_tosend, MSG_TYPE_QUIT, 0, 0, 0);
-		chess_msg_send(h->player_info.nt_info, h->player_info.msg_tosend, MSG_SIZE);
-	}
+	// if (h->player_info.nt_info && h->player_info.nt_info->peer_conected) {
+	// 	build_message(h, h->player_info.msg_tosend, MSG_TYPE_QUIT, 0, 0, 0);
+	// 	chess_msg_send(h->player_info.nt_info, h->player_info.msg_tosend, MSG_SIZE);
+	// }
 	if (h->board->lst) {
 		ft_lstclear(&h->board->lst, free);
 	}
