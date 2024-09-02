@@ -103,7 +103,15 @@ SDL_Window* create_sdl_windows(SDLHandle *h, const char* title) {
 	}
 
 	compute_win_size(h);
-	init_menu(h, BTN_MAX);
+
+	if (!init_menu(h, BTN_MAX)) {
+		TTF_Quit();
+		SDL_Quit();
+		return (NULL);
+	}
+
+	h->center_text = init_center_text(h);
+
 
 	window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, h->window_size.x, h->window_size.y, SDL_WINDOW_SHOWN);
 	if (!window) {
@@ -430,12 +438,17 @@ void destroy_sdl_handle(SDLHandle *handle) {
 		free(handle->piece_texture);
 	}
 
+
+	/* unload font */
 	if (handle->tile_font) {
 		unload_font(handle->tile_font);
 	}
 	if (handle->timer_font) {
 		unload_font(handle->timer_font);
 	}
+
+	/* free center_text */
+	destroy_center_text(handle->center_text);
 
 	/* Close window */
 	window_close(handle->window, handle->renderer);

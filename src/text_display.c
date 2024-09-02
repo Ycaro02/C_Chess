@@ -1,6 +1,7 @@
 #include "../include/chess.h"
 #include "../include/handle_sdl.h"
 #include "../include/network.h"
+#include "../include/chess_log.h"
 
 /* @brief Center the text in the left band
  * @param char_pos The position of the text
@@ -88,4 +89,99 @@ void draw_letter_number(SDLHandle *handle, s8 player_color) {
 		letter = player_color == IS_BLACK ? letter + 1 : letter - 1;
 		column_raw--;
 	}
+}
+
+/* Draw the given text in the center of the board (in a rect) */
+void draw_info_str(SDLHandle *h, CenterText *ct) {
+    iVec2 text_size = {0, 0};
+    iVec2 text_pos = {0, 0};
+
+    SDL_SetRenderDrawColor(h->renderer, MENU_BG_COLOR);
+    SDL_RenderFillRect(h->renderer, &ct->rect);
+
+    // Calculer la taille et la position de la première chaîne
+    TTF_SizeText(ct->font, ct->str, &text_size.x, &text_size.y);
+    text_pos.x = ct->rect.x + (ct->rect.w >> 1) - (text_size.x >> 1);
+    text_pos.y = ct->rect.y + (ct->rect.h >> 1) - (text_size.y >> 1);
+
+    // Ajuster la position si str2 est présente
+    if (ct->str2) {
+        text_pos.y -= text_size.y; // Remonter la première chaîne de quelques pixels
+    }
+
+    write_text(h, ct->str, ct->font, text_pos, U32_BLACK_COLOR);
+
+    // Afficher la seconde chaîne si elle est présente
+    if (ct->str2) {
+        iVec2 text_size2 = {0, 0};
+        iVec2 text_pos2 = {0, 0};
+
+        TTF_SizeText(ct->font, ct->str2, &text_size2.x, &text_size2.y);
+        text_pos2.x = ct->rect.x + (ct->rect.w >> 1) - (text_size2.x >> 1);
+        text_pos2.y = text_pos.y + (text_size.y << 1); // Positionner la seconde chaîne en dessous de la première
+
+        write_text(h, ct->str2, ct->font, text_pos2, U32_BLACK_COLOR);
+    }
+}
+CenterText *init_center_text(SDLHandle *h) {
+    CenterText *ct = ft_calloc(1, sizeof(CenterText));
+
+    if (!ct) {
+        CHESS_LOG(LOG_ERROR, "Failed to allocate memory\n");
+        return (NULL);
+    }
+
+    ct->str = NULL;
+    ct->str2 = NULL; // Initialiser str2 à NULL
+
+    if (ct->rect.x == 0) {
+        ct->rect.w = h->tile_size.x * 4;
+        ct->rect.h = h->tile_size.x * 2;
+        ct->rect.x = h->band_size.left + (h->tile_size.x * 2);
+        ct->rect.y = h->band_size.top + (h->tile_size.x * 3);
+    }
+
+    ct->font = load_font(FONT_PATH, (ct->rect.h >> 2) - (ct->rect.h >> 4));
+    if (!ct->font) {
+        CHESS_LOG(LOG_ERROR, "Failed to load font\n");
+        free(ct);
+        return (NULL);
+    }
+    return (ct);
+}
+
+void set_info_str(SDLHandle *h, char *str, char *str2) {
+    if (h->center_text->str) {
+        free(h->center_text->str);
+        h->center_text->str = NULL;
+    }
+    if (h->center_text->str2) {
+        free(h->center_text->str2);
+        h->center_text->str2 = NULL;
+    }
+    if (str) {
+        h->center_text->str = ft_strdup(str);
+    }
+    if (str2) {
+        h->center_text->str2 = ft_strdup(str2);
+    }
+}
+
+void destroy_center_text(CenterText *ct) {
+	if (!ct) {
+		return ;
+	}
+	if (ct->str) {
+		free(ct->str);
+		ct->str = NULL;
+	}
+	if (ct->str2) {
+		free(ct->str2);
+		ct->str2 = NULL;
+	}
+	if (ct->font) {
+		unload_font(ct->font);
+		ct->font = NULL;
+	}
+	free(ct);
 }

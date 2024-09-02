@@ -151,6 +151,10 @@ void draw_board(SDLHandle *handle, s8 player_color) {
 		draw_piece_over_board(handle, handle->mouse_pos.x - (handle->tile_size.x >> 1), handle->mouse_pos.y - (handle->tile_size.x >> 1));
 	}
 
+	if (handle->center_text->str) {
+		draw_info_str(handle, handle->center_text);
+	}
+
 }
 
 /**
@@ -189,13 +193,6 @@ void update_mouse_pos(SDLHandle *h, s32 x, s32 y) {
 	h->mouse_pos.x = x;
 	h->mouse_pos.y = y;
 }
-
-void menu_close(ChessMenu *menu) {
-	menu->is_open = FALSE;
-	menu->btn_hover = BTN_INVALID;
-	menu->ip_field.is_active = FALSE;
-}
-
 
 void menu_event_handling(SDLHandle *h, SDL_Event event) {
 	iVec2 pos = {0, 0};

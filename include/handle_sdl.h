@@ -64,7 +64,20 @@ typedef struct s_window_band {
 	s32 bot;
 } WinBand;
 
+
+#define BTN_HOVER_COLOR ((SDL_Color){100, 10, 10, 255})
+#define BTN_BASIC_COLOR ((SDL_Color){10, 10, 10, 255})
+#define BLACK_COLOR 	0, 0, 0, 255
+#define WHITE_COLOR 	255, 255, 255, 255
+#define U32_WHITE_COLOR RGBA_TO_UINT32(255, 255, 255, 255)
+#define U32_BLACK_COLOR RGBA_TO_UINT32(0, 0, 0, 255)
+
+
+/* Clear color */
 #define CLEAR_COLOR 70, 70, 70, 255
+
+/* Menu background color */
+#define MENU_BG_COLOR 	70, 70, 70, 220
 
 typedef enum e_btn_state {
 	BTN_STATE_RELEASED = 0,
@@ -130,6 +143,13 @@ typedef struct s_chess_menu {
 } ChessMenu;
 
 
+typedef struct s_center_text {
+	SDL_Rect	rect;
+	TTF_Font	*font;
+	char		*str;
+	char		*str2;
+} CenterText;
+
 #define TIME_STR_SIZE 16
 
 typedef struct s_sdl_handle {
@@ -140,6 +160,7 @@ typedef struct s_sdl_handle {
 
 	/* GUI */
 	ChessMenu		menu;						/* The menu */
+	CenterText		*center_text;				/* The center text */
 	TTF_Font		*tile_font;					/* The font for tile number/letters */
 	TTF_Font		*timer_font;				/* The font */
 	char			timer_str[TIME_STR_SIZE];	/* Timer string */
@@ -203,7 +224,11 @@ void		draw_circle_outline(SDL_Renderer *renderer, int x, int y, int radius);
 void		left_band_center_text(iVec2 *char_pos, char *text, TTF_Font *font, s32 tile_size, s32 band_left_size);
 void		bot_band_center_text(iVec2 *char_pos, char *text, TTF_Font *font, s32 tile_size, s32 band_bot_size);
 void		draw_letter_number(SDLHandle *handle, s8 player_color);
-
+// center text
+CenterText *init_center_text(SDLHandle *h);
+void		set_info_str(SDLHandle *h, char *str, char *str2);
+void		draw_info_str(SDLHandle *h, CenterText *ct);
+void		destroy_center_text(CenterText *ct);
 
 /* src/text_input.c */
 TextField	init_text_field(SDL_Rect rect, int buff_size_max, TTF_Font *font, char *initial_text);
@@ -211,7 +236,8 @@ void		handle_text_input(SDLHandle *h, SDL_Event *event);
 void		render_text_field(SDL_Renderer *renderer, TextField *text_field, SDL_Color text_color, SDL_Color bg_color);
 
 /* src/chess_menu.c */
-void 	init_menu(SDLHandle *h, s32 nb_btn);
+void	menu_close(ChessMenu *menu);
+s8		init_menu(SDLHandle *h, s32 nb_btn);
 void 	draw_menu(SDLHandle *h);
 
 s32		detect_button_click(Button *btn, s32 nb_btn, iVec2 mouse_pos);

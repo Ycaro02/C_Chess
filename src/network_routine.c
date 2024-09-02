@@ -90,12 +90,14 @@ void network_chess_routine(SDLHandle *h) {
 		
 		if (h->player_info.nt_info->peer_conected == FALSE) {
 			msg_recv = wait_peer_info(h->player_info.nt_info, "Wait reconnect peer info");
+			set_info_str(h, "Wait peer reconnection", NULL);
 			if (msg_recv) {
 				/* Here we need to build MSG_TYPE_RECONECT and while on the list of move to give them to the reconnected client */
 				u16 msg_size = 0;
 				char *buff = build_reconnect_message(h, &msg_size);
 				chess_msg_send(h->player_info.nt_info, buff, msg_size);
 				h->player_info.nt_info->peer_conected = TRUE;
+				set_info_str(h, NULL, NULL);
 			}
 		} else {
 			/* If tile is selected and is player turn, try to send move piece and move it */

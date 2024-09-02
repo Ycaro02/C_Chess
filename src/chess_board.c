@@ -35,6 +35,8 @@ void init_board(ChessBoard *b) {
 	/* Set all pieces to 0 */
 	fast_bzero(b, sizeof(ChessBoard));
 
+	b->turn = 1;
+
 	/* Set start for white and black piece */
 	b->piece[WHITE_PAWN] = START_WHITE_PAWNS;
 	b->piece[WHITE_KNIGHT] = START_WHITE_KNIGHTS;

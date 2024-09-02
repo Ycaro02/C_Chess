@@ -3,6 +3,13 @@
 #include "../include/chess_log.h"
 
 
+
+void menu_close(ChessMenu *menu) {
+	menu->is_open = FALSE;
+	menu->btn_hover = BTN_INVALID;
+	menu->ip_field.is_active = FALSE;
+}
+
 /**
  * @brief Destroy the menu
  * @param h The SDLHandle
@@ -45,10 +52,14 @@ void search_game(SDLHandle *h) {
 	u32 client_flag = FLAG_LISTEN;
 	struct timeval	timeout = {0, 10000}; /* 10000 microseconds = 0.01 seconds */
 
-	CHESS_LOG(LOG_INFO, "Search game\n");
+	menu_close(&h->menu);
+	/* Reset board */
+	init_board(h->board);
+	set_info_str(h, "Searching game on :", h->player_info.dest_ip);
+	update_graphic_board(h);
+
 	if (!has_flag(h->flag, FLAG_NETWORK)) {
 		set_flag(&h->flag, FLAG_NETWORK);
-		h->menu.is_open = FALSE;
 		// network_setup(h, h->flag, &h->player_info, h->player_info.dest_ip);
 		h->player_info.nt_info = init_network(h->player_info.dest_ip, timeout);
 		CHESS_LOG(LOG_INFO, "After network init: %s\n", clientstate_to_str(h->player_info.nt_info->client_state));
@@ -57,6 +68,7 @@ void search_game(SDLHandle *h) {
 		}
 		set_flag(&h->flag, client_flag);
 		handle_network_client_state(h, h->flag, &h->player_info);
+		set_info_str(h, NULL, NULL);
 		network_chess_routine(h);
 		chess_destroy(h);
 	}
@@ -66,13 +78,20 @@ void reconnect_game(SDLHandle *h) {
 	(void)h;
 	struct timeval	timeout = {0, 10000}; /* 10000 microseconds = 0.01 seconds */
 
+	menu_close(&h->menu);
 	CHESS_LOG(LOG_INFO, "Reconnect to game\n");
+	/* Reset board */
+	init_board(h->board);
+	set_info_str(h, "Reconnect game on:", h->player_info.dest_ip);
+	update_graphic_board(h);
+
 	if (!has_flag(h->flag, FLAG_NETWORK)) {
 		set_flag(&h->flag, FLAG_NETWORK);
 		set_flag(&h->flag, FLAG_RECONNECT);
 		h->menu.is_open = FALSE;
 		h->player_info.nt_info = init_network(h->player_info.dest_ip, timeout);
 		handle_network_client_state(h, h->flag, &h->player_info);
+		set_info_str(h, NULL, NULL);
 		network_chess_routine(h);
 		chess_destroy(h);
 	}
@@ -162,7 +181,7 @@ void init_button(SDLHandle *h, ChessMenu *menu, s32 nb_btn) {
  * @param h The SDLHandle
  * @param nb_btn The number of button
 */
-void init_menu(SDLHandle *h, s32 total_btn) {
+s8 init_menu(SDLHandle *h, s32 total_btn) {
 	
 	/* The last button is the server ip button */
 	s32 menu_btn = total_btn - 1;
@@ -195,7 +214,7 @@ void init_menu(SDLHandle *h, s32 total_btn) {
 	h->menu.btn = ft_calloc(sizeof(Button), total_btn);
 	if (h->menu.btn == NULL) {
 		CHESS_LOG(LOG_ERROR, "Failed to allocate memory for buttons\n");
-		return ;
+		return (FALSE);
 	}
 	init_button(h, &h->menu, menu_btn);
 
@@ -227,6 +246,7 @@ void init_menu(SDLHandle *h, s32 total_btn) {
 	rect.h = text_size.y;
 
 	h->menu.ip_field = init_text_field(rect, TEXT_INPUT_SIZE, h->menu.btn_text_font, "127.0.0.1");
+	return (TRUE);
 }
 
 /**
@@ -249,7 +269,7 @@ void draw_button(SDLHandle *h, Button btn, SDL_Color c) {
 }
 
 
-void update_btn_state(SDLHandle *h, Button *btn) {
+void update_btn_disabled(SDLHandle *h, Button *btn) {
 	u32 flag = h->flag;
 
 	if (has_flag(flag, FLAG_NETWORK)) {
@@ -272,7 +292,7 @@ void draw_menu(SDLHandle *h) {
 	rect.h = h->menu.height;
 
 	/* Draw the menu rect */
-	SDL_SetRenderDrawColor(h->renderer, 70,70,70,220);
+	SDL_SetRenderDrawColor(h->renderer, MENU_BG_COLOR);
 	SDL_RenderFillRect(h->renderer, &rect);
 
 	/* Draw the server info rect */
@@ -285,21 +305,21 @@ void draw_menu(SDLHandle *h) {
 	SDL_Color bg_color = {CLEAR_COLOR};
 	/* Draw the server ip text input */
 	if (h->menu.ip_field.is_active) {
-		bg_color = (SDL_Color){255, 255, 255, 255};
+		bg_color = (SDL_Color){BLACK_COLOR};
 	}
 	render_text_field(h->renderer, &h->menu.ip_field, (SDL_Color){255, 0, 0, 255}, bg_color);
 
-	SDL_Color btn_color = {10, 10, 10, 255};
+	/* Update the button state */
+	update_btn_disabled(h, h->menu.btn);
 
-
-	update_btn_state(h, h->menu.btn);
+	SDL_Color btn_color;
 
 	/* Draw the menu button */
 	for (s32 i = 0; i < h->menu.nb_btn; i++) {
 		if (i == h->menu.btn_hover) {
-			btn_color = (SDL_Color){100, 10, 10, 255};
+			btn_color = BTN_HOVER_COLOR;
 		} else {
-			btn_color = (SDL_Color){10, 10, 10, 255};
+			btn_color = BTN_BASIC_COLOR;
 		}
 
 		if (h->menu.btn[i].state == BTN_STATE_DISABLED) {
@@ -309,3 +329,4 @@ void draw_menu(SDLHandle *h) {
 		draw_button(h, h->menu.btn[i], btn_color);
 	}
 }
+

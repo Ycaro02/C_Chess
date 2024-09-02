@@ -19,7 +19,6 @@ SDLHandle *init_game() {
 		return (NULL);
 	}
 	init_board(handle->board);
-	handle->board->turn = 1;
 
 	return (handle);
 }
