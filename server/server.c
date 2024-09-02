@@ -11,21 +11,23 @@
 typedef t_list RoomList;
 
 typedef struct s_chess_client {
-    SockaddrIn		addr;
-	struct timeval 	last_alive;
-    s8				connected;
+    SockaddrIn		addr;			/* Client address */
+	struct timeval 	last_alive;		/* Last alive packet */
+	s8				client_state;	/* Client state */
+    s8				connected;		/* Client connected */
 } ChessClient;
 
 typedef struct s_chess_room {
-	u32			room_id;
-	ChessClient	cliA;
-	ChessClient	cliB;
+	ChessClient	cliA;			/* Client A */
+	ChessClient	cliB;			/* Client B */
+	u32			room_id;		/* Room ID */
+	RoomState	state;			/* Room state */
 } ChessRoom;
 
 typedef struct s_chess_server {
-	int			sockfd;
-	SockaddrIn	addr;
-	RoomList	*room_lst;
+	int			sockfd;			/* Server socket */
+	SockaddrIn	addr;			/* Server address */
+	RoomList	*room_lst;		/* Room list */
 } ChessServer;
 
 void send_quit_msg(int sockfd, ChessClient *client);
@@ -41,6 +43,7 @@ ChessRoom *room_create(u32 id) {
 	room->room_id = id;
 	fast_bzero(&room->cliA, sizeof(ChessClient));
 	fast_bzero(&room->cliB, sizeof(ChessClient));
+	room->state = ROOM_STATE_WAITING;
 	return (room);
 }
 
@@ -86,21 +89,22 @@ char *format_client_message(char *msg, u64 message_size){
 	return (data);
 }
 
-char *format_connect_packet(char *msg, u64 message_size){
-	char *data = ft_calloc(1, MAGIC_SIZE + message_size);
+char *format_connect_packet(char *msg, u64 message_size, s8 player_state){
+	char *data = ft_calloc(1, CONNECT_PACKET_SIZE);
 	if (!data) {
 		ft_printf_fd(2, RED"Error: %s\n"RESET, __func__);
 		return (NULL);
 	}
-	ft_memcpy(data, MAGIC_RECONNECT_STR, MAGIC_SIZE);
+	ft_memcpy(data, MAGIC_CONNECT_STR, MAGIC_SIZE);
 	ft_memcpy(data + MAGIC_SIZE, msg, message_size);
+	data[CONNECT_PACKET_SIZE - 1] = player_state;
 	return (data);
 }
 
 void connect_client_together(int sockfd, ChessRoom *r) {
 
-	char *dataClientA = format_connect_packet((char *)&r->cliA.addr, sizeof(r->cliA.addr));
-	char *dataClientB = format_connect_packet((char *)&r->cliB.addr, sizeof(r->cliB.addr));
+	char *dataClientA = format_connect_packet((char *)&r->cliA.addr, sizeof(r->cliA.addr), r->cliA.client_state);
+	char *dataClientB = format_connect_packet((char *)&r->cliB.addr, sizeof(r->cliB.addr), r->cliB.client_state);
 
 	if (!dataClientA || !dataClientB) {
 		ft_printf_fd(2, RED"Error: %s\n"RESET, __func__);
@@ -110,11 +114,9 @@ void connect_client_together(int sockfd, ChessRoom *r) {
 	ft_printf_fd(1, PURPLE"Room is Ready send info: ClientA : %s:%d, ClientB : %s:%d\n"RESET, inet_ntoa(r->cliA.addr.sin_addr), ntohs(r->cliA.addr.sin_port), inet_ntoa(r->cliB.addr.sin_addr), ntohs(r->cliB.addr.sin_port));
 
 	/* Send information from B to A */
-	// sendto(sockfd, (char *)&r->cliB.addr, MAGIC_SIZE + sizeof(r->cliB.addr), 0, (Sockaddr *)&r->cliA.addr, sizeof(r->cliA.addr));
-	sendto(sockfd, dataClientB, MAGIC_SIZE + sizeof(r->cliB.addr), 0, (Sockaddr *)&r->cliA.addr, sizeof(r->cliA.addr));
+	sendto(sockfd, dataClientB, CONNECT_PACKET_SIZE, 0, (Sockaddr *)&r->cliA.addr, sizeof(r->cliA.addr));
 	/* Send information from A to B */
-	// sendto(sockfd, (char *)&r->cliA.addr, MAGIC_SIZE + sizeof(r->cliA.addr), 0, (Sockaddr *)&r->cliB.addr, sizeof(r->cliB.addr));
-	sendto(sockfd, dataClientA, MAGIC_SIZE + sizeof(r->cliA.addr), 0, (Sockaddr *)&r->cliB.addr, sizeof(r->cliB.addr));
+	sendto(sockfd, dataClientA, CONNECT_PACKET_SIZE, 0, (Sockaddr *)&r->cliB.addr, sizeof(r->cliB.addr));
 
 	free(dataClientA);
 	free(dataClientB);
@@ -208,19 +210,39 @@ void handle_client_timeout(ChessRoom *r) {
 	}
 }
 
+ChessClient set_client_data(SockaddrIn *cliaddr, struct timeval *now, ClientState state ,s8 connected) {
+	ChessClient client;
+
+	ft_memcpy(&client.addr, cliaddr, sizeof(SockaddrIn));
+	ft_memcpy(&client.last_alive, now, sizeof(struct timeval));
+	client.connected = connected;
+	client.client_state = state;
+	return (client);
+}
+
 void handle_client_connect(ChessRoom *r, SockaddrIn *cliaddr, int sockfd) {
 	struct timeval now;
+	ClientState clientA_state = CLIENT_STATE_INIT, clientB_state = CLIENT_STATE_INIT;
+
+	if (r->state == ROOM_STATE_WAITING) {
+		ft_printf_fd(1, RED"Error: Room is playing\n"RESET);
+		clientA_state = CLIENT_STATE_WAIT_COLOR;
+		clientB_state = CLIENT_STATE_SEND_COLOR;
+	} else if (r->state == ROOM_STATE_WAIT_RECONNECT) {
+		ft_printf_fd(1, RED"Error: Room is waiting for reconnect\n"RESET);
+		clientA_state = CLIENT_STATE_RECONNECT;
+		clientB_state = CLIENT_STATE_RECONNECT;
+	} else if (r->state == ROOM_STATE_END || r->state == ROOM_STATE_PLAYING) {
+		ft_printf_fd(1, RED"Error: Room is end or in playing\n"RESET);
+		return ;
+	}
+
 	gettimeofday(&now, NULL);
-	
 	if (!r->cliA.connected && !addr_cmp(cliaddr, &r->cliB.addr)) {
-		ft_memcpy(&r->cliA.addr, cliaddr, sizeof(SockaddrIn));
-		r->cliA.connected = TRUE;
-		ft_memcpy(&r->cliA.last_alive, &now, sizeof(struct timeval));
+		r->cliA = set_client_data(cliaddr, &now, clientA_state, TRUE);
 		ft_printf_fd(1, GREEN"Client A connected: %s:%d\n"RESET, inet_ntoa(r->cliA.addr.sin_addr), ntohs(r->cliA.addr.sin_port));
 	} else if (!r->cliB.connected && !addr_cmp(cliaddr, &r->cliA.addr)) {
-		ft_memcpy(&r->cliB.addr, cliaddr, sizeof(SockaddrIn));
-		r->cliB.connected = TRUE;
-		ft_memcpy(&r->cliB.last_alive, &now, sizeof(struct timeval));
+		r->cliB = set_client_data(cliaddr, &now, clientB_state, TRUE);
 		ft_printf_fd(1, GREEN"Client B connected: %s:%d\n"RESET, inet_ntoa(r->cliB.addr.sin_addr), ntohs(r->cliB.addr.sin_port));
 	}
 	if (r->cliA.connected && r->cliB.connected) {

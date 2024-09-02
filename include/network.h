@@ -32,9 +32,21 @@ void cleanup_network_windows();
 #include <stdio.h> // For perror
 #include "chess.h"
 
-/* For testing */
-#define SENDER 1
-#define RECEIVER 0
+/* CLient state for frist conection */
+typedef enum e_client_state {
+	CLIENT_STATE_INIT=0,		/* Init client */
+	CLIENT_STATE_SEND_COLOR,	/* Send color */
+	CLIENT_STATE_WAIT_COLOR,	/* Wait color */
+	CLIENT_STATE_RECONNECT,		/* Reconnect */
+	CLIENT_STATE_CONNECTED,		/* Connected */
+} ClientState;
+
+typedef enum e_game_state {
+	ROOM_STATE_WAITING, 		/* Waiting for a player */
+	ROOM_STATE_PLAYING, 		/* Playing */
+	ROOM_STATE_WAIT_RECONNECT,	/* Wait reconnect */
+	ROOM_STATE_END				/* End of the game */
+} RoomState;
 
 /* Contant server port and nb attemps max */
 #define SERVER_PORT 24242
@@ -55,11 +67,14 @@ void cleanup_network_windows();
 #define HELLO_STR "Hello"
 #define HELLO_LEN 5
 
+
 /* Magic string for sending addr */
-// #define MAGIC_STRING "\x7ACHESSMAGIC\x7A\x7B\x42\x80\x7A"
 #define MAGIC_STRING ((const char[]){0x7F, 0x42, 'C', 'H', 'E', 'S', 'S', 'M', 'A', 'G', 'I', 'C', 0x7A, 0x7B, 0x42, 0x7F})
-#define MAGIC_RECONNECT_STR ((const char[]){0x42, 'C', 'H', 'E', 'S', 'S', 'R', 'E', 'C', 'O', 'N', 'N', 'E', 'C', 'T', 0x42})
+#define MAGIC_CONNECT_STR ((const char[]){0x42, 0x7B, 'C', 'H', 'E', 'S', 'S', 'C', 'O', 'N', 'N', 'E', 'C', 'T', 0x7B, 0x42})
 #define MAGIC_SIZE 16ULL
+
+/* Connect packet size */
+#define CONNECT_PACKET_SIZE (MAGIC_SIZE + sizeof(struct sockaddr_in) + 1ULL)
 
 enum e_msg_type {
 	MSG_TYPE_COLOR=1,
@@ -67,6 +82,10 @@ enum e_msg_type {
 	MSG_TYPE_PROMOTION,
 	MSG_TYPE_RECONNECT,
 	MSG_TYPE_QUIT,
+	MSG_TYPE_ACK='A',
+	MSG_TYPE_HELLO='H',
+	MSG_TYPE_DISCONNECT='D',
+	MSG_TYPE_CLIENT_ALIVE='C',
 };
 
 enum e_msg_idx {
@@ -89,38 +108,54 @@ struct s_network_info {
     SockaddrIn	servaddr;
     SockaddrIn	peeraddr;
     SocketLen	addr_len;
+	ClientState	client_state;			/* Client state (reconnect, waiter/lister color)*/
 	s8			peer_conected;			/* Peer connected */
 };
 
 typedef enum e_msg_type MsgType;
 typedef struct s_network_info NetworkInfo;
 
+#define ENUM_TO_STR_CASE(_val_) case _val_: return #_val_;
+
+
 FT_INLINE char *message_type_to_str(MsgType msg_type) {
-	if (msg_type == MSG_TYPE_COLOR) {
-		return ("COLOR");
-	} else if (msg_type == MSG_TYPE_MOVE) {
-		return ("MOVE");
-	} else if (msg_type == MSG_TYPE_PROMOTION) {
-		return ("PROMOTION");
-	} else if (msg_type == MSG_TYPE_QUIT) {
-		return ("QUIT");
-	} else if (msg_type == MSG_TYPE_RECONNECT) {
-		return ("RECONNECT");
-	} else if (msg_type == 'A') {
-		return ("ACK");
-	} else if (msg_type == 'H') {
-		return ("HELLO");
-	} else if (msg_type == 'D') {
-		return ("DISCONNECT");
-	} else if (msg_type == 'C') {
-		return ("CLIENT_ALIVE");
+	switch (msg_type) {
+		ENUM_TO_STR_CASE(MSG_TYPE_COLOR);
+		ENUM_TO_STR_CASE(MSG_TYPE_MOVE);
+		ENUM_TO_STR_CASE(MSG_TYPE_PROMOTION);
+		ENUM_TO_STR_CASE(MSG_TYPE_RECONNECT);
+		ENUM_TO_STR_CASE(MSG_TYPE_QUIT);
+		ENUM_TO_STR_CASE(ACK);
+		ENUM_TO_STR_CASE(HELLO);
+		ENUM_TO_STR_CASE(DISCONNECT);
+		ENUM_TO_STR_CASE(CLIENT_ALIVE);
+		default: return "UNKNOWN";
 	}
-	return ("UNKNOWN");
+}
+
+FT_INLINE char *roomstate_to_str(RoomState state) {
+	switch (state) {
+		ENUM_TO_STR_CASE(ROOM_STATE_WAITING);
+		ENUM_TO_STR_CASE(ROOM_STATE_PLAYING);
+		ENUM_TO_STR_CASE(ROOM_STATE_WAIT_RECONNECT);
+		ENUM_TO_STR_CASE(ROOM_STATE_END);
+		default: return "UNKNOWN";
+	}
+}
+
+FT_INLINE char *clientstate_to_str(ClientState state) {
+	switch (state) {
+		ENUM_TO_STR_CASE(CLIENT_STATE_INIT);
+		ENUM_TO_STR_CASE(CLIENT_STATE_SEND_COLOR);
+		ENUM_TO_STR_CASE(CLIENT_STATE_WAIT_COLOR);
+		ENUM_TO_STR_CASE(CLIENT_STATE_RECONNECT);
+		ENUM_TO_STR_CASE(CLIENT_STATE_CONNECTED);
+		default: return "UNKNOWN";
+	}
 }
 
 /* Max iteration for sending message */
 #define	MAX_ITER 50
-
 
 /* Alive packet sent to server delay (in seconde)*/
 #define SEND_ALIVE_DELAY 5ULL

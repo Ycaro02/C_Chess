@@ -147,7 +147,7 @@ s8 check_magic_value(char *buff) {
 }
 
 s8 check_reconnect_magic_value(char *buff) {
-	static const char magic_reco[MAGIC_SIZE] = MAGIC_RECONNECT_STR;
+	static const char magic_reco[MAGIC_SIZE] = MAGIC_CONNECT_STR;
 	u64 i = 0;
 	while (i < MAGIC_SIZE) {
 		if (buff[i] != magic_reco[i]) {
@@ -172,7 +172,7 @@ s8 wait_peer_info(NetworkInfo *info, const char *msg) {
 
 	/* Receive the peer information */
 	ret = recvfrom(info->sockfd, buff, sizeof(buff), 0, (struct sockaddr *)&info->servaddr, &info->addr_len);
-	if (ret == 16 + MAGIC_SIZE) {
+	if (ret == CONNECT_PACKET_SIZE) {
 		s8 check = check_reconnect_magic_value(buff);
 		if (check == FALSE) {
 			CHESS_LOG(LOG_ERROR, "Magic value reconnect check failed\n");
@@ -180,9 +180,19 @@ s8 wait_peer_info(NetworkInfo *info, const char *msg) {
 		}
 		info->peer_conected = TRUE;
 		ft_memcpy(&info->peeraddr, buff + MAGIC_SIZE, sizeof(info->peeraddr));
-		CHESS_LOG(LOG_INFO, "Peer info : %s:%d, addr_len %d\n", inet_ntoa(info->peeraddr.sin_addr), ntohs(info->peeraddr.sin_port), info->addr_len);
+		info->client_state = buff[CONNECT_PACKET_SIZE - 1];
+		CHESS_LOG(LOG_INFO, "Client state: %s: Peer info : %s:%d\n"\
+			, clientstate_to_str(info->client_state)
+			, inet_ntoa(info->peeraddr.sin_addr)
+			, ntohs(info->peeraddr.sin_port));
 		return (TRUE);
 	} 
+	// else if (ret > 0) {
+		// printf("Received %ld bytes\n", ret);
+		// for (ssize_t i = 0; i < ret; i++) {
+			// printf("%d ", buff[i]);
+		// }
+	// }
 	return (FALSE);
 }
 
