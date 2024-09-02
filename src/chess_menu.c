@@ -60,11 +60,12 @@ void search_game(SDLHandle *h) {
 
 	if (!has_flag(h->flag, FLAG_NETWORK)) {
 		set_flag(&h->flag, FLAG_NETWORK);
-		// network_setup(h, h->flag, &h->player_info, h->player_info.dest_ip);
 		h->player_info.nt_info = init_network(h->player_info.dest_ip, timeout);
 		CHESS_LOG(LOG_INFO, "After network init: %s\n", clientstate_to_str(h->player_info.nt_info->client_state));
 		if (h->player_info.nt_info->client_state == CLIENT_STATE_WAIT_COLOR) {
 			client_flag = FLAG_JOIN;
+		} else if (h->player_info.nt_info->client_state == CLIENT_STATE_RECONNECT) {
+			client_flag = FLAG_RECONNECT;
 		}
 		set_flag(&h->flag, client_flag);
 		handle_network_client_state(h, h->flag, &h->player_info);
@@ -88,7 +89,6 @@ void reconnect_game(SDLHandle *h) {
 	if (!has_flag(h->flag, FLAG_NETWORK)) {
 		set_flag(&h->flag, FLAG_NETWORK);
 		set_flag(&h->flag, FLAG_RECONNECT);
-		h->menu.is_open = FALSE;
 		h->player_info.nt_info = init_network(h->player_info.dest_ip, timeout);
 		handle_network_client_state(h, h->flag, &h->player_info);
 		set_info_str(h, NULL, NULL);

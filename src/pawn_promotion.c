@@ -2,7 +2,6 @@
 #include "../include/network.h"
 #include "../include/handle_sdl.h"
 
-
 /* @brief Promot the pawn
  * @param board The ChessBoard structure
  * @param tile The tile to promote
