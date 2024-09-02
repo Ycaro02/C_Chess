@@ -305,7 +305,7 @@ void draw_menu(SDLHandle *h) {
 	SDL_Color bg_color = {CLEAR_COLOR};
 	/* Draw the server ip text input */
 	if (h->menu.ip_field.is_active) {
-		bg_color = (SDL_Color){BLACK_COLOR};
+		bg_color = (SDL_Color){WHITE_COLOR};
 	}
 	render_text_field(h->renderer, &h->menu.ip_field, (SDL_Color){255, 0, 0, 255}, bg_color);
 

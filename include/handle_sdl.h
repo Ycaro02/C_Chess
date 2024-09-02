@@ -103,9 +103,11 @@ typedef struct {
     SDL_Rect	rect;					/* The rect of the text input */
     char		text[TEXT_INPUT_SIZE];	/* The text buffer */
     TTF_Font	*font;					/* The font */
+	u64			last_cursor_time;		/* The last cursor time */
 	int			buffer_size;			/* The buffer size */
     int			cursor;					/* The cursor position */
-	s8			is_active;
+	s8			is_active;				/* The text input is active */
+	s8			cursor_visible;			/* The cursor is visible */
 } TextField;
 
 typedef struct s_button {
