@@ -50,10 +50,9 @@ static s32 display_promotion_selection(SDLHandle *h, ChessTile tile_from, ChessT
 		tile_end = G2;
 	}
 
-	/* Clear the window */
+	/* Update board */
 	h->board->possible_moves = 0;
-	window_clear(h->renderer);
-	draw_board(h, h->player_info.color);
+	update_graphic_board(h);
 
 
 	/* Draw a black rectangle */

@@ -370,13 +370,16 @@ Bitboard 	get_piece_move(ChessBoard *board, Bitboard piece, ChessPiece piece_typ
 s32			move_piece(SDLHandle *handle, ChessTile tile_from, ChessTile tile_to, ChessPiece type);
 
 /* src/handle_board.c */
-void		draw_board(SDLHandle *handle, s8 player_color);
 s32			event_handler(SDLHandle *h, s8 player_color);
+void		reset_selected_tile(SDLHandle *h);
+
+/* src/draw_baord.c */
+s8			is_selected_possible_move(Bitboard possible_moves, ChessTile tile);
+s8			is_en_passant_move(ChessBoard *b, ChessTile tile);
+ChessTile	handle_tile(ChessTile tile, s32 player_color);
 s8			verify_check_and_mat(ChessBoard *b, s8 is_black);
 Bitboard	get_piece_color_control(ChessBoard *b, s8 is_black);
 void 		update_graphic_board(SDLHandle *h);
-void		draw_piece_over_board(SDLHandle *h, s32 x, s32 y);
-void		reset_selected_tile(SDLHandle *h);
 
 /* src/pawn_promotion.c */
 s32			check_pawn_promotion(SDLHandle *handle, ChessPiece type, ChessTile tile_from, ChessTile tile_to);
