@@ -1,12 +1,6 @@
-#include <stdio.h>
-#include <arpa/inet.h>
-#include <time.h>
-
 #include "../include/chess.h"
 #include "../include/network.h"
-#include <signal.h>
-
-#define PORT 24242
+#include "../include/handle_signal.h"
 
 typedef t_list RoomList;
 
@@ -30,8 +24,20 @@ typedef struct s_chess_server {
 	RoomList	*room_lst;		/* Room list */
 } ChessServer;
 
-/* Global server */
+/* Global server pointer */
 ChessServer *g_server = NULL;
+
+#ifdef CHESS_WINDOWS_VERSION
+	/* Define windows version of getimeofday */
+	void gettimeofday(struct timeval *tv, void *tz) {
+		LARGE_INTEGER count, freq;
+		QueryPerformanceCounter(&count);
+		QueryPerformanceFrequency(&freq);
+		tv->tv_sec = count.QuadPart / freq.QuadPart;
+		tv->tv_usec = (count.QuadPart % freq.QuadPart) * 1000000 / freq.QuadPart;
+	}
+
+#endif
 
 
 /* @brief Create a new room
@@ -41,7 +47,7 @@ ChessServer *g_server = NULL;
 ChessRoom *room_create(u32 id) {
 	ChessRoom *room = ft_calloc(1, sizeof(ChessRoom));
 	if (!room) {
-		ft_printf_fd(2, RED"Error: alloc %s\n"RESET, __func__);
+		printf(RED"Error: alloc %s\n"RESET, __func__);
 		return (NULL);
 	}
 	room->room_id = id;
@@ -58,7 +64,7 @@ ChessRoom *room_create(u32 id) {
 void room_list_add(RoomList **lst, ChessRoom *room) {
 	t_list *new = ft_lstnew(room);
 	if (!new) {
-		ft_printf_fd(2, RED"Error: %s\n"RESET, __func__);
+		printf(RED"Error: %s\n"RESET, __func__);
 		return ;
 	}
 	ft_lstadd_back(lst, new);
@@ -83,7 +89,7 @@ s8 addr_cmp(SockaddrIn *client, SockaddrIn *receive) {
 char *build_client_msg_quit() {
 	char *data = ft_calloc(1, MAGIC_SIZE + MSG_SIZE);
 	if (!data) {
-		ft_printf_fd(2, RED"Error: %s\n"RESET, __func__);
+		printf(RED"Error: %s\n"RESET, __func__);
 		return (NULL);
 	}
 	ft_memcpy(data, MAGIC_STRING, MAGIC_SIZE);
@@ -103,7 +109,7 @@ void send_quit_msg(int sockfd, ChessRoom *r, ChessClient *client) {
 	if (client->connected) {
 		quit_msg = build_client_msg_quit();
 		if (!quit_msg) {
-			ft_printf_fd(2, RED"Error: %s\n"RESET, __func__);
+			printf(RED"Error: %s\n"RESET, __func__);
 			return ;
 		}
 		sendto(sockfd, quit_msg, len, 0, (Sockaddr *)&client->addr, sizeof(client->addr));
@@ -127,7 +133,10 @@ s8 client_disconnect_msg(ChessRoom *r, SockaddrIn *cliaddr, char *buff) {
 			send_quit_msg(g_server->sockfd, r, &r->cliA);
 			fast_bzero(&r->cliB, sizeof(ChessClient));
         }
-		ft_printf_fd(1, RED"Client disconnected: %s:%d\n"RESET, inet_ntoa(cliaddr->sin_addr), ntohs(cliaddr->sin_port));
+		printf(RED"Client disconnected: %s:%hu\n"RESET, inet_ntoa(cliaddr->sin_addr), ntohs(cliaddr->sin_port));
+		if (!r->cliA.connected && !r->cliB.connected) {
+			r->state = ROOM_STATE_WAITING;
+		}
 		return (TRUE);
     }
 	return (FALSE);
@@ -141,7 +150,7 @@ s8 client_disconnect_msg(ChessRoom *r, SockaddrIn *cliaddr, char *buff) {
 char *format_client_message(char *msg, u64 message_size){
 	char *data = ft_calloc(1, MAGIC_SIZE + message_size);
 	if (!data) {
-		ft_printf_fd(2, RED"Error: %s\n"RESET, __func__);
+		printf(RED"Error: %s\n"RESET, __func__);
 		return (NULL);
 	}
 	ft_memcpy(data, MAGIC_STRING, MAGIC_SIZE);
@@ -158,7 +167,7 @@ char *format_client_message(char *msg, u64 message_size){
 char *format_connect_packet(char *msg, u64 message_size, s8 player_state){
 	char *data = ft_calloc(1, CONNECT_PACKET_SIZE);
 	if (!data) {
-		ft_printf_fd(2, RED"Error: %s\n"RESET, __func__);
+		printf(RED"Error: %s\n"RESET, __func__);
 		return (NULL);
 	}
 	ft_memcpy(data, MAGIC_CONNECT_STR, MAGIC_SIZE);
@@ -177,11 +186,11 @@ void connect_client_together(int sockfd, ChessRoom *r) {
 	char *dataClientB = format_connect_packet((char *)&r->cliB.addr, sizeof(r->cliB.addr), r->cliB.client_state);
 
 	if (!dataClientA || !dataClientB) {
-		ft_printf_fd(2, RED"Error: %s\n"RESET, __func__);
+		printf(RED"Error: %s\n"RESET, __func__);
 		return ;
 	}
 
-	ft_printf_fd(1, PURPLE"Room is Ready send info:\nClientA : %s:%d %s\nClientB : %s:%d -> %s\n"RESET,
+	printf(PURPLE"Room is Ready send info:\nClientA : %s:%hu %s\nClientB : %s:%hu -> %s\n"RESET,
 	 inet_ntoa(r->cliA.addr.sin_addr), ntohs(r->cliA.addr.sin_port), clientstate_to_str(r->cliA.client_state),
 	 inet_ntoa(r->cliB.addr.sin_addr), ntohs(r->cliB.addr.sin_port), clientstate_to_str(r->cliB.client_state));
 
@@ -209,7 +218,7 @@ void transmit_message(int sockfd, ChessRoom *r, SockaddrIn *addr_from, char *buf
 
 	char *data = format_client_message(buffer, msg_size);
 	if (!data) {
-		ft_printf_fd(2, RED"Error: %s\n"RESET, __func__);
+		printf(RED"Error: %s\n"RESET, __func__);
 		return ;
 	}
 	if (is_client_a) {
@@ -268,13 +277,16 @@ s8 client_timeout_alive(struct timeval *last_alive) {
  */
 void handle_client_timeout(ChessRoom *r) {
 	if (r->cliA.connected && client_timeout_alive(&r->cliA.last_alive)) {
-		ft_printf_fd(1, RED"Client A timeout: %s:%d\n"RESET, inet_ntoa(r->cliA.addr.sin_addr), ntohs(r->cliA.addr.sin_port));
+		printf(RED"Client A timeout: %s:%hu\n"RESET, inet_ntoa(r->cliA.addr.sin_addr), ntohs(r->cliA.addr.sin_port));
 		send_quit_msg(g_server->sockfd, r, &r->cliB);
 		fast_bzero(&r->cliA, sizeof(ChessClient));
 	} else if (r->cliB.connected && client_timeout_alive(&r->cliB.last_alive)) {
-		ft_printf_fd(1, RED"Client B timeout: %s:%d\n"RESET, inet_ntoa(r->cliB.addr.sin_addr), ntohs(r->cliB.addr.sin_port));
+		printf(RED"Client B timeout: %s:%hu\n"RESET, inet_ntoa(r->cliB.addr.sin_addr), ntohs(r->cliB.addr.sin_port));
 		send_quit_msg(g_server->sockfd, r, &r->cliA);
 		fast_bzero(&r->cliB, sizeof(ChessClient));
+	}
+	if (!r->cliA.connected && !r->cliB.connected) {
+		r->state = ROOM_STATE_WAITING;
 	}
 }
 
@@ -284,13 +296,10 @@ void handle_client_timeout(ChessRoom *r) {
  * @param connected The client connected
  * @return The client
  */
-ChessClient set_client_data(SockaddrIn *cliaddr, struct timeval *now ,s8 connected) {
-	ChessClient client;
-
-	ft_memcpy(&client.addr, cliaddr, sizeof(SockaddrIn));
-	ft_memcpy(&client.last_alive, now, sizeof(struct timeval));
-	client.connected = connected;
-	return (client);
+void set_client_data(ChessClient *client, SockaddrIn *cliaddr, struct timeval *now) {
+	ft_memcpy(&client->addr, cliaddr, sizeof(SockaddrIn));
+	ft_memcpy(&client->last_alive, now, sizeof(struct timeval));
+	client->connected = TRUE;
 }
 
 /* @brief Handle the client connection to the server, handle the client state too
@@ -303,25 +312,25 @@ void handle_client_connect(ChessRoom *r, SockaddrIn *cliaddr, int sockfd) {
 
 	/* Check if the room is waiting to start or reconnect */
 	if (r->state == ROOM_STATE_WAITING) {
-		ft_printf_fd(1, GREEN"Room is waiting to start\n"RESET);
+		printf(ORANGE"Room is waiting to start\n"RESET);
 		r->cliA.client_state = CLIENT_STATE_WAIT_COLOR;
 		r->cliB.client_state = CLIENT_STATE_SEND_COLOR;
 	} else if (r->state == ROOM_STATE_WAIT_RECONNECT) {
-		ft_printf_fd(1, YELLOW"Room is waiting for reconnect\n"RESET);
+		printf(YELLOW"Room is waiting for reconnect\n"RESET);
 		r->cliA.client_state = CLIENT_STATE_RECONNECT;
 		r->cliB.client_state = CLIENT_STATE_RECONNECT;
 	} else if (r->state == ROOM_STATE_END || r->state == ROOM_STATE_PLAYING) {
-		ft_printf_fd(1, RED"Error: Room is end or in playing\n"RESET);
+		printf(RED"Error: Room is end or in playing\n"RESET);
 		return ;
 	}
 
 	gettimeofday(&now, NULL);
 	if (!r->cliA.connected && !addr_cmp(cliaddr, &r->cliB.addr)) {
-		r->cliA = set_client_data(cliaddr, &now, TRUE);
-		ft_printf_fd(1, GREEN"Client A connected: %s:%d\n"RESET, inet_ntoa(r->cliA.addr.sin_addr), ntohs(r->cliA.addr.sin_port));
+		set_client_data(&r->cliA, cliaddr, &now);
+		printf(GREEN"Client A connected: %s:%hu\n"RESET, inet_ntoa(r->cliA.addr.sin_addr), ntohs(r->cliA.addr.sin_port));
 	} else if (!r->cliB.connected && !addr_cmp(cliaddr, &r->cliA.addr)) {
-		r->cliB = set_client_data(cliaddr, &now, TRUE);
-		ft_printf_fd(1, GREEN"Client B connected: %s:%d\n"RESET, inet_ntoa(r->cliB.addr.sin_addr), ntohs(r->cliB.addr.sin_port));
+		set_client_data(&r->cliB, cliaddr, &now);
+		printf(GREEN"Client B connected: %s:%hu\n"RESET, inet_ntoa(r->cliB.addr.sin_addr), ntohs(r->cliB.addr.sin_port));
 	}
 	if (r->cliA.connected && r->cliB.connected) {
 		connect_client_together(sockfd, r);		
@@ -338,7 +347,7 @@ void handle_client_connect(ChessRoom *r, SockaddrIn *cliaddr, int sockfd) {
 void handle_client_message(int sockfd, ChessRoom *r, SockaddrIn *cliaddr, char *buffer, ssize_t msg_size) {
 
 	if (r->cliA.connected && r->cliB.connected && !addr_cmp(cliaddr, &r->cliA.addr) && !addr_cmp(cliaddr, &r->cliB.addr)) {
-		ft_printf_fd(2, RED"Error: not a valid client: %s:%d\n"RESET, inet_ntoa(cliaddr->sin_addr), ntohs(cliaddr->sin_port));
+		printf(RED"Error: not a valid client: %s:%hu\n"RESET, inet_ntoa(cliaddr->sin_addr), ntohs(cliaddr->sin_port));
 		return ;
 	}
 
@@ -367,11 +376,16 @@ void handle_client_message(int sockfd, ChessRoom *r, SockaddrIn *cliaddr, char *
  * @return The server
  */
 ChessServer *server_setup() {
-	ChessServer *server = ft_calloc(1, sizeof(ChessServer));
-	struct timeval timeout = {1, 0};
+	ChessServer		*server = NULL;
+	struct timeval	timeout = {0, 100000};
 
-	if (!server) {
-		ft_printf_fd(2, RED"Error: alloc %s\n"RESET, __func__);
+	if (INIT_NETWORK() != 0) {
+		printf(RED"Error: init network\n"RESET);
+		return (NULL);
+	}
+
+	if (!(server = ft_calloc(1, sizeof(ChessServer)))) {
+		printf(RED"Error: alloc %s\n"RESET, __func__);
 		return (NULL);
 	}
 
@@ -386,23 +400,22 @@ ChessServer *server_setup() {
 	/* Server addr configuration */
     server->addr.sin_family = AF_INET;
     server->addr.sin_addr.s_addr = INADDR_ANY;
-    server->addr.sin_port = htons(PORT);
+    server->addr.sin_port = htons(SERVER_PORT);
 
 	/* Bind the socket */
     if (bind(server->sockfd, (Sockaddr *)&server->addr, sizeof(server->addr)) < 0) {
         perror("Bind failed");
+        CLOSE_SOCKET(server->sockfd);
 		free(server);
-        close(server->sockfd);
 		return (NULL);
     }
 
-	if (setsockopt(server->sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(struct timeval)) < 0) {
-		perror("setsockopt failed");
+	if (SOCKET_NO_BLOCK(server->sockfd, timeout) < 0) {
+		perror("Socket no block failed");
+		CLOSE_SOCKET(server->sockfd);
 		free(server);
-		close(server->sockfd);
 		return (NULL);
 	}
-
 	return (server);
 }
 
@@ -411,8 +424,9 @@ ChessServer *server_setup() {
  */
 void server_destroy(ChessServer *server) {
 	ft_lstclear(&server->room_lst, free);
-	close(server->sockfd);
+	CLOSE_SOCKET(server->sockfd);
 	free(server);
+	CLEANUP_NETWORK();
 }
 
 /* @brief Server routine
@@ -427,11 +441,11 @@ void server_routine(ChessServer *server) {
 	fast_bzero(buffer, sizeof(buffer));
 	fast_bzero(&cliaddr, sizeof(cliaddr));
 
-	ft_printf_fd(1, ORANGE"Server waiting on port %d...\n"RESET, PORT);
+	printf(ORANGE"Server waiting on port %d...\n"RESET, SERVER_PORT);
 
 	ChessRoom *room = room_create(1);
 	if (!room) {
-		ft_printf_fd(2, RED"Error: %s\n"RESET, __func__);
+		printf(RED"Error: %s\n"RESET, __func__);
 		return ;
 	}
 	room_list_add(&server->room_lst, room);
@@ -440,7 +454,7 @@ void server_routine(ChessServer *server) {
 		len = recvfrom(server->sockfd, buffer, sizeof(buffer), 0, (Sockaddr *)&cliaddr, &addr_len);
 		if (len > 0) {
 			buffer[len] = '\0';
-			ft_printf_fd(1, CYAN"Server Received: %s from %s:%d\n"RESET, message_type_to_str(buffer[0]), inet_ntoa(cliaddr.sin_addr), ntohs(cliaddr.sin_port));
+			printf(CYAN"Server Received: %s from %s:%hu\n"RESET, message_type_to_str(buffer[0]), inet_ntoa(cliaddr.sin_addr), ntohs(cliaddr.sin_port));
 			handle_client_message(server->sockfd, room, &cliaddr, buffer, len);
 			fast_bzero(buffer, sizeof(buffer));
 			fast_bzero(&cliaddr, sizeof(cliaddr));
@@ -452,49 +466,16 @@ void server_routine(ChessServer *server) {
 }
 
 static void signal_handler_server(int signum) {
-	(void)signum;
-	ft_printf_fd(1, RED"\nSignal Catch: %d\n"RESET, signum);
+	printf(RED"\nSignal Catch: %d\n"RESET, signum);
 	if (g_server) {
 		server_destroy(g_server);
 	}
 	exit(signum);
 }
 
-int init_sig_handler(void) {
-	struct sigaction sa;
-
-	sa.sa_handler = signal_handler_server;
-	sa.sa_flags = 0;
-	sigemptyset(&sa.sa_mask);
-
-	/* Handle SIGINT */
-	if (sigaction(SIGINT, &sa, NULL) == -1) {
-		perror("Can't catch SIGINT");
-		return (FALSE);
-	}
-	/* Handle SIGTERM */
-	if (sigaction(SIGTERM, &sa, NULL) == -1) {
-		perror("Can't catch SIGTERM");
-		return (FALSE);
-	}
-
-	/* Handle SIGQUIT */
-	if (sigaction(SIGQUIT, &sa, NULL) == -1) {
-		perror("Can't catch SIGQUIT");
-		return (FALSE);
-	}
-
-	/* Handle SIGHUP */
-	if (sigaction(SIGHUP, &sa, NULL) == -1) {
-		perror("Can't catch SIGHUP");
-		return (FALSE);
-	}
-	return (TRUE);
-}
-
 int main() {
 
-	init_sig_handler();
+	INIT_SIGNAL_HANDLER(signal_handler_server);
 
 	if (!(g_server = server_setup())) {
 		return (1);

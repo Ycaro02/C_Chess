@@ -2,52 +2,6 @@
 #include "../include/handle_sdl.h"
 #include "../include/chess_log.h"
 
-#ifdef CHESS_WINDOWS_VERSION
-	int init_network_windows() {
-		WSADATA wsaData;
-		int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
-		if (result != 0) {
-			return 1;
-		}
-		return (0);
-	}
-
-	void cleanup_network_windows() {
-		WSACleanup();
-	}
-
-	s8 socket_no_block_windows(NetworkInfo *info) {
-		u_long mode = 1;
-		if (ioctlsocket(info->sockfd, FIONBIO, &mode) != 0) {
-			perror("ioctlsocket failed");
-			CLOSE_SOCKET(info->sockfd);
-			free(info);
-			return (FALSE);
-		}
-		return (TRUE);
-	}
-
-#else
-
-	int init_network_posix() {
-		return (0); // No initialization needed for POSIX
-	}
-
-	void cleanup_network_posix() {
-		// No cleanup needed for POSIX
-	}
-
-	s8 socket_no_block_posix(NetworkInfo *info, struct timeval timeout) {
-		if (setsockopt(info->sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0) {
-			perror("Error setting socket timeout");
-			CLOSE_SOCKET(info->sockfd);
-			free(info);
-			return (FALSE);
-		}
-		return (TRUE);
-	}
-
-#endif /* CHESS_WINDOWS_VERSION */
 
 static void player_color_set_info(PlayerInfo *info) {
 	/* 1 for white, and 0 for black */
@@ -205,7 +159,8 @@ NetworkInfo *init_network(char *server_ip, struct timeval timeout) {
 	}
 
 	/* Set the socket no block */
-	if (SOCKET_NO_BLOCK(info, timeout) == FALSE) {
+	if (SOCKET_NO_BLOCK(info->sockfd, timeout) == FALSE) {
+		free(info);
 		return (NULL);
 	} else if (!local_socket_setup(info)) {
 		return (NULL);

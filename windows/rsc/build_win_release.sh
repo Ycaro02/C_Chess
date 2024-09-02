@@ -10,6 +10,8 @@ REPO="Ycaro02/C_Chess"
 RELEASE_TAG="WindowsRelease"
 RELEASE_NAME="C_Chess_Win"
 GITHUB_TOKEN=$(cat ~/.tok_C_chess)
+CHES_WIN="C_Chess_Win"
+ZIP_FILE="C_Chess_Win.zip"
 
 display_color_msg ${LIGHT_BLUE} "Building Windows Release directory..."
 
@@ -17,13 +19,13 @@ display_color_msg ${LIGHT_BLUE} "Building Windows Release directory..."
 make -s -C windows
 
 # Create a directory for the release
-cp -r windows C_Chess_Win
+cp -r windows ${CHES_WIN}
 
 # Zip the release
-zip -r C_Chess_Win.zip C_Chess_Win > /dev/null
+zip -r ${ZIP_FILE} ${CHES_WIN} > /dev/null
 
 # Clean up
-rm -rf C_Chess_Win
+rm -rf ${CHES_WIN}
 
 # Create or update the release on GitHub
 RELEASE_ID=$(curl -s -H "Authorization: token ${GITHUB_TOKEN}" \
@@ -34,7 +36,7 @@ if [ "${RELEASE_ID}" == "null" ]; then
     display_color_msg ${LIGHT_BLUE} "Creating a new release..."
     RESPONSE=$(curl -s -X POST -H "Authorization: token ${GITHUB_TOKEN}" \
         -H "Content-Type: application/json" \
-        -d "{\"tag_name\": \"${RELEASE_TAG}\", \"name\": \"${RELEASE_NAME}\", \"body\": \"Release of C_Chess_Win\", \"draft\": false, \"prerelease\": false}" \
+        -d "{\"tag_name\": \"${RELEASE_TAG}\", \"name\": \"${RELEASE_NAME}\", \"body\": \"Release of ${CHES_WIN}\", \"draft\": false, \"prerelease\": false}" \
         "https://api.github.com/repos/${REPO}/releases")
     RELEASE_ID=$(echo "${RESPONSE}" | jq -r '.id')
 else
@@ -42,7 +44,7 @@ else
     display_color_msg ${LIGHT_BLUE} "Updating the existing release : ID: ${RELEASE_ID}, TAG: ${RELEASE_TAG}"
     RESPONSE=$(curl -s -X PATCH -H "Authorization: token ${GITHUB_TOKEN}" \
         -H "Content-Type: application/json" \
-        -d "{\"tag_name\": \"${RELEASE_TAG}\", \"name\": \"$RELEASE_NAME\", \"body\": \"Updated release of C_Chess_Win\", \"draft\": false, \"prerelease\": false}" \
+        -d "{\"tag_name\": \"${RELEASE_TAG}\", \"name\": \"$RELEASE_NAME\", \"body\": \"Updated release of ${CHES_WIN}\", \"draft\": false, \"prerelease\": false}" \
         "https://api.github.com/repos/${REPO}/releases/${RELEASE_ID}")
 fi
 
@@ -61,10 +63,10 @@ fi
 display_color_msg ${LIGHT_BLUE} "Uploading the new zip file..."
 curl -s -X POST -H "Authorization: token ${GITHUB_TOKEN}" \
     -H "Content-Type: application/zip" \
-    --data-binary @C_Chess_Win.zip \
-    "https://uploads.github.com/repos/${REPO}/releases/${RELEASE_ID}/assets?name=C_Chess_Win.zip"
+    --data-binary @${ZIP_FILE} \
+    "https://uploads.github.com/repos/${REPO}/releases/${RELEASE_ID}/assets?name=${ZIP_FILE}"
 
 # Clean up the zip file
-rm C_Chess_Win.zip
+rm ${ZIP_FILE}
 
 display_color_msg ${GREEN} "\nWindows release uploaded to GitHub!"

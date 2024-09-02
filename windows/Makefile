@@ -15,15 +15,30 @@ SRC_DIRS    = ../libft/libft ../libft/list ../libft/printf_fd ../libft/parse_fla
 # Find all source files
 SRCS        = $(shell find $(SRC_DIRS) -name '*.c')
 
+SERVER_SRC_DIRS =	../libft/libft ../libft/list ../libft/printf_fd ../libft/parse_flag ../libft/stack_string
+
+SERVER_SRC_DEPS	=	$(shell find $(SERVER_SRC_DIRS) -name '*.c')
+
+SERVER_SRC		=	../server/server.c ../src/network_os.c ../src/handle_signal.c
+
+SERVER_FLAGS	=	-Wall -lmingw32 -lws2_32 -DCHESS_WINDOWS_VERSION
+
+SERVER_EXE		=	WinChessServer.exe
+
 NAME        = WinCchess.exe
 
 all:	$(NAME)
 
-$(NAME):    
-			@printf "$(CYAN)Compiling ${NAME} ...$(RESET)\n"
-			@${UPDATE_BIN_DIR}
-			@${WCC} $(SRCS) $(W_SDL2) $(W_SDL2_TTF) $(W_FLAGS) -DCHESS_WINDOWS_VERSION -o $(NAME) $(NO_TERMINAL)
-			@printf "$(GREEN)Compiling $(NAME) done$(RESET)\n"
+$(NAME): $(SERVER_EXE)    
+	@printf "$(CYAN)Compiling ${NAME} ...$(RESET)\n"
+	@${UPDATE_BIN_DIR}
+	@${WCC} $(SRCS) $(W_SDL2) $(W_SDL2_TTF) $(W_FLAGS) -DCHESS_WINDOWS_VERSION -o $(NAME) $(NO_TERMINAL)
+	@printf "$(GREEN)Compiling $(NAME) done$(RESET)\n"
+
+$(SERVER_EXE):
+	@printf "$(CYAN)Compiling $(SERVER_EXE) ...$(RESET)\n"
+	@${WCC} $(SERVER_SRC_DEPS) $(SERVER_SRC) $(SERVER_FLAGS) -o $(SERVER_EXE)
+	@printf "$(GREEN)Compiling $(SERVER_EXE) done$(RESET)\n"
 
 
 update: $(NAME)
@@ -36,8 +51,8 @@ connect: $(NAME)
 
 
 clean:
-			@${RM} ${NAME}
-			@printf "$(RED)Clean $(NAME)$(RESET)\n"
+			@${RM} ${NAME} $(SERVER_EXE) 
+			@printf "$(RED)Clean $(NAME) $(SERVER_EXE) $(RESET)\n"
 
 fclean:     clean
 

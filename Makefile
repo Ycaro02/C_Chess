@@ -14,7 +14,7 @@ IP_SERVER		=	$(shell $(GET_SERVER_IP))
 
 # Server sources, objects and executable
 
-SERVER_SRC		=	server/server.c
+SERVER_SRC		=	server/server.c src/network_os.c src/handle_signal.c
 SERVER_EXE		=	chess_server
 
 
@@ -80,8 +80,8 @@ endif
 
 fclean:		clean_lib clean
 	@make -s -C windows fclean
-	@$(RM) $(NAME) $(SERVER_EXE)
-	@printf "$(RED)Clean $(NAME)$(RESET)\n"
+	@$(RM) $(NAME) $(SERVER_EXE) $(SERVER_EXE)
+	@printf "$(RED)Clean $(NAME) $(SERVER_EXE) $(RESET)\n"
 
 clean_lib:
 	@$(MAKE_LIST) fclean

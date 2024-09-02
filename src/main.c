@@ -4,6 +4,14 @@
 #include "../include/handle_signal.h"
 #include "../include/chess_log.h"
 
+void chess_signal_handler(int signum)
+{
+	SDLHandle *stat = get_SDL_handle();
+
+	CHESS_LOG(LOG_DEBUG, RED"\nSignal Catch: %d\n"RESET, signum);
+	chess_destroy(stat);
+	exit(signum);
+}
 
 SDLHandle *init_game() {
 	SDLHandle	*handle = NULL;
@@ -108,7 +116,7 @@ SDLHandle *get_SDL_handle() {
 void chess_game(SDLHandle *h) {
 	struct timeval	timeout = {0, 10000}; /* 10000 microseconds = 0.01 seconds */
 	
-	INIT_SIGNAL_HANDLER();
+	INIT_SIGNAL_HANDLER(chess_signal_handler);
 	update_graphic_board(h);
 
 	if (has_flag(h->flag, FLAG_NETWORK)) {
@@ -136,8 +144,8 @@ int main(int argc, char **argv) {
 
 
 	// set_log_level(LOG_ERROR);
-
-	set_log_level(LOG_INFO);
+	// set_log_level(LOG_INFO);
+	set_log_level(LOG_NONE);
 
 
 	flag = handle_chess_flag(argc, argv, &error, &player_info);

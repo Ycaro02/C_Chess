@@ -1,6 +1,9 @@
 #ifndef CHESS_NETWORK_H
 #define CHESS_NETWORK_H
 
+#include <stdio.h> // For perror
+#include "chess.h"
+
 #ifdef CHESS_WINDOWS_VERSION
 	#include <winsock2.h>
 	#include <ws2tcpip.h>
@@ -10,7 +13,7 @@
 	#define CLOSE_SOCKET closesocket
 	#define INIT_NETWORK() init_network_windows()
 	#define CLEANUP_NETWORK() cleanup_network_windows()
-	#define SOCKET_NO_BLOCK(socket, timeout) socket_no_block_windows(socket)
+	#define SOCKET_NO_BLOCK(socket, timeout) socket_no_block_windows(socket, timeout)
 #else
 	#include <sys/socket.h>
 	#include <netinet/in.h>
@@ -26,13 +29,17 @@
 #endif
 
 
-int init_network_posix();
-void cleanup_network_posix();
-int init_network_windows();
-void cleanup_network_windows();
+/* src/network_os.c */
+/* Function prototypes posix */
+int		init_network_posix();
+void	cleanup_network_posix();
+s8		socket_no_block_posix(Socket sockfd, struct timeval timeout);
 
-#include <stdio.h> // For perror
-#include "chess.h"
+/* Function prototypes windows */
+int		init_network_windows();
+void	cleanup_network_windows();
+s8		socket_no_block_windows(Socket sockfd, struct timeval timeout);
+
 
 /* CLient state for frist conection */
 typedef enum e_client_state {
