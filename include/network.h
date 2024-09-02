@@ -10,6 +10,7 @@
 	#define CLOSE_SOCKET closesocket
 	#define INIT_NETWORK() init_network_windows()
 	#define CLEANUP_NETWORK() cleanup_network_windows()
+	#define SOCKET_NO_BLOCK(socket, timeout) socket_no_block_windows(socket)
 #else
 	#include <sys/socket.h>
 	#include <netinet/in.h>
@@ -21,6 +22,7 @@
 	#define CLOSE_SOCKET close
 	#define INIT_NETWORK() init_network_posix()
 	#define CLEANUP_NETWORK() cleanup_network_posix()
+	#define SOCKET_NO_BLOCK(socket, timeout) socket_no_block_posix(socket, timeout)
 #endif
 
 
@@ -125,10 +127,10 @@ FT_INLINE char *message_type_to_str(MsgType msg_type) {
 		ENUM_TO_STR_CASE(MSG_TYPE_PROMOTION);
 		ENUM_TO_STR_CASE(MSG_TYPE_RECONNECT);
 		ENUM_TO_STR_CASE(MSG_TYPE_QUIT);
-		ENUM_TO_STR_CASE(ACK);
-		ENUM_TO_STR_CASE(HELLO);
-		ENUM_TO_STR_CASE(DISCONNECT);
-		ENUM_TO_STR_CASE(CLIENT_ALIVE);
+		ENUM_TO_STR_CASE(MSG_TYPE_ACK);
+		ENUM_TO_STR_CASE(MSG_TYPE_HELLO);
+		ENUM_TO_STR_CASE(MSG_TYPE_DISCONNECT);
+		ENUM_TO_STR_CASE(MSG_TYPE_CLIENT_ALIVE);
 		default: return "UNKNOWN";
 	}
 }
@@ -165,7 +167,8 @@ FT_INLINE char *clientstate_to_str(ClientState state) {
 
 /* src/chess_network.c */
 NetworkInfo	*init_network(char *server_ip, struct timeval timeout);
-s8			network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *server_ip);
+void handle_network_client_state(SDLHandle *handle, u32 flag, PlayerInfo *player_info);
+// s8			network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *server_ip);
 void		send_disconnect_to_server(int sockfd, struct sockaddr_in servaddr);
 void		send_alive_to_server(int sockfd, struct sockaddr_in servaddr);
 s8			wait_peer_info(NetworkInfo *info, const char *msg);

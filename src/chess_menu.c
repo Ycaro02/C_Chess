@@ -34,18 +34,6 @@ s32 detect_button_click(Button *btn, s32 nb_btn, iVec2 mouse_pos) {
 	return (BTN_INVALID);
 }
 
-// s32 detect_menu_btn_click(SDLHandle *h, iVec2 mouse_pos) {
-// 	s32 btn_idx = detect_button_click(h->menu.btn, h->menu.nb_btn, mouse_pos);
-	
-// 	if (btn_idx == BTN_INVALID) {
-// 		btn_idx = detect_button_click(&h->menu.server_ip_btn, 1, mouse_pos);
-// 		if (btn_idx != BTN_INVALID) {
-// 			btn_idx = BTN_SERVER_IP;
-// 		}
-// 	} 
-// 	return (btn_idx);
-// }
-
 /**
  * @brief Wrapper to handle the button click
  * @param h The SDLHandle
@@ -53,20 +41,41 @@ s32 detect_button_click(Button *btn, s32 nb_btn, iVec2 mouse_pos) {
 */
 void search_game(SDLHandle *h) {
 	(void)h;
+	
+	u32 client_flag = FLAG_LISTEN;
+	struct timeval	timeout = {0, 10000}; /* 10000 microseconds = 0.01 seconds */
+
 	CHESS_LOG(LOG_INFO, "Search game\n");
+	if (!has_flag(h->flag, FLAG_NETWORK)) {
+		set_flag(&h->flag, FLAG_NETWORK);
+		h->menu.is_open = FALSE;
+		// network_setup(h, h->flag, &h->player_info, h->player_info.dest_ip);
+		h->player_info.nt_info = init_network(h->player_info.dest_ip, timeout);
+		CHESS_LOG(LOG_INFO, "After network init: %s\n", clientstate_to_str(h->player_info.nt_info->client_state));
+		if (h->player_info.nt_info->client_state == CLIENT_STATE_WAIT_COLOR) {
+			client_flag = FLAG_JOIN;
+		}
+		set_flag(&h->flag, client_flag);
+		handle_network_client_state(h, h->flag, &h->player_info);
+		network_chess_routine(h);
+		chess_destroy(h);
+	}
 }
 
 void reconnect_game(SDLHandle *h) {
 	(void)h;
+	struct timeval	timeout = {0, 10000}; /* 10000 microseconds = 0.01 seconds */
+
 	CHESS_LOG(LOG_INFO, "Reconnect to game\n");
 	if (!has_flag(h->flag, FLAG_NETWORK)) {
 		set_flag(&h->flag, FLAG_NETWORK);
 		set_flag(&h->flag, FLAG_RECONNECT);
 		h->menu.is_open = FALSE;
-		network_setup(h, h->flag, &h->player_info, h->player_info.dest_ip);
+		h->player_info.nt_info = init_network(h->player_info.dest_ip, timeout);
+		handle_network_client_state(h, h->flag, &h->player_info);
 		network_chess_routine(h);
+		chess_destroy(h);
 	}
-	chess_destroy(h);
 }
 
 void quit_game(SDLHandle *h) {
@@ -141,7 +150,7 @@ void init_button(SDLHandle *h, ChessMenu *menu, s32 nb_btn) {
 		menu->btn[i].end.x = menu->btn[i].start.x + btn_width;
 		menu->btn[i].end.y = menu->btn[i].start.y + btn_height;
 		set_btn_text_func(h, i, i);
-		menu->btn[i].state = BTN_RELEASED;
+		menu->btn[i].state = BTN_STATE_RELEASED;
 		button_center_text(&menu->btn[i], menu->btn_text_font);
 	}
 }
@@ -203,7 +212,7 @@ void init_menu(SDLHandle *h, s32 total_btn) {
 	
 	server_ip_btn->text = ft_strdup("Change");
 	button_center_text(server_ip_btn, h->menu.btn_text_font);
-	server_ip_btn->state = BTN_RELEASED;
+	server_ip_btn->state = BTN_STATE_RELEASED;
 	server_ip_btn->func = change_ip_click;
 
 
@@ -240,6 +249,15 @@ void draw_button(SDLHandle *h, Button btn, SDL_Color c) {
 }
 
 
+void update_btn_state(SDLHandle *h, Button *btn) {
+	u32 flag = h->flag;
+
+	if (has_flag(flag, FLAG_NETWORK)) {
+		btn[BTN_SEARCH].state = BTN_STATE_DISABLED;
+		btn[BTN_RECONNECT].state = BTN_STATE_DISABLED;
+	} 
+}
+
 /**
  * @brief Draw the menu
  * @param h The SDLHandle
@@ -258,13 +276,13 @@ void draw_menu(SDLHandle *h) {
 	SDL_RenderFillRect(h->renderer, &rect);
 
 	/* Draw the server info rect */
-	SDL_SetRenderDrawColor(h->renderer, 70,70,70,255);
+	SDL_SetRenderDrawColor(h->renderer, CLEAR_COLOR);
 	SDL_RenderFillRect(h->renderer, &h->menu.server_info);
 
 	/* Draw the server info string */
 	write_text(h, SERVER_INFO_STR, h->menu.btn_text_font, h->menu.server_info_str_pos, RGBA_TO_UINT32(255, 255, 255, 255));
 	
-	SDL_Color bg_color = {70, 70, 70, 255};
+	SDL_Color bg_color = {CLEAR_COLOR};
 	/* Draw the server ip text input */
 	if (h->menu.ip_field.is_active) {
 		bg_color = (SDL_Color){255, 255, 255, 255};
@@ -273,6 +291,9 @@ void draw_menu(SDLHandle *h) {
 
 	SDL_Color btn_color = {10, 10, 10, 255};
 
+
+	update_btn_state(h, h->menu.btn);
+
 	/* Draw the menu button */
 	for (s32 i = 0; i < h->menu.nb_btn; i++) {
 		if (i == h->menu.btn_hover) {
@@ -280,6 +301,11 @@ void draw_menu(SDLHandle *h) {
 		} else {
 			btn_color = (SDL_Color){10, 10, 10, 255};
 		}
+
+		if (h->menu.btn[i].state == BTN_STATE_DISABLED) {
+			btn_color = (SDL_Color){CLEAR_COLOR};
+		}
+		
 		draw_button(h, h->menu.btn[i], btn_color);
 	}
 }

@@ -3,56 +3,65 @@
 #include "../include/chess_log.h"
 
 #ifdef CHESS_WINDOWS_VERSION
-int init_network_windows() {
-    WSADATA wsaData;
-    int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
-    if (result != 0) {
-        return 1;
-    }
-	return (0);
-}
+	int init_network_windows() {
+		WSADATA wsaData;
+		int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
+		if (result != 0) {
+			return 1;
+		}
+		return (0);
+	}
 
-void cleanup_network_windows() {
-    WSACleanup();
-}
+	void cleanup_network_windows() {
+		WSACleanup();
+	}
+
+	s8 socket_no_block_windows(NetworkInfo *info) {
+		u_long mode = 1;
+		if (ioctlsocket(info->sockfd, FIONBIO, &mode) != 0) {
+			perror("ioctlsocket failed");
+			CLOSE_SOCKET(info->sockfd);
+			free(info);
+			return (FALSE);
+		}
+		return (TRUE);
+	}
+
 #else
-int init_network_posix() {
-    return (0); // No initialization needed for POSIX
-}
 
-void cleanup_network_posix() {
-    // No cleanup needed for POSIX
-}
-#endif
+	int init_network_posix() {
+		return (0); // No initialization needed for POSIX
+	}
 
+	void cleanup_network_posix() {
+		// No cleanup needed for POSIX
+	}
 
+	s8 socket_no_block_posix(NetworkInfo *info, struct timeval timeout) {
+		if (setsockopt(info->sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0) {
+			perror("Error setting socket timeout");
+			CLOSE_SOCKET(info->sockfd);
+			free(info);
+			return (FALSE);
+		}
+		return (TRUE);
+	}
+
+#endif /* CHESS_WINDOWS_VERSION */
 
 static void player_color_set_info(PlayerInfo *info) {
 	/* 1 for white, and 0 for black */
 	info->turn = !(info->color);
-
 	/* 5 * 0 for white, and 5 * 1 for black */
 	info->piece_start = BLACK_PAWN * info->color;
-
 	/* 5 * 0 for white, and 5 * 1 for black, + 5 */
 	info->piece_end = BLACK_KING * info->color + 5;
 }
 
-/**
- * @brief Network setup
- * @param handle The SDLHandle pointer
- * @param flag The flag
- * @param player_info The player info
- * @param server_ip The server ip
- * @return s8 TRUE if the network is setup, FALSE otherwise
- */
-s8 network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *server_ip) {
-	// struct timeval	timeout = {0, 500000}; /* 500000 microseconds = 0.5 seconds */
-	struct timeval	timeout = {0, 10000}; /* 10000 microseconds = 0.01 seconds */
+void handle_network_client_state(SDLHandle *handle, u32 flag, PlayerInfo *player_info) {
 	s32				iter = 0;
 	s8				ret = FALSE;
 
-	player_info->nt_info = init_network(server_ip, timeout);
 	if (has_flag(flag, FLAG_LISTEN)) {
 		// player_info->color = random_player_color();
 		player_info->color = IS_WHITE;
@@ -78,36 +87,12 @@ s8 network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *ser
 		}
 		process_message_receive(handle, buffer);
 		update_graphic_board(handle);
-		return (TRUE);
+		return ;
 	}
 	player_color_set_info(player_info);
-
 	update_graphic_board(handle);
-
-	return (TRUE);
 }
 
-static s8 socket_no_block(NetworkInfo *info, struct timeval timeout) {
-#ifdef CHESS_WINDOWS_VERSION
-	/* Set the socket no block */
-	u_long mode = 1;
-	if (ioctlsocket(info->sockfd, FIONBIO, &mode) != 0) {
-		perror("ioctlsocket failed");
-		CLOSE_SOCKET(info->sockfd);
-		free(info);
-		return (FALSE);
-	}
-#else
-	/* Set the socket receive timeout */
-	if (setsockopt(info->sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0) {
-		perror("Error setting socket timeout");
-		CLOSE_SOCKET(info->sockfd);
-		free(info);
-		return (FALSE);
-	}
-#endif
-	return (TRUE);
-}
 
 static s8 local_socket_setup(NetworkInfo *info) {
 	/* Bind the socket */
@@ -136,6 +121,7 @@ static s8 local_socket_setup(NetworkInfo *info) {
 s8 check_magic_value(char *buff) {
 	static const char magic[MAGIC_SIZE] = MAGIC_STRING;
 	u64 i = 0;
+	
 	while (i < MAGIC_SIZE) {
 		if (buff[i] != magic[i]) {
 			// CHESS_LOG(LOG_INFO, "Magic value check failed buff |%d|, magic|%d| idx %llu\n", buff[i], magic[i], i);
@@ -149,6 +135,7 @@ s8 check_magic_value(char *buff) {
 s8 check_reconnect_magic_value(char *buff) {
 	static const char magic_reco[MAGIC_SIZE] = MAGIC_CONNECT_STR;
 	u64 i = 0;
+	
 	while (i < MAGIC_SIZE) {
 		if (buff[i] != magic_reco[i]) {
 			// CHESS_LOG(LOG_INFO, "Magic value check failed buff |%d|, magic|%d| idx %llu\n", buff[i], magic[i], i);
@@ -218,7 +205,7 @@ NetworkInfo *init_network(char *server_ip, struct timeval timeout) {
 	}
 
 	/* Set the socket no block */
-	if (socket_no_block(info, timeout) == FALSE) {
+	if (SOCKET_NO_BLOCK(info, timeout) == FALSE) {
 		return (NULL);
 	} else if (!local_socket_setup(info)) {
 		return (NULL);
@@ -233,7 +220,7 @@ NetworkInfo *init_network(char *server_ip, struct timeval timeout) {
 	info->servaddr.sin_port = htons(SERVER_PORT);
 	info->servaddr.sin_addr.s_addr = inet_addr(server_ip);
 
-	/* Send a message to the server */
+	/* Send Hello to the server */
 	sendto(info->sockfd, "Hello", fast_strlen("Hello"), 0, (struct sockaddr *)&info->servaddr, sizeof(info->servaddr));
 
 	
@@ -248,6 +235,6 @@ void send_disconnect_to_server(int sockfd, struct sockaddr_in servaddr) {
 }
 
 void send_alive_to_server(int sockfd, struct sockaddr_in servaddr) {
-	CHESS_LOG(LOG_INFO, ORANGE"Send alive message\n"RESET);
+	CHESS_LOG(LOG_DEBUG, ORANGE"Send alive message\n"RESET);
 	sendto(sockfd, ALIVE_MSG, ALIVE_LEN, 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
 }

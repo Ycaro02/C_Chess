@@ -204,18 +204,22 @@ void menu_event_handling(SDLHandle *h, SDL_Event event) {
 	SDL_GetMouseState(&pos.x, &pos.y);
 	if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
 		btn_click = detect_button_click(h->menu.btn, h->menu.nb_btn, pos);
-		if (btn_click != BTN_INVALID) {
-			h->menu.btn[btn_click].state = BTN_PRESSED;
+		if (btn_click != BTN_INVALID && h->menu.btn[btn_click].state != BTN_STATE_DISABLED) {
+			h->menu.btn[btn_click].state = BTN_STATE_PRESSED;
 			h->menu.current_btn_clicked = btn_click;
 		}
 	} else if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {
 		btn_click = detect_button_click(h->menu.btn, h->menu.nb_btn, pos);
-		h->menu.btn[h->menu.current_btn_clicked].state = BTN_RELEASED;
-		if (btn_click == h->menu.current_btn_clicked) {
+		if (h->menu.current_btn_clicked != BTN_INVALID) {
+			h->menu.btn[h->menu.current_btn_clicked].state = BTN_STATE_RELEASED;
+		}
+		if (btn_click == h->menu.current_btn_clicked && btn_click != BTN_INVALID) {
 			if (h->menu.btn[btn_click].func) {
+				h->menu.current_btn_clicked = BTN_INVALID;
 				h->menu.btn[btn_click].func(h);
 			}
 			if (btn_click != BTN_SERVER_IP) {
+				CHESS_LOG(LOG_INFO, "Button %d clicked close menu\n", btn_click);
 				menu_close(&h->menu);
 			}
 		}

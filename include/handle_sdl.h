@@ -66,8 +66,11 @@ typedef struct s_window_band {
 
 #define CLEAR_COLOR 70, 70, 70, 255
 
-#define BTN_RELEASED 0
-#define BTN_PRESSED 1
+typedef enum e_btn_state {
+	BTN_STATE_RELEASED = 0,
+	BTN_STATE_PRESSED,
+	BTN_STATE_DISABLED,
+} BtnState;
 
 typedef enum e_btn_type {
 	BTN_INVALID = -1,

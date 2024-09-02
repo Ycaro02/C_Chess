@@ -107,14 +107,16 @@ SDLHandle *get_SDL_handle() {
 
 
 void chess_game(SDLHandle *h) {
+	struct timeval	timeout = {0, 10000}; /* 10000 microseconds = 0.01 seconds */
 	
 	INIT_SIGNAL_HANDLER();
-	
 	update_graphic_board(h);
 
 	if (has_flag(h->flag, FLAG_NETWORK)) {
 		CHESS_LOG(LOG_INFO, ORANGE"Try to connect to Server at : %s:%d\n"RESET, h->player_info.dest_ip, SERVER_PORT);
-		network_setup(h, h->flag, &h->player_info, h->player_info.dest_ip);
+		// network_setup(h, h->flag, &h->player_info, h->player_info.dest_ip);
+		h->player_info.nt_info = init_network(h->player_info.dest_ip, timeout);
+		handle_network_client_state(h, h->flag, &h->player_info);
 		network_chess_routine(h);
 	} else {
 		h->player_info.turn = TRUE;
