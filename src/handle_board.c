@@ -66,7 +66,7 @@ void menu_event_handling(SDLHandle *h, SDL_Event event) {
 				menu_close(&h->menu);
 			}
 		}
-	} else if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_p) {
+	} else if (event.type == SDL_KEYDOWN && (event.key.keysym.sym == SDLK_p || event.key.keysym.sym == SDLK_ESCAPE)) {
 		menu_close(&h->menu);
 	} else if (event.type == SDL_MOUSEMOTION) {
 		update_mouse_pos(h, pos.x, pos.y);
@@ -85,7 +85,7 @@ void game_event_handling(SDLHandle *h, SDL_Event event, s8 player_color) {
 		aly_pos = h->board->occupied;
 	}
 
-	if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_p) {
+	if (event.type == SDL_KEYDOWN && (event.key.keysym.sym == SDLK_p || event.key.keysym.sym == SDLK_ESCAPE)) {
 		h->menu.is_open = TRUE;
 	}
 
@@ -118,8 +118,7 @@ s32 event_handler(SDLHandle *h, s8 player_color) {
 	SDL_Event event;
 
 	while (SDL_PollEvent(&event)) {
-		if (event.type == SDL_QUIT \
-			|| (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE)) {
+		if (event.type == SDL_QUIT) {
 			return (CHESS_QUIT);
 		}
 		if (!h->menu.is_open) {

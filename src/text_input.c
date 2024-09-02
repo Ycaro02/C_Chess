@@ -35,7 +35,7 @@ s8 is_ipv4_format(char *ip) {
 	}
 
 	for (s32 i = 0; i < 4; i++) {
-		printf("split[%d] = %s\n", i, split[i]);
+		// printf("split[%d] = %s\n", i, split[i]);
 		if (fast_strlen(split[i]) > 3) {
 			goto ipv4_error;
 		}
@@ -115,6 +115,7 @@ void handle_text_input(SDLHandle *h, SDL_Event *event) {
 			update_server_ip(h, text_field);
 			text_field->is_active = FALSE;
 		} else if (event->key.keysym.sym == SDLK_ESCAPE) {
+			update_server_ip(h, text_field);
 			text_field->is_active = FALSE;
 		}
 
