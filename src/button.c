@@ -223,6 +223,10 @@ void set_btn_info(SDLHandle *h, s32 btn_idx, iVec2 start, iVec2 size, char *text
 	h->menu.btn[btn_idx].width = size.x;
 	h->menu.btn[btn_idx].height = size.y;
 	h->menu.btn[btn_idx].end = (iVec2){start.x + size.x, start.y + size.y};
+	if (h->menu.btn[btn_idx].text) {
+		free(h->menu.btn[btn_idx].text);
+		h->menu.btn[btn_idx].text = NULL;
+	}
 	h->menu.btn[btn_idx].text = ft_strdup(text);
 	h->menu.btn[btn_idx].func = func;
 	h->menu.btn[btn_idx].state = BTN_STATE_RELEASED;

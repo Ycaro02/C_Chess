@@ -16,7 +16,9 @@ void menu_close(ChessMenu *menu) {
 */
 void destroy_menu(SDLHandle *h) {
 	for (s32 i = 0; i < h->menu.total_btn; i++) {
-		free(h->menu.btn[i].text);
+		if (h->menu.btn[i].text) {
+			free(h->menu.btn[i].text);
+		}
 	}
 	free(h->menu.btn);
 	unload_font(h->menu.btn_text_font);
