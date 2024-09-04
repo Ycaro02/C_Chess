@@ -130,21 +130,23 @@ void draw_menu(SDLHandle *h) {
 	/* Update the button state */
 	update_btn_disabled(h, h->menu.btn);
 
-	SDL_Color btn_color;
-
+	/* Draw the menu button */
 	/* Draw the menu button +1 for the server_ip btn */
-	for (s32 i = 0; i < h->menu.menu_btn + 1; i++) {
-		if (i == h->menu.btn_hover) {
-			btn_color = BTN_HOVER_COLOR;
-		} else {
-			btn_color = BTN_BASIC_COLOR;
-		}
+	draw_multiple_button(h, BTN_RESUME, h->menu.menu_btn + 1);
 
-		if (h->menu.btn[i].state == BTN_STATE_DISABLED) {
-			btn_color = (SDL_Color){CLEAR_COLOR};
-		}
+	// SDL_Color btn_color;
+	// for (s32 i = 0; i < h->menu.menu_btn + 1; i++) {
+	// 	if (i == h->menu.btn_hover) {
+	// 		btn_color = BTN_HOVER_COLOR;
+	// 	} else {
+	// 		btn_color = BTN_BASIC_COLOR;
+	// 	}
+
+	// 	if (h->menu.btn[i].state == BTN_STATE_DISABLED) {
+	// 		btn_color = (SDL_Color){CLEAR_COLOR};
+	// 	}
 		
-		draw_button(h, h->menu.btn[i], btn_color);
-	}
+	// 	draw_button(h, h->menu.btn[i], btn_color);
+	// }
 }
 

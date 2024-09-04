@@ -9,15 +9,17 @@
  * @param mouse_pos The mouse position
  * @return The index of the button clicked
 */
-s32 detect_button_click(Button *btn, s32 nb_btn, iVec2 mouse_pos) {
+s32 detect_button_click(Button *btn, s32 btn_start, s32 nb_btn, iVec2 mouse_pos) {
+	s32 idx = 0;
+	
 	for (s32 i = 0; i < nb_btn; i++) {
-		if (mouse_pos.x >= btn[i].start.x && mouse_pos.x <= btn[i].end.x &&
-			mouse_pos.y >= btn[i].start.y && mouse_pos.y <= btn[i].end.y) {
-			// CHESS_LOG(LOG_INFO, "Button %d clicked\n", i);
-			return (i);
+		idx = btn_start + i;
+		if (mouse_pos.x >= btn[idx].start.x && mouse_pos.x <= btn[idx].end.x &&
+			mouse_pos.y >= btn[idx].start.y && mouse_pos.y <= btn[idx].end.y) {
+			// CHESS_LOG(LOG_INFO, "Button %d clicked\n", idx);
+			return (idx);
 		}
 	}
-	// CHESS_LOG(LOG_INFO, "No button clicked\n");	
 	return (BTN_INVALID);
 }
 
@@ -40,14 +42,27 @@ void search_game(SDLHandle *h) {
 
 	if (!has_flag(h->flag, FLAG_NETWORK)) {
 		set_flag(&h->flag, FLAG_NETWORK);
+		
+		/* Init network and player state */
 		h->player_info.nt_info = init_network(h->player_info.dest_ip, timeout);
-		CHESS_LOG(LOG_INFO, "After network init: %s\n", clientstate_to_str(h->player_info.nt_info->client_state));
+
+		/* Wait for player */
+		set_flag(&h->flag, FLAG_CENTER_TEXT_INPUT);
+		wait_for_player(h);
+		unset_flag(&h->flag, FLAG_CENTER_TEXT_INPUT);
+		if (!has_flag(h->flag, FLAG_NETWORK)) {
+			return ;
+		}
+
+
+		CHESS_LOG(LOG_INFO, "After wait player: %s\n", clientstate_to_str(h->player_info.nt_info->client_state));
 		if (h->player_info.nt_info->client_state == CLIENT_STATE_WAIT_COLOR) {
 			client_flag = FLAG_JOIN;
 		} else if (h->player_info.nt_info->client_state == CLIENT_STATE_RECONNECT) {
 			client_flag = FLAG_RECONNECT;
 		}
 		set_flag(&h->flag, client_flag);
+
 		handle_network_client_state(h, h->flag, &h->player_info);
 		set_info_str(h, NULL, NULL);
 		network_chess_routine(h);
@@ -70,6 +85,16 @@ void reconnect_game(SDLHandle *h) {
 		set_flag(&h->flag, FLAG_NETWORK);
 		set_flag(&h->flag, FLAG_RECONNECT);
 		h->player_info.nt_info = init_network(h->player_info.dest_ip, timeout);
+
+		/* Wait for player */
+		set_flag(&h->flag, FLAG_CENTER_TEXT_INPUT);
+		wait_for_player(h);
+		unset_flag(&h->flag, FLAG_CENTER_TEXT_INPUT);
+		if (!has_flag(h->flag, FLAG_NETWORK)) {
+			return ;
+		}
+
+
 		handle_network_client_state(h, h->flag, &h->player_info);
 		set_info_str(h, NULL, NULL);
 		network_chess_routine(h);
@@ -193,4 +218,25 @@ void set_btn_info(SDLHandle *h, s32 btn_idx, iVec2 start, iVec2 size, char *text
 	h->menu.btn[btn_idx].func = func;
 	h->menu.btn[btn_idx].state = BTN_STATE_RELEASED;
 	center_btn_text(&h->menu.btn[btn_idx], h->menu.btn_text_font);
+}
+
+
+void draw_multiple_button(SDLHandle *h, s32 btn_start, s32 nb_btn) {
+	SDL_Color btn_color;
+	s32 idx = 0;
+
+	for (s32 i = 0; i < nb_btn; i++) {
+		idx = btn_start + i;
+		// printf("In draw multiple button: idx: %d Hover: %d\n", idx, h->menu.btn_hover);
+		if (idx == h->menu.btn_hover) {
+			btn_color = BTN_HOVER_COLOR;
+		} else {
+			btn_color = BTN_BASIC_COLOR;
+		}
+		if (h->menu.btn[idx].state == BTN_STATE_DISABLED) {
+			btn_color = (SDL_Color){CLEAR_COLOR};
+		}
+		draw_button(h, h->menu.btn[idx], btn_color);
+	}
+
 }

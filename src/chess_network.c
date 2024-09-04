@@ -12,10 +12,20 @@ static void player_color_set_info(PlayerInfo *info) {
 	info->piece_end = BLACK_KING * info->color + 5;
 }
 
-void handle_network_client_state(SDLHandle *handle, u32 flag, PlayerInfo *player_info) {
-	s32				iter = 0;
+void wait_message_receive(SDLHandle *h, char *buff) {
 	s8				ret = FALSE;
 
+	while (ret == FALSE) {
+		ret = chess_msg_receive(h, h->player_info.nt_info, buff);
+		update_graphic_board(h);
+		SDL_Delay(1000);
+	}
+}
+
+void handle_network_client_state(SDLHandle *handle, u32 flag, PlayerInfo *player_info) {
+	char			buff[4096];
+
+	fast_bzero(buff, 4096);
 	if (has_flag(flag, FLAG_LISTEN)) {
 		// player_info->color = random_player_color();
 		player_info->color = IS_WHITE;
@@ -23,23 +33,13 @@ void handle_network_client_state(SDLHandle *handle, u32 flag, PlayerInfo *player
 		build_message(handle, player_info->msg_tosend, MSG_TYPE_COLOR, !player_info->color, 0, 0);
 		chess_msg_send(player_info->nt_info, player_info->msg_tosend, MSG_SIZE);
 	} else if (has_flag(flag, FLAG_JOIN)) {
-		while (ret == FALSE && iter < MAX_ITER) {
-			ret = chess_msg_receive(handle, player_info->nt_info, player_info->msg_receiv);
-			iter++;
-			SDL_Delay(1000);
-		}
+		wait_message_receive(handle, buff);
 		/* Process message receive, here set color  */
-		process_message_receive(handle, player_info->msg_receiv);
+		process_message_receive(handle, buff);
 	} else if (has_flag(flag, FLAG_RECONNECT)) {
-		char buffer[4096];
-		fast_bzero(buffer, 4096);
 		CHESS_LOG(LOG_INFO, "Reconnect to server, get game state\n");
-		while (ret == FALSE && iter < MAX_ITER) {
-			ret = chess_msg_receive(handle, player_info->nt_info, buffer);
-			iter++;
-			SDL_Delay(1000);
-		}
-		process_message_receive(handle, buffer);
+		wait_message_receive(handle, buff);
+		process_message_receive(handle, buff);
 		update_graphic_board(handle);
 		return ;
 	}
@@ -103,7 +103,7 @@ s8 check_reconnect_magic_value(char *buff) {
 s8 wait_peer_info(NetworkInfo *info, const char *msg) {
 	ssize_t ret = 0;
 
-	// CHESS_LOG(LOG_INFO, "%s...\n", msg);
+	CHESS_LOG(LOG_INFO, "%s...\n", msg);
 	(void)msg;
 
 	char buff[1024];
@@ -136,6 +136,33 @@ s8 wait_peer_info(NetworkInfo *info, const char *msg) {
 	// }
 	return (FALSE);
 }
+
+void wait_for_player(SDLHandle *h) {
+	s32 event = 0;
+
+	while (!wait_peer_info(h->player_info.nt_info, "Wait for player")) {
+		event = event_handler(h, h->player_info.color);
+		if (!has_flag(h->flag, FLAG_NETWORK)) {
+			break;
+		} else if (event == CHESS_QUIT) {
+			chess_destroy(h);
+			// break;
+		}
+		update_graphic_board(h);
+		SDL_Delay(100);
+	}
+}
+
+void destroy_network_info(SDLHandle *h) {
+	if (h->player_info.nt_info) {
+		CHESS_LOG(LOG_INFO, ORANGE"Send disconnect to server%s\n", RESET);
+		send_disconnect_to_server(h->player_info.nt_info->sockfd, h->player_info.nt_info->servaddr);
+		close(h->player_info.nt_info->sockfd);
+		free(h->player_info.nt_info);
+		h->player_info.nt_info = NULL;
+	}
+}
+
 
 NetworkInfo *init_network(char *server_ip, struct timeval timeout) {
     NetworkInfo *info = NULL;
@@ -178,10 +205,9 @@ NetworkInfo *init_network(char *server_ip, struct timeval timeout) {
 	/* Send Hello to the server */
 	sendto(info->sockfd, "Hello", fast_strlen("Hello"), 0, (struct sockaddr *)&info->servaddr, sizeof(info->servaddr));
 
-	
-	while (!wait_peer_info(info, "Wait peer info")) {
-		SDL_Delay(1000);
-	}
+	// while (!wait_peer_info(info, "Wait peer info")) {
+	// 	SDL_Delay(1000);
+	// }
 	return (info);
 }
 

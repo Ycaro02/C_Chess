@@ -180,6 +180,8 @@ void		send_disconnect_to_server(int sockfd, struct sockaddr_in servaddr);
 void		send_alive_to_server(int sockfd, struct sockaddr_in servaddr);
 s8			wait_peer_info(NetworkInfo *info, const char *msg);
 s8			check_magic_value(char *buff);
+void		destroy_network_info(SDLHandle *h);
+void 		wait_for_player(SDLHandle *h);
 
 /* src/handle_message.c */
 void	process_message_receive(SDLHandle *handle, char *msg);

@@ -123,12 +123,16 @@ void draw_info_str(SDLHandle *h, CenterText *ct) {
         write_text(h, ct->str2, ct->font, text_pos2, U32_BLACK_COLOR);
     }
 
-	draw_button(h, h->menu.btn[BTN_CENTER1], BTN_BASIC_COLOR);
+	draw_multiple_button(h, BTN_CENTER1, 1);
+	// draw_button(h, h->menu.btn[BTN_CENTER1], BTN_BASIC_COLOR);
 }
 
-void btn_center_1func(SDLHandle *h) {
+void cancel_search_func(SDLHandle *h) {
 	(void)h;
-	CHESS_LOG(LOG_INFO, "Center button 1 clicked\n");
+	set_info_str(h, NULL, NULL);
+	unset_flag(&h->flag, FLAG_NETWORK);
+	destroy_network_info(h);
+	CHESS_LOG(LOG_INFO, "BtnCenter1: Cancel search/reconnect\n");
 }
 
 void  get_center_btn_pos(CenterText *ct, iVec2 *btn_start, iVec2 *btn_size) {
@@ -169,7 +173,7 @@ CenterText *init_center_text(SDLHandle *h) {
 	iVec2 btn_size = {0, 0};
 
 	get_center_btn_pos(ct, &btn_start, &btn_size);
-	set_btn_info(h, BTN_CENTER1, btn_start, btn_size, "Center1", btn_center_1func);
+	set_btn_info(h, BTN_CENTER1, btn_start, btn_size, "Cancel", cancel_search_func);
 
     return (ct);
 }

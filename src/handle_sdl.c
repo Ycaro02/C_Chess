@@ -459,12 +459,7 @@ void destroy_sdl_handle(SDLHandle *handle) {
 	}
 
 	/* Free network info and send disconnect to server */
-	if (handle->player_info.nt_info) {
-		CHESS_LOG(LOG_INFO, ORANGE"Send disconnect to server%s\n", RESET);
-		send_disconnect_to_server(handle->player_info.nt_info->sockfd, handle->player_info.nt_info->servaddr);
-		close(handle->player_info.nt_info->sockfd);
-		free(handle->player_info.nt_info);
-	}
+	destroy_network_info(handle);
 }
 
 

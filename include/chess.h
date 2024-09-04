@@ -321,7 +321,8 @@ enum chess_flag_value {
 	FLAG_RECONNECT=1<<2,
 	FLAG_SERVER_IP=1<<3,
 	FLAG_NETWORK=1<<4,
-	FLAG_HELP=1<<5
+	FLAG_HELP=1<<5,
+	FLAG_CENTER_TEXT_INPUT=1<<6,
 };
 
 #define LISTEN_STR		"listen"
