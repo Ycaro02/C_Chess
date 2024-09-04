@@ -15,7 +15,7 @@ typedef enum { MSG_IDX_ENUM } MsgIdx;
 typedef enum { CHESS_FLAG_ENUM } ChessFlag;
 #undef X
 
-/* Automatically generate the enum to string conversion functions */
+/* Create the switch cases automatically */
 #define ENUM_TO_STRING_FUNC(EnumName, EnumDefs) \
     FT_INLINE const char* EnumName##_to_str(EnumName value) { \
         switch (value) { \
@@ -24,7 +24,7 @@ typedef enum { CHESS_FLAG_ENUM } ChessFlag;
         } \
     }
 
-/* Create the switch cases automatically */
+/* Automatically generate the enum to string conversion functions */
 #define X(name, value) case name: return #name;
 ENUM_TO_STRING_FUNC(ChessTile, CHESS_TILE_ENUM)
 ENUM_TO_STRING_FUNC(TileType, TILE_TYPE_ENUM)

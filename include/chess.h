@@ -70,14 +70,11 @@ typedef u64 Bitboard;
 #define CHESS_QUIT -2
 
 /* Struct for special info handling */
-struct s_special_info {
+typedef struct s_special_info {
 	ChessPiece		type;
 	ChessBoolInfo	info_idx;
 	ChessTile		tile_from;
-};
-
-/* Typedef for special info struct */
-typedef struct s_special_info SpecialInfo;
+} SpecialInfo;
 
 /* Special info array size */
 #define SPECIAL_INFO_SIZE 6
@@ -243,7 +240,7 @@ typedef t_flag_context ChessFlagContext;
 #define NETWORK_STR		"network"
 #define HELP_STR		"help"
 
-/* Declarion for SDLHandle struct */
+/* Forward declarion for SDLHandle struct */
 typedef struct s_sdl_handle SDLHandle;
 
 /* src/main.c */
@@ -297,11 +294,11 @@ s8			move_save_add(ChessMoveList **lst, ChessTile tile_from, ChessTile tile_to, 
 void		display_move_list(ChessMoveList *lst);
 
 /* src/handle_reconnect.c */
-void process_reconnect_message(SDLHandle *h, char *msg);
-char *build_reconnect_message(SDLHandle *h, u16 *msg_size);
+void 		process_reconnect_message(SDLHandle *h, char *msg);
+char 		*build_reconnect_message(SDLHandle *h, u16 *msg_size);
 
 /* src/parse_message_receive.c */
-s8 ignore_msg(SDLHandle *h, char *buffer);
+s8 			ignore_msg(SDLHandle *h, char *buffer);
 
 /* src/timer.c */
 u64 		get_time_sec();
