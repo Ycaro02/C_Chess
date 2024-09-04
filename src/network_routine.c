@@ -71,6 +71,29 @@ void send_alive_packet(NetworkInfo *info) {
 	}
 }
 
+s8 reconnect_handling(SDLHandle *h) {
+	set_info_str(h, "Wait peer reconnection", NULL);
+	if (!has_flag(h->flag, FLAG_CENTER_TEXT_INPUT)) {
+		set_flag(&h->flag, FLAG_CENTER_TEXT_INPUT);
+	}
+	
+	if (!has_flag(h->flag, FLAG_NETWORK)) {
+		// instead of just return, we should display a new center text
+		// to ask user if he really want to quit the application and destroy the game
+		return (FALSE);
+	}
+ 	if (wait_peer_info(h->player_info.nt_info, "Wait reconnect peer info")) {
+		/* Here we need to build MSG_TYPE_RECONECT and while on the list of move to give them to the reconnected client */
+		u16 msg_size = 0;
+		char *buff = build_reconnect_message(h, &msg_size);
+		chess_msg_send(h->player_info.nt_info, buff, msg_size);
+		h->player_info.nt_info->peer_conected = TRUE;
+		set_info_str(h, NULL, NULL);
+		unset_flag(&h->flag, FLAG_CENTER_TEXT_INPUT);
+	}
+	return (TRUE);
+}
+
 /**
  * @brief Network chess routine
  * @param h The SDLHandle pointer
@@ -87,25 +110,14 @@ void network_chess_routine(SDLHandle *h) {
 		event = event_handler(h, h->player_info.color);
 		/* If the quit button is pressed */
 		if (event == CHESS_QUIT) { break ; } // Send quit message to the other player
-		
-		if (h->player_info.nt_info->peer_conected == FALSE) {
-			msg_recv = wait_peer_info(h->player_info.nt_info, "Wait reconnect peer info");
-			set_info_str(h, "Wait peer reconnection", NULL);
-			if (msg_recv) {
-				/* Here we need to build MSG_TYPE_RECONECT and while on the list of move to give them to the reconnected client */
-				u16 msg_size = 0;
-				char *buff = build_reconnect_message(h, &msg_size);
-				chess_msg_send(h->player_info.nt_info, buff, msg_size);
-				h->player_info.nt_info->peer_conected = TRUE;
-				set_info_str(h, NULL, NULL);
-			}
+		if (!h->player_info.nt_info->peer_conected) {
+			if (!reconnect_handling(h)) { break ;}
 		} else {
 			/* If tile is selected and is player turn, try to send move piece and move it */
 			if (h->player_info.turn == TRUE && h->board->last_clicked_tile != INVALID_TILE) {
 				ret = network_move_piece(h, h->board->last_clicked_tile);
 				if (ret == CHESS_QUIT || ret == FALSE) { break ; }
 			}
-
 			/* Receive message from the other player */
 			msg_recv = chess_msg_receive(h, h->player_info.nt_info, h->player_info.msg_receiv);
 			if ((!h->player_info.turn && msg_recv) || (h->player_info.turn && msg_recv && h->player_info.msg_receiv[IDX_TYPE] == MSG_TYPE_QUIT)) {

@@ -163,6 +163,8 @@ FT_INLINE char *clientstate_to_str(ClientState state) {
 	}
 }
 
+#define TIMEVAL_TIMEOUT ((struct timeval){0, 10000})
+
 /* Max iteration for sending message */
 #define	MAX_ITER 50
 

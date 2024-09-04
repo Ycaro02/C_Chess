@@ -34,17 +34,37 @@ s8 wait_player_handling(SDLHandle *h) {
 	return (TRUE);
 }
 
+void set_client_search_flag(SDLHandle *h) {
+	u32 client_flag = FLAG_LISTEN;
+	CHESS_LOG(LOG_INFO, "After wait player: %s\n", clientstate_to_str(h->player_info.nt_info->client_state));
+	if (h->player_info.nt_info->client_state == CLIENT_STATE_WAIT_COLOR) {
+		client_flag = FLAG_JOIN;
+	} else if (h->player_info.nt_info->client_state == CLIENT_STATE_RECONNECT) {
+		client_flag = FLAG_RECONNECT;
+	}
+	set_flag(&h->flag, client_flag);
+}
+
+void start_network_game(SDLHandle *h) {
+	/* Connect client together */
+	handle_network_client_state(h, h->flag, &h->player_info);
+	
+	/* Remove center text */
+	set_info_str(h, NULL, NULL);
+	
+	/* Start network chess routine (programme block here in routine while 1) */
+	network_chess_routine(h);
+	
+	/* Destroy the game when we exit the routine */
+	chess_destroy(h);
+}
+
 /**
  * @brief Wrapper to handle the button click
  * @param h The SDLHandle
  * @param mouse_pos The mouse position
 */
 void search_game(SDLHandle *h) {
-	(void)h;
-	
-	u32 client_flag = FLAG_LISTEN;
-	struct timeval	timeout = {0, 10000}; /* 10000 microseconds = 0.01 seconds */
-
 	menu_close(&h->menu);
 	/* Reset board */
 	init_board(h->board);
@@ -55,31 +75,18 @@ void search_game(SDLHandle *h) {
 		set_flag(&h->flag, FLAG_NETWORK);
 		
 		/* Init network and player state */
-		h->player_info.nt_info = init_network(h->player_info.dest_ip, timeout);
+		h->player_info.nt_info = init_network(h->player_info.dest_ip, TIMEVAL_TIMEOUT);
 
 		/* Wait for player */
 		if (!wait_player_handling(h)) {
 			return ;
 		}
-		CHESS_LOG(LOG_INFO, "After wait player: %s\n", clientstate_to_str(h->player_info.nt_info->client_state));
-		if (h->player_info.nt_info->client_state == CLIENT_STATE_WAIT_COLOR) {
-			client_flag = FLAG_JOIN;
-		} else if (h->player_info.nt_info->client_state == CLIENT_STATE_RECONNECT) {
-			client_flag = FLAG_RECONNECT;
-		}
-		set_flag(&h->flag, client_flag);
-
-		handle_network_client_state(h, h->flag, &h->player_info);
-		set_info_str(h, NULL, NULL);
-		network_chess_routine(h);
-		chess_destroy(h);
+		set_client_search_flag(h);
+		start_network_game(h);
 	}
 }
 
 void reconnect_game(SDLHandle *h) {
-	(void)h;
-	struct timeval	timeout = {0, 10000}; /* 10000 microseconds = 0.01 seconds */
-
 	menu_close(&h->menu);
 	CHESS_LOG(LOG_INFO, "Reconnect to game\n");
 	/* Reset board */
@@ -90,16 +97,13 @@ void reconnect_game(SDLHandle *h) {
 	if (!has_flag(h->flag, FLAG_NETWORK)) {
 		set_flag(&h->flag, FLAG_NETWORK);
 		set_flag(&h->flag, FLAG_RECONNECT);
-		h->player_info.nt_info = init_network(h->player_info.dest_ip, timeout);
+		h->player_info.nt_info = init_network(h->player_info.dest_ip, TIMEVAL_TIMEOUT);
 
 		/* Wait for player */
 		if (!wait_player_handling(h)) {
 			return ;
 		}
-		handle_network_client_state(h, h->flag, &h->player_info);
-		set_info_str(h, NULL, NULL);
-		network_chess_routine(h);
-		chess_destroy(h);
+		start_network_game(h);
 	}
 }
 
