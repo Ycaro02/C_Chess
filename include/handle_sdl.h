@@ -92,12 +92,16 @@ typedef enum e_btn_type {
 	BTN_RECONNECT,
 	BTN_QUIT,
 	BTN_SERVER_IP,
+	BTN_CENTER1,
+	BTN_CENTER2,
 	BTN_MAX,
 } BtnType;
 
 typedef void (*ButtonFunc)(SDLHandle*);
 
 #define TEXT_INPUT_SIZE 16
+
+#define SERVER_INFO_STR "Server IP: "
 
 typedef struct {
     SDL_Rect	rect;					/* The rect of the text input */
@@ -134,7 +138,8 @@ typedef struct s_chess_menu {
 	s32			height;
 
 	/* Button data */
-	s32			nb_btn;
+	s32			total_btn;
+	s32			menu_btn;
 	Button		*btn;
 	TTF_Font 	*btn_text_font;
 	BtnType		current_btn_clicked;
@@ -241,8 +246,15 @@ void		render_text_field(SDL_Renderer *renderer, TextField *text_field, SDL_Color
 void	menu_close(ChessMenu *menu);
 s8		init_menu(SDLHandle *h, s32 nb_btn);
 void 	draw_menu(SDLHandle *h);
-
-s32		detect_button_click(Button *btn, s32 nb_btn, iVec2 mouse_pos);
 void	destroy_menu(SDLHandle *h);
 
+/* src/button.c */
+void	init_button(SDLHandle *h, ChessMenu *menu, s32 nb_btn);
+void	center_btn_text(Button *btn, TTF_Font *font);
+void	draw_button(SDLHandle *h, Button btn, SDL_Color c);
+void	update_btn_disabled(SDLHandle *h, Button *btn);
+s32		detect_button_click(Button *btn, s32 nb_btn, iVec2 mouse_pos);
+void 	set_btn_info(SDLHandle *h, s32 btn_idx, iVec2 start, iVec2 size, char *text, ButtonFunc func);
+// btn func
+void	change_ip_click(SDLHandle *h);
 #endif /* HANDLE_SDL_H */

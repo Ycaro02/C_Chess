@@ -29,6 +29,7 @@ SRCS			=	chess_board.c \
 					timer.c \
 					chess_menu.c \
 					text_input.c \
+					button.c \
 
 # SRCS_BONUS		=	main_bonus.c
 

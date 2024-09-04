@@ -122,7 +122,24 @@ void draw_info_str(SDLHandle *h, CenterText *ct) {
 
         write_text(h, ct->str2, ct->font, text_pos2, U32_BLACK_COLOR);
     }
+
+	draw_button(h, h->menu.btn[BTN_CENTER1], BTN_BASIC_COLOR);
 }
+
+void btn_center_1func(SDLHandle *h) {
+	(void)h;
+	CHESS_LOG(LOG_INFO, "Center button 1 clicked\n");
+}
+
+void  get_center_btn_pos(CenterText *ct, iVec2 *btn_start, iVec2 *btn_size) {
+	
+	btn_size->x = ct->rect.w >> 2;
+	btn_size->y = ct->rect.h >> 2;
+
+	btn_start->x = ct->rect.x + (ct->rect.w >> 1) - (btn_size->x >> 1);
+	btn_start->y = ct->rect.y + ct->rect.h + (ct->rect.h >> 4);
+}
+
 CenterText *init_center_text(SDLHandle *h) {
     CenterText *ct = ft_calloc(1, sizeof(CenterText));
 
@@ -132,7 +149,7 @@ CenterText *init_center_text(SDLHandle *h) {
     }
 
     ct->str = NULL;
-    ct->str2 = NULL; // Initialiser str2 à NULL
+    ct->str2 = NULL;
 
     if (ct->rect.x == 0) {
         ct->rect.w = h->tile_size.x * 4;
@@ -147,6 +164,13 @@ CenterText *init_center_text(SDLHandle *h) {
         free(ct);
         return (NULL);
     }
+
+	iVec2 btn_start = {0, 0};
+	iVec2 btn_size = {0, 0};
+
+	get_center_btn_pos(ct, &btn_start, &btn_size);
+	set_btn_info(h, BTN_CENTER1, btn_start, btn_size, "Center1", btn_center_1func);
+
     return (ct);
 }
 
