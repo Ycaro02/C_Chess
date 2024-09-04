@@ -5,6 +5,7 @@
 /**
  * @brief Detect if a button is clicked
  * @param btn The button
+ * @param btn_start The start index of the button
  * @param nb_btn The number of button
  * @param mouse_pos The mouse position
  * @return The index of the button clicked
@@ -21,6 +22,16 @@ s32 detect_button_click(Button *btn, s32 btn_start, s32 nb_btn, iVec2 mouse_pos)
 		}
 	}
 	return (BTN_INVALID);
+}
+
+s8 wait_player_handling(SDLHandle *h) {
+	set_flag(&h->flag, FLAG_CENTER_TEXT_INPUT);
+	wait_for_player(h);
+	unset_flag(&h->flag, FLAG_CENTER_TEXT_INPUT);
+	if (!has_flag(h->flag, FLAG_NETWORK)) {
+		return (FALSE);
+	}
+	return (TRUE);
 }
 
 /**
@@ -47,14 +58,9 @@ void search_game(SDLHandle *h) {
 		h->player_info.nt_info = init_network(h->player_info.dest_ip, timeout);
 
 		/* Wait for player */
-		set_flag(&h->flag, FLAG_CENTER_TEXT_INPUT);
-		wait_for_player(h);
-		unset_flag(&h->flag, FLAG_CENTER_TEXT_INPUT);
-		if (!has_flag(h->flag, FLAG_NETWORK)) {
+		if (!wait_player_handling(h)) {
 			return ;
 		}
-
-
 		CHESS_LOG(LOG_INFO, "After wait player: %s\n", clientstate_to_str(h->player_info.nt_info->client_state));
 		if (h->player_info.nt_info->client_state == CLIENT_STATE_WAIT_COLOR) {
 			client_flag = FLAG_JOIN;
@@ -87,14 +93,9 @@ void reconnect_game(SDLHandle *h) {
 		h->player_info.nt_info = init_network(h->player_info.dest_ip, timeout);
 
 		/* Wait for player */
-		set_flag(&h->flag, FLAG_CENTER_TEXT_INPUT);
-		wait_for_player(h);
-		unset_flag(&h->flag, FLAG_CENTER_TEXT_INPUT);
-		if (!has_flag(h->flag, FLAG_NETWORK)) {
+		if (!wait_player_handling(h)) {
 			return ;
 		}
-
-
 		handle_network_client_state(h, h->flag, &h->player_info);
 		set_info_str(h, NULL, NULL);
 		network_chess_routine(h);
@@ -208,7 +209,15 @@ void update_btn_disabled(SDLHandle *h, Button *btn) {
 	} 
 }
 
-
+/**
+ * @brief Set the button info
+ * @param h The SDLHandle
+ * @param btn_idx The index of the button
+ * @param start The start position
+ * @param size The size of the button
+ * @param text The text of the button
+ * @param func The function of the button
+*/
 void set_btn_info(SDLHandle *h, s32 btn_idx, iVec2 start, iVec2 size, char *text, ButtonFunc func) {
 	h->menu.btn[btn_idx].start = start;
 	h->menu.btn[btn_idx].width = size.x;
@@ -220,7 +229,12 @@ void set_btn_info(SDLHandle *h, s32 btn_idx, iVec2 start, iVec2 size, char *text
 	center_btn_text(&h->menu.btn[btn_idx], h->menu.btn_text_font);
 }
 
-
+/**
+ * @brief Draw multiple button
+ * @param h The SDLHandle
+ * @param btn_start The start index of the button
+ * @param nb_btn The number of button
+*/
 void draw_multiple_button(SDLHandle *h, s32 btn_start, s32 nb_btn) {
 	SDL_Color btn_color;
 	s32 idx = 0;

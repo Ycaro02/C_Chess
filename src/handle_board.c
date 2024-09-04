@@ -40,50 +40,19 @@ void update_mouse_pos(SDLHandle *h, s32 x, s32 y) {
 	h->mouse_pos.y = y;
 }
 
-void center_text_event_handling(SDLHandle *h, SDL_Event event) {
+void button_event_handling(SDLHandle *h, SDL_Event event, s32 btn_start, s32 btn_nb) {
 	iVec2 pos = {0, 0};
 	BtnType btn_click = BTN_INVALID;
 
 	SDL_GetMouseState(&pos.x, &pos.y);
 	if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
-		btn_click = detect_button_click(h->menu.btn, BTN_CENTER1, 1, pos);
-		if (btn_click == BTN_CENTER1 && btn_click != BTN_INVALID && h->menu.btn[btn_click].state != BTN_STATE_DISABLED) {
-			h->menu.btn[btn_click].state = BTN_STATE_PRESSED;
-			h->menu.current_btn_clicked = btn_click;
-		}
-	} else if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {
-		btn_click = detect_button_click(h->menu.btn, BTN_CENTER1, 1, pos);
-		if (btn_click == BTN_CENTER1) {
-			h->menu.btn[h->menu.current_btn_clicked].state = BTN_STATE_RELEASED;
-		}
-		if (btn_click == h->menu.current_btn_clicked && btn_click != BTN_INVALID) {
-			if (h->menu.btn[btn_click].func) {
-				h->menu.current_btn_clicked = BTN_INVALID;
-				h->menu.btn[btn_click].func(h);
-			}
-		}
-	} else if (event.type == SDL_KEYDOWN && (event.key.keysym.sym == SDLK_p || event.key.keysym.sym == SDLK_ESCAPE)) {
-		// menu_close(&h->menu);
-		CHESS_LOG(LOG_INFO, "Close Center text escape key\n");
-	} else if (event.type == SDL_MOUSEMOTION) {
-		update_mouse_pos(h, pos.x, pos.y);
-		h->menu.btn_hover = detect_button_click(h->menu.btn, BTN_CENTER1, 1, pos);
-	}
-}
-
-void menu_event_handling(SDLHandle *h, SDL_Event event) {
-	iVec2 pos = {0, 0};
-	BtnType btn_click = BTN_INVALID;
-
-	SDL_GetMouseState(&pos.x, &pos.y);
-	if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
-		btn_click = detect_button_click(h->menu.btn, 0, h->menu.menu_btn + 1, pos);
+		btn_click = detect_button_click(h->menu.btn, btn_start, btn_nb, pos);
 		if (btn_click != BTN_INVALID && h->menu.btn[btn_click].state != BTN_STATE_DISABLED) {
 			h->menu.btn[btn_click].state = BTN_STATE_PRESSED;
 			h->menu.current_btn_clicked = btn_click;
 		}
 	} else if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {
-		btn_click = detect_button_click(h->menu.btn, 0, h->menu.menu_btn + 1, pos);
+		btn_click = detect_button_click(h->menu.btn, btn_start, btn_nb, pos);
 		if (h->menu.current_btn_clicked != BTN_INVALID) {
 			h->menu.btn[h->menu.current_btn_clicked].state = BTN_STATE_RELEASED;
 		}
@@ -92,16 +61,16 @@ void menu_event_handling(SDLHandle *h, SDL_Event event) {
 				h->menu.current_btn_clicked = BTN_INVALID;
 				h->menu.btn[btn_click].func(h);
 			}
-			if (btn_click != BTN_SERVER_IP) {
+			if (btn_start == BTN_RESUME && btn_click != BTN_SERVER_IP) {
 				CHESS_LOG(LOG_INFO, "Button %d clicked close menu\n", btn_click);
 				menu_close(&h->menu);
 			}
 		}
-	} else if (event.type == SDL_KEYDOWN && (event.key.keysym.sym == SDLK_p || event.key.keysym.sym == SDLK_ESCAPE)) {
+	} else if (btn_start == BTN_RESUME && event.type == SDL_KEYDOWN && (event.key.keysym.sym == SDLK_p || event.key.keysym.sym == SDLK_ESCAPE)) {
 		menu_close(&h->menu);
 	} else if (event.type == SDL_MOUSEMOTION) {
 		update_mouse_pos(h, pos.x, pos.y);
-		h->menu.btn_hover = detect_button_click(h->menu.btn, 0, h->menu.menu_btn + 1, pos);
+		h->menu.btn_hover = detect_button_click(h->menu.btn, btn_start, btn_nb, pos);
 	}
 }
 
@@ -153,7 +122,8 @@ s32 event_handler(SDLHandle *h, s8 player_color) {
 			return (CHESS_QUIT);
 		}
 		if (has_flag(h->flag, FLAG_CENTER_TEXT_INPUT)) {
-			center_text_event_handling(h, event);
+			button_event_handling(h, event, BTN_CENTER1, 1);
+			// center_text_event_handling(h, event);
 		} else {
 			if (!h->menu.is_open) {
 				game_event_handling(h, event, player_color);
@@ -161,7 +131,8 @@ s32 event_handler(SDLHandle *h, s8 player_color) {
 				if (h->menu.ip_field.is_active) {
 					handle_text_input(h, &event);
 				}
-				menu_event_handling(h, event);
+				button_event_handling(h, event, BTN_RESUME, h->menu.menu_btn + 1);
+				// menu_event_handling(h, event);
 			}
 		}
 	}
