@@ -135,7 +135,7 @@ s8 verify_check_and_mat(ChessBoard *b, s8 is_black) {
 			/* Get the possible moves */
 			possible_moves = get_piece_move(b, piece, type, TRUE);
 			if (possible_moves != 0) {
-				CHESS_LOG(LOG_DEBUG, "Piece %s on [%s] has possible moves\n", chess_piece_to_string(type), TILE_TO_STRING(piece));
+				CHESS_LOG(LOG_DEBUG, "Piece %s on [%s] has possible moves\n", ChessPiece_to_str(type), ChessTile_to_str(piece));
 				mat = FALSE;
 				break ;
 			}

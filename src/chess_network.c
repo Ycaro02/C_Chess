@@ -123,7 +123,7 @@ s8 wait_peer_info(NetworkInfo *info, const char *msg) {
 		ft_memcpy(&info->peeraddr, buff + MAGIC_SIZE, sizeof(info->peeraddr));
 		info->client_state = buff[CONNECT_PACKET_SIZE - 1];
 		CHESS_LOG(LOG_INFO, "Client state: %s: Peer info : %s:%d\n"\
-			, clientstate_to_str(info->client_state)
+			, ClientState_to_str(info->client_state)
 			, inet_ntoa(info->peeraddr.sin_addr)
 			, ntohs(info->peeraddr.sin_port));
 		return (TRUE);

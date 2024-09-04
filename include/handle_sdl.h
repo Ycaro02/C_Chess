@@ -79,24 +79,6 @@ typedef struct s_window_band {
 /* Menu background color */
 #define MENU_BG_COLOR 	70, 70, 70, 220
 
-typedef enum e_btn_state {
-	BTN_STATE_RELEASED = 0,
-	BTN_STATE_PRESSED,
-	BTN_STATE_DISABLED,
-} BtnState;
-
-typedef enum e_btn_type {
-	BTN_INVALID = -1,
-	BTN_RESUME,
-	BTN_SEARCH,
-	BTN_RECONNECT,
-	BTN_QUIT,
-	BTN_SERVER_IP,
-	BTN_CENTER1,
-	BTN_CENTER2,
-	BTN_MAX,
-} BtnType;
-
 typedef void (*ButtonFunc)(SDLHandle*);
 
 #define TEXT_INPUT_SIZE 16

@@ -40,23 +40,6 @@ int		init_network_windows();
 void	cleanup_network_windows();
 s8		socket_no_block_windows(Socket sockfd, struct timeval timeout);
 
-
-/* CLient state for frist conection */
-typedef enum e_client_state {
-	CLIENT_STATE_INIT=0,		/* Init client */
-	CLIENT_STATE_SEND_COLOR,	/* Send color */
-	CLIENT_STATE_WAIT_COLOR,	/* Wait color */
-	CLIENT_STATE_RECONNECT,		/* Reconnect */
-	CLIENT_STATE_CONNECTED,		/* Connected */
-} ClientState;
-
-typedef enum e_game_state {
-	ROOM_STATE_WAITING, 		/* Waiting for a player */
-	ROOM_STATE_PLAYING, 		/* Playing */
-	ROOM_STATE_WAIT_RECONNECT,	/* Wait reconnect */
-	ROOM_STATE_END				/* End of the game */
-} RoomState;
-
 /* Contant server port and nb attemps max */
 #define SERVER_PORT 24242
 #define MAX_ATTEMPTS 10
@@ -85,30 +68,7 @@ typedef enum e_game_state {
 /* Connect packet size */
 #define CONNECT_PACKET_SIZE (MAGIC_SIZE + sizeof(struct sockaddr_in) + 1ULL)
 
-enum e_msg_type {
-	MSG_TYPE_COLOR=1,
-	MSG_TYPE_MOVE,
-	MSG_TYPE_PROMOTION,
-	MSG_TYPE_RECONNECT,
-	MSG_TYPE_QUIT,
-	MSG_TYPE_ACK='A',
-	MSG_TYPE_HELLO='H',
-	MSG_TYPE_DISCONNECT='D',
-	MSG_TYPE_CLIENT_ALIVE='C',
-};
-
-enum e_msg_idx {
-	IDX_TYPE=0,
-	IDX_TURN,
-	IDX_FROM,
-	IDX_TO,
-	IDX_PIECE,
-	IDX_TIMER,
-	IDX_TIMER_END=IDX_TIMER+8,
-};
-
 typedef struct sockaddr_in SockaddrIn;
-
 typedef struct sockaddr Sockaddr;
 
 struct s_network_info {
@@ -121,48 +81,9 @@ struct s_network_info {
 	s8			peer_conected;			/* Peer connected */
 };
 
-typedef enum e_msg_type MsgType;
 typedef struct s_network_info NetworkInfo;
 
-#define ENUM_TO_STR_CASE(_val_) case _val_: return #_val_;
-
-
-FT_INLINE char *message_type_to_str(MsgType msg_type) {
-	switch (msg_type) {
-		ENUM_TO_STR_CASE(MSG_TYPE_COLOR);
-		ENUM_TO_STR_CASE(MSG_TYPE_MOVE);
-		ENUM_TO_STR_CASE(MSG_TYPE_PROMOTION);
-		ENUM_TO_STR_CASE(MSG_TYPE_RECONNECT);
-		ENUM_TO_STR_CASE(MSG_TYPE_QUIT);
-		ENUM_TO_STR_CASE(MSG_TYPE_ACK);
-		ENUM_TO_STR_CASE(MSG_TYPE_HELLO);
-		ENUM_TO_STR_CASE(MSG_TYPE_DISCONNECT);
-		ENUM_TO_STR_CASE(MSG_TYPE_CLIENT_ALIVE);
-		default: return "UNKNOWN";
-	}
-}
-
-FT_INLINE char *roomstate_to_str(RoomState state) {
-	switch (state) {
-		ENUM_TO_STR_CASE(ROOM_STATE_WAITING);
-		ENUM_TO_STR_CASE(ROOM_STATE_PLAYING);
-		ENUM_TO_STR_CASE(ROOM_STATE_WAIT_RECONNECT);
-		ENUM_TO_STR_CASE(ROOM_STATE_END);
-		default: return "UNKNOWN";
-	}
-}
-
-FT_INLINE char *clientstate_to_str(ClientState state) {
-	switch (state) {
-		ENUM_TO_STR_CASE(CLIENT_STATE_INIT);
-		ENUM_TO_STR_CASE(CLIENT_STATE_SEND_COLOR);
-		ENUM_TO_STR_CASE(CLIENT_STATE_WAIT_COLOR);
-		ENUM_TO_STR_CASE(CLIENT_STATE_RECONNECT);
-		ENUM_TO_STR_CASE(CLIENT_STATE_CONNECTED);
-		default: return "UNKNOWN";
-	}
-}
-
+/* Timeout for reveive */
 #define TIMEVAL_TIMEOUT ((struct timeval){0, 10000})
 
 /* Max iteration for sending message */

@@ -8,16 +8,16 @@ s8 is_legal_promotion_packet(SDLHandle *handle, ChessPiece new_piece, ChessTile 
 	ChessPiece end_piece = enemy_color == IS_WHITE ? WHITE_QUEEN : BLACK_QUEEN;
 
 	if (new_piece < start_piece || new_piece > end_piece) {
-		CHESS_LOG(LOG_INFO, "Piece type promotion is out of range %s\n", chess_piece_to_string(new_piece));
+		CHESS_LOG(LOG_INFO, "Piece type promotion is out of range %s\n", ChessPiece_to_str(new_piece));
 		return (FALSE);
 	}
 
 	/* Is if a promotion we need to check te pawn reach the raw of the promotion */
 	if (enemy_color == IS_WHITE && tile_to < A8 && tile_to > H8) {
-		CHESS_LOG(LOG_INFO, "Tile to is not in the promotion raw %s\n", TILE_TO_STRING(tile_to));
+		CHESS_LOG(LOG_INFO, "Tile to is not in the promotion raw %s\n", ChessTile_to_str(tile_to));
 		return (FALSE);
 	} else if (enemy_color == IS_BLACK && tile_to < A1 && tile_to > H1) {
-		CHESS_LOG(LOG_INFO, "Tile to is not in the promotion raw %s\n", TILE_TO_STRING(tile_to));
+		CHESS_LOG(LOG_INFO, "Tile to is not in the promotion raw %s\n", ChessTile_to_str(tile_to));
 		return (FALSE);
 	}
 
@@ -32,26 +32,26 @@ s8 is_legal_move_packet(SDLHandle *handle, ChessTile tile_from, ChessTile tile_t
 
 	/* Check if the tile is out of bound */
 	if (tile_from < A1 || tile_from > H8 || tile_to < A1 || tile_to > H8) {
-		CHESS_LOG(LOG_INFO, "Tile from or to is out of bound %s %s\n", TILE_TO_STRING(tile_from), TILE_TO_STRING(tile_to));
+		CHESS_LOG(LOG_INFO, "Tile from or to is out of bound %s %s\n", ChessTile_to_str(tile_from), ChessTile_to_str(tile_to));
 		return (FALSE);
 	}
 
 	/* Check if the piece is out of range */
 	if (piece_type < enemy_piece_start || piece_type > enemy_piece_end) {
-		CHESS_LOG(LOG_INFO, "Piece type is out of range %s\n", chess_piece_to_string(piece_type));
+		CHESS_LOG(LOG_INFO, "Piece type is out of range %s\n", ChessPiece_to_str(piece_type));
 		return (FALSE);
 	}
 
 	/* Check if the piece is on the tile */
 	if ((handle->board->piece[piece_type] & (1ULL << tile_from)) == 0) {
-		CHESS_LOG(LOG_INFO, "Piece is %s not on the tile %s\n", chess_piece_to_string(piece_type), TILE_TO_STRING(tile_from));
+		CHESS_LOG(LOG_INFO, "Piece is %s not on the tile %s\n", ChessPiece_to_str(piece_type), ChessTile_to_str(tile_from));
 		return (FALSE);
 	}
 
 	/* Check if the move is possible */
 	possible_moves = get_piece_move(handle->board, 1ULL << tile_from, piece_type, TRUE);
 	if ((possible_moves & (1ULL << tile_to)) == 0) {
-		CHESS_LOG(LOG_INFO, "Move is not possible from %s to %s\n", TILE_TO_STRING(tile_from), TILE_TO_STRING(tile_to));
+		CHESS_LOG(LOG_INFO, "Move is not possible from %s to %s\n", ChessTile_to_str(tile_from), ChessTile_to_str(tile_to));
 		return (FALSE);
 	}
 	return (TRUE);

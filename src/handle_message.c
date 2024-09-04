@@ -87,7 +87,7 @@ void display_message(char *msg) {
 	ChessPiece piece_type = EMPTY;
 
 
-	CHESS_LOG(LOG_INFO, YELLOW"Message type: %s: "RESET, message_type_to_str(msg_type));
+	CHESS_LOG(LOG_INFO, YELLOW"Message type: %s: "RESET, MsgType_to_str(msg_type));
 
 	if (msg_type == MSG_TYPE_COLOR) {
 		CHESS_LOG(LOG_INFO, "turn: |%d| color |%d| -> ", msg[IDX_TURN], msg[IDX_FROM]);
@@ -104,10 +104,10 @@ void display_message(char *msg) {
 	piece_type = msg[IDX_PIECE] - 1;
 	// CHESS_LOG(LOG_INFO, PURPLE"brut data: |%d||%d||%d| Timer:|%lu|\n"RESET, msg[IDX_FROM], msg[IDX_TO], msg[IDX_PIECE], *(u64 *)&msg[IDX_TIMER]);
 	if (msg_type == MSG_TYPE_MOVE) {
-		CHESS_LOG(LOG_INFO, ORANGE"Move from %s to %s with piece %s\n"RESET, TILE_TO_STRING(tile_from), TILE_TO_STRING(tile_to), chess_piece_to_string(piece_type));
+		CHESS_LOG(LOG_INFO, ORANGE"Move from %s to %s with piece %s\n"RESET, ChessTile_to_str(tile_from), ChessTile_to_str(tile_to), ChessPiece_to_str(piece_type));
 
 	} else if (msg_type == MSG_TYPE_PROMOTION) {
-		CHESS_LOG(LOG_INFO, ORANGE"Promotion from %s to %s with piece %s\n"RESET, TILE_TO_STRING(tile_from), TILE_TO_STRING(tile_to), chess_piece_to_string(piece_type));
+		CHESS_LOG(LOG_INFO, ORANGE"Promotion from %s to %s with piece %s\n"RESET, ChessTile_to_str(tile_from), ChessTile_to_str(tile_to), ChessPiece_to_str(piece_type));
 	} 
 }
 
@@ -197,7 +197,7 @@ s8 chess_msg_receive(SDLHandle *h, NetworkInfo *info, char *rcv_buffer) {
 		}
 		buffer[rcv_len] = '\0';
 		sendto(info->sockfd, ACK_STR, ACK_LEN, 0, (struct sockaddr *)&info->servaddr, info->addr_len);
-		CHESS_LOG(LOG_INFO, GREEN"Msg |%s| receive len : %zd -> ACK send\n"RESET, message_type_to_str(buffer[0 + MAGIC_SIZE]), rcv_len);
+		CHESS_LOG(LOG_INFO, GREEN"Msg |%s| receive len : %zd -> ACK send\n"RESET, MsgType_to_str(buffer[0 + MAGIC_SIZE]), rcv_len);
 		ft_memcpy(rcv_buffer, buffer + MAGIC_SIZE, rcv_len - MAGIC_SIZE);
 		return (TRUE);
 	} 
@@ -210,7 +210,7 @@ s8 chess_msg_send(NetworkInfo *info, char *msg, u16 msg_len) {
 	char	buffer[4096];
 
 	fast_bzero(buffer, 4096);
-	CHESS_LOG(LOG_INFO, CYAN"Try to send %s len %u -> "RESET, message_type_to_str(msg[0]), msg_len);
+	CHESS_LOG(LOG_INFO, CYAN"Try to send %s len %u -> "RESET, MsgType_to_str(msg[0]), msg_len);
 	while (attempts < MAX_ATTEMPTS && !ack_received) {
 		sendto(info->sockfd, msg, msg_len, 0, (struct sockaddr *)&info->servaddr, info->addr_len);
 		rcv_len = recvfrom(info->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&info->servaddr, &info->addr_len);
@@ -226,7 +226,7 @@ s8 chess_msg_send(NetworkInfo *info, char *msg, u16 msg_len) {
 		SDL_Delay(1000);
 	}
 	if (!ack_received) {
-		CHESS_LOG(LOG_ERROR, "No ACK received for |%s| after %d sending try\nVerify your network connection\n",message_type_to_str(msg[0]), MAX_ATTEMPTS);
+		CHESS_LOG(LOG_ERROR, "No ACK received for |%s| after %d sending try\nVerify your network connection\n",MsgType_to_str(msg[0]), MAX_ATTEMPTS);
 		return (FALSE);
 	}
 	return (TRUE);

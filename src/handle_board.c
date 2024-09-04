@@ -16,7 +16,7 @@ ChessTile detect_tile_click(s32 x, s32 y, s32 tile_size, WinBand wb, s8 player_c
 	while (column >= 0) {
 		for (s32 raw = 0; raw < 8; raw++) {
 			if (is_in_x_range(x, raw, tile_size, wb) && is_in_y_range(y, column, tile_size, wb)) {
-				CHESS_LOG(LOG_INFO, "Click on "ORANGE"[%s]"RESET" -> "PINK"|%d|\n"RESET, TILE_TO_STRING(tile), tile);
+				CHESS_LOG(LOG_INFO, "Click on "ORANGE"[%s]"RESET" -> "PINK"|%d|\n"RESET, ChessTile_to_str(tile), tile);
 				return (tile);
 			}
 			/* Increment or decrement tile */

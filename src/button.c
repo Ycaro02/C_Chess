@@ -36,7 +36,7 @@ s8 wait_player_handling(SDLHandle *h) {
 
 void set_client_search_flag(SDLHandle *h) {
 	u32 client_flag = FLAG_LISTEN;
-	CHESS_LOG(LOG_INFO, "After wait player: %s\n", clientstate_to_str(h->player_info.nt_info->client_state));
+	CHESS_LOG(LOG_INFO, "After wait player: %s\n", ClientState_to_str(h->player_info.nt_info->client_state));
 	if (h->player_info.nt_info->client_state == CLIENT_STATE_WAIT_COLOR) {
 		client_flag = FLAG_JOIN;
 	} else if (h->player_info.nt_info->client_state == CLIENT_STATE_RECONNECT) {

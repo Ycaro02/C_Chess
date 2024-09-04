@@ -3,14 +3,11 @@
 
 #include "../libft/libft.h"
 
-#include "stdio.h"
-
-/* Chess log level */
-typedef enum e_log_level {
-	LOG_NONE = 0U,
-	LOG_ERROR = 1U,
-	LOG_INFO = 2U,
-	LOG_DEBUG = 3U,
+typedef enum {
+	LOG_NONE,
+	LOG_ERROR,
+	LOG_INFO,
+	LOG_DEBUG
 } LogLevel;
 
 /* Get the chess log level */

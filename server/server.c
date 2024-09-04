@@ -191,8 +191,8 @@ void connect_client_together(int sockfd, ChessRoom *r) {
 	}
 
 	printf(PURPLE"Room is Ready send info:\nClientA : %s:%hu %s\nClientB : %s:%hu -> %s\n"RESET,
-	 inet_ntoa(r->cliA.addr.sin_addr), ntohs(r->cliA.addr.sin_port), clientstate_to_str(r->cliA.client_state),
-	 inet_ntoa(r->cliB.addr.sin_addr), ntohs(r->cliB.addr.sin_port), clientstate_to_str(r->cliB.client_state));
+	 inet_ntoa(r->cliA.addr.sin_addr), ntohs(r->cliA.addr.sin_port), ClientState_to_str(r->cliA.client_state),
+	 inet_ntoa(r->cliB.addr.sin_addr), ntohs(r->cliB.addr.sin_port), ClientState_to_str(r->cliB.client_state));
 
 	/* Send information from B to A */
 	sendto(sockfd, dataClientB, CONNECT_PACKET_SIZE, 0, (Sockaddr *)&r->cliA.addr, sizeof(r->cliA.addr));
@@ -454,7 +454,7 @@ void server_routine(ChessServer *server) {
 		len = recvfrom(server->sockfd, buffer, sizeof(buffer), 0, (Sockaddr *)&cliaddr, &addr_len);
 		if (len > 0) {
 			buffer[len] = '\0';
-			printf(CYAN"Server Received: %s from %s:%hu\n"RESET, message_type_to_str(buffer[0]), inet_ntoa(cliaddr.sin_addr), ntohs(cliaddr.sin_port));
+			printf(CYAN"Server Received: %s from %s:%hu\n"RESET, MsgType_to_str(buffer[0]), inet_ntoa(cliaddr.sin_addr), ntohs(cliaddr.sin_port));
 			handle_client_message(server->sockfd, room, &cliaddr, buffer, len);
 			fast_bzero(buffer, sizeof(buffer));
 			fast_bzero(&cliaddr, sizeof(cliaddr));

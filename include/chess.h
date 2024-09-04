@@ -3,8 +3,9 @@
 
 #include "../libft/libft.h"
 #include "../libft/parse_flag/parse_flag.h"
+#include "chess_enum.h"
+#include <time.h>
 #include <stdio.h>
-
 
 /* Typedef for Bitboard type just unsigned long long (64 bits) */
 typedef u64 Bitboard;
@@ -12,23 +13,6 @@ typedef u64 Bitboard;
 /* Define for white and black boolean for different function using 'is_black' argument */
 #define IS_WHITE 0
 #define IS_BLACK 1
-
-/* Enum for chess tile */
-enum e_chess_tile {
-	INVALID_TILE=-1,
-	A1, B1, C1, D1, E1, F1, G1, H1,
-	A2, B2, C2, D2, E2, F2, G2, H2,
-	A3, B3, C3, D3, E3, F3, G3, H3,
-	A4, B4, C4, D4, E4, F4, G4, H4,
-	A5, B5, C5, D5, E5, F5, G5, H5,
-	A6, B6, C6, D6, E6, F6, G6, H6,
-	A7, B7, C7, D7, E7, F7, G7, H7,
-	A8, B8, C8, D8, E8, F8, G8, H8,
-	TILE_MAX
-};
-
-/* Typedef for chess tile enum */
-typedef enum e_chess_tile ChessTile;
 
 /* White and Black castle constant */
 #define WHITE_KING_START_POS E1
@@ -85,32 +69,6 @@ typedef enum e_chess_tile ChessTile;
 /* Chess quit */
 #define CHESS_QUIT -2
 
-/* Enum for chess piece */
-enum e_chess_piece {
-	EMPTY=-1,
-	WHITE_PAWN, WHITE_KNIGHT, WHITE_BISHOP, WHITE_ROOK, WHITE_QUEEN, WHITE_KING,
-	BLACK_PAWN, BLACK_KNIGHT, BLACK_BISHOP, BLACK_ROOK, BLACK_QUEEN, BLACK_KING,
-	PIECE_MAX
-};
-
-/* Typedef for chess piece enum */
-typedef enum e_chess_piece ChessPiece;
-
-/* Enum for chess boolean info */
-enum chess_bool_info {
-	WHITE_CHECK = 0,
-	BLACK_CHECK,
-	WHITE_KING_MOVED,
-	WHITE_KING_ROOK_MOVED,
-	WHITE_QUEEN_ROOK_MOVED,
-	BLACK_KING_MOVED,
-	BLACK_KING_ROOK_MOVED,
-	BLACK_QUEEN_ROOK_MOVED,
-};
-
-/* Typedef for chess boolean info enum */
-typedef enum chess_bool_info ChessBoolInfo;
-
 /* Struct for special info handling */
 struct s_special_info {
 	ChessPiece		type;
@@ -125,21 +83,18 @@ typedef struct s_special_info SpecialInfo;
 #define SPECIAL_INFO_SIZE 6
 
 /* Struct for move save */
-struct s_move_save {
+typedef struct s_move_save {
 	ChessTile	tile_from;
 	ChessTile	tile_to;
 	ChessPiece	piece_from;
 	ChessPiece	piece_to;
-};
-
-/* Typedef for move save struct */
-typedef struct s_move_save MoveSave;
+} MoveSave;
 
 /* Typedef for t_list */
 typedef t_list ChessMoveList; 
 
 /* ChessBoard struct */
-struct s_chess_board {
+typedef struct s_chess_board {
 	ChessMoveList	*lst;			/* List of MoveSave struct */
 
 	/* 64 bitboard for each piece */
@@ -186,11 +141,7 @@ struct s_chess_board {
 	 * 7: black queen rook moved
 	*/
 	u8			info;
-};
-
-/* Typedef for ChessBoard struct and enum */
-typedef struct s_chess_board ChessBoard;
-
+} ChessBoard;
 
 /* @brief Function pointer typedef for get move functions 
  * @param b		ChessBoard struct pointer
@@ -203,40 +154,14 @@ typedef struct s_chess_board ChessBoard;
 typedef Bitboard (*GetMoveFunc)(ChessBoard*, Bitboard, ChessPiece, s8, s8);
 
 /* Struct for piece move */
-struct s_piece_move {
+typedef struct s_piece_move {
 	ChessPiece	white_piece_type;
 	ChessPiece	black_piece_type;
 	GetMoveFunc get_move_func;
-};
-
-/* Typedef for piece move structure */
-typedef struct s_piece_move PieceMove;
+} PieceMove;
 
 /* Piece Move Array size */
 #define PIECE_MOVE_ARRAY_SIZE 6
-
-/* Inline function to convert ChessPiece to string */
-FT_INLINE const char *chess_piece_to_string(ChessPiece piece) {
-	static const char *piece_str[PIECE_MAX] = {
-		"WHITE_PAWN", "WHITE_KNIGHT", "WHITE_BISHOP", "WHITE_ROOK", "WHITE_QUEEN", "WHITE_KING",
-		"BLACK_PAWN", "BLACK_KNIGHT", "BLACK_BISHOP", "BLACK_ROOK", "BLACK_QUEEN", "BLACK_KING"
-	};
-	if (piece < 0 || piece >= PIECE_MAX) {
-		return ("EMPTY");
-	}
-	return (piece_str[piece]);
-}
-
-/* Macro to convert tile to string */
-#define TILE_TO_STRING(t) (char[3]){'A' + (t) % 8, '1' + (t) / 8, '\0'}
-
-
-/* Enum for tile type, use in handle_occupied_tile */
-enum tile_type {
-	EMPTY_TILE = 0,
-	ALLY_TILE,
-	ENEMY_TILE
-};
 
 /* @brief Display kill info
  * @param enemy_piece	ChessPiece enum
@@ -244,7 +169,7 @@ enum tile_type {
 */
 FT_INLINE void display_kill_info(ChessPiece enemy_piece, ChessTile tile_to) {
 	printf(RED"Kill %s on [%s]\n"RESET, \
-		chess_piece_to_string(enemy_piece), TILE_TO_STRING(tile_to));
+		ChessPiece_to_str(enemy_piece), ChessTile_to_str(tile_to));
 }
 
 /* Tile color */
@@ -252,18 +177,19 @@ FT_INLINE void display_kill_info(ChessPiece enemy_piece, ChessTile tile_to) {
 #define WHITE_TILE ((u32)(RGBA_TO_UINT32(255, 255, 255, 255)))
 
 
-typedef struct s_network_info NetworkInfo;
-
 
 /* Used in move piece to check if the move is a promotion and adapt message sending */
 #define PAWN_PROMOTION 2
 
 
+/* Forward declaration of NetworkInfo */
+typedef struct s_network_info NetworkInfo;
+
 /* Message max size */
 #define	MSG_SIZE 16
 
 /* Player info struct */
-struct s_player_info {
+typedef struct s_player_info {
 	NetworkInfo *nt_info;				/* Network info */
 	char		msg_tosend[MSG_SIZE];	/* Message to send */
 	char		msg_receiv[MSG_SIZE];	/* Message received */
@@ -274,13 +200,7 @@ struct s_player_info {
 	ChessPiece	piece_end;				/* ChessPiece color end */
 	s8			color;					/* player color */
 	s8			turn;					/* player turn */
-};
-
-/* Typedef for player info struct */
-typedef struct s_player_info PlayerInfo;
-
-
-#include <time.h>
+} PlayerInfo;
 
 FT_INLINE s8 random_player_color() {
 	srand(time(NULL));
@@ -315,15 +235,6 @@ typedef t_flag_context ChessFlagContext;
 #define NETWORK_OPT_CHAR	'n'
 #define HELP_OPT_CHAR		'h'
 
-enum chess_flag_value {
-	FLAG_LISTEN=1<<0,
-	FLAG_JOIN=1<<1,
-	FLAG_RECONNECT=1<<2,
-	FLAG_SERVER_IP=1<<3,
-	FLAG_NETWORK=1<<4,
-	FLAG_HELP=1<<5,
-	FLAG_CENTER_TEXT_INPUT=1<<6,
-};
 
 #define LISTEN_STR		"listen"
 #define JOIN_STR		"join"
@@ -331,11 +242,6 @@ enum chess_flag_value {
 #define SERVER_IP_STR	"server_ip"
 #define NETWORK_STR		"network"
 #define HELP_STR		"help"
-// #define DEFAULT_PORT 	54321
-// #define MAX_PORT		65535
-
-
-
 
 /* Declarion for SDLHandle struct */
 typedef struct s_sdl_handle SDLHandle;
