@@ -92,7 +92,7 @@ void draw_letter_number(SDLHandle *handle, s8 player_color) {
 }
 
 /* Draw the given text in the center of the board (in a rect) */
-void draw_info_str(SDLHandle *h, CenterText *ct) {
+void center_text_draw(SDLHandle *h, CenterText *ct) {
     iVec2 text_size = {0, 0};
     iVec2 text_pos = {0, 0};
 
@@ -123,28 +123,44 @@ void draw_info_str(SDLHandle *h, CenterText *ct) {
         write_text(h, ct->str2, ct->font, text_pos2, U32_BLACK_COLOR);
     }
 
-	draw_multiple_button(h, BTN_CENTER1, 1);
-	// draw_button(h, h->menu.btn[BTN_CENTER1], BTN_BASIC_COLOR);
+	draw_multiple_button(h, BTN_CENTER1, ct->curent_btn_enable);
 }
 
 void cancel_search_func(SDLHandle *h) {
 	(void)h;
-	set_info_str(h, NULL, NULL);
-	unset_flag(&h->flag, FLAG_NETWORK);
-	destroy_network_info(h);
+	center_text_string_set(h, NULL, NULL);
+	if (has_flag(h->flag, FLAG_NETWORK)) {
+		unset_flag(&h->flag, FLAG_NETWORK);
+		destroy_network_info(h);
+	}
+	// unset_flag(&h->flag, FLAG_CENTER_TEXT_INPUT);
 	CHESS_LOG(LOG_INFO, "BtnCenter1: Cancel search/reconnect\n");
 }
 
-void  get_center_btn_pos(CenterText *ct, iVec2 *btn_start, iVec2 *btn_size) {
-	
+typedef enum {
+	CENTER_POS,
+	LEFT_POS,
+	RIGHT_POS,
+} CenterBtnPos;
+
+
+
+void  get_center_btn_pos(CenterText *ct, iVec2 *btn_start, iVec2 *btn_size, s8 pos) {
 	btn_size->x = ct->rect.w >> 2;
 	btn_size->y = ct->rect.h >> 2;
 
-	btn_start->x = ct->rect.x + (ct->rect.w >> 1) - (btn_size->x >> 1);
 	btn_start->y = ct->rect.y + ct->rect.h + (ct->rect.h >> 4);
+
+	if (pos == CENTER_POS) {
+		btn_start->x = ct->rect.x + (ct->rect.w >> 1) - (btn_size->x >> 1);
+	} else if (pos == LEFT_POS) {
+		btn_start->x = ct->rect.x + (ct->rect.w >> 2) - (btn_size->x >> 1);
+	} else if (pos == RIGHT_POS) {
+		btn_start->x = ct->rect.x + (ct->rect.w >> 1) + (ct->rect.w >> 2) - (btn_size->x >> 1);
+	}
 }
 
-CenterText *init_center_text(SDLHandle *h) {
+CenterText *center_text_init(SDLHandle *h) {
     CenterText *ct = ft_calloc(1, sizeof(CenterText));
 
     if (!ct) {
@@ -169,16 +185,31 @@ CenterText *init_center_text(SDLHandle *h) {
         return (NULL);
     }
 
-	iVec2 btn_start = {0, 0};
-	iVec2 btn_size = {0, 0};
-
-	get_center_btn_pos(ct, &btn_start, &btn_size);
-	set_btn_info(h, BTN_CENTER1, btn_start, btn_size, "Cancel", cancel_search_func);
-
+	center_text_function_set(h, ct, (BtnCenterText){"Cancel", cancel_search_func}, (BtnCenterText){NULL, NULL});
     return (ct);
 }
 
-void set_info_str(SDLHandle *h, char *str, char *str2) {
+void center_text_function_set(SDLHandle *h, CenterText *ct, BtnCenterText btn1, BtnCenterText btn2) {
+	iVec2 btn_start = {0, 0};
+	iVec2 btn_size = {0, 0};
+
+	if (!btn2.func) {
+		ct->curent_btn_enable = 1;
+		get_center_btn_pos(ct, &btn_start, &btn_size, CENTER_POS);
+		set_btn_info(h, BTN_CENTER1, btn_start, btn_size, btn1.str, btn1.func);
+		return ;
+	}
+
+	ct->curent_btn_enable = 2;
+
+	get_center_btn_pos(ct, &btn_start, &btn_size, LEFT_POS);
+	set_btn_info(h, BTN_CENTER1, btn_start, btn_size, btn1.str, btn1.func);
+
+	get_center_btn_pos(ct, &btn_start, &btn_size, RIGHT_POS);
+	set_btn_info(h, BTN_CENTER2, btn_start, btn_size, btn2.str, btn2.func);
+}
+
+void center_text_string_set(SDLHandle *h, char *str, char *str2) {
     if (h->center_text->str) {
         free(h->center_text->str);
         h->center_text->str = NULL;
@@ -195,7 +226,7 @@ void set_info_str(SDLHandle *h, char *str, char *str2) {
     }
 }
 
-void destroy_center_text(CenterText *ct) {
+void center_text_destroy(CenterText *ct) {
 	if (!ct) {
 		return ;
 	}

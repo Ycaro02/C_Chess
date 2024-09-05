@@ -152,7 +152,7 @@ void draw_board(SDLHandle *handle, s8 player_color) {
 	}
 
 	if (handle->center_text->str) {
-		draw_info_str(handle, handle->center_text);
+		center_text_draw(handle, handle->center_text);
 	}
 }
 

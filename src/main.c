@@ -17,12 +17,12 @@ SDLHandle *init_game() {
 	SDLHandle	*handle = NULL;
 	handle = create_sdl_handle("C_Chess");
 	if (!handle) {
-		CHESS_LOG(LOG_ERROR, "Error %s: create_sdl_handle failed\n", __func__);
+		CHESS_LOG(LOG_ERROR, "create_sdl_handle failed\n");
 		return (NULL);
 	}
 	handle->board = ft_calloc(1, sizeof(ChessBoard));
 	if (!handle->board) {
-		CHESS_LOG(LOG_ERROR, "Error %s : malloc failed\n", __func__);
+		CHESS_LOG(LOG_ERROR, "malloc failed\n");
 		free(handle);
 		return (NULL);
 	}
@@ -32,7 +32,6 @@ SDLHandle *init_game() {
 }
 
 void chess_routine(SDLHandle *h){
-	// ChessTile	tile_selected = INVALID_TILE;
 	ChessBoard	*b = h->board;
 	s32			ret = TRUE;
 	s32			event = 0;

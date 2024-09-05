@@ -122,7 +122,7 @@ s32 event_handler(SDLHandle *h, s8 player_color) {
 			return (CHESS_QUIT);
 		}
 		if (has_flag(h->flag, FLAG_CENTER_TEXT_INPUT)) {
-			button_event_handling(h, event, BTN_CENTER1, 1);
+			button_event_handling(h, event, BTN_CENTER1, h->center_text->curent_btn_enable);
 			// center_text_event_handling(h, event);
 		} else {
 			if (!h->menu.is_open) {

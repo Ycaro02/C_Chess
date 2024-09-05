@@ -72,7 +72,7 @@ void send_alive_packet(NetworkInfo *info) {
 }
 
 s8 reconnect_handling(SDLHandle *h) {
-	set_info_str(h, "Wait peer reconnection", NULL);
+	center_text_string_set(h, "Wait peer reconnection", NULL);
 	if (!has_flag(h->flag, FLAG_CENTER_TEXT_INPUT)) {
 		set_flag(&h->flag, FLAG_CENTER_TEXT_INPUT);
 	}
@@ -88,7 +88,7 @@ s8 reconnect_handling(SDLHandle *h) {
 		char *buff = build_reconnect_message(h, &msg_size);
 		chess_msg_send(h->player_info.nt_info, buff, msg_size);
 		h->player_info.nt_info->peer_conected = TRUE;
-		set_info_str(h, NULL, NULL);
+		center_text_string_set(h, NULL, NULL);
 		unset_flag(&h->flag, FLAG_CENTER_TEXT_INPUT);
 	}
 	return (TRUE);

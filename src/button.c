@@ -50,7 +50,7 @@ void start_network_game(SDLHandle *h) {
 	handle_network_client_state(h, h->flag, &h->player_info);
 	
 	/* Remove center text */
-	set_info_str(h, NULL, NULL);
+	center_text_string_set(h, NULL, NULL);
 	
 	/* Start network chess routine (programme block here in routine while 1) */
 	network_chess_routine(h);
@@ -68,7 +68,7 @@ void search_game(SDLHandle *h) {
 	menu_close(&h->menu);
 	/* Reset board */
 	init_board(h->board);
-	set_info_str(h, "Searching game on :", h->player_info.dest_ip);
+	center_text_string_set(h, "Searching game on :", h->player_info.dest_ip);
 	update_graphic_board(h);
 
 	if (!has_flag(h->flag, FLAG_NETWORK)) {
@@ -91,7 +91,7 @@ void reconnect_game(SDLHandle *h) {
 	CHESS_LOG(LOG_INFO, "Reconnect to game\n");
 	/* Reset board */
 	init_board(h->board);
-	set_info_str(h, "Reconnect game on:", h->player_info.dest_ip);
+	center_text_string_set(h, "Reconnect game on:", h->player_info.dest_ip);
 	update_graphic_board(h);
 
 	if (!has_flag(h->flag, FLAG_NETWORK)) {

@@ -110,7 +110,7 @@ SDL_Window* create_sdl_windows(SDLHandle *h, const char* title) {
 		return (NULL);
 	}
 
-	h->center_text = init_center_text(h);
+	h->center_text = center_text_init(h);
 
 
 	window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, h->window_size.x, h->window_size.y, SDL_WINDOW_SHOWN);
@@ -448,7 +448,7 @@ void destroy_sdl_handle(SDLHandle *handle) {
 	}
 
 	/* free center_text */
-	destroy_center_text(handle->center_text);
+	center_text_destroy(handle->center_text);
 
 	/* Close window */
 	window_close(handle->window, handle->renderer);

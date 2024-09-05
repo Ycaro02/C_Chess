@@ -1,6 +1,7 @@
 #include "../include/chess.h"
 #include "../include/handle_sdl.h"
 #include "../include/chess_log.h"
+#include "../include/network.h"
 
 /* Update control bitboard */
 void update_piece_control(ChessBoard *b) {
@@ -104,6 +105,35 @@ ChessPiece get_piece_from_mask(ChessBoard *b, Bitboard mask) {
 }
 
 
+void replay_func(SDLHandle *h) {
+
+	printf("Replay CALL\n");
+
+	init_board(h->board);
+	center_text_string_set(h, NULL, NULL);
+	if (has_flag(h->flag, FLAG_NETWORK)) {
+		unset_flag(&h->flag, FLAG_NETWORK);
+		destroy_network_info(h);
+	}
+	unset_flag(&h->flag, FLAG_CENTER_TEXT_INPUT);
+
+	update_graphic_board(h);
+
+	/* Restore center text basic btn */
+	center_text_function_set(h, h->center_text, (BtnCenterText){"Cancel", cancel_search_func}, (BtnCenterText){NULL, NULL});
+
+	// search_game(h);
+}
+
+void end_game_func(SDLHandle *h) {
+	printf("End Game CALL\n");
+	init_board(h->board);
+	center_text_string_set(h, NULL, NULL);
+	unset_flag(&h->flag, FLAG_CENTER_TEXT_INPUT);
+	update_graphic_board(h);
+	center_text_function_set(h, h->center_text, (BtnCenterText){"Cancel", cancel_search_func}, (BtnCenterText){NULL, NULL});
+}
+
 /* @brief Verify if the king is check and mat or PAT
  * @param b			ChessBoard struct
  * @param is_black	Flag to check if the piece is black
@@ -142,10 +172,20 @@ s8 verify_check_and_mat(ChessBoard *b, s8 is_black) {
 		}
 	}
 
+	SDLHandle *h = get_SDL_handle();
+
 	if (check && mat) {
+		set_flag(&h->flag, FLAG_CENTER_TEXT_INPUT);
+		center_text_string_set(h, "Checkmate", "Game Over");
+		center_text_function_set(h, h->center_text, (BtnCenterText) {"Replay", replay_func}, (BtnCenterText){"Cancel", cancel_search_func});
+
 		CHESS_LOG(LOG_ERROR, YELLOW"Checkmate detected for %s\n"RESET, color);
 		return (TRUE);
 	} else if (!check && mat) {
+		set_flag(&h->flag, FLAG_CENTER_TEXT_INPUT);
+		center_text_string_set(h, "Pat", "Game Over");
+		center_text_function_set(h, h->center_text, (BtnCenterText) {"Replay", replay_func}, (BtnCenterText){"Cancel", cancel_search_func});
+
 		CHESS_LOG(LOG_ERROR, PURPLE"PAT detected Egality for %s\n"RESET, color);
 		return (TRUE);	
 	}

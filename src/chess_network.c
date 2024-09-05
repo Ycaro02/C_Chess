@@ -103,7 +103,7 @@ s8 check_reconnect_magic_value(char *buff) {
 s8 wait_peer_info(NetworkInfo *info, const char *msg) {
 	ssize_t ret = 0;
 
-	CHESS_LOG(LOG_INFO, "%s...\n", msg);
+	// CHESS_LOG(LOG_INFO, "%s...\n", msg);
 	(void)msg;
 
 	char buff[1024];

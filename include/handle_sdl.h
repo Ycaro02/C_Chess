@@ -131,12 +131,17 @@ typedef struct s_chess_menu {
 	s8			is_open;
 } ChessMenu;
 
+typedef struct s_btn_center_tex {
+	char		*str;
+	ButtonFunc	func;
+} BtnCenterText;
 
 typedef struct s_center_text {
 	SDL_Rect	rect;
 	TTF_Font	*font;
 	char		*str;
 	char		*str2;
+	s32			curent_btn_enable;
 } CenterText;
 
 #define TIME_STR_SIZE 16
@@ -210,14 +215,16 @@ void		draw_circle_outline(SDL_Renderer *renderer, int x, int y, int radius);
 
 
 /* src/text_display.c */
-void		left_band_center_text(iVec2 *char_pos, char *text, TTF_Font *font, s32 tile_size, s32 band_left_size);
-void		bot_band_center_text(iVec2 *char_pos, char *text, TTF_Font *font, s32 tile_size, s32 band_bot_size);
+// void		left_band_center_text(iVec2 *char_pos, char *text, TTF_Font *font, s32 tile_size, s32 band_left_size);
+// void		bot_band_center_text(iVec2 *char_pos, char *text, TTF_Font *font, s32 tile_size, s32 band_bot_size);
 void		draw_letter_number(SDLHandle *handle, s8 player_color);
+void		center_text_function_set(SDLHandle *h, CenterText *ct, BtnCenterText btn1, BtnCenterText btn2);
+void		cancel_search_func(SDLHandle *h);
 // center text
-CenterText *init_center_text(SDLHandle *h);
-void		set_info_str(SDLHandle *h, char *str, char *str2);
-void		draw_info_str(SDLHandle *h, CenterText *ct);
-void		destroy_center_text(CenterText *ct);
+CenterText *center_text_init(SDLHandle *h);
+void		center_text_string_set(SDLHandle *h, char *str, char *str2);
+void		center_text_draw(SDLHandle *h, CenterText *ct);
+void		center_text_destroy(CenterText *ct);
 
 /* src/text_input.c */
 TextField	init_text_field(SDL_Rect rect, int buff_size_max, TTF_Font *font, char *initial_text);
@@ -231,6 +238,7 @@ void 	draw_menu(SDLHandle *h);
 void	destroy_menu(SDLHandle *h);
 
 /* src/button.c */
+void	search_game(SDLHandle *h);
 void	init_button(SDLHandle *h, ChessMenu *menu, s32 nb_btn);
 void	center_btn_text(Button *btn, TTF_Font *font);
 void	draw_button(SDLHandle *h, Button btn, SDL_Color c);
