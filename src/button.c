@@ -56,7 +56,7 @@ void start_network_game(SDLHandle *h) {
 	network_chess_routine(h);
 	
 	/* Destroy the game when we exit the routine */
-	chess_destroy(h);
+	// chess_destroy(h);
 }
 
 /**

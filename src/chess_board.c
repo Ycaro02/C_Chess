@@ -33,6 +33,11 @@ void update_piece_state(ChessBoard *b) {
 
 void init_board(ChessBoard *b) {
 
+	if (b->lst) {
+		CHESS_LOG(LOG_DEBUG, "Free Movelist\n");
+		ft_lstclear(&b->lst, free);
+	}	
+
 	/* Set all pieces to 0 */
 	fast_bzero(b, sizeof(ChessBoard));
 
@@ -105,32 +110,27 @@ ChessPiece get_piece_from_mask(ChessBoard *b, Bitboard mask) {
 }
 
 
-void replay_func(SDLHandle *h) {
-
-	printf("Replay CALL\n");
-
-	init_board(h->board);
-	center_text_string_set(h, NULL, NULL);
-	if (has_flag(h->flag, FLAG_NETWORK)) {
-		unset_flag(&h->flag, FLAG_NETWORK);
-		destroy_network_info(h);
-	}
-	unset_flag(&h->flag, FLAG_CENTER_TEXT_INPUT);
-
-	update_graphic_board(h);
-
-	/* Restore center text basic btn */
-	center_text_function_set(h, h->center_text, (BtnCenterText){"Cancel", cancel_search_func}, (BtnCenterText){NULL, NULL});
-
-	// search_game(h);
+void exit_func(SDLHandle *h) {
+	CHESS_LOG(LOG_INFO, "exit_func\n");
+	chess_destroy(h);
 }
 
-void end_game_func(SDLHandle *h) {
-	printf("End Game CALL\n");
+void replay_func(SDLHandle *h) {
+	CHESS_LOG(LOG_INFO, "Replay game\n");
 	init_board(h->board);
+
+	/*
+		Here we need to wait the other player to accept the replay
+		Maybe send a end game packet to the server to update the room state
+		Then wait for the other player to accept the replay, create a replay packet
+	*/
+	// center_text_string_set(h, "Waiting for the other player", "to accept the replay");
+	// center_text_function_set(h, h->center_text, (BtnCenterText){"Cancel", cancel_search_func}, (BtnCenterText){NULL, NULL});
+	// update_graphic_board(h);
 	center_text_string_set(h, NULL, NULL);
 	unset_flag(&h->flag, FLAG_CENTER_TEXT_INPUT);
 	update_graphic_board(h);
+	h->player_info.turn = h->player_info.color == IS_WHITE ? TRUE : FALSE;
 	center_text_function_set(h, h->center_text, (BtnCenterText){"Cancel", cancel_search_func}, (BtnCenterText){NULL, NULL});
 }
 
@@ -175,16 +175,22 @@ s8 verify_check_and_mat(ChessBoard *b, s8 is_black) {
 	SDLHandle *h = get_SDL_handle();
 
 	if (check && mat) {
+
+		char *checkmate_msg = ft_strjoin(color, " is checkmate");
+
 		set_flag(&h->flag, FLAG_CENTER_TEXT_INPUT);
-		center_text_string_set(h, "Checkmate", "Game Over");
-		center_text_function_set(h, h->center_text, (BtnCenterText) {"Replay", replay_func}, (BtnCenterText){"Cancel", cancel_search_func});
+		center_text_string_set(h, checkmate_msg, "Do you want to replay ?");
+
+		free(checkmate_msg);
+
+		center_text_function_set(h, h->center_text, (BtnCenterText) {"Replay", replay_func}, (BtnCenterText){"Exit", exit_func});
 
 		CHESS_LOG(LOG_ERROR, YELLOW"Checkmate detected for %s\n"RESET, color);
 		return (TRUE);
 	} else if (!check && mat) {
 		set_flag(&h->flag, FLAG_CENTER_TEXT_INPUT);
 		center_text_string_set(h, "Pat", "Game Over");
-		center_text_function_set(h, h->center_text, (BtnCenterText) {"Replay", replay_func}, (BtnCenterText){"Cancel", cancel_search_func});
+		center_text_function_set(h, h->center_text, (BtnCenterText) {"Replay", replay_func}, (BtnCenterText){"Exit", exit_func});
 
 		CHESS_LOG(LOG_ERROR, PURPLE"PAT detected Egality for %s\n"RESET, color);
 		return (TRUE);	
