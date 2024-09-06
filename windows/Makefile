@@ -27,12 +27,16 @@ SERVER_EXE		=	WinChessServer.exe
 
 NAME        = WinCchess.exe
 
+# Resource iconefile
+RESOURCE    = rsc/resource.rc
+RESOURCE_OBJ = resource.o
+
 all:	$(NAME)
 
-$(NAME): $(SERVER_EXE)    
+$(NAME): $(SERVER_EXE) $(RESOURCE_OBJ)
 	@printf "$(CYAN)Compiling ${NAME} ...$(RESET)\n"
 	@${UPDATE_BIN_DIR}
-	@${WCC} $(SRCS) $(W_SDL2) $(W_SDL2_TTF) $(W_FLAGS) -DCHESS_WINDOWS_VERSION -o $(NAME) $(NO_TERMINAL)
+	@${WCC} $(SRCS) $(W_SDL2) $(W_SDL2_TTF) $(W_FLAGS) -DCHESS_WINDOWS_VERSION -o $(NAME) $(NO_TERMINAL) $(RESOURCE_OBJ)
 	@printf "$(GREEN)Compiling $(NAME) done$(RESET)\n"
 
 $(SERVER_EXE):
@@ -40,19 +44,17 @@ $(SERVER_EXE):
 	@${WCC} $(SERVER_SRC_DEPS) $(SERVER_SRC) $(SERVER_FLAGS) -o $(SERVER_EXE)
 	@printf "$(GREEN)Compiling $(SERVER_EXE) done$(RESET)\n"
 
+$(RESOURCE_OBJ):
+	@x86_64-w64-mingw32-windres $(RESOURCE) -o $(RESOURCE_OBJ)
 
 update: $(NAME)
 	@printf "$(CYAN)Updating windows version in /media/ycaro/Data/C_chess_win ${NAME} ...$(RESET)\n"
 	@cp -r * /media/ycaro/Data/C_chess_win
 	@printf "$(GREEN)Update done $(NAME) done$(RESET)\n"
 
-connect: $(NAME)
-	wine $(NAME) -j -n -i 127.0.0.1
-
-
 clean:
-			@${RM} ${NAME} $(SERVER_EXE) 
-			@printf "$(RED)Clean $(NAME) $(SERVER_EXE) $(RESET)\n"
+			@${RM} ${NAME} $(SERVER_EXE) $(RESOURCE_OBJ)
+			@printf "$(RED)Clean $(NAME) $(SERVER_EXE) $(RESOURCE_OBJ) $(RESET)\n"
 
 fclean:     clean
 
