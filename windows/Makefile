@@ -32,8 +32,7 @@ all:	$(NAME)
 $(NAME): $(SERVER_EXE)    
 	@printf "$(CYAN)Compiling ${NAME} ...$(RESET)\n"
 	@${UPDATE_BIN_DIR}
-# @${WCC} $(SRCS) $(W_SDL2) $(W_SDL2_TTF) $(W_FLAGS) -DCHESS_WINDOWS_VERSION -o $(NAME) $(NO_TERMINAL)
-	@${WCC} $(SRCS) $(W_SDL2) $(W_SDL2_TTF) $(W_FLAGS) -DCHESS_WINDOWS_VERSION -o $(NAME)
+	@${WCC} $(SRCS) $(W_SDL2) $(W_SDL2_TTF) $(W_FLAGS) -DCHESS_WINDOWS_VERSION -o $(NAME) $(NO_TERMINAL)
 	@printf "$(GREEN)Compiling $(NAME) done$(RESET)\n"
 
 $(SERVER_EXE):
