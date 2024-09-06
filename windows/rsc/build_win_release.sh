@@ -18,6 +18,9 @@ display_color_msg ${LIGHT_BLUE} "Building Windows Release directory..."
 # Build the game
 make -s -C windows
 
+# Clean the release directory remove .o files
+make -s -C windows clean
+
 # Create a directory for the release
 cp -r windows ${CHES_WIN}
 

@@ -53,9 +53,10 @@ update: $(NAME)
 	@printf "$(GREEN)Update done $(NAME) done$(RESET)\n"
 
 clean:
-			@${RM} ${NAME} $(SERVER_EXE) $(RESOURCE_OBJ)
-			@printf "$(RED)Clean $(NAME) $(SERVER_EXE) $(RESOURCE_OBJ) $(RESET)\n"
+	@${RM} $(RESOURCE_OBJ)
+	@printf "$(RED)Clean $(RESOURCE_OBJ) $(RESET)\n"
 
-fclean:     clean
-
+fclean:	clean
+	@${RM} ${NAME} $(SERVER_EXE)
+	@printf "$(RED)Full clean $(NAME) $(SERVER_EXE) $(RESET)\n"
 re:         fclean all
