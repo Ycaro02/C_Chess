@@ -27,8 +27,8 @@ void handle_network_client_state(SDLHandle *handle, u32 flag, PlayerInfo *player
 
 	fast_bzero(buff, 4096);
 	if (has_flag(flag, FLAG_LISTEN)) {
-		// player_info->color = random_player_color();
-		player_info->color = IS_WHITE;
+		// player_info->color = IS_WHITE;
+		player_info->color = random_player_color();
 		CHESS_LOG(LOG_INFO, "Listen for player...%s", "\n");
 		build_message(handle, player_info->msg_tosend, MSG_TYPE_COLOR, !player_info->color, 0, 0);
 		chess_msg_send(player_info->nt_info, player_info->msg_tosend, MSG_SIZE);
@@ -211,11 +211,16 @@ NetworkInfo *init_network(char *server_ip, struct timeval timeout) {
 	return (info);
 }
 
+void send_game_end_to_server(int sockfd, struct sockaddr_in servaddr) {
+	CHESS_LOG(LOG_INFO, ORANGE"Send game end message\n"RESET);
+	sendto(sockfd, GAME_END_MSG, strlen(GAME_END_MSG), 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
+}
+
 void send_disconnect_to_server(int sockfd, struct sockaddr_in servaddr) {
 	sendto(sockfd, DISCONNECT_MSG, fast_strlen(DISCONNECT_MSG), 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
 }
 
 void send_alive_to_server(int sockfd, struct sockaddr_in servaddr) {
-	CHESS_LOG(LOG_DEBUG, ORANGE"Send alive message\n"RESET);
+	// CHESS_LOG(LOG_DEBUG, ORANGE"Send alive message\n"RESET);
 	sendto(sockfd, ALIVE_MSG, ALIVE_LEN, 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
 }

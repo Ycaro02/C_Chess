@@ -51,6 +51,14 @@ s8		socket_no_block_windows(Socket sockfd, struct timeval timeout);
 #define ALIVE_MSG "CLIENT_ALIVE"
 #define ALIVE_LEN 12
 
+/* Message Game End */
+#define GAME_END_MSG "GAME_END"
+#define GAME_END_LEN 8
+
+/* Message Replay */
+#define REPLAY_MSG "GAME_REPLAY"
+#define REPLAY_LEN 10
+
 /* Message ack */
 #define ACK_STR "ACK"
 #define ACK_LEN 3
@@ -97,9 +105,9 @@ typedef struct s_network_info NetworkInfo;
 
 /* src/chess_network.c */
 NetworkInfo	*init_network(char *server_ip, struct timeval timeout);
-void handle_network_client_state(SDLHandle *handle, u32 flag, PlayerInfo *player_info);
-// s8			network_setup(SDLHandle *handle, u32 flag, PlayerInfo *player_info, char *server_ip);
+void		handle_network_client_state(SDLHandle *handle, u32 flag, PlayerInfo *player_info);
 void		send_disconnect_to_server(int sockfd, struct sockaddr_in servaddr);
+void 		send_game_end_to_server(int sockfd, struct sockaddr_in servaddr);
 void		send_alive_to_server(int sockfd, struct sockaddr_in servaddr);
 s8			wait_peer_info(NetworkInfo *info, const char *msg);
 s8			check_magic_value(char *buff);

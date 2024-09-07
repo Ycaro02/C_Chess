@@ -4,11 +4,47 @@
 #include "../include/handle_signal.h"
 #include "../include/chess_log.h"
 
+// #include <execinfo.h>
+// int get_char_idx(char *str, char c) {
+// 	int i = 0;
+// 	while (str[i] != '\0') {
+// 		if (str[i] == c) {
+// 			return (i);
+// 		}
+// 		i++;
+// 	}
+// 	return (-1);
+// }
+// void print_call_stack() {
+//     void *buffer[10];
+//     char **callstack;
+//     int frames = backtrace(buffer, 10);
+//     callstack = backtrace_symbols(buffer, frames);
+//     if (callstack == NULL) {
+//         perror("backtrace_symbols");
+// 		return ;
+//     }
+
+//     printf("Call stack:\n");
+//     for (int i = 1; i < frames; i++) { // Start from 1 to skip the current function
+// 		char **split_addr = ft_split(callstack[i], '+');
+// 		split_addr[1][get_char_idx(split_addr[1], ')')] = '\0';
+		
+//         char cmd[256];
+//         snprintf(cmd, sizeof(cmd), "addr2line -e %s %s", "C_Chess", split_addr[1]);
+
+//         system(cmd);
+// 		free_double_char(split_addr);
+//     }
+
+//     free(callstack);
+// }
+
 void chess_signal_handler(int signum)
 {
 	SDLHandle *stat = get_SDL_handle();
 
-	CHESS_LOG(LOG_DEBUG, RED"\nSignal Catch: %d\n"RESET, signum);
+	CHESS_LOG(LOG_INFO, RED"\nSignal Catch: %d\n"RESET, signum);
 	chess_destroy(stat);
 	exit(signum);
 }
@@ -70,10 +106,8 @@ void chess_routine(SDLHandle *h){
 void chess_destroy(SDLHandle *h) {
 	CHESS_LOG(LOG_INFO, RED"Destroy chess game%s\n", RESET);
 
-	// if (h->player_info.nt_info && h->player_info.nt_info->peer_conected) {
-	// 	build_message(h, h->player_info.msg_tosend, MSG_TYPE_QUIT, 0, 0, 0);
-	// 	chess_msg_send(h->player_info.nt_info, h->player_info.msg_tosend, MSG_SIZE);
-	// }
+	// print_call_stack();
+
 	if (h->board->lst) {
 		ft_lstclear(&h->board->lst, free);
 	}
@@ -96,22 +130,6 @@ SDLHandle *get_SDL_handle() {
 	return (stat);
 }
 
-/**
- * When player click on search game button : we enable the flag network (if not already set)
- *	- We need to send a message to the server to search for a game
- *	- We need to wait for the server to send us if we are the first player or the second player
- * 		- If he is the first player, he will wait for the second player (flag_listen)
- * 		- If he is the second player, the first player will send him the color (flag_join)
- 
- *	When player click on reconnect game button : we enable the flag network (if not already set)
- *	- We enable the reconnect flag too
- *	- Then we send a message to the server to get the game state from the first player
- */
-
-
-
-
-
 void chess_game(SDLHandle *h) {
 	struct timeval	timeout = {0, 10000}; /* 10000 microseconds = 0.01 seconds */
 	
@@ -132,8 +150,6 @@ void chess_game(SDLHandle *h) {
 		chess_routine(h);
 	}
 }
-
-#include "../include/chess_log.h"
 
 int main(int argc, char **argv) {
 	SDLHandle	*handle = NULL;

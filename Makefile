@@ -5,6 +5,7 @@ NAME            =   C_Chess
 CC              =   clang
 
 SDL_LIB			=	-L./rsc/lib/install/lib -rpath ./rsc/lib/install/lib -lSDL2 -lSDL2_ttf
+# SDL_LIB			=	-L./rsc/lib/install/lib -lSDL2 -lSDL2_ttf
 
 LIB_DEPS		=   rsc/lib
 
@@ -16,6 +17,8 @@ IP_SERVER		=	$(shell $(GET_SERVER_IP))
 
 SERVER_SRC		=	server/server.c src/network_os.c src/handle_signal.c
 SERVER_EXE		=	chess_server
+
+CFLAGS = -g3
 
 
 all:        $(NAME)
@@ -57,6 +60,7 @@ $(OBJ_DIR):
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	@printf "$(YELLOW)Compile $<$(RESET) $(BRIGHT_BLACK)-->$(RESET) $(BRIGHT_MAGENTA)$@$(RESET)\n"
 	@$(CC) $(CFLAGS) -o $@ -c $<
+
 bonus: clear_mandatory $(NAME)
 
 clear_mandatory:

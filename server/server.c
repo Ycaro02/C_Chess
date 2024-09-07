@@ -9,6 +9,7 @@ typedef struct s_chess_client {
 	struct timeval 	last_alive;		/* Last alive packet */
 	s8				client_state;	/* Client state */
     s8				connected;		/* Client connected */
+	s8				player_ready;	/* Player ready */
 } ChessClient;
 
 typedef struct s_chess_room {
@@ -115,7 +116,10 @@ void send_quit_msg(int sockfd, ChessRoom *r, ChessClient *client) {
 		sendto(sockfd, quit_msg, len, 0, (Sockaddr *)&client->addr, sizeof(client->addr));
 		free(quit_msg);
 	}
-	r->state = ROOM_STATE_WAIT_RECONNECT;
+
+	if (r->state == ROOM_STATE_PLAYING) {
+		r->state = ROOM_STATE_WAIT_RECONNECT;
+	}
 }
 
 /* @brief Check if the message is a disconnect message and send a quit message to the client if it is
@@ -190,7 +194,7 @@ void connect_client_together(int sockfd, ChessRoom *r) {
 		return ;
 	}
 
-	printf(PURPLE"Room is Ready send info:\nClientA : %s:%hu %s\nClientB : %s:%hu -> %s\n"RESET,
+	printf(PURPLE"Room is Ready send info:\nClientA : %s:%hu -> %s\nClientB : %s:%hu -> %s\n"RESET,
 	 inet_ntoa(r->cliA.addr.sin_addr), ntohs(r->cliA.addr.sin_port), ClientState_to_str(r->cliA.client_state),
 	 inet_ntoa(r->cliB.addr.sin_addr), ntohs(r->cliB.addr.sin_port), ClientState_to_str(r->cliB.client_state));
 
@@ -300,6 +304,7 @@ void set_client_data(ChessClient *client, SockaddrIn *cliaddr, struct timeval *n
 	ft_memcpy(&client->addr, cliaddr, sizeof(SockaddrIn));
 	ft_memcpy(&client->last_alive, now, sizeof(struct timeval));
 	client->connected = TRUE;
+	client->player_ready = TRUE;
 }
 
 /* @brief Handle the client connection to the server, handle the client state too
@@ -332,9 +337,17 @@ void handle_client_connect(ChessRoom *r, SockaddrIn *cliaddr, int sockfd) {
 		set_client_data(&r->cliB, cliaddr, &now);
 		printf(GREEN"Client B connected: %s:%hu\n"RESET, inet_ntoa(r->cliB.addr.sin_addr), ntohs(r->cliB.addr.sin_port));
 	}
-	if (r->cliA.connected && r->cliB.connected) {
-		connect_client_together(sockfd, r);		
+	if (r->cliA.connected && r->cliB.connected && r->cliA.player_ready && r->cliB.player_ready) {
+		connect_client_together(sockfd, r);
 	}
+}
+
+s8 is_end_game_message(char *buffer, ssize_t msg_size) {
+	if (msg_size == GAME_END_LEN && ft_memcmp(buffer, GAME_END_MSG, GAME_END_LEN) == 0) {
+		printf(RED"Game End Receive\n"RESET);
+		return (TRUE);
+	}
+	return (FALSE);
 }
 
 /* @brief Handle the client message
@@ -360,6 +373,15 @@ void handle_client_message(int sockfd, ChessRoom *r, SockaddrIn *cliaddr, char *
 
 	/* Check if the message is an alive message */
 	if (is_alive_message(r, cliaddr, buffer, msg_size)) {
+		return ;
+	}
+
+	/* Check if the message is an end game message */
+	if (is_end_game_message(buffer, msg_size) && r->state == ROOM_STATE_PLAYING) {
+		printf(RED"Game End Room Reset to Waiting\n"RESET);
+		r->state = ROOM_STATE_WAITING;
+		r->cliA.player_ready = FALSE;
+		r->cliB.player_ready = FALSE;
 		return ;
 	}
 

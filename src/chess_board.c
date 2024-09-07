@@ -119,19 +119,16 @@ void replay_func(SDLHandle *h) {
 	CHESS_LOG(LOG_INFO, "Replay game\n");
 	init_board(h->board);
 
-	/*
-		Here we need to wait the other player to accept the replay
-		Maybe send a end game packet to the server to update the room state
-		Then wait for the other player to accept the replay, create a replay packet
-	*/
-	// center_text_string_set(h, "Waiting for the other player", "to accept the replay");
-	// center_text_function_set(h, h->center_text, (BtnCenterText){"Cancel", cancel_search_func}, (BtnCenterText){NULL, NULL});
-	// update_graphic_board(h);
-	center_text_string_set(h, NULL, NULL);
-	unset_flag(&h->flag, FLAG_CENTER_TEXT_INPUT);
-	update_graphic_board(h);
-	h->player_info.turn = h->player_info.color == IS_WHITE ? TRUE : FALSE;
+	send_game_end_to_server(h->player_info.nt_info->sockfd, h->player_info.nt_info->servaddr);
+	if (has_flag(h->flag, FLAG_NETWORK)) {
+		/* Disconect from the server */
+		unset_flag(&h->flag, FLAG_NETWORK);
+		destroy_network_info(h);
+	}
+	h->game_start = TRUE;
 	center_text_function_set(h, h->center_text, (BtnCenterText){"Cancel", cancel_search_func}, (BtnCenterText){NULL, NULL});
+	update_graphic_board(h);
+	search_game(h);
 }
 
 /* @brief Verify if the king is check and mat or PAT
@@ -179,20 +176,21 @@ s8 verify_check_and_mat(ChessBoard *b, s8 is_black) {
 		char *checkmate_msg = ft_strjoin(color, " is checkmate");
 
 		set_flag(&h->flag, FLAG_CENTER_TEXT_INPUT);
+		
+		/* Set game_start bool to false */
+		h->game_start = FALSE;
 		center_text_string_set(h, checkmate_msg, "Do you want to replay ?");
-
 		free(checkmate_msg);
-
 		center_text_function_set(h, h->center_text, (BtnCenterText) {"Replay", replay_func}, (BtnCenterText){"Exit", exit_func});
-
-		CHESS_LOG(LOG_ERROR, YELLOW"Checkmate detected for %s\n"RESET, color);
 		return (TRUE);
 	} else if (!check && mat) {
 		set_flag(&h->flag, FLAG_CENTER_TEXT_INPUT);
+		CHESS_LOG(LOG_ERROR, PURPLE"PAT detected Egality for %s\n"RESET, color);
+
+		/* Set game_start bool to false */
+		h->game_start = FALSE;
 		center_text_string_set(h, "Pat", "Game Over");
 		center_text_function_set(h, h->center_text, (BtnCenterText) {"Replay", replay_func}, (BtnCenterText){"Exit", exit_func});
-
-		CHESS_LOG(LOG_ERROR, PURPLE"PAT detected Egality for %s\n"RESET, color);
 		return (TRUE);	
 	}
 	return (FALSE);

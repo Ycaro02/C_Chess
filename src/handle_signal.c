@@ -49,16 +49,16 @@
 		}
 
 		/* Handle SIGSEV */
-		if (sigaction(SIGSEGV, &sa, NULL) == -1) {
-			perror("Can't catch SIGSEGV");
-			return (FALSE);
-		}
+		// if (sigaction(SIGSEGV, &sa, NULL) == -1) {
+		// 	perror("Can't catch SIGSEGV");
+		// 	return (FALSE);
+		// }
 		
 		/* Handle SIGTERM */
-		if (sigaction(SIGTERM, &sa, NULL) == -1) {
-			perror("Can't catch SIGTERM");
-			return (FALSE);
-		}
+		// if (sigaction(SIGTERM, &sa, NULL) == -1) {
+		// 	perror("Can't catch SIGTERM");
+		// 	return (FALSE);
+		// }
 
 		return (TRUE);
 	}

@@ -132,6 +132,8 @@ void send_disconnect_to_server(int sockfd, struct sockaddr_in servaddr) {
 	sendto(sockfd, DISCONNECT_MSG, strlen(DISCONNECT_MSG), 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
 }
 
+
+
 int main(int argc, char **argv) {
 	struct timeval timeout = { .tv_sec = TIMEOUT_SEC, .tv_usec = 0 };
 	NetworkInfo *c = setup_client(argc, argv,timeout);

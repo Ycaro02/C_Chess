@@ -1,5 +1,6 @@
 #include "../include/network.h"
 #include "../include/handle_sdl.h"
+#include "../include/chess_log.h"
 
 static void piece_update_move(SDLHandle *h, ChessBoard *b, ChessTile last_tile_click) {
 	if (h->over_piece_select != EMPTY) {
@@ -108,21 +109,31 @@ void network_chess_routine(SDLHandle *h) {
 
 		/* Event handler */
 		event = event_handler(h, h->player_info.color);
+		
 		/* If the quit button is pressed */
 		if (event == CHESS_QUIT) { break ; } // Send quit message to the other player
-		if (!h->player_info.nt_info->peer_conected) {
-			if (!reconnect_handling(h)) { break ;}
-		} else {
-			/* If tile is selected and is player turn, try to send move piece and move it */
-			if (h->player_info.turn == TRUE && h->board->last_clicked_tile != INVALID_TILE) {
-				ret = network_move_piece(h, h->board->last_clicked_tile);
-				if (ret == CHESS_QUIT || ret == FALSE) { break ; }
+
+		/* If the game is started */
+		if (h->game_start && h->player_info.nt_info != NULL) {
+			if (!h->player_info.nt_info->peer_conected) {
+				if (!reconnect_handling(h)) { break ;}
+			} else {
+				/* If tile is selected and is player turn, try to send move piece and move it */
+				if (h->player_info.turn == TRUE && h->board->last_clicked_tile != INVALID_TILE) {
+					ret = network_move_piece(h, h->board->last_clicked_tile);
+					if (ret == CHESS_QUIT || ret == FALSE) { break ; }
+				}
+				/* Receive message from the other player */
+				msg_recv = chess_msg_receive(h, h->player_info.nt_info, h->player_info.msg_receiv);
+				if ((!h->player_info.turn && msg_recv) || (h->player_info.turn && msg_recv && h->player_info.msg_receiv[IDX_TYPE] == MSG_TYPE_QUIT)) {
+					process_message_receive(h, h->player_info.msg_receiv);
+				}
 			}
-			/* Receive message from the other player */
-			msg_recv = chess_msg_receive(h, h->player_info.nt_info, h->player_info.msg_receiv);
-			if ((!h->player_info.turn && msg_recv) || (h->player_info.turn && msg_recv && h->player_info.msg_receiv[IDX_TYPE] == MSG_TYPE_QUIT)) {
-				process_message_receive(h, h->player_info.msg_receiv);
-			}
+		}
+
+		if (h->player_info.nt_info == NULL) {
+			CHESS_LOG(LOG_INFO, RED"Network info is NULL call Chess destroy\n"RESET);
+			chess_destroy(h);
 		}
 
 		/* Draw logic */

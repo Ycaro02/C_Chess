@@ -152,6 +152,7 @@
 	X(MSG_TYPE_HELLO, ='H') \
 	X(MSG_TYPE_DISCONNECT, ='D') \
 	X(MSG_TYPE_CLIENT_ALIVE, ='C') \
+	X(MSG_TYPE_GAME_END, ='G') \
 
 #define MSG_IDX_ENUM \
 	X(IDX_TYPE, =0) \
