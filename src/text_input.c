@@ -76,9 +76,10 @@ TextField init_text_field(SDL_Rect rect, int buff_size_max, TTF_Font *font, char
 
 s8 is_accepted_char(char *ip, SDL_Keycode type) {
 	(void)ip;
-	if (type >= SDLK_0 && type <= SDLK_9) // number
+	/* Number classic and keypad */
+	if ((type >= SDLK_0 && type <= SDLK_9) || (type >= SDLK_KP_1 && type <= SDLK_KP_0))
 		return (TRUE);
-	else if (type == SDLK_PERIOD) // dot
+	else if (type == SDLK_PERIOD || type == SDLK_KP_PERIOD) /* Dot classic and keypad */
 		return (TRUE);
 	return (FALSE);
 }
