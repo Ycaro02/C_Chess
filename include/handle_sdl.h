@@ -171,6 +171,7 @@ typedef struct s_sdl_handle {
 	u64				enemy_remaining_time;	/* Enemy player ramaining time */
 	PlayerInfo		player_info;			/* Player info */
 	u32				flag;					/* App Flag */
+	u16				msg_id;				/* Over flag */
 	s8				game_start;				/* Game start flag */
 }	SDLHandle ;
 

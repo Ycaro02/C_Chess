@@ -124,7 +124,6 @@ void handle_text_input(SDLHandle *h, SDL_Event *event) {
 }
 
 void render_text_field(SDL_Renderer *renderer, TextField *text_field, SDL_Color text_color, SDL_Color bg_color) {
-
 	u64			current_time = SDL_GetTicks64();
 
     SDL_Surface *surface = TTF_RenderText_Blended(text_field->font, text_field->text, text_color);

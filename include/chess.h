@@ -124,9 +124,6 @@ typedef struct s_chess_board {
 	/* Last clicked tile */
 	ChessTile	last_clicked_tile;		/* Last clicked tile */
 
-	s32			turn;				/* Turn counter */
-	// s32			move_count;			/* White king position */
-
 	/* u8 used as 8 boolean info used as follow
 	 * 0: white check
 	 * 1: black check

@@ -2,6 +2,8 @@
 #include "../include/handle_sdl.h"
 #include "../include/chess_log.h"
 
+#define MOVE_ARRAY_IDX 10
+
 static void detect_player_turn(SDLHandle *h, ChessPiece last_piece_move, s8 is_player_black) {
 	s8 last_move_is_black = last_piece_move >= BLACK_PAWN;
 	if (last_piece_move == EMPTY) {
@@ -23,16 +25,18 @@ void process_reconnect_message(SDLHandle *h, char *msg) {
 	u16			list_size = 0, array_byte_size = 0;
 
 	/* Get size and time */
-	ft_memcpy(&list_size, &msg[5], sizeof(u16));
-	ft_memcpy(&array_byte_size, &msg[7], sizeof(u16));
-	ft_memcpy(&my_remaining_time, &msg[9 + array_byte_size], sizeof(u64));
-	ft_memcpy(&enemy_remaining_time, &msg[9 + array_byte_size + 8], sizeof(u64));
+	ft_memcpy(&list_size, &msg[6], sizeof(u16));
+	ft_memcpy(&array_byte_size, &msg[8], sizeof(u16));
+	ft_memcpy(&my_remaining_time, &msg[MOVE_ARRAY_IDX + array_byte_size], sizeof(u64));
+	ft_memcpy(&enemy_remaining_time, &msg[MOVE_ARRAY_IDX + array_byte_size + 8], sizeof(u64));
 
-	/* Set the turn and player color */
-	h->board->turn = msg[IDX_TURN];
+	/* Set message ID and player color */
+	h->msg_id = GET_MESSAGE_ID(msg);
 	h->player_info.color = msg[IDX_FROM];
+
 	/* 5 * 0 for white, and 5 * 1 for black */
 	h->player_info.piece_start = BLACK_PAWN * h->player_info.color;
+
 	/* 5 * 0 for white, and 5 * 1 for black, + 5 */
 	h->player_info.piece_end = BLACK_KING * h->player_info.color + 5;
 
@@ -41,7 +45,7 @@ void process_reconnect_message(SDLHandle *h, char *msg) {
 	h->enemy_remaining_time = enemy_remaining_time;
 
 	/* Transform the array in list */
-	move_arr = (MoveSave *)&msg[9];
+	move_arr = (MoveSave *)&msg[MOVE_ARRAY_IDX];
 	for (int i = 0; i < list_size; i++) {
 		tile_from = move_arr[i].tile_from;
 		tile_to = move_arr[i].tile_to;
@@ -98,27 +102,31 @@ char *build_reconnect_message(SDLHandle *h, u16 *msg_size) {
 	move_arr = list_to_array(move_list, list_size, sizeof(MoveSave));
 
 	/*
-		3 byte for msg_type, turn and color
+		2 byte for msg_type and color
+		2 byte for the msg_id
 		4 byte for the size of the message and the size of the list
 		2 byte for the size of the list in byte
 		size of array
 		8 byte for enemy_remaining time
 		8 byte for my_remaining time
 	*/
-	*msg_size = 3 + 4 + 2 + array_byte_size + 8 + 8;
+	*msg_size = 2 + 2 + 4 + 2 + array_byte_size + 8 + 8;
 	buff = ft_calloc(*msg_size, sizeof(char));
 	if (!buff) {
 		return (NULL);
 	}
 	buff[IDX_TYPE] = MSG_TYPE_RECONNECT;
-	buff[IDX_TURN] = h->board->turn;
+	ft_memcpy(&buff[IDX_MSG_ID], &h->msg_id, sizeof(u16));
+
+	/* Idx from is for the color on color/reconnect message */
 	buff[IDX_FROM] = !h->player_info.color;
-	ft_memcpy(&buff[3], msg_size, sizeof(u16));
-	ft_memcpy(&buff[5], &list_size, sizeof(u16));
-	ft_memcpy(&buff[7], &array_byte_size, sizeof(u16));
-	ft_memcpy(&buff[9], move_arr, array_byte_size);
-	ft_memcpy(&buff[9 + array_byte_size], &h->enemy_remaining_time, sizeof(u64));
-	ft_memcpy(&buff[9 + array_byte_size + 8], &h->my_remaining_time, sizeof(u64));
+
+	ft_memcpy(&buff[4], msg_size, sizeof(u16));
+	ft_memcpy(&buff[6], &list_size, sizeof(u16));
+	ft_memcpy(&buff[8], &array_byte_size, sizeof(u16));
+	ft_memcpy(&buff[MOVE_ARRAY_IDX], move_arr, array_byte_size);
+	ft_memcpy(&buff[MOVE_ARRAY_IDX + array_byte_size], &h->enemy_remaining_time, sizeof(u64));
+	ft_memcpy(&buff[MOVE_ARRAY_IDX + array_byte_size + 8], &h->my_remaining_time, sizeof(u64));
 	free(move_arr);
 	return (buff);
 }

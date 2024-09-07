@@ -67,6 +67,9 @@ s8		socket_no_block_windows(Socket sockfd, struct timeval timeout);
 #define HELLO_STR "Hello"
 #define HELLO_LEN 5
 
+/* Macro to easier get msg_id */
+#define GET_MESSAGE_ID(msg) (*(u16 *)&msg[IDX_MSG_ID])
+
 
 /* Magic string for sending addr */
 #define MAGIC_STRING ((const char[]){0x7F, 0x42, 'C', 'H', 'E', 'S', 'S', 'M', 'A', 'G', 'I', 'C', 0x7A, 0x7B, 0x42, 0x7F})

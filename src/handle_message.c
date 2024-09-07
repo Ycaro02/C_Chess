@@ -3,11 +3,20 @@
 #include "../include/chess_log.h"
 
 /*
- * Packet format: 5 char + 8 char (for u64) = 13 char
+ * Potential struct :
+ * typedef struct {
+ * 		u8 msg_type;	MSG_TYPE_COLOR, MSG_TYPE_MOVE, MSG_TYPE_PROMOTION, MSG_TYPE_RECONNECT
+ * 		u16 msg_id;		The message id
+ * 		u8 tile_from;	The tile from
+ * 		u8 tile_to;		The tile to
+ * 		u8 piece_type;	The piece type
+ * 		u64 remaining_time;	The remaining time
+ * } Message;
+ * Total size 1 + 2 + 1 + 1 + 1 + 8 = 14: MSG_SIZE is set to 16
  * 
  * General structure:
- * - 1: msg_type
- * - 2: turn
+ * - 1	:	msg_type
+ * - 2-3:	msg_id (u16)
  * 
  * Specific fields based on msg_type:
  * 
@@ -27,7 +36,7 @@
  * - 6-13: remaining_time (u64)
  * - @note: The piece type is the new piece type, not the pawn type (WHITE_PAWN, BLACK_PAWN)
  * 
- * MSG_TYPE_RECONNECT:
+ * MSG_TYPE_RECONNECT: Special message to reconnect to the server containing all the move list
  * - 3: color
  * - 4-5: msg_size: Len of the MESSAGE (u16)
  * - 5-6: list_size: Len of the move list (u16), is the number of element in the move list transmitted
@@ -37,16 +46,16 @@
  * - list_byte_size + 8 - end: my_remaining_time (u64)
  */
 
+
 /* @brief Build the message
  * @param msg The message to build
  * @param msg_type The message type
  * @param tile_from_or_color The tile from or the color
  * @param tile_to The tile to
  * @param piece_type The piece type
- * @note We use +1 to avoid sending 0, interpreted like '\0'
 */
 void build_message(SDLHandle *h, char *msg, MsgType msg_type, ChessTile tile_from_or_color, ChessTile tile_to, ChessPiece piece_type) {
-	// char *msg = ft_calloc(msg_size, sizeof(char));
+
 
 	fast_bzero(msg, MSG_SIZE);
 
@@ -57,8 +66,11 @@ void build_message(SDLHandle *h, char *msg, MsgType msg_type, ChessTile tile_fro
 	msg[IDX_TYPE] = msg_type;
 
 
-	/* Set the message turn counter */
-	msg[IDX_TURN] = h->board->turn;
+	/* Set the message id counter */
+	// msg[IDX_TURN] = (u8)h->msg_id;
+	ft_memcpy(&msg[IDX_MSG_ID], &h->msg_id, sizeof(u16));
+
+	CHESS_LOG(LOG_INFO, PURPLE"Build: %s ID: %d\n"RESET, MsgType_to_str(msg_type), GET_MESSAGE_ID(msg));
 
 	/* If the message is a quit message, return here */
 	if (msg_type == MSG_TYPE_QUIT) {
@@ -66,18 +78,20 @@ void build_message(SDLHandle *h, char *msg, MsgType msg_type, ChessTile tile_fro
 	}
 
 	/* Set the tile_from or color (1st data) */
-	msg[IDX_FROM] = (tile_from_or_color + 1);
+	msg[IDX_FROM] = (tile_from_or_color);
 
 	/* If the message is a color message, return here */
 	if (msg_type == MSG_TYPE_COLOR) {
+		msg[IDX_MSG_ID] = 0;
+		msg[IDX_MSG_ID + 1] = 0;
 		return ;
 	}
 
 	/* Set the tile_to (2nd data) */
-	msg[IDX_TO] = (tile_to + 1);
+	msg[IDX_TO] = (tile_to);
 
 	/* Set the piece_type (3rd data) */
-	msg[IDX_PIECE] = (piece_type + 1);
+	msg[IDX_PIECE] = (piece_type);
 }
 
 
@@ -90,8 +104,7 @@ void display_message(char *msg) {
 	CHESS_LOG(LOG_INFO, YELLOW"Message type: %s: "RESET, MsgType_to_str(msg_type));
 
 	if (msg_type == MSG_TYPE_COLOR) {
-		CHESS_LOG(LOG_INFO, "turn: |%d| color |%d| -> ", msg[IDX_TURN], msg[IDX_FROM]);
-		CHESS_LOG(LOG_INFO, "Color: %s\n", (msg[IDX_TURN] - 1) == IS_WHITE ? "WHITE" : "BLACK");
+		CHESS_LOG(LOG_INFO, "ID: |%d| color |%d| -> ", GET_MESSAGE_ID(msg), msg[IDX_FROM]);
 		return ;
 	} else if (msg_type == MSG_TYPE_QUIT) {
 		CHESS_LOG(LOG_INFO, "Opponent quit the game, msg type %d\n", msg[0]);
@@ -99,9 +112,9 @@ void display_message(char *msg) {
 	}	
 	
 	/* We need to decrement all value cause we send with +1 can't send 0, interpreted like '\0' */
-	tile_from = msg[IDX_FROM] - 1;
-	tile_to = msg[IDX_TO] - 1;
-	piece_type = msg[IDX_PIECE] - 1;
+	tile_from = msg[IDX_FROM];
+	tile_to = msg[IDX_TO];
+	piece_type = msg[IDX_PIECE];
 	// CHESS_LOG(LOG_INFO, PURPLE"brut data: |%d||%d||%d| Timer:|%lu|\n"RESET, msg[IDX_FROM], msg[IDX_TO], msg[IDX_PIECE], *(u64 *)&msg[IDX_TIMER]);
 	if (msg_type == MSG_TYPE_MOVE) {
 		CHESS_LOG(LOG_INFO, ORANGE"Move from %s to %s with piece %s\n"RESET, ChessTile_to_str(tile_from), ChessTile_to_str(tile_to), ChessPiece_to_str(piece_type));
@@ -144,19 +157,20 @@ void process_message_receive(SDLHandle *handle, char *msg) {
 	MsgType 	msg_type = msg[IDX_TYPE];
 	ChessTile	tile_from = 0, tile_to = 0;
 	ChessPiece	piece_type = EMPTY;
-	// char		*real_msg = msg + MAGIC_SIZE;
 	
+	CHESS_LOG(LOG_INFO, YELLOW"Process: %s ID: %d\n"RESET, MsgType_to_str(msg_type), GET_MESSAGE_ID(msg));
+
 	/* If the message is a color message, set the player color */
 	if (msg_type == MSG_TYPE_COLOR) {
-		handle->player_info.color = msg[IDX_FROM] - 1;
+		handle->player_info.color = msg[IDX_FROM];
 	} else if (msg_type == MSG_TYPE_QUIT) {
 		CHESS_LOG(LOG_INFO, "%s\n", RED"Opponent quit the game"RESET);
 		handle->player_info.nt_info->peer_conected = FALSE;
 	} else if (msg_type == MSG_TYPE_MOVE || msg_type == MSG_TYPE_PROMOTION) {
 		/* We need to decrement all value cause we send with +1 can't send 0, interpreted like '\0' */
-		tile_from = msg[IDX_FROM] - 1;
-		tile_to = msg[IDX_TO] - 1;
-		piece_type = msg[IDX_PIECE] - 1;
+		tile_from = msg[IDX_FROM];
+		tile_to = msg[IDX_TO];
+		piece_type = msg[IDX_PIECE];
 		
 		/* If the message is a move, just call move piece */
 		if (msg_type == MSG_TYPE_MOVE) {
@@ -167,20 +181,19 @@ void process_message_receive(SDLHandle *handle, char *msg) {
 		handle->player_info.turn = TRUE;
 		handle->enemy_remaining_time = *(u64 *)&msg[IDX_TIMER];
 	} else if (msg_type == MSG_TYPE_RECONNECT)  {
-		// if (check_magic_value(msg) == FALSE) {
-		// 	CHESS_LOG(LOG_ERROR, "Reconnect ACK Magic value check failed %s\n", msg);
-		// 	return ;
-		// }
 		process_reconnect_message(handle, msg);
 		update_msg_store(handle->player_info.last_msg, msg);
-		return ;	
 	} else {
 		display_unknow_msg(msg);
 		return ;
 	}
-	/* Update the turn counter */
-	handle->board->turn += 1;
-	update_msg_store(handle->player_info.last_msg, msg);
+	if (msg_type != MSG_TYPE_QUIT) {
+		handle->msg_id = (GET_MESSAGE_ID(msg)) + 1;
+	}
+	// CHESS_LOG(LOG_INFO, ORANGE"MESSAGE ID: %hu\n"RESET, handle->msg_id);
+	if (msg_type >= MSG_TYPE_COLOR && msg_type <= MSG_TYPE_PROMOTION) {
+		update_msg_store(handle->player_info.last_msg, msg);
+	}
 }
 
 

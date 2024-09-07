@@ -84,7 +84,7 @@ s8 is_illegal_packet(SDLHandle *h, char *buffer, int len) {
 
 	/* If the message is COLOR and not the right size return here */
 	if (msg_type == MSG_TYPE_COLOR) {
-		color = buffer[IDX_FROM] - 1;
+		color = buffer[IDX_FROM];
 		if (color != IS_WHITE && color != IS_BLACK) {
 			CHESS_LOG(LOG_INFO, RED"Buffer color is not WHITE or BLACK%s\n", RESET);
 			return (TRUE);
@@ -93,9 +93,9 @@ s8 is_illegal_packet(SDLHandle *h, char *buffer, int len) {
 
 	if (msg_type == MSG_TYPE_MOVE || msg_type == MSG_TYPE_PROMOTION) {
 		
-		tile_from = buffer[IDX_FROM] - 1;
-		tile_to = buffer[IDX_TO] - 1;
-		piece_type = buffer[IDX_PIECE] - 1;
+		tile_from = buffer[IDX_FROM];
+		tile_to = buffer[IDX_TO];
+		piece_type = buffer[IDX_PIECE];
 
 		piece_check_legal = piece_type;
 

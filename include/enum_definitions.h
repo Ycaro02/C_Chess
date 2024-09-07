@@ -156,11 +156,11 @@
 
 #define MSG_IDX_ENUM \
 	X(IDX_TYPE, =0) \
-	X(IDX_TURN, ) \
-	X(IDX_FROM, ) \
-	X(IDX_TO, ) \
-	X(IDX_PIECE, ) \
-	X(IDX_TIMER, ) \
+	X(IDX_MSG_ID, ) \
+	X(IDX_FROM, =3) \
+	X(IDX_TO, =4) \
+	X(IDX_PIECE, =5) \
+	X(IDX_TIMER, =6) \
 	X(IDX_TIMER_END, ) \
 
 #define CHESS_FLAG_ENUM \
