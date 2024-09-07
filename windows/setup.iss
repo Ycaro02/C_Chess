@@ -1,14 +1,21 @@
-; -- CodeExample1.iss --
-;
-; This script shows various things you can achieve using a [Code] section.
+; [Setup]
+; AppName=C_Chess
+; AppVersion=1.0
+; WizardStyle=modern
+; DisableWelcomePage=yes
+; ; Use the default folder and ask the user to confirm or change it
+; DefaultDirName={autopf}\Chess
+; DefaultGroupName=Chess
+
 [Setup]
 AppName=C_Chess
 AppVersion=1.0
 WizardStyle=modern
 DisableWelcomePage=yes
-; Use the default folder and ask the user to confirm or change it
-DefaultDirName={autopf}\Chess
+; Use appdata folder and ask the user to confirm or change it
+DefaultDirName={userappdata}\Chess
 DefaultGroupName=Chess
+PrivilegesRequired=lowest
 
 [Files]
 Source: "WinChessServer.exe"; DestDir: "{app}";
