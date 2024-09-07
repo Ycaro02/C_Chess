@@ -34,15 +34,19 @@ RESOURCE_OBJ = resource.o
 all:	$(NAME)
 
 $(NAME): $(SERVER_EXE) $(RESOURCE_OBJ)
+ifeq ($(shell [ -f ${NAME} ] && echo 0 || echo 1), 1)
 	@printf "$(CYAN)Compiling ${NAME} ...$(RESET)\n"
 	@${UPDATE_BIN_DIR}
 	@${WCC} $(SRCS) $(W_SDL2) $(W_SDL2_TTF) $(W_FLAGS) -DCHESS_WINDOWS_VERSION -o $(NAME) $(NO_TERMINAL) $(RESOURCE_OBJ)
 	@printf "$(GREEN)Compiling $(NAME) done$(RESET)\n"
+endif
 
 $(SERVER_EXE):
+ifeq ($(shell [ -f ${SERVER_EXE} ] && echo 0 || echo 1), 1)
 	@printf "$(CYAN)Compiling $(SERVER_EXE) ...$(RESET)\n"
 	@${WCC} $(SERVER_SRC_DEPS) $(SERVER_SRC) $(SERVER_FLAGS) -o $(SERVER_EXE)
 	@printf "$(GREEN)Compiling $(SERVER_EXE) done$(RESET)\n"
+endif
 
 $(RESOURCE_OBJ):
 	@x86_64-w64-mingw32-windres $(RESOURCE) -o $(RESOURCE_OBJ)

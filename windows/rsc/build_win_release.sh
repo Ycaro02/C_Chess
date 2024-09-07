@@ -13,6 +13,8 @@ GITHUB_TOKEN=$(cat ~/.tok_C_chess)
 CHES_WIN="C_Chess_Win"
 ZIP_FILE="C_Chess_Win.zip"
 
+INO_OUTPUT_DIR="Inno_out"
+
 display_color_msg ${LIGHT_BLUE} "Building Windows Release directory..."
 
 # Build the game
@@ -21,14 +23,13 @@ make -s -C windows
 # Clean the release directory remove .o files
 make -s -C windows clean
 
-# Create a directory for the release
-cp -r windows ${CHES_WIN}
+wine "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /O"${INO_OUTPUT_DIR}" /F"Chess Install" windows/setup.iss > /dev/null 2>&1
 
-# Zip the release
-zip -r ${ZIP_FILE} ${CHES_WIN} > /dev/null
+mv "${INO_OUTPUT_DIR}/Chess Install.exe" .
 
-# Clean up
-rm -rf ${CHES_WIN}
+display_color_msg ${LIGHT_BLUE} "Creating the zip file from Chess Install.exe..."
+
+zip -r ${ZIP_FILE} "Chess Install.exe" > /dev/null
 
 # Create or update the release on GitHub
 RELEASE_ID=$(curl -s -H "Authorization: token ${GITHUB_TOKEN}" \
@@ -70,6 +71,7 @@ curl -s -X POST -H "Authorization: token ${GITHUB_TOKEN}" \
     "https://uploads.github.com/repos/${REPO}/releases/${RELEASE_ID}/assets?name=${ZIP_FILE}"
 
 # Clean up the zip file
-rm ${ZIP_FILE}
+rm -rf ${ZIP_FILE} ${INO_OUTPUT_DIR} "Chess Install.exe"
 
-display_color_msg ${GREEN} "\nWindows release uploaded to GitHub!"
+display_color_msg ${YELLOW} "\nRemove ${ZIP_FILE} ${INO_OUTPUT_DIR} Chess Install.exe!" 
+display_color_msg ${GREEN} "Windows release uploaded to GitHub!"
