@@ -146,6 +146,15 @@ s8 client_disconnect_msg(ChessRoom *r, SockaddrIn *cliaddr, char *buff) {
 	return (FALSE);
 }
 
+void display_brut_packet(char *msg, u64 packet_size, char *msg_type) {
+	printf(PINK"Packet %s: "ORANGE, msg_type);
+	for (u64 i = 0; i < packet_size; i++) {
+		printf("%d ", msg[i]);
+	}
+	printf("\n"RESET);
+}
+
+
 /* @brief Format a client message with adding the magic string
  * @param msg The message
  * @param message_size The message size
@@ -159,6 +168,7 @@ char *format_client_message(char *msg, u64 message_size){
 	}
 	ft_memcpy(data, MAGIC_STRING, MAGIC_SIZE);
 	ft_memcpy(data + MAGIC_SIZE, msg, message_size);
+	// display_brut_packet(data, MAGIC_SIZE + message_size, "Client Message");
 	return (data);
 }
 
@@ -177,6 +187,8 @@ char *format_connect_packet(char *msg, u64 message_size, s8 player_state){
 	ft_memcpy(data, MAGIC_CONNECT_STR, MAGIC_SIZE);
 	ft_memcpy(data + MAGIC_SIZE, msg, message_size);
 	data[CONNECT_PACKET_SIZE - 1] = player_state;
+
+	// display_brut_packet(data, CONNECT_PACKET_SIZE, "Connect");
 	return (data);
 }
 
@@ -476,7 +488,7 @@ void server_routine(ChessServer *server) {
 		len = recvfrom(server->sockfd, buffer, sizeof(buffer), 0, (Sockaddr *)&cliaddr, &addr_len);
 		if (len > 0) {
 			buffer[len] = '\0';
-			printf(CYAN"Server Received: %s from %s:%hu\n"RESET, MsgType_to_str(buffer[0]), inet_ntoa(cliaddr.sin_addr), ntohs(cliaddr.sin_port));
+			// printf(CYAN"Server Received: %s from %s:%hu\n"RESET, MsgType_to_str(buffer[0]), inet_ntoa(cliaddr.sin_addr), ntohs(cliaddr.sin_port));
 			handle_client_message(server->sockfd, room, &cliaddr, buffer, len);
 			fast_bzero(buffer, sizeof(buffer));
 			fast_bzero(&cliaddr, sizeof(cliaddr));

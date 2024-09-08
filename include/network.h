@@ -73,7 +73,7 @@ s8		socket_no_block_windows(Socket sockfd, struct timeval timeout);
 
 /* Magic string for sending addr */
 #define MAGIC_STRING ((const char[]){0x7F, 0x42, 'C', 'H', 'E', 'S', 'S', 'M', 'A', 'G', 'I', 'C', 0x7A, 0x7B, 0x42, 0x7F})
-#define MAGIC_CONNECT_STR ((const char[]){0x42, 0x7B, 'C', 'H', 'E', 'S', 'S', 'C', 'O', 'N', 'N', 'E', 'C', 'T', 0x7B, 0x42})
+#define MAGIC_CONNECT_STR ((const char[]){-0x80, 0x7B, 'C', 'H', 'E', 'S', 'S', 'C', 'O', 'N', 'N', 'E', 'C', 'T', 0x7B, -0x80})
 #define MAGIC_SIZE 16ULL
 
 /* Connect packet size */

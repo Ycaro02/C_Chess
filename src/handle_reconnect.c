@@ -44,16 +44,13 @@ void process_reconnect_message(SDLHandle *h, char *msg) {
 	h->my_remaining_time = my_remaining_time;
 	h->enemy_remaining_time = enemy_remaining_time;
 
-	/* Transform the array in list */
+	/* Iter on move array to update board state */
 	move_arr = (MoveSave *)&msg[MOVE_ARRAY_IDX];
 	for (int i = 0; i < list_size; i++) {
 		tile_from = move_arr[i].tile_from;
 		tile_to = move_arr[i].tile_to;
 		piece_from = move_arr[i].piece_from;
 		piece_to = move_arr[i].piece_to;
-		// printf(ORANGE"tile_from: %d, tile_to: %d, piece_from: %d, piece_to: %d\n", tile_from, tile_to, piece_from, piece_to);
-		// printf(GREEN"Move from %s to %s\n", ChessTile_to_str(tile_from), ChessTile_to_str(tile_to));
-		// printf(PURPLE"Piece from %s to %s\n"RESET, ChessPiece_to_str(piece_from), ChessPiece_to_str(piece_to));
 		/* If the piece is the same */
 		if (piece_from == piece_to) {
 			// is_legal_move_packet
@@ -69,13 +66,6 @@ void process_reconnect_message(SDLHandle *h, char *msg) {
 
 	/* Set the move list */
 	h->board->lst = array_to_list(move_arr, list_size, sizeof(MoveSave));
-
-	// t_list *tmp = h->board->lst;
-	// while (tmp) {
-		// MoveSave *move = tmp->content;
-		// printf(ORANGE"After list cpy: tile_from: %d, tile_to: %d, piece_from: %d, piece_to: %d\n", move->tile_from, move->tile_to, move->piece_from, move->piece_to);
-		// tmp = tmp->next;
-	// }
 
 	/* Detect player turn */
 	detect_player_turn(h, last_piece_moved, h->player_info.color);
@@ -116,7 +106,12 @@ char *build_reconnect_message(SDLHandle *h, u16 *msg_size) {
 		return (NULL);
 	}
 	buff[IDX_TYPE] = MSG_TYPE_RECONNECT;
+
+	/* Set the message ID */
 	ft_memcpy(&buff[IDX_MSG_ID], &h->msg_id, sizeof(u16));
+
+	CHESS_LOG(LOG_INFO, PURPLE"Build: %s ID: %d\n"RESET, MsgType_to_str(buff[IDX_TYPE]), GET_MESSAGE_ID(buff));
+
 
 	/* Idx from is for the color on color/reconnect message */
 	buff[IDX_FROM] = !h->player_info.color;

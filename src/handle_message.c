@@ -200,18 +200,32 @@ void process_message_receive(SDLHandle *handle, char *msg) {
 s8 chess_msg_receive(SDLHandle *h, NetworkInfo *info, char *rcv_buffer) {
 	ssize_t	rcv_len = 0;
 	char	buffer[4096];
+	char	ack_str[MSG_SIZE];
+	char 	*msg_data;
 
-	// (void)last_msg_processed;
 	fast_bzero(buffer, 4096);
+	fast_bzero(ack_str, MSG_SIZE);
 	rcv_len = recvfrom(info->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&info->servaddr, &info->addr_len);
 	if (rcv_len > 0) {
 		if (check_magic_value(buffer) == FALSE || ignore_msg(h, buffer + MAGIC_SIZE)) {
 			return (FALSE);
 		}
 		buffer[rcv_len] = '\0';
-		sendto(info->sockfd, ACK_STR, ACK_LEN, 0, (struct sockaddr *)&info->servaddr, info->addr_len);
-		CHESS_LOG(LOG_INFO, GREEN"Msg |%s| receive len : %zd -> ACK send\n"RESET, MsgType_to_str(buffer[0 + MAGIC_SIZE]), rcv_len);
-		ft_memcpy(rcv_buffer, buffer + MAGIC_SIZE, rcv_len - MAGIC_SIZE);
+
+		msg_data = buffer + MAGIC_SIZE;
+
+		/* Copy ACK str */
+		ft_memcpy(ack_str, ACK_STR, ACK_LEN);
+		/* Copy the message id in ACK */
+		ft_memcpy(ack_str + ACK_LEN, msg_data + IDX_MSG_ID, sizeof(u16));
+		
+		/* Send ACK */
+		sendto(info->sockfd, ack_str, MSG_SIZE, 0, (struct sockaddr *)&info->servaddr, info->addr_len);
+
+		CHESS_LOG(LOG_INFO, GREEN"Receive msg |%s| ID: [%u]\n"RESET, MsgType_to_str(msg_data[0]), GET_MESSAGE_ID(msg_data));
+		
+		/* Copy the message in rcv buffer */
+		ft_memcpy(rcv_buffer, msg_data, rcv_len - MAGIC_SIZE);
 		return (TRUE);
 	} 
 	return (FALSE);
@@ -221,18 +235,22 @@ s8 chess_msg_send(NetworkInfo *info, char *msg, u16 msg_len) {
 	ssize_t	rcv_len = 0;
 	int		ack_received = 0, attempts = 0;
 	char	buffer[4096];
+	u16		message_id = GET_MESSAGE_ID(msg);
 
 	fast_bzero(buffer, 4096);
-	CHESS_LOG(LOG_INFO, CYAN"Try to send %s len %u -> "RESET, MsgType_to_str(msg[0]), msg_len);
+	CHESS_LOG(LOG_INFO, CYAN"Send msg |%s| ID: [%u] -> "RESET, MsgType_to_str(msg[0]), message_id);
 	while (attempts < MAX_ATTEMPTS && !ack_received) {
 		sendto(info->sockfd, msg, msg_len, 0, (struct sockaddr *)&info->servaddr, info->addr_len);
 		rcv_len = recvfrom(info->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&info->servaddr, &info->addr_len);
 		if (rcv_len > 0) {
 			buffer[rcv_len] = '\0';
-			if (check_magic_value(buffer) == TRUE && fast_strcmp(buffer + MAGIC_SIZE, ACK_STR) == 0) {
-				CHESS_LOG(LOG_INFO, CYAN"ACK receive\n%s", RESET);
-				ack_received = 1;
-				break ;
+			if (check_magic_value(buffer) == TRUE && ft_memcmp(buffer + MAGIC_SIZE, ACK_STR, 3) == 0) {
+				if (*(u16 *)&buffer[MAGIC_SIZE + ACK_LEN] == message_id) {
+					CHESS_LOG(LOG_INFO, CYAN"ACK rcv ID: [%u]\n"RESET, *(u16 *)&buffer[MAGIC_SIZE + ACK_LEN]);
+					ack_received = 1;
+					break ;
+				} 
+				CHESS_LOG(LOG_INFO, RED"Wrong ACK ID: [%u] != [%u]\n"RESET, *(u16 *)&buffer[MAGIC_SIZE + ACK_LEN], message_id);
 			}
 		} 
 		attempts++;
