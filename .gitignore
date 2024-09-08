@@ -8,3 +8,4 @@ windows/*.exe
 windows/license
 webasm/emsdk
 webasm/output*
+webasm/rsc

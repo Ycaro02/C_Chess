@@ -16,7 +16,8 @@ all:	$(NAME)
 $(NAME):
 ifeq ($(shell [ -f ${NAME} ] && echo 0 || echo 1), 1)
 	@printf "$(CYAN)Compiling ${NAME} ...$(RESET)\n"
-	emcc -s USE_SDL=2 -s USE_SDL_TTF=2 --preload-file rsc -s -D_EMSCRIPTEN_VERSION_ -o $(NAME) $(SRCS)
+	@cp -r ../windows/rsc .
+	@emcc -s USE_SDL=2 -s USE_SDL_TTF=2 --preload-file rsc -s -D_EMSCRIPTEN_VERSION_ -o $(NAME) $(SRCS)
 	@printf "$(GREEN)Compiling $(NAME) done$(RESET)\n"
 endif
 
