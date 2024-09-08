@@ -77,10 +77,10 @@ s8 init_menu(SDLHandle *h, s32 total_btn) {
 	server_ip_btn->end.x = server_ip_btn->start.x + server_ip_btn->width;
 	server_ip_btn->end.y = server_ip_btn->start.y + server_ip_btn->height;
 	
-	server_ip_btn->text = ft_strdup("Change");
+	server_ip_btn->text = ft_strdup("Edit");
 	center_btn_text(server_ip_btn, h->menu.btn_text_font);
 	server_ip_btn->state = BTN_STATE_RELEASED;
-	server_ip_btn->func = change_ip_click;
+	server_ip_btn->func = edit_ip_click;
 
 
 	/* Set server ip position */
@@ -132,23 +132,7 @@ void draw_menu(SDLHandle *h) {
 	/* Update the button state */
 	update_btn_disabled(h, h->menu.btn);
 
-	/* Draw the menu button */
 	/* Draw the menu button +1 for the server_ip btn */
 	draw_multiple_button(h, BTN_RESUME, h->menu.menu_btn + 1);
-
-	// SDL_Color btn_color;
-	// for (s32 i = 0; i < h->menu.menu_btn + 1; i++) {
-	// 	if (i == h->menu.btn_hover) {
-	// 		btn_color = BTN_HOVER_COLOR;
-	// 	} else {
-	// 		btn_color = BTN_BASIC_COLOR;
-	// 	}
-
-	// 	if (h->menu.btn[i].state == BTN_STATE_DISABLED) {
-	// 		btn_color = (SDL_Color){CLEAR_COLOR};
-	// 	}
-		
-	// 	draw_button(h, h->menu.btn[i], btn_color);
-	// }
 }
 

@@ -113,10 +113,14 @@ void quit_game(SDLHandle *h) {
 	chess_destroy(h);
 }
 
-void change_ip_click(SDLHandle *h) {
+void edit_ip_click(SDLHandle *h) {
 	(void)h;
-	h->menu.ip_field.is_active = TRUE;
-	CHESS_LOG(LOG_INFO, "Change ip\n");
+	if (h->menu.ip_field.is_active) {
+		update_server_ip(h, &h->menu.ip_field);
+	}
+
+	h->menu.ip_field.is_active = !h->menu.ip_field.is_active;
+	CHESS_LOG(LOG_INFO, "Edit ip\n");
 }
 
 /**

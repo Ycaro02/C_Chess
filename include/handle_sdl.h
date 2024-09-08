@@ -216,11 +216,10 @@ void		draw_circle_outline(SDL_Renderer *renderer, int x, int y, int radius);
 
 
 /* src/text_display.c */
-// void		left_band_center_text(iVec2 *char_pos, char *text, TTF_Font *font, s32 tile_size, s32 band_left_size);
-// void		bot_band_center_text(iVec2 *char_pos, char *text, TTF_Font *font, s32 tile_size, s32 band_bot_size);
 void		draw_letter_number(SDLHandle *handle, s8 player_color);
 void		center_text_function_set(SDLHandle *h, CenterText *ct, BtnCenterText btn1, BtnCenterText btn2);
 void		cancel_search_func(SDLHandle *h);
+
 // center text
 CenterText *center_text_init(SDLHandle *h);
 void		center_text_string_set(SDLHandle *h, char *str, char *str2);
@@ -231,6 +230,7 @@ void		center_text_destroy(CenterText *ct);
 TextField	init_text_field(SDL_Rect rect, int buff_size_max, TTF_Font *font, char *initial_text);
 void		handle_text_input(SDLHandle *h, SDL_Event *event);
 void		render_text_field(SDL_Renderer *renderer, TextField *text_field, SDL_Color text_color, SDL_Color bg_color);
+void		update_server_ip(SDLHandle *h, TextField *text_field);
 
 /* src/chess_menu.c */
 void	menu_close(ChessMenu *menu);
@@ -247,6 +247,8 @@ void	draw_multiple_button(SDLHandle *h, s32 btn_start, s32 nb_btn);
 void	update_btn_disabled(SDLHandle *h, Button *btn);
 s32		detect_button_click(Button *btn, s32 btn_start, s32 nb_btn, iVec2 mouse_pos);
 void 	set_btn_info(SDLHandle *h, s32 btn_idx, iVec2 start, iVec2 size, char *text, ButtonFunc func);
+
 // btn func
-void	change_ip_click(SDLHandle *h);
+void	edit_ip_click(SDLHandle *h);
+
 #endif /* HANDLE_SDL_H */
