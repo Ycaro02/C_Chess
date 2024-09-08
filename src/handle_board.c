@@ -100,7 +100,12 @@ void game_event_handling(SDLHandle *h, SDL_Event event, s8 player_color) {
 	} else if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {
 		if (h->over_piece_select != EMPTY) {
 			h->board->last_clicked_tile = detect_tile_click(x, y, h->tile_size.x, h->band_size, player_color);
-			if (h->board->last_clicked_tile == h->board->selected_tile || ((1ULL << h->board->last_clicked_tile) & aly_pos) != 0) {
+			
+			if (h->board->last_clicked_tile == INVALID_TILE) {
+				h->over_piece_select = EMPTY;
+				h->board->possible_moves = 0;
+			} 
+			else if (h->board->last_clicked_tile == h->board->selected_tile || ((1ULL << h->board->last_clicked_tile) & aly_pos) != 0) {
 				h->over_piece_select = EMPTY;
 			} 
 		}
