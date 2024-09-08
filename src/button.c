@@ -53,7 +53,10 @@ void start_network_game(SDLHandle *h) {
 	center_text_string_set(h, NULL, NULL);
 	
 	/* Start network chess routine (programme block here in routine while 1) */
-	network_chess_routine(h);
+	h->game_start = TRUE;
+	while (1) {
+		network_chess_routine(h);
+	}
 	
 	/* Destroy the game when we exit the routine */
 	// chess_destroy(h);

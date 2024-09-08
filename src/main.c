@@ -132,7 +132,10 @@ void chess_game(SDLHandle *h) {
 		// network_setup(h, h->flag, &h->player_info, h->player_info.dest_ip);
 		h->player_info.nt_info = init_network(h->player_info.dest_ip, timeout);
 		handle_network_client_state(h, h->flag, &h->player_info);
-		network_chess_routine(h);
+		h->game_start = TRUE;
+		while (1) {
+			network_chess_routine(h);
+		}
 	} else {
 		set_local_info(h);
 		while (1) {

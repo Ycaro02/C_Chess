@@ -84,7 +84,6 @@ s8 reconnect_handling(SDLHandle *h) {
 		return (FALSE);
 	}
  	if (wait_peer_info(h->player_info.nt_info, "Wait reconnect peer info")) {
-		/* Here we need to build MSG_TYPE_RECONECT and while on the list of move to give them to the reconnected client */
 		u16 msg_size = 0;
 		char *buff = build_reconnect_message(h, &msg_size);
 		chess_msg_send(h->player_info.nt_info, buff, msg_size);
@@ -103,46 +102,40 @@ void network_chess_routine(SDLHandle *h) {
 	s32			ret = FALSE, event = 0;
 	s8			msg_recv = FALSE;
 	
-	h->game_start = TRUE;
+	/* Event handler */
+	event = event_handler(h, h->player_info.color);
+	
+	/* If the quit button is pressed */
+	if (event == CHESS_QUIT) { chess_destroy(h) ; }
 
-	while (1) {
-
-		/* Event handler */
-		event = event_handler(h, h->player_info.color);
-		
-		/* If the quit button is pressed */
-		if (event == CHESS_QUIT) { break ; } // Send quit message to the other player
-
-		/* If the game is started */
-		if (h->game_start && h->player_info.nt_info != NULL) {
-			if (!h->player_info.nt_info->peer_conected) {
-				if (!reconnect_handling(h)) { break ;}
-			} else {
-				/* If tile is selected and is player turn, try to send move piece and move it */
-				if (h->player_info.turn == TRUE && h->board->last_clicked_tile != INVALID_TILE) {
-					ret = network_move_piece(h, h->board->last_clicked_tile);
-					if (ret == CHESS_QUIT || ret == FALSE) { break ; }
-				}
-				/* Receive message from the other player */
-				msg_recv = chess_msg_receive(h, h->player_info.nt_info, h->player_info.msg_receiv);
-				if ((!h->player_info.turn && msg_recv) || (h->player_info.turn && msg_recv && h->player_info.msg_receiv[IDX_TYPE] == MSG_TYPE_QUIT)) {
-					process_message_receive(h, h->player_info.msg_receiv);
-				}
+	/* If the game is started */
+	if (h->game_start && h->player_info.nt_info != NULL) {
+		if (!h->player_info.nt_info->peer_conected) {
+			if (!reconnect_handling(h)) { chess_destroy(h) ;}
+		} else {
+			/* If tile is selected and is player turn, try to send move piece and move it */
+			if (h->player_info.turn == TRUE && h->board->last_clicked_tile != INVALID_TILE) {
+				ret = network_move_piece(h, h->board->last_clicked_tile);
+				if (ret == CHESS_QUIT || ret == FALSE) { chess_destroy(h) ; }
+			}
+			/* Receive message from the other player */
+			msg_recv = chess_msg_receive(h, h->player_info.nt_info, h->player_info.msg_receiv);
+			if ((!h->player_info.turn && msg_recv) || (h->player_info.turn && msg_recv && h->player_info.msg_receiv[IDX_TYPE] == MSG_TYPE_QUIT)) {
+				process_message_receive(h, h->player_info.msg_receiv);
 			}
 		}
-
-		if (h->player_info.nt_info == NULL) {
-			CHESS_LOG(LOG_INFO, RED"Network info is NULL call Chess destroy\n"RESET);
-			chess_destroy(h);
-		}
-
-		/* Draw logic */
-		update_graphic_board(h);
-
-		/* Send alive message to the server */
-		send_alive_packet(h->player_info.nt_info);
-
-		SDL_Delay(16);
-
 	}
+
+	if (h->player_info.nt_info == NULL) {
+		CHESS_LOG(LOG_INFO, RED"Network info is NULL call Chess destroy\n"RESET);
+		chess_destroy(h);
+	}
+
+	/* Draw logic */
+	update_graphic_board(h);
+
+	/* Send alive message to the server */
+	send_alive_packet(h->player_info.nt_info);
+	SDL_Delay(16);
+
 }
