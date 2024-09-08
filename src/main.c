@@ -6,55 +6,26 @@
 
 #ifdef _EMSCRIPTEN_VERSION_
 	#include <emscripten.h>
-	/* 
-	* @brief Emscripten routine, need to be called by emscripten_set_main_loop
-	* @note We can't use while(1) loop in emscripten
-	*/
-	void emscripten_routine() {
-		SDLHandle	*h = get_SDL_handle();
-		ChessBoard	*b = h->board;
-		s32			ret = TRUE;
-		s32			event = 0;
-		
-		event = event_handler(h, h->player_info.color);
-		/* If the quit button is pressed */
-		if (event == CHESS_QUIT) { return ; }
-		
-		/* If tile is selected */
-		if (b->last_clicked_tile != INVALID_TILE) {
-			/* If a piece is selected and the tile selected is a possible move */
-			if (is_selected_possible_move(b->possible_moves, b->last_clicked_tile)) {
-				ret = move_piece(h, b->selected_tile, b->last_clicked_tile, b->selected_piece);
-				b->possible_moves = 0;
-				h->over_piece_select = EMPTY;
-				if (ret == CHESS_QUIT) { return ; }
-			} 
-			else { /* Update piece possible move and selected tile */
-				if (h->over_piece_select != EMPTY) {
-					b->selected_piece = get_piece_from_tile(b, b->last_clicked_tile);
-					b->selected_tile = b->last_clicked_tile;
-					b->possible_moves = get_piece_move(b, (1ULL << b->selected_tile), b->selected_piece, TRUE);
-					if (b->possible_moves == 0) { h->over_piece_select = EMPTY ; }
-				} else { /* if over piece select is empty */
-					reset_selected_tile(h);
-				}
-			}
-		} /* End if invalid tile */
-
-		/* Draw logic */
-		update_graphic_board(h);
-
-	}
+	
+	void	set_local_info(SDLHandle *h);
+	void	local_chess_routine();
 
 	void emscripten_setup() {
 		SDLHandle *h = get_SDL_handle();
-		h->game_start = TRUE;
-		h->player_info.piece_start = WHITE_PAWN;
-		h->player_info.piece_end = BLACK_KING;
-		h->player_info.turn = TRUE;
-		emscripten_set_main_loop(emscripten_routine, 0, 1);
+
+		set_local_info(h);
+		emscripten_set_main_loop(local_chess_routine, 0, 1);
 	}
 #endif
+
+
+void set_local_info(SDLHandle *h) {
+	h->player_info.turn = TRUE;
+	h->game_start = TRUE;
+	h->player_info.piece_start = WHITE_PAWN;
+	h->player_info.piece_end = BLACK_KING;
+}
+
 
 void chess_signal_handler(int signum)
 {
@@ -83,40 +54,44 @@ SDLHandle *init_game() {
 	return (handle);
 }
 
-void chess_routine(SDLHandle *h){
+
+/*
+ * @brief Main chess routine
+ * @note This function is called in a loop
+*/
+void local_chess_routine() {
+	SDLHandle *h = get_SDL_handle();
 	ChessBoard	*b = h->board;
 	s32			ret = TRUE;
 	s32			event = 0;
 	
-	while (1) {
-		event = event_handler(h, h->player_info.color);
-		/* If the quit button is pressed */
-		if (event == CHESS_QUIT) { break ; }
-		
-		/* If tile is selected */
-		if (b->last_clicked_tile != INVALID_TILE) {
-			/* If a piece is selected and the tile selected is a possible move */
-			if (is_selected_possible_move(b->possible_moves, b->last_clicked_tile)) {
-				ret = move_piece(h, b->selected_tile, b->last_clicked_tile, b->selected_piece);
-				b->possible_moves = 0;
-				h->over_piece_select = EMPTY;
-				if (ret == CHESS_QUIT) { break ; }
-			} 
-			else { /* Update piece possible move and selected tile */
-				if (h->over_piece_select != EMPTY) {
-					b->selected_piece = get_piece_from_tile(b, b->last_clicked_tile);
-					b->selected_tile = b->last_clicked_tile;
-					b->possible_moves = get_piece_move(b, (1ULL << b->selected_tile), b->selected_piece, TRUE);
-					if (b->possible_moves == 0) { h->over_piece_select = EMPTY ; }
-				} else { /* if over piece select is empty */
-					reset_selected_tile(h);
-				}
+	event = event_handler(h, h->player_info.color);
+	/* If the quit button is pressed */
+	if (event == CHESS_QUIT) { chess_destroy(h) ; }
+	
+	/* If tile is selected */
+	if (b->last_clicked_tile != INVALID_TILE) {
+		/* If a piece is selected and the tile selected is a possible move */
+		if (is_selected_possible_move(b->possible_moves, b->last_clicked_tile)) {
+			ret = move_piece(h, b->selected_tile, b->last_clicked_tile, b->selected_piece);
+			b->possible_moves = 0;
+			h->over_piece_select = EMPTY;
+			if (ret == CHESS_QUIT) { chess_destroy(h) ; }
+		} 
+		else { /* Update piece possible move and selected tile */
+			if (h->over_piece_select != EMPTY) {
+				b->selected_piece = get_piece_from_tile(b, b->last_clicked_tile);
+				b->selected_tile = b->last_clicked_tile;
+				b->possible_moves = get_piece_move(b, (1ULL << b->selected_tile), b->selected_piece, TRUE);
+				if (b->possible_moves == 0) { h->over_piece_select = EMPTY ; }
+			} else { /* if over piece select is empty */
+				reset_selected_tile(h);
 			}
-		} /* End if invalid tile */
+		}
+	} /* End if not invalid tile */
 
-		/* Draw logic */
-		update_graphic_board(h);
-	}
+	/* Draw logic */
+	update_graphic_board(h);
 }
 
 void chess_destroy(SDLHandle *h) {
@@ -146,7 +121,6 @@ SDLHandle *get_SDL_handle() {
 	return (stat);
 }
 
-
 void chess_game(SDLHandle *h) {
 	struct timeval	timeout = {0, 10000}; /* 10000 microseconds = 0.01 seconds */
 	
@@ -160,11 +134,10 @@ void chess_game(SDLHandle *h) {
 		handle_network_client_state(h, h->flag, &h->player_info);
 		network_chess_routine(h);
 	} else {
-		h->player_info.turn = TRUE;
-		h->game_start = TRUE;
-		h->player_info.piece_start = WHITE_PAWN;
-		h->player_info.piece_end = BLACK_KING;
-		chess_routine(h);
+		set_local_info(h);
+		while (1) {
+			local_chess_routine();
+		}
 	}
 }
 

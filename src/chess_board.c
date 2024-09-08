@@ -114,11 +114,14 @@ void exit_func(SDLHandle *h) {
 }
 
 void replay_func(SDLHandle *h) {
+	s8 network_flag = FALSE;
+
 	CHESS_LOG(LOG_INFO, "Replay game\n");
 	init_board(h->board);
 
-	send_game_end_to_server(h->player_info.nt_info->sockfd, h->player_info.nt_info->servaddr);
 	if (has_flag(h->flag, FLAG_NETWORK)) {
+		network_flag = TRUE;
+		send_game_end_to_server(h->player_info.nt_info->sockfd, h->player_info.nt_info->servaddr);
 		/* Disconect from the server */
 		unset_flag(&h->flag, FLAG_NETWORK);
 		destroy_network_info(h);
@@ -126,7 +129,13 @@ void replay_func(SDLHandle *h) {
 	h->game_start = TRUE;
 	center_text_function_set(h, h->center_text, (BtnCenterText){"Cancel", cancel_search_func}, (BtnCenterText){NULL, NULL});
 	update_graphic_board(h);
-	search_game(h);
+	if (network_flag) {
+		search_game(h);
+	} else {
+		/* Remove center text and his flag */
+		center_text_string_set(h, NULL, NULL);
+		unset_flag(&h->flag, FLAG_CENTER_TEXT_INPUT);
+	}
 }
 
 /* @brief Verify if the king is check and mat or PAT
