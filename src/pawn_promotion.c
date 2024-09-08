@@ -154,8 +154,7 @@ void do_promotion_move(SDLHandle *h, ChessTile tile_from, ChessTile tile_to, Che
  * @param tile_to The tile to
  * @return TRUE if the pawn need to be promoted, FALSE otherwise, CHESS_QUIT if the player quit
 */
-s32 check_pawn_promotion(SDLHandle *handle, ChessPiece type, ChessTile tile_from, ChessTile tile_to) {
-	s32 ret = FALSE;
+s8 check_pawn_promotion(SDLHandle *handle, ChessPiece type, ChessTile tile_from, ChessTile tile_to) {
 	s8 is_pawn = (type == WHITE_PAWN || type == BLACK_PAWN);
 	s8 is_black = (type >= BLACK_PAWN);
 	s8 is_white = !is_black;
@@ -163,18 +162,17 @@ s32 check_pawn_promotion(SDLHandle *handle, ChessPiece type, ChessTile tile_from
 
 	/* Check if is the player control pawn or opponent (no mandatory in network version) */
 	if (handle->player_info.color == IS_WHITE && is_black) {
-		return (ret);
+		return (FALSE);
 	} else if (handle->player_info.color == IS_BLACK && is_white) {
-		return (ret);
+		return (FALSE);
 	}
 
 
 	/* Check if the pawn need to be promoted */
 	if ((is_pawn && is_white && tile_to >= A8 && tile_to <= H8)
 		|| (is_pawn && is_black && tile_to >= A1 && tile_to <= H1)) {
-		// ret = display_promotion_selection(handle, tile_from, tile_to);
 		set_flag(&handle->flag, FLAG_PROMOTION_SELECTION);
-		ret = TRUE;
+		return (TRUE);
 	}
-	return (ret);
+	return (FALSE);
 }
