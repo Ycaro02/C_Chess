@@ -285,6 +285,8 @@ void 		update_graphic_board(SDLHandle *h);
 /* src/pawn_promotion.c */
 s32			check_pawn_promotion(SDLHandle *handle, ChessPiece type, ChessTile tile_from, ChessTile tile_to);
 void		do_promotion_move(SDLHandle *h, ChessTile tile_from, ChessTile tile_to, ChessPiece new_piece_type, s8 add_list);
+void		display_promotion_selection(SDLHandle *h, ChessTile tile_from, ChessTile tile_to);
+void		pawn_selection_event(SDLHandle *h);
 
 /* src/move_save.c */
 s8			move_save_add(ChessMoveList **lst, ChessTile tile_from, ChessTile tile_to, ChessPiece piece_from, ChessPiece piece_to);

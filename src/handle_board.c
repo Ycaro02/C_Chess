@@ -94,11 +94,12 @@ void game_event_handling(SDLHandle *h, SDL_Event event, s8 player_color) {
 	if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
 		h->board->last_clicked_tile = detect_tile_click(x, y, h->tile_size.x, h->band_size, player_color);
 		piece_select = get_piece_from_tile(h->board, h->board->last_clicked_tile);
-		if (piece_select >= h->player_info.piece_start && piece_select <= h->player_info.piece_end) {
+		if (!has_flag(h->flag, FLAG_PROMOTION_SELECTION) \
+			&& (piece_select >= h->player_info.piece_start && piece_select <= h->player_info.piece_end)) {
 			h->over_piece_select = piece_select;
 		}
 	} else if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {
-		if (h->over_piece_select != EMPTY) {
+		if (!has_flag(h->flag, FLAG_PROMOTION_SELECTION) && h->over_piece_select != EMPTY) {
 			h->board->last_clicked_tile = detect_tile_click(x, y, h->tile_size.x, h->band_size, player_color);
 			
 			if (h->board->last_clicked_tile == INVALID_TILE) {

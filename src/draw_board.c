@@ -137,6 +137,10 @@ void draw_board(SDLHandle *handle, s8 player_color) {
 		column--;
 	}
 
+	if (has_flag(handle->flag, FLAG_PROMOTION_SELECTION)) {
+		display_promotion_selection(handle, handle->board->last_tile_from, handle->board->last_tile_to);
+	}
+
 	draw_timer_rect(handle);
 
 	/* Draw the letter and number for raw/column */

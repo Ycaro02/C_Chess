@@ -54,29 +54,27 @@ SDLHandle *init_game() {
 	return (handle);
 }
 
-
 /*
  * @brief Main chess routine
  * @note This function is called in a loop
 */
 void local_chess_routine() {
-	SDLHandle *h = get_SDL_handle();
+	SDLHandle	*h = get_SDL_handle();
 	ChessBoard	*b = h->board;
-	s32			ret = TRUE;
 	s32			event = 0;
 	
 	event = event_handler(h, h->player_info.color);
 	/* If the quit button is pressed */
 	if (event == CHESS_QUIT) { chess_destroy(h) ; }
 	
-	/* If tile is selected */
-	if (b->last_clicked_tile != INVALID_TILE) {
+	if (has_flag(h->flag, FLAG_PROMOTION_SELECTION)) {
+		pawn_selection_event(h);
+	} else if (b->last_clicked_tile != INVALID_TILE) {
 		/* If a piece is selected and the tile selected is a possible move */
 		if (is_selected_possible_move(b->possible_moves, b->last_clicked_tile)) {
-			ret = move_piece(h, b->selected_tile, b->last_clicked_tile, b->selected_piece);
+			move_piece(h, b->selected_tile, b->last_clicked_tile, b->selected_piece);
 			b->possible_moves = 0;
 			h->over_piece_select = EMPTY;
-			if (ret == CHESS_QUIT) { chess_destroy(h) ; }
 		} 
 		else { /* Update piece possible move and selected tile */
 			if (h->over_piece_select != EMPTY) {

@@ -26,12 +26,13 @@ static void piece_update_move(SDLHandle *h, ChessBoard *b, ChessTile last_tile_c
  * @param piece_type 
  * @return s32 FALSE if we can't send the message, CHESS_QUIT if the player quit the game, TRUE otherwise 
  */
-static s32 network_move_piece(SDLHandle *h, ChessTile last_tile_click) {
+static s32 handle_player_event(SDLHandle *h, ChessTile last_tile_click) {
 	ChessBoard	*b = h->board;
 	s32			ret = FALSE;
 
-	/* If a piece is selected and the tile selected is a possible move */
-	if (is_selected_possible_move(b->possible_moves, last_tile_click)) {
+	if (has_flag(h->flag, FLAG_PROMOTION_SELECTION)) {
+		pawn_selection_event(h);
+	} else if (is_selected_possible_move(b->possible_moves, last_tile_click)) {
 		// piece_type = get_piece_from_tile(b, b->selected_tile);
 		ret = move_piece(h, b->selected_tile, last_tile_click, b->selected_piece);
 		b->possible_moves = 0;
@@ -39,18 +40,18 @@ static s32 network_move_piece(SDLHandle *h, ChessTile last_tile_click) {
 		
 		update_graphic_board(h);
 
+
 		/* Build move message to the other player if is not pawn promotion or chess quit */
-		if (ret == TRUE) {
+		if (ret != PAWN_PROMOTION) {
+			h->player_info.turn = FALSE;
 			build_message(h, h->player_info.msg_tosend, MSG_TYPE_MOVE, b->selected_tile, last_tile_click, b->selected_piece);
+			if (!safe_msg_send(h)) {
+				return (ret);
+			}
 		}
 
-		h->player_info.turn = FALSE;
 		update_graphic_board(h);
-
 		/* Send the message to the other player */
-		if (!safe_msg_send(h)) {
-			return (ret);
-		}
 
 		reset_selected_tile(h);
 		update_graphic_board(h);
@@ -99,7 +100,7 @@ s8 reconnect_handling(SDLHandle *h) {
  * @param h The SDLHandle pointer
  */
 void network_chess_routine(SDLHandle *h) {
-	s32			ret = FALSE, event = 0;
+	s32			event = 0;
 	s8			msg_recv = FALSE;
 	
 	/* Event handler */
@@ -115,8 +116,7 @@ void network_chess_routine(SDLHandle *h) {
 		} else {
 			/* If tile is selected and is player turn, try to send move piece and move it */
 			if (h->player_info.turn == TRUE && h->board->last_clicked_tile != INVALID_TILE) {
-				ret = network_move_piece(h, h->board->last_clicked_tile);
-				if (ret == CHESS_QUIT || ret == FALSE) { chess_destroy(h) ; }
+				handle_player_event(h, h->board->last_clicked_tile);
 			}
 			/* Receive message from the other player */
 			msg_recv = chess_msg_receive(h, h->player_info.nt_info, h->player_info.msg_receiv);
