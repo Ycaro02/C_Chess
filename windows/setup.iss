@@ -26,7 +26,7 @@ Source: "rsc\*"; DestDir: "{app}\rsc"; Flags: recursesubdirs createallsubdirs
 
 [Icons]
 ; Create a program group folder with the name of the application and the associated icon
-Name: "{group}\Chess"; Filename: "{app}\WinCchess.exe"; IconFilename: "{app}\rsc\white_pawn.ico"
+Name: "{group}\Chess"; Filename: "{app}\WinCchess.exe"; IconFilename: "{app}\rsc\black_pawn.ico"
 
 [Code]
 procedure RenameUninstallLogFile(NewUninstallLogFileName: String);
