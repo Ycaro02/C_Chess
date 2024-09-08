@@ -20,7 +20,6 @@ SERVER_EXE		=	chess_server
 
 CFLAGS = -g3
 
-
 all:        $(NAME)
 
 $(NAME): $(LIB_DEPS) $(LIBFT) $(LIST) $(OBJ_DIR) $(OBJS) $(SERVER_EXE)

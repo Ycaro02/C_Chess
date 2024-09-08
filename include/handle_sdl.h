@@ -26,7 +26,6 @@
 #define WHITE_KNIGHT_TEXTURE "rsc/texture/piece/white_knight.bmp"
 #define WHITE_PAWN_TEXTURE "rsc/texture/piece/white_pawn.bmp"
 
-
 /* Macro to convert RGBA to UINT32 and UINT32 to RGBA */
 #define		RGBA_TO_UINT32(r, g, b, a)		((u32)((a << 24) | (r << 16) | (g << 8) | b))
 

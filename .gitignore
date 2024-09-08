@@ -6,3 +6,5 @@ obj
 windows/*.dll
 windows/*.exe
 windows/license
+webasm/emsdk
+webasm/output*

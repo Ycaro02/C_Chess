@@ -4,41 +4,57 @@
 #include "../include/handle_signal.h"
 #include "../include/chess_log.h"
 
-// #include <execinfo.h>
-// int get_char_idx(char *str, char c) {
-// 	int i = 0;
-// 	while (str[i] != '\0') {
-// 		if (str[i] == c) {
-// 			return (i);
-// 		}
-// 		i++;
-// 	}
-// 	return (-1);
-// }
-// void print_call_stack() {
-//     void *buffer[10];
-//     char **callstack;
-//     int frames = backtrace(buffer, 10);
-//     callstack = backtrace_symbols(buffer, frames);
-//     if (callstack == NULL) {
-//         perror("backtrace_symbols");
-// 		return ;
-//     }
-
-//     printf("Call stack:\n");
-//     for (int i = 1; i < frames; i++) { // Start from 1 to skip the current function
-// 		char **split_addr = ft_split(callstack[i], '+');
-// 		split_addr[1][get_char_idx(split_addr[1], ')')] = '\0';
+#ifdef _EMSCRIPTEN_VERSION_
+	#include <emscripten.h>
+	/* 
+	* @brief Emscripten routine, need to be called by emscripten_set_main_loop
+	* @note We can't use while(1) loop in emscripten
+	*/
+	void emscripten_routine() {
+		SDLHandle	*h = get_SDL_handle();
+		ChessBoard	*b = h->board;
+		s32			ret = TRUE;
+		s32			event = 0;
 		
-//         char cmd[256];
-//         snprintf(cmd, sizeof(cmd), "addr2line -e %s %s", "C_Chess", split_addr[1]);
+		event = event_handler(h, h->player_info.color);
+		/* If the quit button is pressed */
+		if (event == CHESS_QUIT) { return ; }
+		
+		/* If tile is selected */
+		if (b->last_clicked_tile != INVALID_TILE) {
+			/* If a piece is selected and the tile selected is a possible move */
+			if (is_selected_possible_move(b->possible_moves, b->last_clicked_tile)) {
+				ret = move_piece(h, b->selected_tile, b->last_clicked_tile, b->selected_piece);
+				b->possible_moves = 0;
+				h->over_piece_select = EMPTY;
+				if (ret == CHESS_QUIT) { return ; }
+			} 
+			else { /* Update piece possible move and selected tile */
+				if (h->over_piece_select != EMPTY) {
+					b->selected_piece = get_piece_from_tile(b, b->last_clicked_tile);
+					b->selected_tile = b->last_clicked_tile;
+					b->possible_moves = get_piece_move(b, (1ULL << b->selected_tile), b->selected_piece, TRUE);
+					if (b->possible_moves == 0) { h->over_piece_select = EMPTY ; }
+				} else { /* if over piece select is empty */
+					reset_selected_tile(h);
+				}
+			}
+		} /* End if invalid tile */
 
-//         system(cmd);
-// 		free_double_char(split_addr);
-//     }
+		/* Draw logic */
+		update_graphic_board(h);
 
-//     free(callstack);
-// }
+	}
+
+	void emscripten_setup() {
+		SDLHandle *h = get_SDL_handle();
+		h->game_start = TRUE;
+		h->player_info.piece_start = WHITE_PAWN;
+		h->player_info.piece_end = BLACK_KING;
+		h->player_info.turn = TRUE;
+		emscripten_set_main_loop(emscripten_routine, 0, 1);
+	}
+#endif
 
 void chess_signal_handler(int signum)
 {
@@ -130,6 +146,7 @@ SDLHandle *get_SDL_handle() {
 	return (stat);
 }
 
+
 void chess_game(SDLHandle *h) {
 	struct timeval	timeout = {0, 10000}; /* 10000 microseconds = 0.01 seconds */
 	
@@ -162,23 +179,26 @@ int main(int argc, char **argv) {
 	set_log_level(LOG_INFO);
 	// set_log_level(LOG_NONE);
 
-
 	flag = handle_chess_flag(argc, argv, &error, &player_info);
 	if (error == -1) {
 		return (1);
 	}
-	
+
 
 	handle = get_SDL_handle();
 	if (!handle) {
 		CHESS_LOG(LOG_ERROR, "Error %s: get_SDL_handle failed init\n", __func__);
 		return (1);
 	}
-
 	handle->flag = flag;
 	handle->player_info = player_info;
 
-	chess_game(handle);
+	#ifdef _EMSCRIPTEN_VERSION_
+		emscripten_setup();
+	#else
+		chess_game(handle);	
+	#endif
+	
 
 	/* Free memory */
 	chess_destroy(handle);

@@ -2,8 +2,6 @@
 #include "../include/handle_sdl.h"
 #include "../include/chess_log.h"
 
-
-
 void menu_close(ChessMenu *menu) {
 	menu->is_open = FALSE;
 	menu->btn_hover = BTN_INVALID;
