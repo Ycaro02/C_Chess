@@ -30,6 +30,7 @@ SRCS			=	chess_board.c \
 					chess_menu.c \
 					text_input.c \
 					button.c \
+					profile.c \
 
 MAKE_LIBFT		=	make -s -C libft -j
 

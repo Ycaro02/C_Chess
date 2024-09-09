@@ -155,6 +155,10 @@ void draw_board(SDLHandle *handle, s8 player_color) {
 		draw_piece_over_board(handle, handle->mouse_pos.x - (handle->tile_size.x >> 1), handle->mouse_pos.y - (handle->tile_size.x >> 1));
 	}
 
+	if (has_flag(handle->flag, FLAG_EDIT_PROFILE)) {
+		draw_profile_page(handle, handle->menu.profile);	
+	}
+
 	if (handle->center_text->str) {
 		center_text_draw(handle, handle->center_text);
 	}

@@ -128,6 +128,8 @@ void edit_ip_click(SDLHandle *h) {
 
 void edit_profile(SDLHandle *h) {
 	(void)h;
+	menu_close(&h->menu);
+	set_flag(&h->flag, FLAG_EDIT_PROFILE);
 	CHESS_LOG(LOG_INFO, "Edit profile\n");
 }
 

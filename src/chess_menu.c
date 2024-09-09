@@ -20,6 +20,7 @@ void destroy_menu(SDLHandle *h) {
 		}
 	}
 	free(h->menu.btn);
+	destroy_profile_page(h->menu.profile);
 	unload_font(h->menu.btn_text_font);
 }
 
@@ -93,6 +94,7 @@ s8 init_menu(SDLHandle *h, s32 total_btn) {
 	rect.h = text_size.y;
 
 	h->menu.ip_field = init_text_field(rect, IP_INPUT_SIZE, h->menu.btn_text_font, "127.0.0.1");
+	h->menu.profile = init_profile_page(h, PFT_TIMER + 1);
 	return (TRUE);
 }
 

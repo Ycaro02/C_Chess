@@ -3,6 +3,34 @@
 #include "../include/network.h"
 #include "../include/chess_log.h"
 
+/* @brief Write text in a rect
+ * @param h The SDLHandle
+ * @param str The string to write
+ * @param font The font
+ * @param pos The position of the text
+ * @param color The color of the text
+ */
+void write_text_in_rect(SDLHandle *h, TTF_Font *font, SDL_Rect rect, char *str, RectTextPos align) {
+	u32 color = RGBA_TO_UINT32(0, 0, 0, 255);
+	iVec2 pos = {0, 0};
+	iVec2 text_size = {0, 0};
+
+	TTF_SizeText(font, str, &text_size.x, &text_size.y);
+	pos.x = rect.x + (rect.w >> 1);
+	pos.x -= (text_size.x >> 1);
+
+	if (align == CENTER) {
+		pos.y = rect.y + (rect.h >> 1);
+		pos.y -= (text_size.y >> 1);
+	} else if (align == TOP_CENTER) {
+		pos.y = rect.y + (rect.h >> 4);
+	} else if (align == BOT_CENTER) {
+		pos.y = rect.y + (rect.h >> 1) + (rect.h >> 2);
+	}
+
+	write_text(h, str, font, pos, color);
+}
+
 /* @brief Center the text in the left band
  * @param char_pos The position of the text
  * @param text The text to center

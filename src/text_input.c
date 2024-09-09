@@ -83,6 +83,10 @@ TextField *init_text_field(SDL_Rect rect, int buff_size_max, TTF_Font *font, cha
 		CHESS_LOG(LOG_ERROR, "Failed to allocate memory for text field\n");
 		return (NULL);
 	}
+	if (len > buff_size_max) {
+		CHESS_LOG(LOG_ERROR, "Initial string to long |%s| -> %d, buffer size %d\n", initial_text, len, buff_size_max);
+		len = buff_size_max;
+	}
 	ftlib_strcpy(text_field->text, initial_text, len);
 	text_field->cursor = len;
 	return (text_field);

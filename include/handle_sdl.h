@@ -85,14 +85,14 @@ typedef void (*ButtonFunc)(SDLHandle*);
 #define SERVER_INFO_STR "Server IP: "
 
 typedef struct {
-    SDL_Rect	rect;					/* The rect of the text input */
-    char		*text;	/* The text buffer */
-    TTF_Font	*font;					/* The font */
-	u64			last_cursor_time;		/* The last cursor time */
-	int			buffer_size;			/* The buffer size */
-    int			cursor;					/* The cursor position */
-	s8			is_active;				/* The text input is active */
-	s8			cursor_visible;			/* The cursor is visible */
+    SDL_Rect	rect;				/* The rect of the text input */
+    char		*text;				/* The text buffer */
+    TTF_Font	*font;				/* The font */
+	u64			last_cursor_time;	/* The last cursor time */
+	int			buffer_size;		/* The buffer size */
+    int			cursor;				/* The cursor position */
+	s8			is_active;			/* The text input is active */
+	s8			cursor_visible;		/* The cursor is visible */
 } TextField;
 
 typedef struct s_button {
@@ -106,41 +106,67 @@ typedef struct s_button {
 	s8			state;		/* The button state */
 } Button;
 
+typedef enum s_rect_text_pos {
+	TOP_CENTER,
+	BOT_CENTER,
+	CENTER,
+} RectTextPos;
+
+typedef enum e_profile_field_type {
+	PFT_INVALID=-1,
+	PFT_NAME,
+	PFT_TIMER,
+} ProfileFieldType;
+
+typedef struct s_profile {
+	TextField			**tf;					/* The text field array pointer */
+	Button				*btn;					/* The button array */
+	TTF_Font			*font;					/* The font for field text display */
+	SDL_Rect			rect;					/* The rect of the profile */
+	ProfileFieldType	btn_hover;				/* The idx of button hover */
+	ProfileFieldType	current_btn_clicked;	/* The idx of current button clicked */
+	ProfileFieldType	field_active;			/* The idx of field selected (active) */
+	s32					nb_field;				/* The number of field */
+} Profile;
+
 typedef struct s_chess_menu {
 	/* Server info rect */
-	SDL_Rect	server_info;
-	iVec2		server_info_str_pos;
-	TextField	*ip_field;
+	SDL_Rect	server_info;			/* The server info rect */
+	iVec2		server_info_str_pos;	/* The server info string position */
+	TextField	*ip_field;				/* The server ip field */
+
+	/* Profile */
+	Profile			*profile;			/* The profile page */
 
 	/* Menu rect data  */
-	iVec2		start;
-	iVec2		end;
-	s32			width;
-	s32			height;
+	iVec2		start;				/* The start position */
+	iVec2		end;				/* The end position */
+	s32			width;				/* The width */
+	s32			height;				/* The height */
 
 	/* Button data */
-	s32			total_btn;
-	s32			menu_btn;
-	Button		*btn;
-	TTF_Font 	*btn_text_font;
-	BtnType		current_btn_clicked;
-	BtnType		btn_hover;
+	s32			total_btn;			/* The total number of button */
+	s32			menu_btn;			/* The number of button in the menu */
+	Button		*btn;				/* The button array */
+	TTF_Font 	*btn_text_font;		/* The button text font */
+	BtnType		current_btn_clicked;	/* The current button clicked */
+	BtnType		btn_hover;				/* The button hover */
 
 	/* Menu is open */
-	s8			is_open;
+	s8			is_open;			/* The menu is open */
 } ChessMenu;
 
 typedef struct s_btn_center_tex {
-	char		*str;
-	ButtonFunc	func;
+	char		*str;	/* The button text */
+	ButtonFunc	func;	/* The button function */
 } BtnCenterText;
 
 typedef struct s_center_text {
-	SDL_Rect	rect;
-	TTF_Font	*font;
-	char		*str;
-	char		*str2;
-	s32			curent_btn_enable;
+	SDL_Rect	rect;		/* The rect */
+	TTF_Font	*font;		/* The font */
+	char		*str;		/* The string */
+	char		*str2;		/* The second string */
+	s32			curent_btn_enable;	/* The current button enable 1 or 2 (btn are stored in menu struct)*/
 } CenterText;
 
 #define TIME_STR_SIZE 16
@@ -173,18 +199,17 @@ typedef struct s_sdl_handle {
 	u64				enemy_remaining_time;	/* Enemy player ramaining time */
 	PlayerInfo		player_info;			/* Player info */
 	u32				flag;					/* App Flag */
-	u16				msg_id;				/* Over flag */
+	u16				msg_id;					/* Over flag */
 	s8				game_start;				/* Game start flag */
 }	SDLHandle ;
 
 #define	FONT_PATH "rsc/font/arial.ttf"
 
 /* @brief Inline func to convert tile position to pixel position
+ * @param pos The pixel position to fill
  * @param p The tile position
- * @param px The pixel x position
- * @param py The pixel y position
- * @param _ts_ The tile size
- * @param _wb_ The window band size
+ * @param tile_size The size of the tile
+ * @param wb The window band struct
 */
 FT_INLINE void tile_to_pixel_pos(iVec2 *pos, iVec2 p, s32 tile_size, WinBand wb) {
 	pos->x = (p.x * tile_size) + wb.left;
@@ -221,7 +246,7 @@ void		draw_circle_outline(SDL_Renderer *renderer, int x, int y, int radius);
 void		draw_letter_number(SDLHandle *handle, s8 player_color);
 void		center_text_function_set(SDLHandle *h, CenterText *ct, BtnCenterText btn1, BtnCenterText btn2);
 void		cancel_search_func(SDLHandle *h);
-
+void		write_text_in_rect(SDLHandle *h, TTF_Font *font, SDL_Rect rect, char *str, RectTextPos align);
 // center text
 CenterText *center_text_init(SDLHandle *h);
 void		center_text_string_set(SDLHandle *h, char *str, char *str2);
@@ -236,22 +261,27 @@ void		update_server_ip(SDLHandle *h, TextField *text_field);
 void		destroy_text_field(TextField *text_field);
 
 /* src/chess_menu.c */
-void	menu_close(ChessMenu *menu);
-s8		init_menu(SDLHandle *h, s32 nb_btn);
-void 	draw_menu(SDLHandle *h);
-void	destroy_menu(SDLHandle *h);
+void		menu_close(ChessMenu *menu);
+s8			init_menu(SDLHandle *h, s32 nb_btn);
+void 		draw_menu(SDLHandle *h);
+void		destroy_menu(SDLHandle *h);
 
 /* src/button.c */
-void	search_game(SDLHandle *h);
-void	init_button(SDLHandle *h, ChessMenu *menu, s32 nb_btn);
-void	center_btn_text(Button *btn, TTF_Font *font);
-void	draw_button(SDLHandle *h, Button btn, SDL_Color c);
-void	draw_multiple_button(SDLHandle *h, s32 btn_start, s32 nb_btn);
-void	update_btn_disabled(SDLHandle *h, Button *btn);
-s32		detect_button_click(Button *btn, s32 btn_start, s32 nb_btn, iVec2 mouse_pos);
-void 	set_btn_info(SDLHandle *h, s32 btn_idx, iVec2 start, iVec2 size, char *text, ButtonFunc func);
+void		search_game(SDLHandle *h);
+void		init_button(SDLHandle *h, ChessMenu *menu, s32 nb_btn);
+void		center_btn_text(Button *btn, TTF_Font *font);
+void		draw_button(SDLHandle *h, Button btn, SDL_Color c);
+void		draw_multiple_button(SDLHandle *h, s32 btn_start, s32 nb_btn);
+void		update_btn_disabled(SDLHandle *h, Button *btn);
+s32			detect_button_click(Button *btn, s32 btn_start, s32 nb_btn, iVec2 mouse_pos);
+void 		set_btn_info(SDLHandle *h, s32 btn_idx, iVec2 start, iVec2 size, char *text, ButtonFunc func);
 
 // btn func
 void	edit_ip_click(SDLHandle *h);
+
+/* src/profile.c */
+Profile	*init_profile_page(SDLHandle *h, s32 nb_field);
+void	destroy_profile_page(Profile *profile);
+void	draw_profile_page(SDLHandle *h, Profile *profile);
 
 #endif /* HANDLE_SDL_H */
