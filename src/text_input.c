@@ -60,17 +60,31 @@ s8 is_ipv4_format(char *ip) {
 }
 
 
-TextField init_text_field(SDL_Rect rect, int buff_size_max, TTF_Font *font, char *initial_text) {
-	TextField text_field = {};
+void destroy_text_field(TextField *text_field) {
+	if (text_field->text) {
+		free(text_field->text);
+	}
+	free(text_field);
+}
 
-	int len = fast_strlen(initial_text);
+TextField *init_text_field(SDL_Rect rect, int buff_size_max, TTF_Font *font, char *initial_text) {
+	TextField	*text_field = ft_calloc(1, sizeof(TextField));
+	int			len = fast_strlen(initial_text);
 
-	ft_memcpy(&text_field.rect, &rect, sizeof(SDL_Rect));
-	text_field.buffer_size = buff_size_max;
-	text_field.font = font;
-	fast_bzero(text_field.text, buff_size_max);
-	ftlib_strcpy(text_field.text, initial_text, len);
-	text_field.cursor = len;
+	if (!text_field) {
+		CHESS_LOG(LOG_ERROR, "Failed to allocate memory for text field\n");
+		return (NULL);
+	}
+
+	ft_memcpy(&text_field->rect, &rect, sizeof(SDL_Rect));
+	text_field->buffer_size = buff_size_max;
+	text_field->font = font;
+	if (!(text_field->text = ft_calloc(buff_size_max, sizeof(char)))) {
+		CHESS_LOG(LOG_ERROR, "Failed to allocate memory for text field\n");
+		return (NULL);
+	}
+	ftlib_strcpy(text_field->text, initial_text, len);
+	text_field->cursor = len;
 	return (text_field);
 }
 
@@ -97,27 +111,27 @@ void update_server_ip(SDLHandle *h, TextField *text_field) {
 }
 
 void handle_text_input(SDLHandle *h, SDL_Event *event) {
-	TextField *text_field = &h->menu.ip_field;
+	TextField *tf = h->menu.ip_field;
 
     if (event->type == SDL_KEYDOWN) {
-        if (is_accepted_char(text_field->text, event->key.keysym.sym)) {
-            if (text_field->cursor < text_field->buffer_size - 1) {
-                text_field->text[text_field->cursor] = (char)event->key.keysym.sym;
-				text_field->cursor += 1;
-                text_field->text[text_field->cursor] = '\0';
+        if (is_accepted_char(tf->text, event->key.keysym.sym)) {
+            if (tf->cursor < tf->buffer_size - 1) {
+                tf->text[tf->cursor] = (char)event->key.keysym.sym;
+				tf->cursor += 1;
+                tf->text[tf->cursor] = '\0';
 				/* Update the cursor time to avoid hiden him when the user write */
-				text_field->last_cursor_time = SDL_GetTicks64();
+				tf->last_cursor_time = SDL_GetTicks64();
             } 
-        } else if (event->key.keysym.sym == SDLK_BACKSPACE && text_field->cursor > 0) {
-            text_field->cursor -= 1;
-			text_field->text[text_field->cursor] = '\0';
-			text_field->last_cursor_time = SDL_GetTicks64();
+        } else if (event->key.keysym.sym == SDLK_BACKSPACE && tf->cursor > 0) {
+            tf->cursor -= 1;
+			tf->text[tf->cursor] = '\0';
+			tf->last_cursor_time = SDL_GetTicks64();
         } else if (event->key.keysym.sym == SDLK_RETURN) {
-			update_server_ip(h, text_field);
-			text_field->is_active = FALSE;
+			update_server_ip(h, tf);
+			tf->is_active = FALSE;
 		} else if (event->key.keysym.sym == SDLK_ESCAPE) {
-			update_server_ip(h, text_field);
-			text_field->is_active = FALSE;
+			update_server_ip(h, tf);
+			tf->is_active = FALSE;
 		}
 
     }

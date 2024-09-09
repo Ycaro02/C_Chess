@@ -5,16 +5,14 @@ NAME            =   C_Chess
 CC              =   clang
 
 SDL_LIB			=	-L./rsc/lib/install/lib -rpath ./rsc/lib/install/lib -lSDL2 -lSDL2_ttf
-# SDL_LIB			=	-L./rsc/lib/install/lib -lSDL2 -lSDL2_ttf
 
 LIB_DEPS		=   rsc/lib
 
-GET_SERVER_IP 	 	=	./rsc/network_test/get_ipv4.sh 
+GET_LOCAL_IP 	=	./rsc/network_test/get_ipv4.sh 
 
-IP_SERVER		=	$(shell $(GET_SERVER_IP))
+IP_SERVER		=	$(shell $(GET_LOCAL_IP))
 
-# Server sources, objects and executable
-
+# Server sources and executable
 SERVER_SRC		=	server/server.c src/network_os.c src/handle_signal.c
 SERVER_EXE		=	chess_server
 
@@ -52,7 +50,8 @@ ifeq ($(shell [ -d $(LIB_DEPS) ] && echo 0 || echo 1), 1)
 endif
 
 $(OBJ_DIR):
-	@mkdir -p $(ALL_SRC_DIR)
+	@printf "$(YELLOW)Create $(ALL_OBJ_DIR)$(RESET)\n"
+	@mkdir -p $(ALL_OBJ_DIR)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	@printf "$(YELLOW)Compile $<$(RESET) $(BRIGHT_BLACK)-->$(RESET) $(BRIGHT_MAGENTA)$@$(RESET)\n"

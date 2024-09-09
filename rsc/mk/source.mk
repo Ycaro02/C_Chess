@@ -2,7 +2,7 @@ CFLAGS			=	-Wall -Wextra -Werror -O3
 
 OBJ_DIR			=	obj
 
-ALL_SRC_DIR 	=	obj
+ALL_OBJ_DIR 	=	obj
 
 SRC_DIR 		=	src
 
@@ -30,8 +30,6 @@ SRCS			=	chess_board.c \
 					chess_menu.c \
 					text_input.c \
 					button.c \
-
-# SRCS_BONUS		=	main_bonus.c
 
 MAKE_LIBFT		=	make -s -C libft -j
 

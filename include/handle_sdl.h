@@ -80,13 +80,13 @@ typedef struct s_window_band {
 
 typedef void (*ButtonFunc)(SDLHandle*);
 
-#define TEXT_INPUT_SIZE 16
+#define IP_INPUT_SIZE 16
 
 #define SERVER_INFO_STR "Server IP: "
 
 typedef struct {
     SDL_Rect	rect;					/* The rect of the text input */
-    char		text[TEXT_INPUT_SIZE];	/* The text buffer */
+    char		*text;	/* The text buffer */
     TTF_Font	*font;					/* The font */
 	u64			last_cursor_time;		/* The last cursor time */
 	int			buffer_size;			/* The buffer size */
@@ -110,7 +110,7 @@ typedef struct s_chess_menu {
 	/* Server info rect */
 	SDL_Rect	server_info;
 	iVec2		server_info_str_pos;
-	TextField	ip_field;
+	TextField	*ip_field;
 
 	/* Menu rect data  */
 	iVec2		start;
@@ -229,10 +229,11 @@ void		center_text_draw(SDLHandle *h, CenterText *ct);
 void		center_text_destroy(CenterText *ct);
 
 /* src/text_input.c */
-TextField	init_text_field(SDL_Rect rect, int buff_size_max, TTF_Font *font, char *initial_text);
+TextField	*init_text_field(SDL_Rect rect, int buff_size_max, TTF_Font *font, char *initial_text);
 void		handle_text_input(SDLHandle *h, SDL_Event *event);
 void		render_text_field(SDL_Renderer *renderer, TextField *text_field, SDL_Color text_color, SDL_Color bg_color);
 void		update_server_ip(SDLHandle *h, TextField *text_field);
+void		destroy_text_field(TextField *text_field);
 
 /* src/chess_menu.c */
 void	menu_close(ChessMenu *menu);

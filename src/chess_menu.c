@@ -5,7 +5,7 @@
 void menu_close(ChessMenu *menu) {
 	menu->is_open = FALSE;
 	menu->btn_hover = BTN_INVALID;
-	menu->ip_field.is_active = FALSE;
+	menu->ip_field->is_active = FALSE;
 }
 
 /**
@@ -13,6 +13,7 @@ void menu_close(ChessMenu *menu) {
  * @param h The SDLHandle
 */
 void destroy_menu(SDLHandle *h) {
+	destroy_text_field(h->menu.ip_field);
 	for (s32 i = 0; i < h->menu.total_btn; i++) {
 		if (h->menu.btn[i].text) {
 			free(h->menu.btn[i].text);
@@ -91,7 +92,7 @@ s8 init_menu(SDLHandle *h, s32 total_btn) {
 	rect.w = (h->menu.width >> 1) + (h->menu.width >> 4);
 	rect.h = text_size.y;
 
-	h->menu.ip_field = init_text_field(rect, TEXT_INPUT_SIZE, h->menu.btn_text_font, "127.0.0.1");
+	h->menu.ip_field = init_text_field(rect, IP_INPUT_SIZE, h->menu.btn_text_font, "127.0.0.1");
 	return (TRUE);
 }
 
@@ -122,10 +123,10 @@ void draw_menu(SDLHandle *h) {
 	
 	SDL_Color bg_color = {CLEAR_COLOR};
 	/* Draw the server ip text input */
-	if (h->menu.ip_field.is_active) {
+	if (h->menu.ip_field->is_active) {
 		bg_color = (SDL_Color){WHITE_COLOR};
 	}
-	render_text_field(h->renderer, &h->menu.ip_field, (SDL_Color){255, 0, 0, 255}, bg_color);
+	render_text_field(h->renderer, h->menu.ip_field, (SDL_Color){255, 0, 0, 255}, bg_color);
 
 	/* Update the button state */
 	update_btn_disabled(h, h->menu.btn);
