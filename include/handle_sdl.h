@@ -257,7 +257,7 @@ void		center_text_destroy(CenterText *ct);
 TextField	*init_text_field(SDL_Rect rect, int buff_size_max, TTF_Font *font, char *initial_text);
 void		handle_text_input(SDLHandle *h, SDL_Event *event);
 void		render_text_field(SDL_Renderer *renderer, TextField *text_field, SDL_Color text_color, SDL_Color bg_color);
-void		update_server_ip(SDLHandle *h, TextField *text_field);
+void		ip_server_update_data(SDLHandle *h, TextField *text_field);
 void		destroy_text_field(TextField *text_field);
 
 /* src/chess_menu.c */

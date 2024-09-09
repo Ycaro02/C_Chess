@@ -94,8 +94,7 @@ TextField *init_text_field(SDL_Rect rect, int buff_size_max, TTF_Font *font, cha
 	return (text_field);
 }
 
-s8 is_accepted_char(char *ip, SDL_Keycode type) {
-	(void)ip;
+s8 ip_server_accepted_char(SDL_Keycode type) {
 	/* Number classic and keypad */
 	if ((type >= SDLK_0 && type <= SDLK_9) || (type >= SDLK_KP_1 && type <= SDLK_KP_0))
 		return (TRUE);
@@ -104,7 +103,7 @@ s8 is_accepted_char(char *ip, SDL_Keycode type) {
 	return (FALSE);
 }
 
-void update_server_ip(SDLHandle *h, TextField *text_field) {
+void ip_server_update_data(SDLHandle *h, TextField *text_field) {
 	if (is_ipv4_format(text_field->text)) {
 		free(h->player_info.dest_ip);
 		h->player_info.dest_ip = ft_strdup(text_field->text);
@@ -116,11 +115,15 @@ void update_server_ip(SDLHandle *h, TextField *text_field) {
 	}
 }
 
+
+// Need to refactor this to take the TextFIeld as a parameter
+// TextField need to have a function pointer on accepted_char function
+// TextField need to have a function pointer on update function
 void handle_text_input(SDLHandle *h, SDL_Event *event) {
 	TextField *tf = h->menu.ip_field;
 
     if (event->type == SDL_KEYDOWN) {
-        if (is_accepted_char(tf->text, event->key.keysym.sym)) {
+        if (ip_server_accepted_char(event->key.keysym.sym)) {
             if (tf->cursor < tf->buffer_size - 1) {
                 tf->text[tf->cursor] = (char)event->key.keysym.sym;
 				tf->cursor += 1;
@@ -133,10 +136,10 @@ void handle_text_input(SDLHandle *h, SDL_Event *event) {
 			tf->text[tf->cursor] = '\0';
 			tf->last_cursor_time = SDL_GetTicks64();
         } else if (event->key.keysym.sym == SDLK_RETURN) {
-			update_server_ip(h, tf);
+			ip_server_update_data(h, tf);
 			tf->is_active = FALSE;
 		} else if (event->key.keysym.sym == SDLK_ESCAPE) {
-			update_server_ip(h, tf);
+			ip_server_update_data(h, tf);
 			tf->is_active = FALSE;
 		}
 
