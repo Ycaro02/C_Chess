@@ -126,6 +126,11 @@ void edit_ip_click(SDLHandle *h) {
 	CHESS_LOG(LOG_INFO, "Edit ip\n");
 }
 
+void edit_profile(SDLHandle *h) {
+	(void)h;
+	CHESS_LOG(LOG_INFO, "Edit profile\n");
+}
+
 /**
  * @brief Set the button text and function
  * @param h The SDLHandle
@@ -137,6 +142,9 @@ void set_btn_text_func(SDLHandle *h, s32 idx, BtnType type) {
 	if (type == BTN_RESUME) {
 		h->menu.btn[idx].text = ft_strdup("Resume");
 		h->menu.btn[idx].func = NULL;
+	} else if (type == BTN_PROFILE) {
+		h->menu.btn[idx].text = ft_strdup("Profile");
+		h->menu.btn[idx].func = edit_profile;
 	} else if (type == BTN_SEARCH) {
 		h->menu.btn[idx].text = ft_strdup("Search game");
 		h->menu.btn[idx].func = search_game;
@@ -172,7 +180,7 @@ void center_btn_text(Button *btn, TTF_Font *font) {
  * @param nb_btn The number of button
 */
 void init_button(SDLHandle *h, ChessMenu *menu, s32 nb_btn) {
-	s32 btn_pad = menu->height / 10;
+	s32 btn_pad = menu->height / 12;
 	s32 btn_width = menu->width >> 1;
 	s32 btn_height = (menu->height - (btn_pad * (nb_btn + 1))) / nb_btn;
 

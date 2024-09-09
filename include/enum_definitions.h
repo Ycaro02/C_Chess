@@ -119,6 +119,7 @@
 #define BTN_TYPE_ENUM \
 	X(BTN_INVALID, =-1) \
 	X(BTN_RESUME, ) \
+	X(BTN_PROFILE, ) \
 	X(BTN_SEARCH, ) \
 	X(BTN_RECONNECT, ) \
 	X(BTN_QUIT, ) \

@@ -37,15 +37,15 @@ s8 init_menu(SDLHandle *h, s32 total_btn) {
 
 	/* Set menu rect data */
 	h->menu.start.x = h->band_size.left + (h->tile_size.x << 1);
-	h->menu.start.y = h->band_size.top + (h->tile_size.x << 1);
+	h->menu.start.y = h->band_size.top + (h->tile_size.x << 1) - (h->tile_size.x >> 1);
 	h->menu.width = h->tile_size.x << 2;
-	h->menu.height = h->tile_size.x << 2;
+	h->menu.height = (h->tile_size.x << 2) + h->tile_size.x;
 	h->menu.end.x = h->menu.start.x + h->menu.width;
 	h->menu.end.y = h->menu.start.y + h->menu.height;
 
 	/* Set server info rect */
 	h->menu.server_info.x = h->menu.start.x;
-	h->menu.server_info.y = h->menu.start.y - ((h->tile_size.x >> 1) + h->tile_size.x);
+	h->menu.server_info.y = h->menu.start.y - ((h->tile_size.x >> 2)) - h->tile_size.x;
 	h->menu.server_info.w = h->menu.width;
 	h->menu.server_info.h = h->tile_size.x;
 
