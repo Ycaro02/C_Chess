@@ -138,7 +138,7 @@ void draw_board(SDLHandle *handle, s8 player_color) {
 	}
 
 	if (has_flag(handle->flag, FLAG_PROMOTION_SELECTION)) {
-		display_promotion_selection(handle, handle->board->last_tile_from, handle->board->last_tile_to);
+		display_promotion_selection(handle);
 	}
 
 	draw_timer_rect(handle);

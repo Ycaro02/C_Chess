@@ -1,6 +1,7 @@
 #include "../include/chess.h"
 #include "../include/network.h"
 #include "../include/handle_sdl.h"
+#include "../include/chess_log.h"
 
 /* @brief Promot the pawn
  * @param board The ChessBoard structure
@@ -27,7 +28,7 @@ static ChessPiece get_promot_selected_piece(s32 idx, s8 is_black) {
 	ChessPiece selected = EMPTY;
 	
 	if (is_black) {
-		selected = BLACK_PAWN + idx;
+		selected = BLACK_KNIGHT + idx;
 		if (selected > BLACK_QUEEN || selected < BLACK_KNIGHT) {
 			selected = EMPTY;
 		}
@@ -43,7 +44,7 @@ static ChessPiece get_promot_selected_piece(s32 idx, s8 is_black) {
 void pawn_selection_event(SDLHandle *h) {
 	// s32 event = event_handler(h, h->player_info.color);
 	ChessTile tile_start = C7;
-	ChessTile tile_end = G7;
+	ChessTile tile_end = F7;
 	ChessPiece piece_selected = EMPTY;
 	s32 piece_idx = 0;
 	s8 is_black = (h->player_info.color == IS_BLACK);
@@ -51,13 +52,14 @@ void pawn_selection_event(SDLHandle *h) {
 	
 	if (is_black) {
 		tile_start = C2;
-		tile_end = G2;
+		tile_end = F2;
 	}
 
 	ChessTile tile_to = h->board->last_tile_to;
 
 	if (last_click >= tile_start && last_click <= tile_end) {
 		piece_idx = !is_black ? last_click - tile_start : tile_end - last_click;
+		CHESS_LOG(LOG_INFO, "Tile clicked: %s\n", ChessTile_to_str(last_click));
 		piece_selected = get_promot_selected_piece(piece_idx, is_black);
 		if (piece_selected == EMPTY) { return ; }  
 		promote_pawn(h->board, tile_to, piece_selected, is_black ? BLACK_PAWN : WHITE_PAWN);
@@ -77,25 +79,16 @@ void pawn_selection_event(SDLHandle *h) {
  * @param tile_to The tile to
  * @return TRUE if the promotion is done, CHESS_QUIT if the player quit
  */
-void display_promotion_selection(SDLHandle *h, ChessTile tile_from, ChessTile tile_to) {
+void display_promotion_selection(SDLHandle *h) {
 	iVec2 start_pos = {2, 1}; // x, y
-	ChessTile tile_start = C7;
-	ChessTile tile_end = G7;
-	ChessPiece piece_selected = EMPTY;
-	s32 piece_idx = 0;
 	s8 is_black = (h->player_info.color == IS_BLACK);
-
-	if (is_black) {
-		tile_start = C2;
-		tile_end = G2;
-	}
 
 	/* Update board move (mandatory ? ) */
 	h->board->possible_moves = 0;
 
 	/* Draw a black rectangle */
 	for (s32 i = 0; i < 4; i++) {
-		draw_color_tile(h, start_pos, h->tile_size, RGBA_TO_UINT32(0, 100, 100, 255));
+		draw_color_tile(h, start_pos, h->tile_size, RGBA_TO_UINT32(70, 70, 70, 255));
 		start_pos.x++;
 	}
 
@@ -154,7 +147,7 @@ void do_promotion_move(SDLHandle *h, ChessTile tile_from, ChessTile tile_to, Che
  * @param tile_to The tile to
  * @return TRUE if the pawn need to be promoted, FALSE otherwise, CHESS_QUIT if the player quit
 */
-s8 check_pawn_promotion(SDLHandle *handle, ChessPiece type, ChessTile tile_from, ChessTile tile_to) {
+s8 check_pawn_promotion(SDLHandle *handle, ChessPiece type, ChessTile tile_to) {
 	s8 is_pawn = (type == WHITE_PAWN || type == BLACK_PAWN);
 	s8 is_black = (type >= BLACK_PAWN);
 	s8 is_white = !is_black;

@@ -18,8 +18,6 @@ IP_SERVER		=	$(shell $(GET_SERVER_IP))
 SERVER_SRC		=	server/server.c src/network_os.c src/handle_signal.c
 SERVER_EXE		=	chess_server
 
-CFLAGS = -g3
-
 all:        $(NAME)
 
 $(NAME): $(LIB_DEPS) $(LIBFT) $(LIST) $(OBJ_DIR) $(OBJS) $(SERVER_EXE)

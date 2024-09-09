@@ -22,7 +22,7 @@ ifeq ($(shell [ -f ${NAME} ] && echo 0 || echo 1), 1)
 endif
 
 test:
-	@./load_emcc.sh
+	@./emcc_setup.sh
 	@printf "$(CYAN)Test $(NAME), http_server runing on port 8000 ...$(RESET)\n"
 	@python3 -m http.server 8000
 

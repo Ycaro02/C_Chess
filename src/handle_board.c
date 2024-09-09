@@ -89,6 +89,11 @@ void game_event_handling(SDLHandle *h, SDL_Event event, s8 player_color) {
 		h->menu.is_open = TRUE;
 	}
 
+	// if (!has_flag(h->flag, FLAG_NETWORK) && event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_r) {
+	// 	h->player_info.color = !h->player_info.color;
+	// 	return ;
+	// }
+
 	if (h->player_info.turn == FALSE) { return ; }
 	SDL_GetMouseState(&x, &y);
 	if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {

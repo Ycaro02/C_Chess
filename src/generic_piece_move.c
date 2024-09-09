@@ -172,7 +172,7 @@ s32 move_piece(SDLHandle *handle, ChessTile tile_from, ChessTile tile_to, ChessP
 	// s32 pawn_ret = check_pawn_promot;
 	// if (pawn_ret == CHESS_QUIT) { return (CHESS_QUIT); } // toremove
 	/* Check if the pawn need to be promoted */
-	if (check_pawn_promotion(handle, type, tile_from, tile_to) == TRUE) { ret = PAWN_PROMOTION; }
+	if (check_pawn_promotion(handle, type, tile_to) == TRUE) { ret = PAWN_PROMOTION; }
 
 	/* Check if the enemy king is check and mat or PAT */
 	verify_check_and_mat(handle->board, !(type >= BLACK_PAWN));
