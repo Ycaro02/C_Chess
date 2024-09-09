@@ -42,14 +42,21 @@ void draw_timer_rect(SDLHandle *h) {
 	SDL_SetRenderDrawColor(h->renderer, 180, 180, 180, 255);
 	SDL_RenderFillRect(h->renderer, &h->timer_rect_bot);
 	SDL_RenderFillRect(h->renderer, &h->timer_rect_top);
+
+	/* Draw name rect */
+	SDL_RenderFillRect(h->renderer, &h->name_rect_bot);
+	SDL_RenderFillRect(h->renderer, &h->name_rect_top);
+
 	if (h->game_start) {
 		SDL_SetRenderDrawColor(h->renderer, 0, 0, 150, 150);
 		/* Get the timer to update */
 		if (h->player_info.turn == TRUE) {
 			SDL_RenderFillRect(h->renderer, &h->timer_rect_bot);
+			SDL_RenderFillRect(h->renderer, &h->name_rect_bot);
 			timer_to_update = &h->my_remaining_time;
 		} else {
 			SDL_RenderFillRect(h->renderer, &h->timer_rect_top);
+			SDL_RenderFillRect(h->renderer, &h->name_rect_top);
 			timer_to_update = &h->enemy_remaining_time;
 		} 
 
@@ -60,15 +67,12 @@ void draw_timer_rect(SDLHandle *h) {
 		}
 
 	}
+	/* Draw timer text */
 	write_timer_in_rect(h, h->timer_rect_bot, h->my_remaining_time);
 	write_timer_in_rect(h, h->timer_rect_top, h->enemy_remaining_time);
 
-	// name rect
-	SDL_SetRenderDrawColor(h->renderer, 180, 180, 180, 255);
-	SDL_RenderFillRect(h->renderer, &h->name_rect_bot);
-	SDL_RenderFillRect(h->renderer, &h->name_rect_top);
+	/* Draw name text */
 	write_text_in_rect(h, h->name_font, h->name_rect_bot, h->player_info.name, CENTER, U32_BLACK_COLOR);
-	
 	char *enemy_name = "Bot";
 
 	if (has_flag(h->flag, FLAG_NETWORK) && h->player_info.nt_info->peer_nickname[0] != '\0') {
