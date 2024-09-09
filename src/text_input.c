@@ -121,20 +121,29 @@ void ip_server_update_data(SDLHandle *h, TextField *text_field) {
 // Need to refactor this to take the TextFIeld as a parameter
 // TextField need to have a function pointer on accepted_char function
 // TextField need to have a function pointer on update function
-void handle_text_input(SDLHandle *h, SDL_Event *event) {
-	TextField *tf = h->menu.ip_field;
+void handle_text_input(SDLHandle *h, SDL_Event *event, TextField *tf) {
+	s8 ret = FALSE, uppercase = 0;
+	u8 mod = 0;
+
+	get_keyboard_mod(&mod);
 
     if (event->type == SDL_KEYDOWN) {
         // if (ip_server_accepted_char(event->key.keysym.sym)) {
-        if (tf->is_accepted_char(event->key.keysym.sym)) {
+        if ((ret = tf->is_accepted_char(event->key.keysym.sym))) {
             if (tf->cursor < tf->buffer_size - 1) {
-                tf->text[tf->cursor] = (char)event->key.keysym.sym;
+				if (ret == UPPERCASE_CHAR) {
+					uppercase = 32;
+				}
+                tf->text[tf->cursor] = ((char)event->key.keysym.sym - uppercase);
 				tf->cursor += 1;
                 tf->text[tf->cursor] = '\0';
 				/* Update the cursor time to avoid hiden him when the user write */
 				tf->last_cursor_time = SDL_GetTicks64();
             } 
-        } else if (event->key.keysym.sym == SDLK_BACKSPACE && tf->cursor > 0) {
+        } else if (event->key.keysym.sym == SDLK_BACKSPACE && u8ValueGet(mod, IS_CTRL)) {
+			tf->cursor = 0;
+			fast_bzero(tf->text, tf->buffer_size);
+		} else if (event->key.keysym.sym == SDLK_BACKSPACE && tf->cursor > 0) {
             tf->cursor -= 1;
 			tf->text[tf->cursor] = '\0';
 			tf->last_cursor_time = SDL_GetTicks64();

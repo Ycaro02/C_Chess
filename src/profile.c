@@ -3,14 +3,31 @@
 #include "../include/chess_log.h"
 
 
+void disable_active_field(SDLHandle *h, Profile *profile) {
+	for (s32 i = 0; i < profile->nb_field; i++) {
+		if (profile->tf[i]->is_active) {
+			profile->tf[i]->update_data(h, profile->tf[i]);
+		}
+		profile->tf[i]->is_active = FALSE;
+	}
+}
+
 void edit_name_func(SDLHandle *h) {
-	(void)h;
-	CHESS_LOG(LOG_INFO, "Edit name\n");
+	if (h->menu.profile->tf[PFT_NAME]->is_active) {
+		h->menu.profile->tf[PFT_NAME]->update_data(h, h->menu.profile->tf[PFT_NAME]);
+	} else {
+		disable_active_field(h, h->menu.profile);
+	}
+	h->menu.profile->tf[PFT_NAME]->is_active = !h->menu.profile->tf[PFT_NAME]->is_active;
 }
 
 void edit_timer_func(SDLHandle *h) {
-	(void)h;
-	CHESS_LOG(LOG_INFO, "Edit Timer\n");
+	if (h->menu.profile->tf[PFT_TIMER]->is_active) {
+		h->menu.profile->tf[PFT_TIMER]->update_data(h, h->menu.profile->tf[PFT_TIMER]);
+	} else {
+		disable_active_field(h, h->menu.profile);
+	}
+	h->menu.profile->tf[PFT_TIMER]->is_active = !h->menu.profile->tf[PFT_TIMER]->is_active;
 }
 
 static void set_profile_btn_text_func(Profile *profile, s32 idx, ProfileFieldType type) {
@@ -32,7 +49,6 @@ typedef struct s_profile_field_info {
 	s32		height_pad;
 } ProfileFieldInfo;
 
-// TextField * init_profile_text_field(TTF_Font *font , SDL_Rect profile_rect, char *text, s32 height, s32 width, s32 height_pad, s32 i) {
 TextField * init_profile_text_field(TTF_Font *font, SDL_Rect profile_rect, ProfileFieldInfo info, s32 i) {
 	TextField *tf = NULL;
 	SDL_Rect rect;
@@ -65,27 +81,40 @@ Button init_pofile_button(TextField *tf, TTF_Font *font, s32 btn_text_width, s32
 }
 
 s8 is_nickname_accepted_char(SDL_Keycode code) {
-	(void)code;
-	printf("is_nickname_accepted_char\n");
-	return (TRUE);
+	u8 mod = 0;
+
+	get_keyboard_mod(&mod);
+
+	if ((code >= SDLK_0 && code <= SDLK_9) || (code >= SDLK_KP_1 && code <= SDLK_KP_0)
+		|| (code >= SDLK_a && code <= SDLK_z)) {
+			if ((code >= SDLK_a && code <= SDLK_z) && (u8ValueGet(mod, IS_SHIFT) || u8ValueGet(mod, IS_CAPS))) {
+				return (UPPERCASE_CHAR);
+			}
+		return (TRUE);
+	}
+	return (FALSE);
 }
 
 s8 is_timer_accepted_char(SDL_Keycode code) {
 	(void)code;
-	printf("is_timer_accepted_char\n");
-	return (TRUE);
+	if ((code >= SDLK_0 && code <= SDLK_9) || (code >= SDLK_KP_1 && code <= SDLK_KP_0)) {
+		return (TRUE);
+	}
+	return (FALSE);
 }
 
 void update_nickname(SDLHandle *h, TextField *tf) {
 	(void)h;
 	(void)tf;
-	printf("update_nickname\n");
+	if (fast_strlen(tf->text) == 0) { return ; }
+	free(h->player_info.name);
+	h->player_info.name = ft_strdup(tf->text);
 }
 
 void update_timer(SDLHandle *h, TextField *tf) {
 	(void)h;
 	(void)tf;
-	printf("update_timer\n");
+	if (fast_strlen(tf->text) == 0) { return ; }
 }
 
 Profile *init_profile_page(SDLHandle *h, s32 nb_field) {
@@ -144,7 +173,6 @@ Profile *init_profile_page(SDLHandle *h, s32 nb_field) {
 	/* Set profile field */
 	for (s32 i = 0; i < nb_field; i++) {
 		profile->tf[i] = init_profile_text_field(profile->font, profile->rect, profile_field_info[i], i);
-		// profile->tf[i] = init_profile_text_field(profile->font, profile->rect, basic_string[i], btn_text_height, btn_text_width, field_height_pad, i);
 		profile->btn[i] = init_pofile_button(profile->tf[i], profile->font,  btn_text_width, btn_text_height);
 		set_profile_btn_text_func(profile, i, i);
 	}
@@ -182,8 +210,14 @@ void draw_profile_page(SDLHandle *h, Profile *profile) {
 	write_text_in_rect(h, h->menu.btn_text_font, profile->rect, "Profile", TOP_CENTER);
 
 	/* Draw profile field */
+	SDL_Color bg_color = {70,70,70,0};
+	/* Draw the server ip text input */
 	for (s32 i = 0; i < profile->nb_field; i++) {
-		render_text_field(h->renderer, profile->tf[i], (SDL_Color){255, 255, 255, 255}, (SDL_Color){0, 0, 0, 255});
+		bg_color = (SDL_Color){70,70,70,0};
+		if (profile->tf[i]->is_active) {
+			bg_color = (SDL_Color){WHITE_COLOR};
+		}
+		render_text_field(h->renderer, profile->tf[i], (SDL_Color){0, 0, 0, 255}, bg_color);
 	}
 
 	draw_multiple_button(h, profile->font, profile->btn, profile->btn_hover, 0, profile->nb_field);

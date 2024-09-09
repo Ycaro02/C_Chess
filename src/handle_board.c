@@ -71,6 +71,12 @@ void profile_button_handling(SDLHandle *h, SDL_Event event) {
 		CHESS_LOG(LOG_INFO, "Close profile menu\n");
 		unset_flag(&h->flag, FLAG_EDIT_PROFILE);
 	}
+
+	for (s32 i = 0; i < p->nb_field; i++) {
+		if (p->tf[i]->is_active) {
+			handle_text_input(h, &event, p->tf[i]);
+		}
+	}
 }
 
 void button_event_handling(SDLHandle *h, SDL_Event event, s32 btn_start, s32 btn_nb) {
@@ -175,7 +181,7 @@ s32 event_handler(SDLHandle *h, s8 player_color) {
 				game_event_handling(h, event, player_color);
 			} else {
 				if (h->menu.ip_field->is_active) {
-					handle_text_input(h, &event);
+					handle_text_input(h, &event, h->menu.ip_field);
 				}
 				button_event_handling(h, event, BTN_RESUME, h->menu.menu_btn + 1);
 			}

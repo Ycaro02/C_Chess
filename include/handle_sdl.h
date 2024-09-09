@@ -214,6 +214,8 @@ typedef struct s_sdl_handle {
 
 #define	FONT_PATH "rsc/font/arial.ttf"
 
+#define UPPERCASE_CHAR 2
+
 /* @brief Inline func to convert tile position to pixel position
  * @param pos The pixel position to fill
  * @param p The tile position
@@ -231,6 +233,20 @@ FT_INLINE s8 is_in_x_range(s32 x, s32 raw, s32 tile_size, WinBand wb) {
 
 FT_INLINE s8 is_in_y_range(s32 y, s32 column, s32 tile_size, WinBand wb) {
 	return (y >= (column * tile_size) + wb.top && y <= ((column + 1) * tile_size) + wb.top);
+}
+
+typedef enum e_btn_state {
+	IS_SHIFT,
+	IS_CAPS,
+	IS_CTRL,
+} KeyMod;
+
+FT_INLINE void get_keyboard_mod(u8 *container) {
+	SDL_Keymod mod = SDL_GetModState();
+    
+	*container = u8ValueSet(*container, IS_SHIFT, (mod & KMOD_SHIFT) != 0);
+	*container = u8ValueSet(*container, IS_CAPS, (mod & KMOD_CAPS) != 0);
+	*container = u8ValueSet(*container, IS_CTRL, (mod & KMOD_CTRL) != 0);
 }
 
 /* src/sdl_handle */
@@ -264,7 +280,7 @@ void		center_text_destroy(CenterText *ct);
 
 /* src/text_input.c */
 TextField	*init_text_field(SDL_Rect rect, TTF_Font *font, char *initial_text, s32 buff_size_max, AcceptedCharFunc accept_char_func, UpdateFunc update_func);
-void		handle_text_input(SDLHandle *h, SDL_Event *event);
+void		handle_text_input(SDLHandle *h, SDL_Event *event, TextField *tf);
 void		render_text_field(SDL_Renderer *renderer, TextField *text_field, SDL_Color text_color, SDL_Color bg_color);
 void		ip_server_update_data(SDLHandle *h, TextField *text_field);
 s8			ip_server_accepted_char(SDL_Keycode type);
