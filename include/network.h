@@ -76,17 +76,18 @@ s8		socket_no_block_windows(Socket sockfd, struct timeval timeout);
 #define MAGIC_CONNECT_STR ((const char[]){-0x80, 0x7B, 'C', 'H', 'E', 'S', 'S', 'C', 'O', 'N', 'N', 'E', 'C', 'T', 0x7B, -0x80})
 #define MAGIC_SIZE 16ULL
 
-/* Connect packet size */
-#define CONNECT_PACKET_SIZE (MAGIC_SIZE + sizeof(struct sockaddr_in) + 1ULL)
+/* Connect packet size, 8ULL is NICKNAME_SIZE ) */
+#define CONNECT_PACKET_SIZE (MAGIC_SIZE + 8ULL + 1ULL)
 
 typedef struct sockaddr_in SockaddrIn;
 typedef struct sockaddr Sockaddr;
 
 struct s_network_info {
+	char		peer_nickname[8];
     Socket		sockfd;
     SockaddrIn	localaddr;
     SockaddrIn	servaddr;
-    SockaddrIn	peeraddr;
+    // SockaddrIn	peeraddr;
     SocketLen	addr_len;
 	ClientState	client_state;			/* Client state (reconnect, waiter/lister color)*/
 	s8			peer_conected;			/* Peer connected */

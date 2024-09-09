@@ -120,12 +120,16 @@ s8 wait_peer_info(NetworkInfo *info, const char *msg) {
 			return (FALSE);
 		}
 		info->peer_conected = TRUE;
-		ft_memcpy(&info->peeraddr, buff + MAGIC_SIZE, sizeof(info->peeraddr));
+		
+		// ft_memcpy(&info->peeraddr, buff + MAGIC_SIZE, sizeof(info->peeraddr));
+		
+		fast_bzero(&info->peer_nickname, NICKNAME_MAX_LEN);
+		ft_memcpy(&info->peer_nickname, buff + MAGIC_SIZE, NICKNAME_MAX_LEN);
+
 		info->client_state = buff[CONNECT_PACKET_SIZE - 1];
-		CHESS_LOG(LOG_INFO, "Client state: %s: Peer info : %s:%d\n"\
+		CHESS_LOG(LOG_INFO, "Client state: %s: Peer Nickname : %s\n"\
 			, ClientState_to_str(info->client_state)
-			, inet_ntoa(info->peeraddr.sin_addr)
-			, ntohs(info->peeraddr.sin_port));
+			, info->peer_nickname);
 		return (TRUE);
 	} 
 	// else if (ret > 0) {

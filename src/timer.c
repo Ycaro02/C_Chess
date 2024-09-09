@@ -68,5 +68,11 @@ void draw_timer_rect(SDLHandle *h) {
 	SDL_RenderFillRect(h->renderer, &h->name_rect_bot);
 	SDL_RenderFillRect(h->renderer, &h->name_rect_top);
 	write_text_in_rect(h, h->name_font, h->name_rect_bot, h->player_info.name, CENTER, U32_BLACK_COLOR);
-	write_text_in_rect(h, h->name_font, h->name_rect_top, h->player_info.name, CENTER, U32_BLACK_COLOR);
+	
+	char *enemy_name = "Bot";
+
+	if (has_flag(h->flag, FLAG_NETWORK) && h->player_info.nt_info->peer_nickname[0] != '\0') {
+		enemy_name = h->player_info.nt_info->peer_nickname;
+	}
+	write_text_in_rect(h, h->name_font, h->name_rect_top, enemy_name, CENTER, U32_BLACK_COLOR);
 }

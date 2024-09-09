@@ -189,7 +189,7 @@ char *format_connect_packet(char *msg, u64 message_size, s8 player_state){
 	ft_memcpy(data + MAGIC_SIZE, msg, message_size);
 	data[CONNECT_PACKET_SIZE - 1] = player_state;
 
-	// display_brut_packet(data, CONNECT_PACKET_SIZE, "Connect");
+	display_brut_packet(data, CONNECT_PACKET_SIZE, "Connect");
 	return (data);
 }
 
@@ -199,8 +199,10 @@ char *format_connect_packet(char *msg, u64 message_size, s8 player_state){
  */
 void connect_client_together(int sockfd, ChessRoom *r) {
 
-	char *dataClientA = format_connect_packet((char *)&r->cliA.addr, sizeof(r->cliA.addr), r->cliA.client_state);
-	char *dataClientB = format_connect_packet((char *)&r->cliB.addr, sizeof(r->cliB.addr), r->cliB.client_state);
+	// char *dataClientA = format_connect_packet((char *)&r->cliA.addr, sizeof(r->cliA.addr), r->cliA.client_state);
+	// char *dataClientB = format_connect_packet((char *)&r->cliB.addr, sizeof(r->cliB.addr), r->cliB.client_state);
+	char *dataClientA = format_connect_packet(r->cliA.nickname, 8, r->cliA.client_state);
+	char *dataClientB = format_connect_packet(r->cliB.nickname, 8, r->cliB.client_state);
 
 	if (!dataClientA || !dataClientB) {
 		printf(RED"Error: %s\n"RESET, __func__);
