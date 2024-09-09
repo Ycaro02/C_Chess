@@ -10,8 +10,8 @@
  * @param pos The position of the text
  * @param color The color of the text
  */
-void write_text_in_rect(SDLHandle *h, TTF_Font *font, SDL_Rect rect, char *str, RectTextPos align) {
-	u32 color = RGBA_TO_UINT32(0, 0, 0, 255);
+void write_text_in_rect(SDLHandle *h, TTF_Font *font, SDL_Rect rect, char *str, RectTextPos align, u32 color) {
+	// u32 color = RGBA_TO_UINT32(0, 0, 0, 255);
 	iVec2 pos = {0, 0};
 	iVec2 text_size = {0, 0};
 
@@ -23,9 +23,11 @@ void write_text_in_rect(SDLHandle *h, TTF_Font *font, SDL_Rect rect, char *str, 
 		pos.y = rect.y + (rect.h >> 1);
 		pos.y -= (text_size.y >> 1);
 	} else if (align == TOP_CENTER) {
-		pos.y = rect.y + (rect.h >> 4);
+		pos.y = rect.y + (rect.h >> 4) - (text_size.y >> 1);
 	} else if (align == BOT_CENTER) {
 		pos.y = rect.y + (rect.h >> 1) + (rect.h >> 2);
+	} else if (align == TOP) {
+		pos.y = rect.y - (rect.h) + (text_size.y >> 1);
 	}
 
 	write_text(h, str, font, pos, color);

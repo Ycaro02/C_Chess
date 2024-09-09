@@ -41,7 +41,8 @@ static void set_profile_btn_text_func(Profile *profile, s32 idx, ProfileFieldTyp
 }
 
 typedef struct s_profile_field_info {
-	char *name;
+	char *opt_name;
+	char *text;
 	AcceptedCharFunc	accept_char_func;
 	UpdateFunc 			update_func;
 	s32		height;
@@ -54,11 +55,11 @@ TextField * init_profile_text_field(TTF_Font *font, SDL_Rect profile_rect, Profi
 	SDL_Rect rect;
 
 	rect.x = profile_rect.x + (profile_rect.w >> 3);
-	rect.y = profile_rect.y + (profile_rect.y >> 1) + (i * info.height_pad) + (i * info.height) + info.height_pad;
-	rect.w = info.width;
+	rect.y = profile_rect.y + (profile_rect.y >> 1) + ((i * info.height_pad) * 2)+ (i * info.height) + info.height_pad;
+	rect.w = info.width >> 1;
 	rect.h = info.height;
 
-	if (!(tf = init_text_field(rect, font, info.name, 8, info.accept_char_func, info.update_func))) {
+	if (!(tf = init_text_field(rect, font, info.text, 8, info.accept_char_func, info.update_func))) {
 		CHESS_LOG(LOG_ERROR, "init_text_field failed\n");
 		return (NULL);
 	}
@@ -68,7 +69,7 @@ TextField * init_profile_text_field(TTF_Font *font, SDL_Rect profile_rect, Profi
 Button init_pofile_button(TextField *tf, TTF_Font *font, s32 btn_text_width, s32 btn_text_height) {
 	Button btn = {0};
 
-	btn.start.x = tf->rect.x + tf->rect.w + (tf->rect.w >> 2);
+	btn.start.x = tf->rect.x + tf->rect.w + (tf->rect.w >> 1);
 	btn.start.y = tf->rect.y;
 	btn.width = (btn_text_width >> 1) - (btn_text_width >> 3);
 	btn.height = btn_text_height;
@@ -138,9 +139,9 @@ Profile *init_profile_page(SDLHandle *h, s32 nb_field) {
 	profile->nb_field = nb_field;
 	
 	/* Set profile rect data */
-	profile->rect.x = h->band_size.left + (h->tile_size.x << 1);
+	profile->rect.x = h->band_size.left + (h->tile_size.x << 1) + (h->tile_size.x >> 1);
 	profile->rect.y = h->band_size.top + (h->tile_size.x << 1) - (h->tile_size.x >> 1);
-	profile->rect.w = h->tile_size.x << 2;
+	profile->rect.w = (h->tile_size.x << 2) - (h->tile_size.x);
 	profile->rect.h = (h->tile_size.x << 2) + h->tile_size.x;
 	
 	/* Compute text field and button size */
@@ -150,6 +151,14 @@ Profile *init_profile_page(SDLHandle *h, s32 nb_field) {
 
 	/* Load font */
 	if (!(profile->font = load_font(FONT_PATH, (btn_text_height >> 1) - (btn_text_height >> 4)))) {
+		CHESS_LOG(LOG_ERROR, "load_font failed\n");
+		free(profile->tf);
+		free(profile);
+		return (NULL);
+	}
+	
+	/* Load font */
+	if (!(profile->describe_font = load_font(FONT_PATH, (btn_text_height >> 1) + (btn_text_height >> 3)))) {
 		CHESS_LOG(LOG_ERROR, "load_font failed\n");
 		free(profile->tf);
 		free(profile);
@@ -165,13 +174,23 @@ Profile *init_profile_page(SDLHandle *h, s32 nb_field) {
 		return (NULL);
 	}
 
+	if (!(profile->describe_field = ft_calloc(sizeof(char *), nb_field))) {
+		CHESS_LOG(LOG_ERROR, "malloc failed\n");
+		free(profile->btn);
+		unload_font(profile->font);
+		free(profile->tf);
+		free(profile);
+		return (NULL);
+	}
+
 	ProfileFieldInfo profile_field_info[] = {
-		{"Nickname", is_nickname_accepted_char, update_nickname, btn_text_height, btn_text_width, field_height_pad},
-		{"30", is_timer_accepted_char, update_timer, btn_text_height, btn_text_width, field_height_pad},
+		{"Nickname", "Default", is_nickname_accepted_char, update_nickname, btn_text_height, btn_text_width, field_height_pad},
+		{"Timer", "30", is_timer_accepted_char, update_timer, btn_text_height, btn_text_width, field_height_pad},
 	};
 
 	/* Set profile field */
 	for (s32 i = 0; i < nb_field; i++) {
+		profile->describe_field[i] = ft_strdup(profile_field_info[i].opt_name);
 		profile->tf[i] = init_profile_text_field(profile->font, profile->rect, profile_field_info[i], i);
 		profile->btn[i] = init_pofile_button(profile->tf[i], profile->font,  btn_text_width, btn_text_height);
 		set_profile_btn_text_func(profile, i, i);
@@ -183,6 +202,9 @@ Profile *init_profile_page(SDLHandle *h, s32 nb_field) {
 
 void destroy_profile_page(Profile *profile) {
 	for (s32 i = 0; i < profile->nb_field; i++) {
+		if (profile->describe_field[i]) {
+			free(profile->describe_field[i]);
+		}
 		if (profile->tf[i]) {
 			destroy_text_field(profile->tf[i]);
 		}
@@ -207,12 +229,13 @@ void draw_profile_page(SDLHandle *h, Profile *profile) {
 
 
 	// Display profile in the top center of the rect
-	write_text_in_rect(h, h->menu.btn_text_font, profile->rect, "Profile", TOP_CENTER);
+	write_text_in_rect(h, h->name_font, profile->rect, "Profile", TOP_CENTER, U32_WHITE_COLOR);
 
 	/* Draw profile field */
 	SDL_Color bg_color = {70,70,70,0};
 	/* Draw the server ip text input */
 	for (s32 i = 0; i < profile->nb_field; i++) {
+		write_text_in_rect(h, profile->describe_font, profile->tf[i]->rect, profile->describe_field[i], TOP, U32_WHITE_COLOR);
 		bg_color = (SDL_Color){70,70,70,0};
 		if (profile->tf[i]->is_active) {
 			bg_color = (SDL_Color){WHITE_COLOR};

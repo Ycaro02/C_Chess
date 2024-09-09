@@ -67,6 +67,6 @@ void draw_timer_rect(SDLHandle *h) {
 	SDL_SetRenderDrawColor(h->renderer, 180, 180, 180, 255);
 	SDL_RenderFillRect(h->renderer, &h->name_rect_bot);
 	SDL_RenderFillRect(h->renderer, &h->name_rect_top);
-	write_text_in_rect(h, h->name_font, h->name_rect_bot, h->player_info.name, CENTER);
-	write_text_in_rect(h, h->name_font, h->name_rect_top, h->player_info.name, CENTER);
+	write_text_in_rect(h, h->name_font, h->name_rect_bot, h->player_info.name, CENTER, U32_BLACK_COLOR);
+	write_text_in_rect(h, h->name_font, h->name_rect_top, h->player_info.name, CENTER, U32_BLACK_COLOR);
 }

@@ -119,6 +119,7 @@ typedef enum s_rect_text_pos {
 	TOP_CENTER,
 	BOT_CENTER,
 	CENTER,
+	TOP,
 } RectTextPos;
 
 typedef enum e_profile_field_type {
@@ -129,8 +130,10 @@ typedef enum e_profile_field_type {
 
 typedef struct s_profile {
 	TextField			**tf;					/* The text field array pointer */
+	char 				**describe_field;		/* The string array */
 	Button				*btn;					/* The button array */
 	TTF_Font			*font;					/* The font for field text display */
+	TTF_Font			*describe_font;			/* The font for field description */
 	SDL_Rect			rect;					/* The rect of the profile */
 	ProfileFieldType	btn_hover;				/* The idx of button hover */
 	ProfileFieldType	current_btn_clicked;	/* The idx of current button clicked */
@@ -271,7 +274,7 @@ void		draw_circle_outline(SDL_Renderer *renderer, int x, int y, int radius);
 void		draw_letter_number(SDLHandle *handle, s8 player_color);
 void		center_text_function_set(SDLHandle *h, CenterText *ct, BtnCenterText btn1, BtnCenterText btn2);
 void		cancel_search_func(SDLHandle *h);
-void		write_text_in_rect(SDLHandle *h, TTF_Font *font, SDL_Rect rect, char *str, RectTextPos align);
+void		write_text_in_rect(SDLHandle *h, TTF_Font *font, SDL_Rect rect, char *str, RectTextPos align, u32 color);
 // center text
 CenterText *center_text_init(SDLHandle *h);
 void		center_text_string_set(SDLHandle *h, char *str, char *str2);
