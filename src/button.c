@@ -21,7 +21,7 @@ s32 detect_button_click(Button *btn, s32 btn_start, s32 nb_btn, iVec2 mouse_pos)
 			return (idx);
 		}
 	}
-	return (BTN_INVALID);
+	return (-1); // AKA BTN_INVALID or PFT_INVALID
 }
 
 s8 wait_player_handling(SDLHandle *h) {
@@ -207,7 +207,7 @@ void init_button(SDLHandle *h, ChessMenu *menu, s32 nb_btn) {
  * @param btn The button to draw
  * @param state The state of the button
 */
-void draw_button(SDLHandle *h, Button btn, SDL_Color c) {
+void draw_button(SDLHandle *h, TTF_Font *font, Button btn, SDL_Color c) {
 	SDL_Rect		rect = {0,0,0,0};
 
 	rect.x = btn.start.x;
@@ -217,7 +217,7 @@ void draw_button(SDLHandle *h, Button btn, SDL_Color c) {
 
 	SDL_SetRenderDrawColor(h->renderer, c.r, c.g, c.b, c.a);
 	SDL_RenderFillRect(h->renderer, &rect);
-	write_text(h, btn.text, h->menu.btn_text_font, btn.text_pos, RGBA_TO_UINT32(255, 255, 255, 255));
+	write_text(h, btn.text, font, btn.text_pos, RGBA_TO_UINT32(255, 255, 255, 255));
 }
 
 
@@ -257,25 +257,27 @@ void set_btn_info(SDLHandle *h, s32 btn_idx, iVec2 start, iVec2 size, char *text
 /**
  * @brief Draw multiple button
  * @param h The SDLHandle
+ * @param font The font of the btn text
+ * @param btn The button array
+ * @param btn_hover The hover index
  * @param btn_start The start index of the button
  * @param nb_btn The number of button
 */
-void draw_multiple_button(SDLHandle *h, s32 btn_start, s32 nb_btn) {
+void draw_multiple_button(SDLHandle *h, TTF_Font *font, Button *btn, s32 btn_hover, s32 btn_start, s32 nb_btn) {
 	SDL_Color btn_color;
 	s32 idx = 0;
 
 	for (s32 i = 0; i < nb_btn; i++) {
 		idx = btn_start + i;
 		// printf("In draw multiple button: idx: %d Hover: %d\n", idx, h->menu.btn_hover);
-		if (idx == h->menu.btn_hover) {
+		if (idx == btn_hover) {
 			btn_color = BTN_HOVER_COLOR;
 		} else {
 			btn_color = BTN_BASIC_COLOR;
 		}
-		if (h->menu.btn[idx].state == BTN_STATE_DISABLED) {
+		if (btn[idx].state == BTN_STATE_DISABLED) {
 			btn_color = (SDL_Color){CLEAR_COLOR};
 		}
-		draw_button(h, h->menu.btn[idx], btn_color);
+		draw_button(h, font, btn[idx], btn_color);
 	}
-
 }

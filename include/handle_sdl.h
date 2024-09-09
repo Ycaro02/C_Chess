@@ -270,11 +270,11 @@ void		destroy_menu(SDLHandle *h);
 void		search_game(SDLHandle *h);
 void		init_button(SDLHandle *h, ChessMenu *menu, s32 nb_btn);
 void		center_btn_text(Button *btn, TTF_Font *font);
-void		draw_button(SDLHandle *h, Button btn, SDL_Color c);
-void		draw_multiple_button(SDLHandle *h, s32 btn_start, s32 nb_btn);
+void		draw_button(SDLHandle *h,TTF_Font *font, Button btn, SDL_Color c);
 void		update_btn_disabled(SDLHandle *h, Button *btn);
 s32			detect_button_click(Button *btn, s32 btn_start, s32 nb_btn, iVec2 mouse_pos);
 void 		set_btn_info(SDLHandle *h, s32 btn_idx, iVec2 start, iVec2 size, char *text, ButtonFunc func);
+void		draw_multiple_button(SDLHandle *h, TTF_Font *font, Button *btn, s32 btn_hover, s32 btn_start, s32 nb_btn);
 
 // btn func
 void	edit_ip_click(SDLHandle *h);

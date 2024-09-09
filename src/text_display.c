@@ -151,7 +151,7 @@ void center_text_draw(SDLHandle *h, CenterText *ct) {
         write_text(h, ct->str2, ct->font, text_pos2, U32_BLACK_COLOR);
     }
 
-	draw_multiple_button(h, BTN_CENTER1, ct->curent_btn_enable);
+	draw_multiple_button(h, h->menu.btn_text_font, h->menu.btn, h->menu.btn_hover, BTN_CENTER1, ct->curent_btn_enable);
 }
 
 void cancel_search_func(SDLHandle *h) {

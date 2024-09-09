@@ -40,6 +40,39 @@ void update_mouse_pos(SDLHandle *h, s32 x, s32 y) {
 	h->mouse_pos.y = y;
 }
 
+void profile_button_handling(SDLHandle *h, SDL_Event event) {
+	iVec2 				pos = {0, 0};
+	ProfileFieldType	btn_click = PFT_INVALID;
+	Profile				*p = h->menu.profile;
+
+
+	SDL_GetMouseState(&pos.x, &pos.y);
+	if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+		btn_click = detect_button_click(p->btn, 0, p->nb_field, pos);
+		if (btn_click != PFT_INVALID && p->btn[btn_click].state != BTN_STATE_DISABLED) {
+			p->btn[btn_click].state = BTN_STATE_PRESSED;
+			p->current_btn_clicked = btn_click;
+		}
+	} else if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {
+		btn_click = detect_button_click(p->btn, 0, p->nb_field, pos);
+		if (p->current_btn_clicked != PFT_INVALID) {
+			p->btn[p->current_btn_clicked].state = BTN_STATE_RELEASED;
+		}
+		if (btn_click == p->current_btn_clicked && btn_click != PFT_INVALID) {
+			if (p->btn[btn_click].func) {
+				p->current_btn_clicked = PFT_INVALID;
+				p->btn[btn_click].func(h);
+			}
+		}
+	} else if (event.type == SDL_MOUSEMOTION) {
+		update_mouse_pos(h, pos.x, pos.y);
+		p->btn_hover = detect_button_click(p->btn, 0, p->nb_field, pos);
+	} else if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE) {
+		CHESS_LOG(LOG_INFO, "Close profile menu\n");
+		unset_flag(&h->flag, FLAG_EDIT_PROFILE);
+	}
+}
+
 void button_event_handling(SDLHandle *h, SDL_Event event, s32 btn_start, s32 btn_nb) {
 	iVec2 pos = {0, 0};
 	BtnType btn_click = BTN_INVALID;
@@ -135,6 +168,8 @@ s32 event_handler(SDLHandle *h, s8 player_color) {
 		if (has_flag(h->flag, FLAG_CENTER_TEXT_INPUT)) {
 			button_event_handling(h, event, BTN_CENTER1, h->center_text->curent_btn_enable);
 			// center_text_event_handling(h, event);
+		} else if (has_flag(h->flag, FLAG_EDIT_PROFILE)) {
+			profile_button_handling(h, event);
 		} else {
 			if (!h->menu.is_open) {
 				game_event_handling(h, event, player_color);
@@ -143,7 +178,6 @@ s32 event_handler(SDLHandle *h, s8 player_color) {
 					handle_text_input(h, &event);
 				}
 				button_event_handling(h, event, BTN_RESUME, h->menu.menu_btn + 1);
-				// menu_event_handling(h, event);
 			}
 		}
 	}

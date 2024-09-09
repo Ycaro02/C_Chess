@@ -134,6 +134,6 @@ void draw_menu(SDLHandle *h) {
 	update_btn_disabled(h, h->menu.btn);
 
 	/* Draw the menu button +1 for the server_ip btn */
-	draw_multiple_button(h, BTN_RESUME, h->menu.menu_btn + 1);
+	draw_multiple_button(h, h->menu.btn_text_font, h->menu.btn, h->menu.btn_hover, BTN_RESUME, h->menu.menu_btn + 1);
 }
 
