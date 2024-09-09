@@ -182,12 +182,14 @@ typedef struct s_network_info NetworkInfo;
 /* Message max size */
 #define	MSG_SIZE 16
 
+
 /* Player info struct */
 typedef struct s_player_info {
 	NetworkInfo *nt_info;				/* Network info */
 	char		msg_tosend[MSG_SIZE];	/* Message to send */
 	char		msg_receiv[MSG_SIZE];	/* Message received */
 	char		last_msg[MSG_SIZE];		/* Last message process */
+	char		*name;					/* Player name */
 	char		*dest_ip;				/* destination ip, server ip */
 	u16			dest_port;				/* port server port */
 	ChessPiece	piece_start;			/* ChessPiece color start */

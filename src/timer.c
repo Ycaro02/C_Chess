@@ -10,7 +10,7 @@ void fill_timer_str(SDLHandle *h, u64 time) {
 	snprintf(h->timer_str, TIME_STR_SIZE, "%02d:%02d", min, sec);
 }
 
-void wite_timer_in_rect(SDLHandle *h, SDL_Rect rect, u64 time) {
+void write_timer_in_rect(SDLHandle *h, SDL_Rect rect, u64 time) {
 	u32 color = RGBA_TO_UINT32(0, 0, 0, 255);
 	iVec2 pos = {0, 0};
 	iVec2 text_size = {0, 0};
@@ -30,6 +30,23 @@ void wite_timer_in_rect(SDLHandle *h, SDL_Rect rect, u64 time) {
 
 u64 get_time_sec() {
 	return (SDL_GetTicks64() / 1000ULL);
+}
+
+
+void write_text_in_rect(SDLHandle *h, TTF_Font *font, SDL_Rect rect, char *str) {
+	u32 color = RGBA_TO_UINT32(0, 0, 0, 255);
+	iVec2 pos = {0, 0};
+	iVec2 text_size = {0, 0};
+
+	TTF_SizeText(font, str, &text_size.x, &text_size.y);
+	pos.x = rect.x + (rect.w >> 1);
+	pos.x -= (text_size.x >> 1);
+
+	pos.y = rect.y + (rect.h >> 1);
+	pos.y -= (text_size.y >> 1);
+
+	write_text(h, str, font, pos, color);
+
 }
 
 void draw_timer_rect(SDLHandle *h) {
@@ -60,6 +77,13 @@ void draw_timer_rect(SDLHandle *h) {
 		}
 
 	}
-	wite_timer_in_rect(h, h->timer_rect_bot, h->my_remaining_time);
-	wite_timer_in_rect(h, h->timer_rect_top, h->enemy_remaining_time);
+	write_timer_in_rect(h, h->timer_rect_bot, h->my_remaining_time);
+	write_timer_in_rect(h, h->timer_rect_top, h->enemy_remaining_time);
+
+	// name rect
+	SDL_SetRenderDrawColor(h->renderer, 180, 180, 180, 255);
+	SDL_RenderFillRect(h->renderer, &h->name_rect_bot);
+	SDL_RenderFillRect(h->renderer, &h->name_rect_top);
+	write_text_in_rect(h, h->name_font, h->name_rect_bot, h->player_info.name);
+	write_text_in_rect(h, h->name_font, h->name_rect_top, h->player_info.name);
 }

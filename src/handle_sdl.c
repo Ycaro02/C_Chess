@@ -213,6 +213,46 @@ static SDL_Rect build_timer_rect(SDLHandle *h, s8 is_bot_band) {
 	return (timer_rect);
 }
 
+static SDL_Rect build_name_rect(SDLHandle *h, s8 is_bot_band) {
+	SDL_Rect name_rect = {0}; 
+
+	/* Window end width - size band right - (size_band_right / 16)*/
+	s32 name_padding = h->band_size.right >> 4;
+	
+	s32 start_x = (h->window_size.x - h->band_size.right) + name_padding;
+	s32 rect_end_x = h->window_size.x - name_padding;
+
+	s32 rect_height = h->tile_size.x >> 1;
+
+	name_rect.x = start_x;
+
+	if (is_bot_band) {
+		/* Start to the bot of window - band_size_bot - rect_height */
+		name_rect.y = h->window_size.y - (h->band_size.bot) - (rect_height) - h->timer_rect_bot.h - (h->timer_rect_bot.h >> 2);
+	} else {
+		name_rect.y = h->band_size.top + h->timer_rect_top.h + (h->timer_rect_top.h >> 2);
+	}
+	
+
+	name_rect.w = rect_end_x - start_x;
+	name_rect.h = rect_height;
+
+	CHESS_LOG(LOG_INFO, ORANGE"Name rect start: %d, end: %d, height: %d, width: %d\n"RESET, start_x, rect_end_x, rect_height, name_rect.w);
+	return (name_rect);
+}
+
+
+static TTF_Font *safe_load_font(SDLHandle *h, const char *path, s32 fontSize) {
+	TTF_Font *font = load_font(path, fontSize);
+	if (!font) {
+		SDL_DestroyRenderer(h->renderer);
+		SDL_DestroyWindow(h->window);
+		free(h);
+		CHESS_LOG(LOG_ERROR, "%s: load_font %s failed\n", __func__, path);
+		return (NULL);
+	}
+	return (font);
+}
 
 /**
  * @brief Create a SDLHandle
@@ -251,20 +291,24 @@ SDLHandle *create_sdl_handle(const char* title) {
 	handle->player_info.color = IS_WHITE;
 	handle->over_piece_select = EMPTY;
 	handle->game_start = FALSE;
+
+	/* Init timer rect and font */
 	handle->timer_rect_bot = build_timer_rect(handle, TRUE);
 	handle->timer_rect_top = build_timer_rect(handle, FALSE);
+	if (!(handle->timer_font = safe_load_font(handle, FONT_PATH, (handle->timer_rect_bot.h >> 1)))) {
+		return (NULL);
+	}
+	fast_bzero(handle->timer_str, TIME_STR_SIZE);
+	handle->my_remaining_time = 60 * 30;
+	handle->enemy_remaining_time = 60 * 30;
 
-	if (!(handle->timer_font = load_font(FONT_PATH, (handle->timer_rect_bot.h >> 1)))) {
-		SDL_DestroyRenderer(handle->renderer);
-		SDL_DestroyWindow(handle->window);
-		free(handle);
+	/* Init name rect */
+	handle->name_rect_bot = build_name_rect(handle, TRUE);
+	handle->name_rect_top = build_name_rect(handle, FALSE);
+	if (!(handle->name_font = safe_load_font(handle, FONT_PATH, (handle->name_rect_bot.h >> 1) + (handle->name_rect_bot.h >> 2)))) {
 		return (NULL);
 	}
 
-	fast_bzero(handle->timer_str, TIME_STR_SIZE);
-
-	handle->my_remaining_time = 60 * 10;
-	handle->enemy_remaining_time = 60 * 10;
 
 	window_clear(handle->renderer);
 	return (handle);
@@ -446,6 +490,9 @@ void destroy_sdl_handle(SDLHandle *handle) {
 	if (handle->timer_font) {
 		unload_font(handle->timer_font);
 	}
+	if (handle->name_font) {
+		unload_font(handle->name_font);
+	}
 
 	/* free center_text */
 	center_text_destroy(handle->center_text);
@@ -457,6 +504,12 @@ void destroy_sdl_handle(SDLHandle *handle) {
 	if (handle->player_info.dest_ip) {
 		free(handle->player_info.dest_ip);
 	}
+
+	/* Free player name */
+	if (handle->player_info.name) {
+		free(handle->player_info.name);
+	}
+
 
 	/* Free network info and send disconnect to server */
 	destroy_network_info(handle);

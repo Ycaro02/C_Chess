@@ -166,6 +166,7 @@ int main(int argc, char **argv) {
 	}
 	handle->flag = flag;
 	handle->player_info = player_info;
+	handle->player_info.name = ft_strdup("Ycaro");
 
 	#ifdef _EMSCRIPTEN_VERSION_
 		emscripten_setup();
