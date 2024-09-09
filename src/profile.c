@@ -23,16 +23,26 @@ static void set_profile_btn_text_func(Profile *profile, s32 idx, ProfileFieldTyp
 	}
 }
 
-TextField * init_profile_text_field(TTF_Font *font , SDL_Rect profile_rect, char *text, s32 height, s32 width, s32 height_pad, s32 i) {
+typedef struct s_profile_field_info {
+	char *name;
+	AcceptedCharFunc	accept_char_func;
+	UpdateFunc 			update_func;
+	s32		height;
+	s32		width;
+	s32		height_pad;
+} ProfileFieldInfo;
+
+// TextField * init_profile_text_field(TTF_Font *font , SDL_Rect profile_rect, char *text, s32 height, s32 width, s32 height_pad, s32 i) {
+TextField * init_profile_text_field(TTF_Font *font, SDL_Rect profile_rect, ProfileFieldInfo info, s32 i) {
 	TextField *tf = NULL;
 	SDL_Rect rect;
 
 	rect.x = profile_rect.x + (profile_rect.w >> 3);
-	rect.y = profile_rect.y + (profile_rect.y >> 1) + (i * height_pad) + (i * height) + height_pad;
-	rect.w = width;
-	rect.h = height;
+	rect.y = profile_rect.y + (profile_rect.y >> 1) + (i * info.height_pad) + (i * info.height) + info.height_pad;
+	rect.w = info.width;
+	rect.h = info.height;
 
-	if (!(tf = init_text_field(rect, 8, font, text))) {
+	if (!(tf = init_text_field(rect, font, info.name, 8, info.accept_char_func, info.update_func))) {
 		CHESS_LOG(LOG_ERROR, "init_text_field failed\n");
 		return (NULL);
 	}
@@ -52,6 +62,30 @@ Button init_pofile_button(TextField *tf, TTF_Font *font, s32 btn_text_width, s32
 	btn.func = NULL;
 	center_btn_text(&btn, font);
 	return (btn);
+}
+
+s8 is_nickname_accepted_char(SDL_Keycode code) {
+	(void)code;
+	printf("is_nickname_accepted_char\n");
+	return (TRUE);
+}
+
+s8 is_timer_accepted_char(SDL_Keycode code) {
+	(void)code;
+	printf("is_timer_accepted_char\n");
+	return (TRUE);
+}
+
+void update_nickname(SDLHandle *h, TextField *tf) {
+	(void)h;
+	(void)tf;
+	printf("update_nickname\n");
+}
+
+void update_timer(SDLHandle *h, TextField *tf) {
+	(void)h;
+	(void)tf;
+	printf("update_timer\n");
 }
 
 Profile *init_profile_page(SDLHandle *h, s32 nb_field) {
@@ -102,14 +136,16 @@ Profile *init_profile_page(SDLHandle *h, s32 nb_field) {
 		return (NULL);
 	}
 
-	char *basic_string[] = {
-		"Nickname",
-		"30",
+	ProfileFieldInfo profile_field_info[] = {
+		{"Nickname", is_nickname_accepted_char, update_nickname, btn_text_height, btn_text_width, field_height_pad},
+		{"30", is_timer_accepted_char, update_timer, btn_text_height, btn_text_width, field_height_pad},
 	};
+
 	/* Set profile field */
 	for (s32 i = 0; i < nb_field; i++) {
-		profile->tf[i] = init_profile_text_field(profile->font, profile->rect, basic_string[i], btn_text_height, btn_text_width, field_height_pad, i);
-		profile->btn[i] = init_pofile_button(profile->tf[i], profile->font, btn_text_width, btn_text_height);
+		profile->tf[i] = init_profile_text_field(profile->font, profile->rect, profile_field_info[i], i);
+		// profile->tf[i] = init_profile_text_field(profile->font, profile->rect, basic_string[i], btn_text_height, btn_text_width, field_height_pad, i);
+		profile->btn[i] = init_pofile_button(profile->tf[i], profile->font,  btn_text_width, btn_text_height);
 		set_profile_btn_text_func(profile, i, i);
 	}
 

@@ -67,9 +67,9 @@ void destroy_text_field(TextField *text_field) {
 	free(text_field);
 }
 
-TextField *init_text_field(SDL_Rect rect, int buff_size_max, TTF_Font *font, char *initial_text) {
+TextField *init_text_field(SDL_Rect rect, TTF_Font *font, char *initial_text, s32 buff_size_max, AcceptedCharFunc accept_char_func, UpdateFunc update_func) {
 	TextField	*text_field = ft_calloc(1, sizeof(TextField));
-	int			len = fast_strlen(initial_text);
+	s32			len = fast_strlen(initial_text);
 
 	if (!text_field) {
 		CHESS_LOG(LOG_ERROR, "Failed to allocate memory for text field\n");
@@ -91,6 +91,8 @@ TextField *init_text_field(SDL_Rect rect, int buff_size_max, TTF_Font *font, cha
 		ftlib_strcpy(text_field->text, initial_text, len);
 		text_field->cursor = len;
 	}
+	text_field->is_accepted_char = accept_char_func;
+	text_field->update_data = update_func;
 	return (text_field);
 }
 
@@ -123,7 +125,8 @@ void handle_text_input(SDLHandle *h, SDL_Event *event) {
 	TextField *tf = h->menu.ip_field;
 
     if (event->type == SDL_KEYDOWN) {
-        if (ip_server_accepted_char(event->key.keysym.sym)) {
+        // if (ip_server_accepted_char(event->key.keysym.sym)) {
+        if (tf->is_accepted_char(event->key.keysym.sym)) {
             if (tf->cursor < tf->buffer_size - 1) {
                 tf->text[tf->cursor] = (char)event->key.keysym.sym;
 				tf->cursor += 1;
@@ -136,10 +139,12 @@ void handle_text_input(SDLHandle *h, SDL_Event *event) {
 			tf->text[tf->cursor] = '\0';
 			tf->last_cursor_time = SDL_GetTicks64();
         } else if (event->key.keysym.sym == SDLK_RETURN) {
-			ip_server_update_data(h, tf);
+			// ip_server_update_data(h, tf);
+			tf->update_data(h, tf);
 			tf->is_active = FALSE;
 		} else if (event->key.keysym.sym == SDLK_ESCAPE) {
-			ip_server_update_data(h, tf);
+			// ip_server_update_data(h, tf);
+			tf->update_data(h, tf);
 			tf->is_active = FALSE;
 		}
 

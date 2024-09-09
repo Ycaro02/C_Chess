@@ -93,7 +93,7 @@ s8 init_menu(SDLHandle *h, s32 total_btn) {
 	rect.w = (h->menu.width >> 1) + (h->menu.width >> 4);
 	rect.h = text_size.y;
 
-	h->menu.ip_field = init_text_field(rect, IP_INPUT_SIZE, h->menu.btn_text_font, "127.0.0.1");
+	h->menu.ip_field = init_text_field(rect, h->menu.btn_text_font, "127.0.0.1", IP_INPUT_SIZE, ip_server_accepted_char, ip_server_update_data);
 	h->menu.profile = init_profile_page(h, PFT_TIMER + 1);
 	return (TRUE);
 }

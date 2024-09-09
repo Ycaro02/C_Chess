@@ -78,22 +78,31 @@ typedef struct s_window_band {
 /* Menu background color */
 #define MENU_BG_COLOR 	70, 70, 70, 220
 
+/* Button function pointer */
 typedef void (*ButtonFunc)(SDLHandle*);
+
+typedef struct s_text_field TextField;
+
+/* TextField function pointer */
+typedef s8		(*AcceptedCharFunc)(SDL_Keycode key);
+typedef void 	(*UpdateFunc)(SDLHandle*, TextField*);
 
 #define IP_INPUT_SIZE 16
 
 #define SERVER_INFO_STR "Server IP: "
 
-typedef struct {
+struct s_text_field {
     SDL_Rect	rect;				/* The rect of the text input */
     char		*text;				/* The text buffer */
     TTF_Font	*font;				/* The font */
+	AcceptedCharFunc	is_accepted_char;	/* The accepted char function ptr */
+	UpdateFunc			update_data;		/* The update data function ptr */
 	u64			last_cursor_time;	/* The last cursor time */
 	int			buffer_size;		/* The buffer size */
     int			cursor;				/* The cursor position */
 	s8			is_active;			/* The text input is active */
 	s8			cursor_visible;		/* The cursor is visible */
-} TextField;
+};
 
 typedef struct s_button {
 	ButtonFunc	func;		/* The button function */
@@ -254,10 +263,11 @@ void		center_text_draw(SDLHandle *h, CenterText *ct);
 void		center_text_destroy(CenterText *ct);
 
 /* src/text_input.c */
-TextField	*init_text_field(SDL_Rect rect, int buff_size_max, TTF_Font *font, char *initial_text);
+TextField	*init_text_field(SDL_Rect rect, TTF_Font *font, char *initial_text, s32 buff_size_max, AcceptedCharFunc accept_char_func, UpdateFunc update_func);
 void		handle_text_input(SDLHandle *h, SDL_Event *event);
 void		render_text_field(SDL_Renderer *renderer, TextField *text_field, SDL_Color text_color, SDL_Color bg_color);
 void		ip_server_update_data(SDLHandle *h, TextField *text_field);
+s8			ip_server_accepted_char(SDL_Keycode type);
 void		destroy_text_field(TextField *text_field);
 
 /* src/chess_menu.c */
