@@ -96,6 +96,7 @@ void chess_destroy(SDLHandle *h) {
 	CHESS_LOG(LOG_INFO, RED"Destroy chess game%s\n", RESET);
 
 	// print_call_stack();
+	register_nickname(h->player_info.name, NICKNAME_FILE);
 
 	if (h->board->lst) {
 		ft_lstclear(&h->board->lst, free);
@@ -166,7 +167,13 @@ int main(int argc, char **argv) {
 	}
 	handle->flag = flag;
 	handle->player_info = player_info;
-	handle->player_info.name = ft_strdup("Default");
+	char *nickname = get_nickname_in_file();
+	if (nickname) {
+		handle->player_info.name = nickname;
+		printf("Nickname: |%s|\n", handle->player_info.name);
+	} else {
+		handle->player_info.name = ft_strdup("Default");
+	}
 
 	#ifdef _EMSCRIPTEN_VERSION_
 		emscripten_setup();
