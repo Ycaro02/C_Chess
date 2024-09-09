@@ -78,7 +78,7 @@ void search_game(SDLHandle *h) {
 		set_flag(&h->flag, FLAG_NETWORK);
 		
 		/* Init network and player state */
-		h->player_info.nt_info = init_network(h->player_info.dest_ip, TIMEVAL_TIMEOUT);
+		h->player_info.nt_info = init_network(h->player_info.dest_ip, h->player_info.name ,TIMEVAL_TIMEOUT);
 
 		/* Wait for player */
 		if (!wait_player_handling(h)) {
@@ -100,7 +100,7 @@ void reconnect_game(SDLHandle *h) {
 	if (!has_flag(h->flag, FLAG_NETWORK)) {
 		set_flag(&h->flag, FLAG_NETWORK);
 		set_flag(&h->flag, FLAG_RECONNECT);
-		h->player_info.nt_info = init_network(h->player_info.dest_ip, TIMEVAL_TIMEOUT);
+		h->player_info.nt_info = init_network(h->player_info.dest_ip, h->player_info.name, TIMEVAL_TIMEOUT);
 
 		/* Wait for player */
 		if (!wait_player_handling(h)) {

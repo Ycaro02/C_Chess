@@ -217,7 +217,11 @@ typedef struct s_sdl_handle {
 
 #define	FONT_PATH "rsc/font/arial.ttf"
 
+/* Accepted char return if key pressed is uppercase */
 #define UPPERCASE_CHAR 2
+
+#define NICKNAME_MAX_LEN 8
+
 
 /* @brief Inline func to convert tile position to pixel position
  * @param pos The pixel position to fill

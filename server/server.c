@@ -5,6 +5,7 @@
 typedef t_list RoomList;
 
 typedef struct s_chess_client {
+	char 			nickname[8];	/* Client nickname */
     SockaddrIn		addr;			/* Client address */
 	struct timeval 	last_alive;		/* Last alive packet */
 	s8				client_state;	/* Client state */
@@ -324,7 +325,7 @@ void set_client_data(ChessClient *client, SockaddrIn *cliaddr, struct timeval *n
  * @param cliaddr The client address
  * @param sockfd The socket file descriptor
  */
-void handle_client_connect(ChessRoom *r, SockaddrIn *cliaddr, int sockfd) {
+void handle_client_connect(ChessRoom *r, SockaddrIn *cliaddr, int sockfd, char *nickname) {
 	struct timeval now;
 
 	/* Check if the room is waiting to start or reconnect */
@@ -344,10 +345,12 @@ void handle_client_connect(ChessRoom *r, SockaddrIn *cliaddr, int sockfd) {
 	gettimeofday(&now, NULL);
 	if (!r->cliA.connected && !addr_cmp(cliaddr, &r->cliB.addr)) {
 		set_client_data(&r->cliA, cliaddr, &now);
-		printf(GREEN"Client A connected: %s:%hu\n"RESET, inet_ntoa(r->cliA.addr.sin_addr), ntohs(r->cliA.addr.sin_port));
+		ft_memcpy(r->cliA.nickname, nickname, 8);
+		printf(GREEN"Client A connected: |%s| -> %s:%hu\n"RESET, r->cliA.nickname, inet_ntoa(r->cliA.addr.sin_addr), ntohs(r->cliA.addr.sin_port));
 	} else if (!r->cliB.connected && !addr_cmp(cliaddr, &r->cliA.addr)) {
 		set_client_data(&r->cliB, cliaddr, &now);
-		printf(GREEN"Client B connected: %s:%hu\n"RESET, inet_ntoa(r->cliB.addr.sin_addr), ntohs(r->cliB.addr.sin_port));
+		ft_memcpy(r->cliB.nickname, nickname, 8);
+		printf(GREEN"Client B connected: |%s| -> %s:%hu\n"RESET, r->cliB.nickname, inet_ntoa(r->cliB.addr.sin_addr), ntohs(r->cliB.addr.sin_port));
 	}
 	if (r->cliA.connected && r->cliB.connected && r->cliA.player_ready && r->cliB.player_ready) {
 		connect_client_together(sockfd, r);
@@ -377,9 +380,12 @@ void handle_client_message(int sockfd, ChessRoom *r, SockaddrIn *cliaddr, char *
 	}
 
 	/* Check if the message is a hello message */
-	if (msg_size == HELLO_LEN && ft_memcmp(buffer, HELLO_STR, HELLO_LEN) == 0) {
+	if (ft_memcmp(buffer, CONNECT_STR, CONNECT_LEN) == 0 && msg_size == MSG_SIZE) {
 		/* Handle client connection */
-		handle_client_connect(r, cliaddr, sockfd);
+		handle_client_connect(r, cliaddr, sockfd, buffer + CONNECT_LEN);
+		// char nickname[8] = {};
+		// ft_memcpy(nickname, buffer + CONNECT_LEN, 8);
+		// printf(ORANGE"Buff: |%s| -> "CYAN"name |%s|\n"RESET, buffer, nickname);
 		return ;
 	}
 

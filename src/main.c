@@ -128,7 +128,7 @@ void chess_game(SDLHandle *h) {
 	if (has_flag(h->flag, FLAG_NETWORK)) {
 		CHESS_LOG(LOG_INFO, ORANGE"Try to connect to Server at : %s:%d\n"RESET, h->player_info.dest_ip, SERVER_PORT);
 		// network_setup(h, h->flag, &h->player_info, h->player_info.dest_ip);
-		h->player_info.nt_info = init_network(h->player_info.dest_ip, timeout);
+		h->player_info.nt_info = init_network(h->player_info.dest_ip, h->player_info.name, timeout);
 		handle_network_client_state(h, h->flag, &h->player_info);
 		h->game_start = TRUE;
 		while (1) {
@@ -166,7 +166,7 @@ int main(int argc, char **argv) {
 	}
 	handle->flag = flag;
 	handle->player_info = player_info;
-	handle->player_info.name = ft_strdup("Ycaro");
+	handle->player_info.name = ft_strdup("Default");
 
 	#ifdef _EMSCRIPTEN_VERSION_
 		emscripten_setup();

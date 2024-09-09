@@ -50,6 +50,7 @@ typedef struct s_profile_field_info {
 	s32		height_pad;
 } ProfileFieldInfo;
 
+
 TextField * init_profile_text_field(TTF_Font *font, SDL_Rect profile_rect, ProfileFieldInfo info, s32 i) {
 	TextField *tf = NULL;
 	SDL_Rect rect;
@@ -59,7 +60,7 @@ TextField * init_profile_text_field(TTF_Font *font, SDL_Rect profile_rect, Profi
 	rect.w = info.width >> 1;
 	rect.h = info.height;
 
-	if (!(tf = init_text_field(rect, font, info.text, 8, info.accept_char_func, info.update_func))) {
+	if (!(tf = init_text_field(rect, font, info.text, NICKNAME_MAX_LEN, info.accept_char_func, info.update_func))) {
 		CHESS_LOG(LOG_ERROR, "init_text_field failed\n");
 		return (NULL);
 	}

@@ -164,7 +164,7 @@ void destroy_network_info(SDLHandle *h) {
 }
 
 
-NetworkInfo *init_network(char *server_ip, struct timeval timeout) {
+NetworkInfo *init_network(char *server_ip, char *nickname, struct timeval timeout) {
     NetworkInfo *info = NULL;
     char buffer[1024];
 
@@ -202,12 +202,20 @@ NetworkInfo *init_network(char *server_ip, struct timeval timeout) {
 	info->servaddr.sin_port = htons(SERVER_PORT);
 	info->servaddr.sin_addr.s_addr = inet_addr(server_ip);
 
-	/* Send Hello to the server */
-	sendto(info->sockfd, "Hello", fast_strlen("Hello"), 0, (struct sockaddr *)&info->servaddr, sizeof(info->servaddr));
+	/* Send Hello + name to the server */
+	char connect_str[MSG_SIZE];
+	fast_bzero(connect_str, MSG_SIZE);
+	ft_memcpy(connect_str, CONNECT_STR, CONNECT_LEN);
+	ft_memcpy(connect_str + CONNECT_LEN, nickname, fast_strlen(nickname));
+	sendto(info->sockfd, connect_str, MSG_SIZE, 0, (struct sockaddr *)&info->servaddr, sizeof(info->servaddr));
 
-	// while (!wait_peer_info(info, "Wait peer info")) {
-	// 	SDL_Delay(1000);
+	// printf(PINK"Connect str brut: ");
+	// for (u32 i = 0; i < MSG_SIZE; i++) {
+	// 	printf("%d ", connect_str[i]);
 	// }
+	// printf("\n"RESET);
+
+	// sendto(info->sockfd, CONNECT_STR, CONNECT_LEN, 0, (struct sockaddr *)&info->servaddr, sizeof(info->servaddr));
 	return (info);
 }
 

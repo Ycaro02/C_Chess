@@ -64,8 +64,8 @@ s8		socket_no_block_windows(Socket sockfd, struct timeval timeout);
 #define ACK_LEN 3
 
 /* Message hello */
-#define HELLO_STR "Hello"
-#define HELLO_LEN 5
+#define CONNECT_STR "HConnect"
+#define CONNECT_LEN 8
 
 /* Macro to easier get msg_id */
 #define GET_MESSAGE_ID(msg) (*(u16 *)&msg[IDX_MSG_ID])
@@ -107,7 +107,7 @@ typedef struct s_network_info NetworkInfo;
 #define CLIENT_NOT_ALIVE_TIMEOUT 12L
 
 /* src/chess_network.c */
-NetworkInfo	*init_network(char *server_ip, struct timeval timeout);
+NetworkInfo	*init_network(char *server_ip, char *nickname, struct timeval timeout);
 void		handle_network_client_state(SDLHandle *handle, u32 flag, PlayerInfo *player_info);
 void		send_disconnect_to_server(int sockfd, struct sockaddr_in servaddr);
 void 		send_game_end_to_server(int sockfd, struct sockaddr_in servaddr);
