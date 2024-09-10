@@ -2,7 +2,6 @@
 #include "../include/handle_sdl.h"
 #include "../include/chess_log.h"
 
-
 static void player_color_set_info(PlayerInfo *info) {
 	/* 1 for white, and 0 for black */
 	info->turn = !(info->color);

@@ -14,10 +14,11 @@ typedef struct s_chess_client {
 } ChessClient;
 
 typedef struct s_chess_room {
-	ChessClient	cliA;			/* Client A */
-	ChessClient	cliB;			/* Client B */
-	u32			room_id;		/* Room ID */
-	RoomState	state;			/* Room state */
+	ChessClient		cliA;			/* Client A */
+	ChessClient		cliB;			/* Client B */
+	u32				room_id;		/* Room ID */
+	RoomState		state;			/* Room state */
+	ChessMoveList	*move_lst;		/* Move list */
 } ChessRoom;
 
 typedef struct s_chess_server {
@@ -40,6 +41,32 @@ ChessServer *g_server = NULL;
 	}
 
 #endif
+
+void server_store_movelist(ChessMoveList **lst, char *msg) { 
+	ChessPiece piece_from = 0, piece_to = 0;
+	ChessTile tile_from = 0, tile_to = 0;
+	MsgType msg_type = msg[IDX_TYPE];
+
+	
+	if (msg_type == MSG_TYPE_MOVE || msg_type == MSG_TYPE_PROMOTION)  {
+	/* Get the tile from */
+	tile_from = msg[IDX_FROM];
+	/* Get the tile to */
+	tile_to = msg[IDX_TO];
+		if (msg_type == MSG_TYPE_MOVE) {
+			/* Get the piece from */
+			piece_from = msg[IDX_PIECE];
+			/* Get the piece to */
+			piece_to = piece_from;
+		} else {
+			/* Get the piece from */
+			piece_to = msg[IDX_PIECE];
+			/* Get the piece to select pawn same color than piece to */
+			piece_from = piece_to >= BLACK_PAWN ? BLACK_PAWN : WHITE_PAWN; 
+		}
+		move_save_add(lst, tile_from, tile_to, piece_from, piece_to);
+	}
+}
 
 
 /* @brief Create a new room
@@ -245,6 +272,11 @@ void transmit_message(int sockfd, ChessRoom *r, SockaddrIn *addr_from, char *buf
 	} else if (is_client_b) {
 		sendto(sockfd, data, msg_size + MAGIC_SIZE, 0, (Sockaddr *)&r->cliA.addr, sizeof(r->cliA.addr));
 	}
+
+	server_store_movelist(&r->move_lst, buffer);
+
+	display_move_list(r->move_lst);
+
 	free(data);
 }
 
@@ -306,6 +338,10 @@ void handle_client_timeout(ChessRoom *r) {
 	}
 	if (!r->cliA.connected && !r->cliB.connected) {
 		r->state = ROOM_STATE_WAITING;
+		if (r->move_lst != NULL) {
+			printf(ORANGE"Room reset to waiting\n"RESET);
+			ft_lstclear(&r->move_lst, free);
+		}
 	}
 }
 
@@ -385,9 +421,6 @@ void handle_client_message(int sockfd, ChessRoom *r, SockaddrIn *cliaddr, char *
 	if (ft_memcmp(buffer, CONNECT_STR, CONNECT_LEN) == 0 && msg_size == MSG_SIZE) {
 		/* Handle client connection */
 		handle_client_connect(r, cliaddr, sockfd, buffer + CONNECT_LEN);
-		// char nickname[8] = {};
-		// ft_memcpy(nickname, buffer + CONNECT_LEN, 8);
-		// printf(ORANGE"Buff: |%s| -> "CYAN"name |%s|\n"RESET, buffer, nickname);
 		return ;
 	}
 
@@ -399,6 +432,9 @@ void handle_client_message(int sockfd, ChessRoom *r, SockaddrIn *cliaddr, char *
 	/* Check if the message is an end game message */
 	if (is_end_game_message(buffer, msg_size) && r->state == ROOM_STATE_PLAYING) {
 		printf(RED"Game End Room Reset to Waiting\n"RESET);
+		// Reset move list
+		printf(ORANGE"Game end: Room reset to waiting\n"RESET);
+		ft_lstclear(&r->move_lst, free);
 		r->state = ROOM_STATE_WAITING;
 		r->cliA.player_ready = FALSE;
 		r->cliB.player_ready = FALSE;
@@ -461,11 +497,20 @@ ChessServer *server_setup() {
 	return (server);
 }
 
+void room_destroy(void *room) {
+	ChessRoom *r = room;
+
+	if (r->move_lst) {
+		ft_lstclear(&r->move_lst, free);
+	}
+	free(r);
+}
+
 /* @brief Destroy the server
  * @param server The server
  */
 void server_destroy(ChessServer *server) {
-	ft_lstclear(&server->room_lst, free);
+	ft_lstclear(&server->room_lst, room_destroy);
 	CLOSE_SOCKET(server->sockfd);
 	free(server);
 	CLEANUP_NETWORK();

@@ -19,7 +19,7 @@ SERVER_SRC_DIRS =	../libft/libft ../libft/list ../libft/printf_fd ../libft/parse
 
 SERVER_SRC_DEPS	=	$(shell find $(SERVER_SRC_DIRS) -name '*.c')
 
-SERVER_SRC		=	../server/server.c ../src/network_os.c ../src/handle_signal.c
+SERVER_SRC		=	../server/server.c ../src/network_os.c ../src/handle_signal.c ../src/move_save.c
 
 SERVER_FLAGS	=	-Wall -lmingw32 -lws2_32 -DCHESS_WINDOWS_VERSION
 

@@ -41,7 +41,7 @@ void display_move_list(ChessMoveList *lst) {
 
 	while (tmp) {
 		m = tmp->content;
-		printf("Move from: %s, to: %s, piece from: %s, piece to: %s\n", ChessTile_to_str(m->tile_from), ChessTile_to_str(m->tile_to), ChessPiece_to_str(m->piece_from), ChessPiece_to_str(m->piece_to));
+		printf("Move from: "CYAN"[%s]"RESET" -> "PURPLE"[%s]"RESET": Piece from: "CYAN"|%s|"RESET" -> to: "PURPLE"|%s|\n"RESET, ChessTile_to_str(m->tile_from), ChessTile_to_str(m->tile_to), ChessPiece_to_str(m->piece_from), ChessPiece_to_str(m->piece_to));
 		tmp = tmp->next;
 	}
 	printf("-----------------------------------------------------------------------\n");
