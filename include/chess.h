@@ -88,12 +88,14 @@ typedef struct s_move_save {
 } MoveSave;
 
 /* Typedef for t_list */
-typedef t_list ChessMoveList; 
+typedef t_list ChessMoveList;
+typedef t_list ChessPieceList;
 
 /* ChessBoard struct */
 typedef struct s_chess_board {
-	ChessMoveList	*lst;			/* List of MoveSave struct */
-
+	ChessMoveList	*lst;				/* List of MoveSave struct */
+	ChessPieceList	*white_kill_lst;	/* List of white killed pieces */
+	ChessPieceList	*black_kill_lst;	/* List of black killed pieces */
 	/* 64 bitboard for each piece */
 	Bitboard	piece[PIECE_MAX];
 
@@ -296,7 +298,7 @@ void		pawn_selection_event(SDLHandle *h);
 /* src/move_save.c */
 s8			move_save_add(ChessMoveList **lst, ChessTile tile_from, ChessTile tile_to, ChessPiece piece_from, ChessPiece piece_to);
 void		display_move_list(ChessMoveList *lst);
-
+void		add_kill_lst(ChessBoard *b, ChessPiece killed_piece);
 /* src/handle_reconnect.c */
 void 		process_reconnect_message(SDLHandle *h, char *msg);
 char 		*build_reconnect_message(SDLHandle *h, u16 *msg_size);

@@ -36,6 +36,14 @@ void init_board(ChessBoard *b) {
 	if (b->lst) {
 		CHESS_LOG(LOG_DEBUG, "Free Movelist\n");
 		ft_lstclear(&b->lst, free);
+		if (b->white_kill_lst) {
+			CHESS_LOG(LOG_DEBUG, "Free white kill list\n");
+			ft_lstclear(&b->white_kill_lst, free);
+		}
+		if (b->black_kill_lst) {
+			CHESS_LOG(LOG_DEBUG, "Free black kill list\n");
+			ft_lstclear(&b->black_kill_lst, free);
+		}
 	}	
 
 	/* Set all pieces to 0 */

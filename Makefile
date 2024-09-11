@@ -8,12 +8,12 @@ SDL_LIB			=	-L./rsc/lib/install/lib -rpath ./rsc/lib/install/lib -lSDL2 -lSDL2_t
 
 LIB_DEPS		=   rsc/lib
 
-GET_LOCAL_IP 	=	./rsc/network_test/get_ipv4.sh 
+GET_LOCAL_IP 	=	./rsc/sh/get_ipv4.sh 
 
 IP_SERVER		=	$(shell $(GET_LOCAL_IP))
 
 # Server sources and executable
-SERVER_SRC		=	server/server.c src/network_os.c src/handle_signal.c src/move_save.c
+SERVER_SRC		=	server/server.c src/network_os.c src/handle_signal.c src/move_save.c src/chess_log.c
 SERVER_EXE		=	chess_server
 
 all:        $(NAME)

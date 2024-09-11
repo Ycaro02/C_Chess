@@ -32,6 +32,31 @@ s8 move_save_add(ChessMoveList **lst, ChessTile tile_from, ChessTile tile_to, Ch
 	return (TRUE);
 }
 
+void add_kill_lst(ChessBoard *b, ChessPiece killed_piece) {
+	ChessPieceList	*node = NULL;
+	ChessPiece		*piece = malloc(sizeof(ChessPiece));
+	s8 				is_black = (killed_piece >= BLACK_PAWN);
+
+	if (!piece) {
+		CHESS_LOG(LOG_ERROR, "Malloc failed\n");
+		return ;
+	}
+	*piece = killed_piece;
+	node = ft_lstnew(piece);
+	if (!node) {
+		free(piece);
+		CHESS_LOG(LOG_ERROR, "Malloc failed\n");
+		return ;
+	}
+
+	if (is_black) {
+		ft_lstadd_back(&b->black_kill_lst, node);
+	} else {
+		ft_lstadd_back(&b->white_kill_lst, node);
+	}
+}
+
+
 /* @brief Display the move list
  * @param lst	ChessMoveList head pointer
  */
