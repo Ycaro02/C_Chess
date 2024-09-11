@@ -273,6 +273,7 @@ Bitboard	get_knight_moves(ChessBoard *b, Bitboard knight, ChessPiece type, s8 is
 /* src/generic_piece_move.c */
 Bitboard 	get_piece_move(ChessBoard *board, Bitboard piece, ChessPiece piece_type, s8 check_legal);
 s32			move_piece(SDLHandle *handle, ChessTile tile_from, ChessTile tile_to, ChessPiece type);
+void		handle_enemy_piece_kill(ChessBoard *b, ChessPiece type, Bitboard mask_to);
 
 /* src/handle_board.c */
 s32			event_handler(SDLHandle *h, s8 player_color);

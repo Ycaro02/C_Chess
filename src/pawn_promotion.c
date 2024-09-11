@@ -17,6 +17,9 @@ static void promote_pawn(ChessBoard *board, ChessTile tile, ChessPiece new_piece
 	board->piece[new_piece] |= mask;
 	/* Update the piece state */
 	update_piece_state(board);
+
+	/* Add the move to the list */
+	move_save_add(&board->lst, board->last_tile_from, tile, pawn_type, new_piece);
 }
 
 /* @brief Get the selected piece
@@ -115,14 +118,12 @@ void do_promotion_move(SDLHandle *h, ChessTile tile_from, ChessTile tile_to, Che
 	/* If the message is a promotion message, promote the pawn */
 	ChessPiece	opponent_pawn = new_piece_type >= BLACK_KNIGHT ? BLACK_PAWN : WHITE_PAWN;
 	ChessPiece	piece_to_remove = get_piece_from_tile(h->board, tile_to);
-	
+
 	/* Remove the opponent pawn */
 	h->board->piece[opponent_pawn] &= ~(1ULL << tile_from);
 
 	/* Remove the piece if there is one on the tile */
-	if (piece_to_remove != EMPTY) {
-		h->board->piece[piece_to_remove] &= ~(1ULL << tile_to);
-	}
+	handle_enemy_piece_kill(h->board, piece_to_remove, (1ULL << tile_to));
 
 	/* Add the new piece */
 	h->board->piece[new_piece_type] |= (1ULL << tile_to);

@@ -51,6 +51,9 @@ void process_reconnect_message(SDLHandle *h, char *msg) {
 		tile_to = move_arr[i].tile_to;
 		piece_from = move_arr[i].piece_from;
 		piece_to = move_arr[i].piece_to;
+		CHESS_LOG(LOG_INFO, PINK"Process move Tile: [%s] -> [%s], Piece [%s] -> [%s]\n"RESET,
+			ChessTile_to_str(tile_from), ChessTile_to_str(tile_to),
+			ChessPiece_to_str(piece_from), ChessPiece_to_str(piece_to));
 		/* If the piece is the same */
 		if (piece_from == piece_to) {
 			// is_legal_move_packet
@@ -59,6 +62,9 @@ void process_reconnect_message(SDLHandle *h, char *msg) {
 			/* Is promotion move */
 			// is_legal_move_packet // send pawn here
 			// is_legal_promotion // send new piece here
+			CHESS_LOG(LOG_INFO, ORANGE"Promotion move Tile: [%s] -> [%s], Piece [%s] -> [%s]\n"RESET,
+				ChessTile_to_str(tile_from), ChessTile_to_str(tile_to),
+				ChessPiece_to_str(piece_from), ChessPiece_to_str(piece_to));
 			do_promotion_move(h, tile_from, tile_to, piece_to, FALSE);
 		}
 		last_piece_moved = piece_from;

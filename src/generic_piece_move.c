@@ -1,5 +1,6 @@
 #include "../include/chess.h"
 #include "../include/handle_sdl.h"
+#include "../include/chess_log.h"
 
 /* @brief Update special info byte for the king and rook
  * @param b		ChessBoard struct
@@ -76,22 +77,33 @@ static void update_en_passant_bitboard(ChessBoard *b, ChessPiece type, ChessTile
 	}
 }
 
+ChessTile get_tile_from_mask(Bitboard mask) {
+	for (s32 i = 0; i < 64; i++) {
+		if (mask & (1ULL << i)) {
+			return ((ChessTile)i);
+		}
+	}
+	return (INVALID_TILE);
+}
+
 /* @brief Handle enemy piece kill
  * @param b			ChessBoard struct
  * @param type		ChessPiece enum
  * @param tile_to	ChessTile enum
  * @param mask_to	Bitboard of the destination tile
 */
-static void handle_enemy_piece_kill(ChessBoard *b, ChessPiece type, ChessTile tile_to, Bitboard mask_to) {
+void handle_enemy_piece_kill(ChessBoard *b, ChessPiece type, Bitboard mask_to) {
 	ChessPiece	enemy_piece = get_piece_from_mask(b, mask_to);
 	
 	if (enemy_piece != EMPTY) {
-		// display_kill_info(enemy_piece, tile_to);
-		b->piece[enemy_piece] &= ~(1ULL << tile_to);
+		ChessTile tile_to = get_tile_from_mask(mask_to);
+		display_kill_info(enemy_piece, tile_to);
+		b->piece[enemy_piece] &= ~mask_to;
 	} else if ((type == WHITE_PAWN || type == BLACK_PAWN) && mask_to == b->en_passant) {
 		mask_to = (1ULL << b->en_passant_tile);
 		enemy_piece = (type == WHITE_PAWN) ? BLACK_PAWN : WHITE_PAWN;
-		// display_kill_info(enemy_piece, b->en_passant_tile);
+		CHESS_LOG(LOG_INFO, "En passant kill\n");
+		display_kill_info(enemy_piece, b->en_passant_tile);
 		b->piece[enemy_piece] &= ~mask_to;
 	}
 }
@@ -155,7 +167,7 @@ s32 move_piece(SDLHandle *handle, ChessTile tile_from, ChessTile tile_to, ChessP
 	s32			ret = TRUE;
 
 	/* Check if the enemy piece need to be kill, handle 'en passant' kill too */
-	handle_enemy_piece_kill(handle->board, type, tile_to, mask_to);
+	handle_enemy_piece_kill(handle->board, type, mask_to);
 
 	/* Check if the move is a castle move and move rook if needed */
 	handle_castle_move(handle, type, tile_from, tile_to);
@@ -186,7 +198,9 @@ s32 move_piece(SDLHandle *handle, ChessTile tile_from, ChessTile tile_to, ChessP
 	handle->board->last_tile_from = tile_from;
 	handle->board->last_tile_to = tile_to;
 
-	move_save_add(&handle->board->lst, tile_from, tile_to, type, get_piece_from_tile(handle->board, tile_to));
+	if (ret != PAWN_PROMOTION) {
+		move_save_add(&handle->board->lst, tile_from, tile_to, type, get_piece_from_tile(handle->board, tile_to));
+	}
 
 	// display_move_list(handle->board->lst);
 	return (ret);
