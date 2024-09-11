@@ -86,6 +86,44 @@ void draw_piece_over_board(SDLHandle *h, s32 x, s32 y) {
 	draw_texure(h, texture, (iVec2){x, y}, h->tile_size);
 }
 
+void display_killed_piece(SDLHandle *h, ChessPiece piece, iVec2 pos, iVec2 size) {
+	SDL_Texture	*texture = h->piece_texture[piece];
+	draw_texure(h, texture, pos, size);
+}
+
+void draw_piece_kill(SDLHandle *h, s8 is_bot, s8 is_black) {
+	iVec2 start = {0, 0};
+	iVec2 piece_size = {h->tile_size.x >> 2, h->tile_size.y >> 2};
+
+	SDL_Rect name_rect = is_bot ? h->name_rect_bot : h->name_rect_top;
+
+	start.x = name_rect.x;
+
+	if (is_bot) {
+		start.y = name_rect.y - (h->tile_size.y >> 1);
+	} else {
+		start.y = name_rect.y + name_rect.h + (h->tile_size.y >> 1) - (piece_size.y);
+	}
+
+
+	ChessPieceList *lst_display = is_black ? h->board->black_kill_lst : h->board->white_kill_lst;
+
+	for (ChessPieceList *l = lst_display; l; l = l->next) {
+		display_killed_piece(h, *(ChessPiece *)l->content, start, piece_size);
+		start.x += piece_size.x;
+		/* Check if we need to go to the next line */
+		if (start.x + (piece_size.x + (piece_size.x >> 1)) >= h->window_size.x) {
+			start.x = name_rect.x;
+			if (is_bot) {
+				start.y -= piece_size.y + (piece_size.y >> 1);
+			} else {
+				start.y += piece_size.y + (piece_size.y >> 1);
+			}
+
+		}
+	}
+}
+
 
 /* Draw chess board */
 void draw_board(SDLHandle *handle, s8 player_color) {
@@ -162,6 +200,9 @@ void draw_board(SDLHandle *handle, s8 player_color) {
 	if (handle->center_text->str) {
 		center_text_draw(handle, handle->center_text);
 	}
+
+	draw_piece_kill(handle, TRUE, !handle->player_info.color);
+	draw_piece_kill(handle, FALSE, handle->player_info.color);
 }
 
 /* @brief update_graphic_board, just call window_clear, draw_board and SDL_RenderPresent

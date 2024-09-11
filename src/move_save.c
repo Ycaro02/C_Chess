@@ -32,6 +32,13 @@ s8 move_save_add(ChessMoveList **lst, ChessTile tile_from, ChessTile tile_to, Ch
 	return (TRUE);
 }
 
+int sort_chess_piece(void *a, void *b) {
+	ChessPiece	*pa = (ChessPiece *)a;
+	ChessPiece	*pb = (ChessPiece *)b;
+
+	return (*pa < *pb);
+}
+
 void add_kill_lst(ChessBoard *b, ChessPiece killed_piece) {
 	ChessPieceList	*node = NULL;
 	ChessPiece		*piece = malloc(sizeof(ChessPiece));
@@ -51,8 +58,10 @@ void add_kill_lst(ChessBoard *b, ChessPiece killed_piece) {
 
 	if (is_black) {
 		ft_lstadd_back(&b->black_kill_lst, node);
+		list_sort(&b->black_kill_lst, sort_chess_piece);
 	} else {
 		ft_lstadd_back(&b->white_kill_lst, node);
+		list_sort(&b->white_kill_lst, sort_chess_piece);
 	}
 }
 
