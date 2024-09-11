@@ -195,6 +195,7 @@ typedef struct s_sdl_handle {
 	TTF_Font		*tile_font;					/* The font for tile number/letters */
 	TTF_Font		*timer_font;				/* The font */
 	TTF_Font		*name_font;					/* The font */
+	TTF_Font		*piece_diff_font;			/* The font */
 	char			timer_str[TIME_STR_SIZE];	/* Timer string */
 	iVec2			window_size;				/* The size of the window */
 	iVec2			tile_size;					/* The size of the tile */

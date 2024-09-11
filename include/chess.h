@@ -126,6 +126,10 @@ typedef struct s_chess_board {
 	/* Last clicked tile */
 	ChessTile	last_clicked_tile;		/* Last clicked tile */
 
+	/* Value of white and black pieces taken */
+	s8			white_piece_val;		/* White piece value */
+	s8			black_piece_val;		/* Black piece value */
+
 	/* u8 used as 8 boolean info used as follow
 	 * 0: white check
 	 * 1: black check
@@ -299,6 +303,9 @@ void		pawn_selection_event(SDLHandle *h);
 s8			move_save_add(ChessMoveList **lst, ChessTile tile_from, ChessTile tile_to, ChessPiece piece_from, ChessPiece piece_to);
 void		display_move_list(ChessMoveList *lst);
 void		add_kill_lst(ChessBoard *b, ChessPiece killed_piece);
+void		compute_piece_value(ChessBoard *b);
+
+
 /* src/handle_reconnect.c */
 void 		process_reconnect_message(SDLHandle *h, char *msg);
 char 		*build_reconnect_message(SDLHandle *h, u16 *msg_size);

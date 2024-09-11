@@ -308,7 +308,9 @@ SDLHandle *create_sdl_handle(const char* title) {
 	if (!(handle->name_font = safe_load_font(handle, FONT_PATH, (handle->name_rect_bot.h >> 1) + (handle->name_rect_bot.h >> 2)))) {
 		return (NULL);
 	}
-
+	if (!(handle->piece_diff_font = safe_load_font(handle, FONT_PATH, (handle->tile_size.x >> 2))) ) {
+		return (NULL);
+	}
 
 	window_clear(handle->renderer);
 	return (handle);

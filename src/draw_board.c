@@ -91,14 +91,24 @@ void display_killed_piece(SDLHandle *h, ChessPiece piece, iVec2 pos, iVec2 size)
 	draw_texure(h, texture, pos, size);
 }
 
-void draw_piece_kill(SDLHandle *h, s8 is_bot, s8 is_black) {
-	iVec2 start = {0, 0};
-	iVec2 piece_size = {h->tile_size.x >> 2, h->tile_size.y >> 2};
+void piece_diff_to_str(char *str, s8 piece_diff) {
+	fast_bzero(str, 8);
+	int start = 0;
 
-	SDL_Rect name_rect = is_bot ? h->name_rect_bot : h->name_rect_top;
+
+	if (piece_diff > 0) {
+		str[0] = '+';
+		start = 1;
+	} 
+	sprintf(str + start, "%d", piece_diff);
+}
+
+void draw_piece_kill(SDLHandle *h, s8 is_bot, s8 is_black) {
+	iVec2 			start = {0, 0}, piece_size = {h->tile_size.x >> 2, h->tile_size.y >> 2};
+	SDL_Rect		name_rect = is_bot ? h->name_rect_bot : h->name_rect_top;
+	ChessPieceList	*lst_display = is_black ? h->board->black_kill_lst : h->board->white_kill_lst;
 
 	start.x = name_rect.x;
-
 	if (is_bot) {
 		start.y = name_rect.y - (h->tile_size.y >> 1);
 	} else {
@@ -106,7 +116,6 @@ void draw_piece_kill(SDLHandle *h, s8 is_bot, s8 is_black) {
 	}
 
 
-	ChessPieceList *lst_display = is_black ? h->board->black_kill_lst : h->board->white_kill_lst;
 
 	for (ChessPieceList *l = lst_display; l; l = l->next) {
 		display_killed_piece(h, *(ChessPiece *)l->content, start, piece_size);
@@ -122,6 +131,21 @@ void draw_piece_kill(SDLHandle *h, s8 is_bot, s8 is_black) {
 
 		}
 	}
+
+	s8 my_val = h->board->white_piece_val, enemy_val = h->board->black_piece_val;
+
+	if (h->player_info.color == IS_BLACK) {
+		my_val = h->board->black_piece_val;
+		enemy_val = h->board->white_piece_val;
+	}
+
+	if (is_bot && my_val != enemy_val) {
+		// char *str = ft_itoa(h->board->white_piece_val - h->board->black_piece_val);
+		char str[8] = {0};
+		piece_diff_to_str(str, my_val - enemy_val);
+		write_text(h, str, h->piece_diff_font, (iVec2){start.x + (piece_size.x >> 2), start.y}, U32_WHITE_COLOR);
+	}
+
 }
 
 
@@ -200,6 +224,8 @@ void draw_board(SDLHandle *handle, s8 player_color) {
 	if (handle->center_text->str) {
 		center_text_draw(handle, handle->center_text);
 	}
+
+	compute_piece_value(handle->board);
 
 	draw_piece_kill(handle, TRUE, !handle->player_info.color);
 	draw_piece_kill(handle, FALSE, handle->player_info.color);
