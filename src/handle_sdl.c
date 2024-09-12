@@ -38,7 +38,9 @@ void compute_win_size(SDLHandle *h) {
 
     /* Calculate tile size for the chessboard */
 	minus = width < height ? width : height;
-    tile_size = minus >> 3;
+    
+	/* Chess tile size == minus / 8 */
+	tile_size = minus >> 3;
 
 	h->tile_size.x = tile_size;
 	h->tile_size.y = tile_size;
@@ -54,7 +56,7 @@ void compute_win_size(SDLHandle *h) {
 	/* Detect minus between left and bot band size */
 	minus = h->band_size.left < h->band_size.bot ? h->band_size.left : h->band_size.bot;
 
-	/* Set the band size */
+	/* Set the band size left and band to be the same size */
 	h->band_size.left = minus;
 	h->band_size.bot = minus;
 

@@ -150,8 +150,9 @@ int main(int argc, char **argv) {
 	s8			error = 0;
 
 
+	set_log_level(LOG_DEBUG);
+	// set_log_level(LOG_INFO);
 	// set_log_level(LOG_ERROR);
-	set_log_level(LOG_INFO);
 	// set_log_level(LOG_NONE);
 
 	flag = handle_chess_flag(argc, argv, &error, &player_info);
@@ -162,7 +163,7 @@ int main(int argc, char **argv) {
 
 	handle = get_SDL_handle();
 	if (!handle) {
-		CHESS_LOG(LOG_ERROR, "Error %s: get_SDL_handle failed init\n", __func__);
+		CHESS_LOG(LOG_ERROR, "%s: get_SDL_handle failed init\n", __func__);
 		return (1);
 	}
 	handle->flag = flag;
@@ -170,7 +171,6 @@ int main(int argc, char **argv) {
 	char *nickname = get_nickname_in_file();
 	if (nickname) {
 		handle->player_info.name = nickname;
-		printf("Nickname: |%s|\n", handle->player_info.name);
 	} else {
 		handle->player_info.name = ft_strdup("Default");
 	}
