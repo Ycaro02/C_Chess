@@ -3,13 +3,21 @@
 
 #include "chess.h"
 
-/* Basic SDL include */
-#include "../rsc/lib/install/include/SDL2/SDL.h"
-#include "../rsc/lib/install/include/SDL2/SDL_video.h"
-#include "../rsc/lib/install/include/SDL2/SDL_render.h"
-
-/* TTF include */
-#include "../rsc/lib/install/include/SDL2/SDL_ttf.h"
+#ifdef __ANDROID__
+	/* Define to avoid SDL_main replace main */
+	#define SDL_MAIN_HANDLED
+	#include <SDL2/SDL.h>
+	#include <SDL2/SDL_video.h>
+	#include <SDL2/SDL_render.h>
+	#include <SDL2/SDL_ttf.h>
+#else 
+	/* Basic SDL include */
+	#include "../rsc/lib/install/include/SDL2/SDL.h"
+	#include "../rsc/lib/install/include/SDL2/SDL_video.h"
+	#include "../rsc/lib/install/include/SDL2/SDL_render.h"
+	/* TTF include */
+	#include "../rsc/lib/install/include/SDL2/SDL_ttf.h"
+#endif
 
 /* Texture path */
 #define BLACK_KING_TEXTURE "rsc/texture/piece/black_king.bmp"
