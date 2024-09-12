@@ -70,7 +70,6 @@ s8		socket_no_block_windows(Socket sockfd, struct timeval timeout);
 /* Macro to easier get msg_id */
 #define GET_MESSAGE_ID(msg) (*(u16 *)&msg[IDX_MSG_ID])
 
-
 /* Magic string for sending addr */
 #define MAGIC_STRING ((const char[]){0x7F, 0x42, 'C', 'H', 'E', 'S', 'S', 'M', 'A', 'G', 'I', 'C', 0x7A, 0x7B, 0x42, 0x7F})
 #define MAGIC_CONNECT_STR ((const char[]){-0x80, 0x7B, 'C', 'H', 'E', 'S', 'S', 'C', 'O', 'N', 'N', 'E', 'C', 'T', 0x7B, -0x80})
@@ -87,7 +86,6 @@ struct s_network_info {
     Socket		sockfd;
     SockaddrIn	localaddr;
     SockaddrIn	servaddr;
-    // SockaddrIn	peeraddr;
     SocketLen	addr_len;
 	ClientState	client_state;			/* Client state (reconnect, waiter/lister color)*/
 	s8			peer_conected;			/* Peer connected */
@@ -119,16 +117,19 @@ void		destroy_network_info(SDLHandle *h);
 void 		wait_for_player(SDLHandle *h);
 
 /* src/handle_message.c */
-void	process_message_receive(SDLHandle *handle, char *msg);
-void	display_message(char *msg);
-void	build_message(SDLHandle *h, char *msg, MsgType msg_type, ChessTile tile_from_or_color, ChessTile tile_to, ChessPiece piece_type);
-char	*build_reconnect_message(SDLHandle *h, u16 *msg_size);
-s8		chess_msg_receive(SDLHandle *h, NetworkInfo *info, char *rcv_buffer);
-s8		chess_msg_send(NetworkInfo *info, char *msg, u16 msg_size);
-s8		safe_msg_send(SDLHandle *h);
+void		process_message_receive(SDLHandle *handle, char *msg);
+void		display_message(char *msg);
+void		build_message(SDLHandle *h, char *msg, MsgType msg_type, ChessTile tile_from_or_color, ChessTile tile_to, ChessPiece piece_type);
+s8			chess_msg_receive(SDLHandle *h, NetworkInfo *info, char *rcv_buffer);
+s8			chess_msg_send(NetworkInfo *info, char *msg, u16 msg_size);
+s8			safe_msg_send(SDLHandle *h);
+
+/* src/handle_reconnect.c */
+char		*build_reconnect_message(ChessMoveList *move_lst, u16 *msg_size, u64 my_time, u64 enemy_time, u16 msg_id, s8 color);
+void		process_reconnect_message(SDLHandle *h, char *msg);
 
 /* src/network_routine.c */
-void	network_chess_routine(SDLHandle *h);
-void 	send_alive_packet(NetworkInfo *info);
+void		network_chess_routine(SDLHandle *h);
+void 		send_alive_packet(NetworkInfo *info);
 
 #endif /* CHESS_NETWORK_H */

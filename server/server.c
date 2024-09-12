@@ -5,20 +5,24 @@
 typedef t_list RoomList;
 
 typedef struct s_chess_client {
-	char 			nickname[8];	/* Client nickname */
-    SockaddrIn		addr;			/* Client address */
-	struct timeval 	last_alive;		/* Last alive packet */
-	s8				client_state;	/* Client state */
-    s8				connected;		/* Client connected */
-	s8				player_ready;	/* Player ready */
+	char 			nickname[8];		/* Client nickname */
+    SockaddrIn		addr;				/* Client address */
+	struct timeval 	last_alive;			/* Last alive packet */
+	u64				my_remain_time;	/* Client remaining time */
+	u64				enemy_remain_time;	/* Enemy remaining time */
+	s8				color;				/* Client color */
+	s8				client_state;		/* Client state */
+    s8				connected;			/* Client connected */
+	s8				player_ready;		/* Player ready */
 } ChessClient;
 
 typedef struct s_chess_room {
 	ChessClient		cliA;			/* Client A */
 	ChessClient		cliB;			/* Client B */
-	u32				room_id;		/* Room ID */
-	RoomState		state;			/* Room state */
 	ChessMoveList	*move_lst;		/* Move list */
+	u64				room_id;		/* Room ID */
+	RoomState		state;			/* Room state */
+	u16				msg_id;			/* Message ID of the cli communication */
 } ChessRoom;
 
 typedef struct s_chess_server {
@@ -46,7 +50,6 @@ void server_store_movelist(ChessMoveList **lst, char *msg) {
 	ChessTile tile_from = 0, tile_to = 0;
 	MsgType msg_type = msg[IDX_TYPE];
 
-	
 	if (msg_type == MSG_TYPE_MOVE || msg_type == MSG_TYPE_PROMOTION)  {
 		/* Get the tile from */
 		tile_from = msg[IDX_FROM];
@@ -250,6 +253,50 @@ void connect_client_together(int sockfd, ChessRoom *r) {
 	r->state = ROOM_STATE_PLAYING;
 }
 
+void set_first_timer_data(ChessRoom *r, u64 timer) {
+	r->cliA.my_remain_time = timer;
+	r->cliA.enemy_remain_time = timer;
+	r->cliB.my_remain_time = timer;
+	r->cliB.enemy_remain_time = timer;
+}
+
+void server_save_info(ChessRoom *r, char *msg, s8 is_client_a) {
+	s8 msg_type = msg[IDX_TYPE];
+
+	if (msg_type >= MSG_TYPE_COLOR && msg_type <= MSG_TYPE_PROMOTION) {
+		r->msg_id = GET_MESSAGE_ID(msg);
+		printf("Message ID rcv: %d in |%s|\n", r->msg_id, MsgType_to_str(msg_type));
+
+		if (msg_type == MSG_TYPE_MOVE || msg_type == MSG_TYPE_PROMOTION) {
+			server_store_movelist(&r->move_lst, msg);
+			// display_move_list(r->move_lst);
+		} else if (msg_type == MSG_TYPE_COLOR) {
+				if (is_client_a) {
+					r->cliB.color = msg[IDX_FROM];
+					r->cliA.color = !r->cliB.color;
+					set_first_timer_data(r, *(u64 *)&msg[IDX_TIMER]);
+				} else {
+					r->cliA.color = msg[IDX_FROM];
+					r->cliB.color = !r->cliA.color;
+					set_first_timer_data(r, *(u64 *)&msg[IDX_TIMER]);
+				}
+				printf("Client A |%s| color: %s\n", r->cliA.nickname, r->cliA.color == IS_WHITE ? "WHITE" : "BLACK");
+				printf("Client B |%s| color: %s\n", r->cliB.nickname, r->cliB.color == IS_WHITE ? "WHITE" : "BLACK");
+		}
+		if (msg_type != MSG_TYPE_COLOR) {
+			if (is_client_a) {
+				r->cliA.my_remain_time = *(u64 *)&msg[IDX_TIMER];
+				r->cliB.enemy_remain_time = *(u64 *)&msg[IDX_TIMER];
+			} else {
+				r->cliB.my_remain_time = *(u64 *)&msg[IDX_TIMER];
+				r->cliA.enemy_remain_time = *(u64 *)&msg[IDX_TIMER];
+			}
+		}
+		printf("Client A |%s| remain time: %ld, enemy: %ld\n", r->cliA.nickname, r->cliA.my_remain_time, r->cliA.enemy_remain_time);
+		printf("Client B |%s| remain time: %ld, enemy: %ld\n", r->cliB.nickname, r->cliB.my_remain_time, r->cliB.enemy_remain_time);
+	}
+}
+
 /* @brief Transmit a message to the other client
  * @param sockfd The socket file descriptor
  * @param r The room
@@ -272,9 +319,9 @@ void transmit_message(int sockfd, ChessRoom *r, SockaddrIn *addr_from, char *buf
 		sendto(sockfd, data, msg_size + MAGIC_SIZE, 0, (Sockaddr *)&r->cliA.addr, sizeof(r->cliA.addr));
 	}
 
-	server_store_movelist(&r->move_lst, buffer);
+	server_save_info(r, buffer, is_client_a); 
 
-	display_move_list(r->move_lst);
+
 
 	free(data);
 }

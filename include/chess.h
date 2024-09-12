@@ -305,11 +305,6 @@ void		display_move_list(ChessMoveList *lst);
 void		add_kill_lst(ChessBoard *b, ChessPiece killed_piece);
 void		compute_piece_value(ChessBoard *b);
 
-
-/* src/handle_reconnect.c */
-void 		process_reconnect_message(SDLHandle *h, char *msg);
-char 		*build_reconnect_message(SDLHandle *h, u16 *msg_size);
-
 /* src/parse_message_receive.c */
 s8 			ignore_msg(SDLHandle *h, char *buffer);
 

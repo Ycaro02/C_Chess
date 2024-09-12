@@ -82,8 +82,8 @@ void process_reconnect_message(SDLHandle *h, char *msg) {
  * @param msg_size The size of the message
  * @return The message
  */
-char *build_reconnect_message(SDLHandle *h, u16 *msg_size) {
-	ChessMoveList	*move_list = h->board->lst;
+char *build_reconnect_message(ChessMoveList *move_lst, u16 *msg_size, u64 my_time, u64 enemy_time, u16 msg_id, s8 color) {
+	ChessMoveList	*move_list = move_lst;
 	MoveSave		*move_arr = NULL;
 	char			*buff = NULL;
 
@@ -114,20 +114,20 @@ char *build_reconnect_message(SDLHandle *h, u16 *msg_size) {
 	buff[IDX_TYPE] = MSG_TYPE_RECONNECT;
 
 	/* Set the message ID */
-	ft_memcpy(&buff[IDX_MSG_ID], &h->msg_id, sizeof(u16));
+	ft_memcpy(&buff[IDX_MSG_ID], &msg_id, sizeof(u16));
 
 	CHESS_LOG(LOG_INFO, PURPLE"Build: %s ID: %d\n"RESET, MsgType_to_str(buff[IDX_TYPE]), GET_MESSAGE_ID(buff));
 
 
 	/* Idx from is for the color on color/reconnect message */
-	buff[IDX_FROM] = !h->player_info.color;
+	buff[IDX_FROM] = !color;
 
 	ft_memcpy(&buff[4], msg_size, sizeof(u16));
 	ft_memcpy(&buff[6], &list_size, sizeof(u16));
 	ft_memcpy(&buff[8], &array_byte_size, sizeof(u16));
 	ft_memcpy(&buff[MOVE_ARRAY_IDX], move_arr, array_byte_size);
-	ft_memcpy(&buff[MOVE_ARRAY_IDX + array_byte_size], &h->enemy_remaining_time, sizeof(u64));
-	ft_memcpy(&buff[MOVE_ARRAY_IDX + array_byte_size + 8], &h->my_remaining_time, sizeof(u64));
+	ft_memcpy(&buff[MOVE_ARRAY_IDX + array_byte_size], &enemy_time, sizeof(u64));
+	ft_memcpy(&buff[MOVE_ARRAY_IDX + array_byte_size + 8], &my_time, sizeof(u64));
 	free(move_arr);
 	return (buff);
 }

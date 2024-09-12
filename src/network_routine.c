@@ -86,7 +86,7 @@ s8 reconnect_handling(SDLHandle *h) {
 	}
  	if (wait_peer_info(h->player_info.nt_info, "Wait reconnect peer info")) {
 		u16 msg_size = 0;
-		char *buff = build_reconnect_message(h, &msg_size);
+		char *buff = build_reconnect_message(h->board->lst, &msg_size, h->my_remaining_time, h->enemy_remaining_time, h->msg_id, h->player_info.color);
 		chess_msg_send(h->player_info.nt_info, buff, msg_size);
 		h->player_info.nt_info->peer_conected = TRUE;
 		center_text_string_set(h, NULL, NULL);
