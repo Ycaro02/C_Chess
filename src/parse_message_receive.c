@@ -129,7 +129,7 @@ s8 ignore_msg(SDLHandle *h, char *buffer) {
 	int			len = fast_strlen(buffer);
 
 	/* If the message is a hello,ack message or same than last msg process return here */
-	if (fast_strcmp(buffer, CONNECT_STR) == 0 || fast_strcmp(buffer, ACK_STR) == 0) {
+	if (ft_memcmp(buffer, CONNECT_STR, CONNECT_LEN) == 0 || ft_memcmp(buffer, ACK_STR, ACK_LEN) == 0) {
 		return (TRUE);
 	}
 

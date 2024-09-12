@@ -39,7 +39,6 @@ ChessServer *g_server = NULL;
 		tv->tv_sec = count.QuadPart / freq.QuadPart;
 		tv->tv_usec = (count.QuadPart % freq.QuadPart) * 1000000 / freq.QuadPart;
 	}
-
 #endif
 
 void server_store_movelist(ChessMoveList **lst, char *msg) { 
@@ -49,22 +48,22 @@ void server_store_movelist(ChessMoveList **lst, char *msg) {
 
 	
 	if (msg_type == MSG_TYPE_MOVE || msg_type == MSG_TYPE_PROMOTION)  {
-	/* Get the tile from */
-	tile_from = msg[IDX_FROM];
-	/* Get the tile to */
-	tile_to = msg[IDX_TO];
-		if (msg_type == MSG_TYPE_MOVE) {
-			/* Get the piece from */
-			piece_from = msg[IDX_PIECE];
-			/* Get the piece to */
-			piece_to = piece_from;
-		} else {
-			/* Get the piece from */
-			piece_to = msg[IDX_PIECE];
-			/* Get the piece to select pawn same color than piece to */
-			piece_from = piece_to >= BLACK_PAWN ? BLACK_PAWN : WHITE_PAWN; 
-		}
-		move_save_add(lst, tile_from, tile_to, piece_from, piece_to);
+		/* Get the tile from */
+		tile_from = msg[IDX_FROM];
+		/* Get the tile to */
+		tile_to = msg[IDX_TO];
+			if (msg_type == MSG_TYPE_MOVE) {
+				/* Get the piece from */
+				piece_from = msg[IDX_PIECE];
+				/* Get the piece to */
+				piece_to = piece_from;
+			} else {
+				/* Get the piece from */
+				piece_to = msg[IDX_PIECE];
+				/* Get the piece to select pawn same color than piece to */
+				piece_from = piece_to >= BLACK_PAWN ? BLACK_PAWN : WHITE_PAWN; 
+			}
+			move_save_add(lst, tile_from, tile_to, piece_from, piece_to);
 	}
 }
 
@@ -521,7 +520,7 @@ void server_destroy(ChessServer *server) {
  */
 void server_routine(ChessServer *server) {
 	SockaddrIn			cliaddr;
-	socklen_t			addr_len = sizeof(cliaddr);
+	SocketLen			addr_len = sizeof(cliaddr);
 	char				buffer[4096];
 	ssize_t				len = 0;
 

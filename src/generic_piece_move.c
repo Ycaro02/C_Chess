@@ -96,7 +96,7 @@ void handle_enemy_piece_kill(ChessBoard *b, ChessPiece type, Bitboard mask_to) {
 	ChessPiece	enemy_piece = get_piece_from_mask(b, mask_to);
 	
 	if (enemy_piece != EMPTY) {
-		ChessTile tile_to = get_tile_from_mask(mask_to);
+		// ChessTile tile_to = get_tile_from_mask(mask_to);
 		// display_kill_info(enemy_piece, tile_to);
 		add_kill_lst(b, enemy_piece);
 		b->piece[enemy_piece] &= ~mask_to;
