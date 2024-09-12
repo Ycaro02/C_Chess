@@ -2,6 +2,10 @@
 #include "../include/network.h"
 #include "../include/handle_signal.h"
 
+#define INVALID_CLIENT -1
+#define CLIENT_A 0
+#define CLIENT_B 1
+
 typedef t_list RoomList;
 
 typedef struct s_chess_client {
@@ -16,7 +20,20 @@ typedef struct s_chess_client {
 	s8				player_ready;		/* Player ready */
 } ChessClient;
 
+typedef struct s_chess_game_state {
+	char 			cliA_nickname[8];
+	char 			cliB_nickname[8];
+	ChessMoveList	*move_lst;
+	u64 			room_id;
+	u64 			cliA_timer;
+	u64 			cliB_timer;
+	u16 			msg_id;
+	s8 				cliA_color;
+	s8 				cliB_color;
+} ChessGameState;
+
 typedef struct s_chess_room {
+	ChessGameState	game_state;		/* Game state */
 	ChessClient		cliA;			/* Client A */
 	ChessClient		cliB;			/* Client B */
 	ChessMoveList	*move_lst;		/* Move list */
@@ -45,6 +62,25 @@ ChessServer *g_server = NULL;
 	}
 #endif
 
+/* @brief Update the chess game state structure 
+ * @param r The room
+ */
+void update_chess_game_state(ChessRoom *r) {
+	ft_memcpy(r->game_state.cliA_nickname, r->cliA.nickname, 8);
+	ft_memcpy(r->game_state.cliB_nickname, r->cliB.nickname, 8);
+	r->game_state.move_lst = r->move_lst;
+	r->game_state.room_id = r->room_id;
+	r->game_state.cliA_timer = r->cliA.my_remain_time;
+	r->game_state.cliB_timer = r->cliB.my_remain_time;
+	r->game_state.msg_id = r->msg_id;
+	r->game_state.cliA_color = r->cliA.color;
+	r->game_state.cliB_color = r->cliB.color;
+}
+
+/* @brief Store the move list in list
+ * @param lst pointer to the head of the move list
+ * @param msg The message buffer
+ */
 void server_store_movelist(ChessMoveList **lst, char *msg) { 
 	ChessPiece piece_from = 0, piece_to = 0;
 	ChessTile tile_from = 0, tile_to = 0;
@@ -176,6 +212,11 @@ s8 client_disconnect_msg(ChessRoom *r, SockaddrIn *cliaddr, char *buff) {
 	return (FALSE);
 }
 
+/* @brief Display a brut packet
+ * @param msg The message
+ * @param packet_size The packet size
+ * @param msg_type The message type
+ */
 void display_brut_packet(char *msg, u64 packet_size, char *msg_type) {
 	printf(PINK"Packet %s: "ORANGE, msg_type);
 	for (u64 i = 0; i < packet_size; i++) {
@@ -222,14 +263,56 @@ char *format_connect_packet(char *msg, u64 message_size, s8 player_state){
 	return (data);
 }
 
+void send_reconnect_packet(ChessRoom *r, int sockfd, s8 last_connected) {
+	char *reconnect_msg, *format_reconnect_msg;
+	u64 my_timer = 0, enemy_timer = 0;
+	u16 msg_size = 0;
+	s8 color = -1;
+	
+	/* Get the right timer and color */
+	if (last_connected == CLIENT_A) {
+		my_timer = r->game_state.cliA_timer;
+		enemy_timer = r->game_state.cliB_timer;
+		color = r->game_state.cliB_color; /* need to send the reverse color */
+	} else if (last_connected == CLIENT_B) {
+		my_timer = r->game_state.cliB_timer;
+		enemy_timer = r->game_state.cliA_timer;
+		color = r->game_state.cliA_color; /* need to send the reverse color */
+	}
+	
+	/* Build the reconnect message */
+	reconnect_msg = build_reconnect_message(r->game_state.move_lst, &msg_size, my_timer, enemy_timer, r->game_state.msg_id, color);
+	if (!reconnect_msg) {
+		printf(RED"Error: %s\n"RESET, __func__);
+		return ;
+	}
+	
+	/* Format the reconnect message */
+	format_reconnect_msg = format_client_message(reconnect_msg, msg_size);
+	if (!format_reconnect_msg) {
+		printf(RED"Error: %s\n"RESET, __func__);
+		free(reconnect_msg);
+		return ;
+	}
+
+	/* Send it */
+	if (last_connected == CLIENT_A) {
+		printf("Send reconnect packet to %s\n", r->cliA.nickname);
+		sendto(sockfd, format_reconnect_msg, msg_size, 0, (Sockaddr *)&r->cliA.addr, sizeof(r->cliA.addr));
+	} else if (last_connected == CLIENT_B) {
+		printf("Send reconnect packet to %s\n", r->cliB.nickname);
+		sendto(sockfd, format_reconnect_msg, msg_size, 0, (Sockaddr *)&r->cliB.addr, sizeof(r->cliB.addr));
+	}
+	free(reconnect_msg);
+	free(format_reconnect_msg);
+}
+
 /* @brief Connect the client together set the room state to playing
  * @param sockfd The socket file descriptor
  * @param r The room
  */
-void connect_client_together(int sockfd, ChessRoom *r) {
+void connect_client_together(int sockfd, ChessRoom *r, s8 last_connected) {
 
-	// char *dataClientA = format_connect_packet((char *)&r->cliA.addr, sizeof(r->cliA.addr), r->cliA.client_state);
-	// char *dataClientB = format_connect_packet((char *)&r->cliB.addr, sizeof(r->cliB.addr), r->cliB.client_state);
 	char *dataClientA = format_connect_packet(r->cliA.nickname, 8, r->cliA.client_state);
 	char *dataClientB = format_connect_packet(r->cliB.nickname, 8, r->cliB.client_state);
 
@@ -250,9 +333,18 @@ void connect_client_together(int sockfd, ChessRoom *r) {
 	free(dataClientA);
 	free(dataClientB);
 
+	// We need to check for reconnect here and send recconnect packet to the right client
+	if (r->state == ROOM_STATE_WAIT_RECONNECT) {
+		send_reconnect_packet(r, sockfd, last_connected);
+	}
+
 	r->state = ROOM_STATE_PLAYING;
 }
 
+/* @brief Set the first timer data
+ * @param r The room
+ * @param timer The timer
+ */
 void set_first_timer_data(ChessRoom *r, u64 timer) {
 	r->cliA.my_remain_time = timer;
 	r->cliA.enemy_remain_time = timer;
@@ -260,6 +352,11 @@ void set_first_timer_data(ChessRoom *r, u64 timer) {
 	r->cliB.enemy_remain_time = timer;
 }
 
+/* @brief Save the information of the client
+ * @param r The room
+ * @param msg The message buffer
+ * @param is_client_a TRUE if the client is A, FALSE otherwise
+ */
 void server_save_info(ChessRoom *r, char *msg, s8 is_client_a) {
 	s8 msg_type = msg[IDX_TYPE];
 
@@ -280,8 +377,8 @@ void server_save_info(ChessRoom *r, char *msg, s8 is_client_a) {
 					r->cliB.color = !r->cliA.color;
 					set_first_timer_data(r, *(u64 *)&msg[IDX_TIMER]);
 				}
-				printf("Client A |%s| color: %s\n", r->cliA.nickname, r->cliA.color == IS_WHITE ? "WHITE" : "BLACK");
-				printf("Client B |%s| color: %s\n", r->cliB.nickname, r->cliB.color == IS_WHITE ? "WHITE" : "BLACK");
+				// printf("Client A |%s| color: %s\n", r->cliA.nickname, r->cliA.color == IS_WHITE ? "WHITE" : "BLACK");
+				// printf("Client B |%s| color: %s\n", r->cliB.nickname, r->cliB.color == IS_WHITE ? "WHITE" : "BLACK");
 		}
 		if (msg_type != MSG_TYPE_COLOR) {
 			if (is_client_a) {
@@ -292,8 +389,9 @@ void server_save_info(ChessRoom *r, char *msg, s8 is_client_a) {
 				r->cliA.enemy_remain_time = *(u64 *)&msg[IDX_TIMER];
 			}
 		}
-		printf("Client A |%s| remain time: %ld, enemy: %ld\n", r->cliA.nickname, r->cliA.my_remain_time, r->cliA.enemy_remain_time);
-		printf("Client B |%s| remain time: %ld, enemy: %ld\n", r->cliB.nickname, r->cliB.my_remain_time, r->cliB.enemy_remain_time);
+		update_chess_game_state(r);
+		// printf("Client A |%s| remain time: %ld, enemy: %ld\n", r->cliA.nickname, r->cliA.my_remain_time, r->cliA.enemy_remain_time);
+		// printf("Client B |%s| remain time: %ld, enemy: %ld\n", r->cliB.nickname, r->cliB.my_remain_time, r->cliB.enemy_remain_time);
 	}
 }
 
@@ -359,14 +457,12 @@ s8 client_timeout_alive(struct timeval *last_alive) {
 	struct timeval now;
 	gettimeofday(&now, NULL);
 	
-	s64 diff = (now.tv_sec - last_alive->tv_sec);
-	if (diff > CLIENT_NOT_ALIVE_TIMEOUT) {
-		// printf("Client timeout: %ld\n", diff);
-		// printf("Last alive: %ld\n", last_alive->tv_sec);
-		// printf("Now: %ld\n", now.tv_sec);
-		return (TRUE);
-	}
-	return (FALSE);
+	return ((now.tv_sec - last_alive->tv_sec) > CLIENT_NOT_ALIVE_TIMEOUT);
+	// s64 diff = (now.tv_sec - last_alive->tv_sec);
+	// if (diff > CLIENT_NOT_ALIVE_TIMEOUT) {
+	// 	return (TRUE);
+	// }
+	// return (FALSE);
 }
 
 /* @brief Handle the client timeout
@@ -404,6 +500,7 @@ void set_client_data(ChessClient *client, SockaddrIn *cliaddr, struct timeval *n
 	client->player_ready = TRUE;
 }
 
+
 /* @brief Handle the client connection to the server, handle the client state too
  * @param r The room
  * @param cliaddr The client address
@@ -411,6 +508,7 @@ void set_client_data(ChessClient *client, SockaddrIn *cliaddr, struct timeval *n
  */
 void handle_client_connect(ChessRoom *r, SockaddrIn *cliaddr, int sockfd, char *nickname) {
 	struct timeval now;
+	s8 last_connected = INVALID_CLIENT;
 
 	/* Check if the room is waiting to start or reconnect */
 	if (r->state == ROOM_STATE_WAITING) {
@@ -430,14 +528,16 @@ void handle_client_connect(ChessRoom *r, SockaddrIn *cliaddr, int sockfd, char *
 	if (!r->cliA.connected && !addr_cmp(cliaddr, &r->cliB.addr)) {
 		set_client_data(&r->cliA, cliaddr, &now);
 		ft_memcpy(r->cliA.nickname, nickname, 8);
+		last_connected = CLIENT_A;
 		printf(GREEN"Client A connected: |%s| -> %s:%hu\n"RESET, r->cliA.nickname, inet_ntoa(r->cliA.addr.sin_addr), ntohs(r->cliA.addr.sin_port));
 	} else if (!r->cliB.connected && !addr_cmp(cliaddr, &r->cliA.addr)) {
 		set_client_data(&r->cliB, cliaddr, &now);
 		ft_memcpy(r->cliB.nickname, nickname, 8);
+		last_connected = CLIENT_B;
 		printf(GREEN"Client B connected: |%s| -> %s:%hu\n"RESET, r->cliB.nickname, inet_ntoa(r->cliB.addr.sin_addr), ntohs(r->cliB.addr.sin_port));
 	}
 	if (r->cliA.connected && r->cliB.connected && r->cliA.player_ready && r->cliB.player_ready) {
-		connect_client_together(sockfd, r);
+		connect_client_together(sockfd, r, last_connected);
 	}
 }
 
@@ -607,7 +707,6 @@ static void signal_handler_server(int signum) {
 }
 
 int main() {
-
 	INIT_SIGNAL_HANDLER(signal_handler_server);
 
 	if (!(g_server = server_setup())) {

@@ -13,7 +13,7 @@ GET_LOCAL_IP 	=	./rsc/sh/get_ipv4.sh
 IP_SERVER		=	$(shell $(GET_LOCAL_IP))
 
 # Server sources and executable
-SERVER_SRC		=	server/server.c src/network_os.c src/handle_signal.c src/move_save.c src/chess_log.c
+SERVER_SRC		=	server/server.c src/network_os.c src/handle_signal.c src/move_save.c src/chess_log.c src/handle_reconnect.c -DCHESS_SERVER
 SERVER_EXE		=	chess_server
 
 all:        $(NAME)

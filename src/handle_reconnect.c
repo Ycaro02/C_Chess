@@ -4,78 +4,80 @@
 
 #define MOVE_ARRAY_IDX 10
 
-static void detect_player_turn(SDLHandle *h, ChessPiece last_piece_move, s8 is_player_black) {
-	s8 last_move_is_black = last_piece_move >= BLACK_PAWN;
-	if (last_piece_move == EMPTY) {
-		h->player_info.turn = !(is_player_black);
-	} else {
-		h->player_info.turn = !(last_move_is_black == is_player_black);
-	}
-}
-
-/* @brief Process the reconnect message
- * @param h The SDLHandle pointer
- * @param msg The message
- */
-void process_reconnect_message(SDLHandle *h, char *msg) {
-	MoveSave	*move_arr = NULL;
-	ChessTile	tile_from = INVALID_TILE, tile_to = INVALID_TILE;
-	ChessPiece	piece_from = EMPTY, piece_to = EMPTY, last_piece_moved = EMPTY;
-	u64			my_remaining_time = 0, enemy_remaining_time = 0;
-	u16			list_size = 0, array_byte_size = 0;
-
-	/* Get size and time */
-	ft_memcpy(&list_size, &msg[6], sizeof(u16));
-	ft_memcpy(&array_byte_size, &msg[8], sizeof(u16));
-	ft_memcpy(&my_remaining_time, &msg[MOVE_ARRAY_IDX + array_byte_size], sizeof(u64));
-	ft_memcpy(&enemy_remaining_time, &msg[MOVE_ARRAY_IDX + array_byte_size + 8], sizeof(u64));
-
-	/* Set message ID and player color */
-	h->msg_id = GET_MESSAGE_ID(msg);
-	h->player_info.color = msg[IDX_FROM];
-
-	/* 5 * 0 for white, and 5 * 1 for black */
-	h->player_info.piece_start = BLACK_PAWN * h->player_info.color;
-
-	/* 5 * 0 for white, and 5 * 1 for black, + 5 */
-	h->player_info.piece_end = BLACK_KING * h->player_info.color + 5;
-
-	/* Set the remaining time */
-	h->my_remaining_time = my_remaining_time;
-	h->enemy_remaining_time = enemy_remaining_time;
-
-	/* Iter on move array to update board state */
-	move_arr = (MoveSave *)&msg[MOVE_ARRAY_IDX];
-	for (int i = 0; i < list_size; i++) {
-		tile_from = move_arr[i].tile_from;
-		tile_to = move_arr[i].tile_to;
-		piece_from = move_arr[i].piece_from;
-		piece_to = move_arr[i].piece_to;
-		CHESS_LOG(LOG_INFO, PINK"Process move Tile: [%s] -> [%s], Piece [%s] -> [%s]\n"RESET,
-			ChessTile_to_str(tile_from), ChessTile_to_str(tile_to),
-			ChessPiece_to_str(piece_from), ChessPiece_to_str(piece_to));
-		/* If the piece is the same */
-		if (piece_from == piece_to) {
-			// is_legal_move_packet
-			move_piece(h, tile_from, tile_to, piece_from);
+#ifndef CHESS_SERVER
+	static void detect_player_turn(SDLHandle *h, ChessPiece last_piece_move, s8 is_player_black) {
+		s8 last_move_is_black = last_piece_move >= BLACK_PAWN;
+		if (last_piece_move == EMPTY) {
+			h->player_info.turn = !(is_player_black);
 		} else {
-			/* Is promotion move */
-			// is_legal_move_packet // send pawn here
-			// is_legal_promotion // send new piece here
-			CHESS_LOG(LOG_INFO, ORANGE"Promotion move Tile: [%s] -> [%s], Piece [%s] -> [%s]\n"RESET,
+			h->player_info.turn = !(last_move_is_black == is_player_black);
+		}
+	}
+
+	/* @brief Process the reconnect message
+	* @param h The SDLHandle pointer
+	* @param msg The message
+	*/
+	void process_reconnect_message(SDLHandle *h, char *msg) {
+		MoveSave	*move_arr = NULL;
+		ChessTile	tile_from = INVALID_TILE, tile_to = INVALID_TILE;
+		ChessPiece	piece_from = EMPTY, piece_to = EMPTY, last_piece_moved = EMPTY;
+		u64			my_remaining_time = 0, enemy_remaining_time = 0;
+		u16			list_size = 0, array_byte_size = 0;
+
+		/* Get size and time */
+		ft_memcpy(&list_size, &msg[6], sizeof(u16));
+		ft_memcpy(&array_byte_size, &msg[8], sizeof(u16));
+		ft_memcpy(&my_remaining_time, &msg[MOVE_ARRAY_IDX + array_byte_size], sizeof(u64));
+		ft_memcpy(&enemy_remaining_time, &msg[MOVE_ARRAY_IDX + array_byte_size + 8], sizeof(u64));
+
+		/* Set message ID and player color */
+		h->msg_id = GET_MESSAGE_ID(msg);
+		h->player_info.color = msg[IDX_FROM];
+
+		/* 5 * 0 for white, and 5 * 1 for black */
+		h->player_info.piece_start = BLACK_PAWN * h->player_info.color;
+
+		/* 5 * 0 for white, and 5 * 1 for black, + 5 */
+		h->player_info.piece_end = BLACK_KING * h->player_info.color + 5;
+
+		/* Set the remaining time */
+		h->my_remaining_time = my_remaining_time;
+		h->enemy_remaining_time = enemy_remaining_time;
+
+		/* Iter on move array to update board state */
+		move_arr = (MoveSave *)&msg[MOVE_ARRAY_IDX];
+		for (int i = 0; i < list_size; i++) {
+			tile_from = move_arr[i].tile_from;
+			tile_to = move_arr[i].tile_to;
+			piece_from = move_arr[i].piece_from;
+			piece_to = move_arr[i].piece_to;
+			CHESS_LOG(LOG_INFO, PINK"Process move Tile: [%s] -> [%s], Piece [%s] -> [%s]\n"RESET,
 				ChessTile_to_str(tile_from), ChessTile_to_str(tile_to),
 				ChessPiece_to_str(piece_from), ChessPiece_to_str(piece_to));
-			do_promotion_move(h, tile_from, tile_to, piece_to, FALSE);
+			/* If the piece is the same */
+			if (piece_from == piece_to) {
+				// is_legal_move_packet
+				move_piece(h, tile_from, tile_to, piece_from);
+			} else {
+				/* Is promotion move */
+				// is_legal_move_packet // send pawn here
+				// is_legal_promotion // send new piece here
+				CHESS_LOG(LOG_INFO, ORANGE"Promotion move Tile: [%s] -> [%s], Piece [%s] -> [%s]\n"RESET,
+					ChessTile_to_str(tile_from), ChessTile_to_str(tile_to),
+					ChessPiece_to_str(piece_from), ChessPiece_to_str(piece_to));
+				do_promotion_move(h, tile_from, tile_to, piece_to, FALSE);
+			}
+			last_piece_moved = piece_from;
 		}
-		last_piece_moved = piece_from;
+
+		/* Set the move list */
+		h->board->lst = array_to_list(move_arr, list_size, sizeof(MoveSave));
+
+		/* Detect player turn */
+		detect_player_turn(h, last_piece_moved, h->player_info.color);
 	}
-
-	/* Set the move list */
-	h->board->lst = array_to_list(move_arr, list_size, sizeof(MoveSave));
-
-	/* Detect player turn */
-	detect_player_turn(h, last_piece_moved, h->player_info.color);
-}
+#endif
 
 /* @brief Build the reconnect message
  * @param h The SDLHandle pointer
