@@ -1,0 +1,4 @@
+#Fri Sep 13 15:05:05 CEST 2024
+base.0=/home/ycaro/chess/C_Chess/android/chess_app/app/build/intermediates/dex/debug/mergeDexDebug/classes.dex
+renamed.0=classes.dex
+path.0=classes.dex

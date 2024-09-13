@@ -2,38 +2,26 @@
 
 ARCHI=""
 
-#check for architecture
-if [ "$1" == "arm" ]; then
-	echo "ARM architecture"
-	ARCHI="aarch64-linux-android/"
-elif [ "$1" == "x86" ]; then
-	echo "x86 architecture"
-	ARCHI="x86_64-linux-android/"
-else
-	echo "Usage: $0 [arm|x86]"
-	exit 1
-fi
+function get_sdl2_lib {
+	local archi="${1}"
+	# Find the android SDL2.so file
+	LIBSDL2=$(find ${PWD}/../rsc/lib/SDL2/libs/ -name libSDL2.so | grep ${archi})
+	echo "libSDL2.so found at ${LIBSDL2}"
 
-# check for version needed to be found, if no version is given, return here
-if [ -z "$2" ]; then
-	echo "Usage: $0 [arm|x86] [version]"
-	exit 1
-fi
+	# Find the android SDL2_ttf.so file
+	LIBSDL2_TTF=$(find ${PWD}/../rsc/lib/SDL2_ttf-2.22.0/libs/ -name libSDL2_ttf.so | grep ${archi})
+	echo "libSDL2_ttf.so found at ${LIBSDL2_TTF}"
 
-VERSION=$2
+	# Copy the files to the android_lib folder
+	mkdir -p android_lib/${archi}
+	cp ${LIBSDL2} ${LIBSDL2_TTF} android_lib/${archi}
+}
 
-mkdir -p android_lib/${1}
 
-# Find the android SDL2.so file
-LIBSDL2=$(find ${PWD}/../rsc/lib/SDL2/libs/ -name libSDL2.so | grep ${1})
-echo "libSDL2.so found at $LIBSDL2"
-
-# Find the android SDL2_ttf.so file
-LIBSDL2_TTF=$(find ${PWD}/../rsc/lib/SDL2_ttf-2.22.0/libs/ -name libSDL2_ttf.so | grep ${1})
-echo "libSDL2_ttf.so found at $LIBSDL2_TTF"
-
-# Copy the files to the android_lib folder
-cp $LIBC $LIBLOG $LIBANDROID $LIBDL $LIBM $LIBSDL2 $LIBSDL2_TTF android_lib/${1}/
+get_sdl2_lib "arm64-v8a"
+get_sdl2_lib "armeabi-v7a"
+get_sdl2_lib "x86"
+get_sdl2_lib "x86_64"
 
 # Check the files
-ls -la android_lib/${1}/
+ls -lRa android_lib/${1}/

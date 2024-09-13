@@ -143,6 +143,7 @@ void chess_game(SDLHandle *h) {
 	}
 }
 
+// int SDL_main(int argc, char **argv) {
 int main(int argc, char **argv) {
 	SDLHandle	*handle = NULL;
 	PlayerInfo	player_info = {0};

@@ -3,6 +3,71 @@
 #include "../include/chess_log.h"
 
 
+#ifdef __ANDROID__
+	#include <jni.h>
+	#include <android/asset_manager.h>
+	#include <android/asset_manager_jni.h>
+
+	AAssetManager* g_asset_manager = NULL;
+
+	JNIEXPORT void JNICALL
+	Java_org_libsdl_app_SDLActivity_nativeInit(JNIEnv* env, jobject obj, jobject assetManagerObj) {
+		g_asset_manager = AAssetManager_fromJava(env, assetManagerObj);
+	}
+
+    static Sint64 android_rwops_size(SDL_RWops* context) {
+        return AAsset_getLength((AAsset*)context->hidden.unknown.data1);
+    }
+
+    static Sint64 android_rwops_seek(SDL_RWops* context, Sint64 offset, int whence) {
+        return AAsset_seek((AAsset*)context->hidden.unknown.data1, offset, whence);
+    }
+
+    static size_t android_rwops_read(SDL_RWops* context, void* ptr, size_t size, size_t maxnum) {
+        return AAsset_read((AAsset*)context->hidden.unknown.data1, ptr, size * maxnum) / size;
+    }
+
+    static int android_rwops_close(SDL_RWops* context) {
+        AAsset_close((AAsset*)context->hidden.unknown.data1);
+        SDL_FreeRW(context);
+        return 0;
+    }
+
+    SDL_RWops* SDL_RWFromAsset(AAsset* asset) {
+        if (!asset) {
+            return NULL;
+        }
+
+        SDL_RWops* rw = SDL_AllocRW();
+        if (!rw) {
+            return NULL;
+        }
+
+        rw->size = android_rwops_size;
+        rw->seek = android_rwops_seek;
+        rw->read = android_rwops_read;
+        rw->close = android_rwops_close;
+        rw->hidden.unknown.data1 = asset;
+
+        return rw;
+    }
+
+	SDL_RWops* loadAsset(const char* file) {
+    AAsset* asset = AAssetManager_open(g_asset_manager, file, AASSET_MODE_UNKNOWN);
+    if (asset == NULL) {
+        CHESS_LOG(LOG_ERROR, "Failed to open asset: %s\n", file);
+        return NULL;
+    }
+
+    SDL_RWops* rw = SDL_RWFromAsset(asset);
+    if (rw == NULL) {
+        CHESS_LOG(LOG_ERROR, "Failed to create RWops from asset: %s\n", file);
+        AAsset_close(asset);
+    }
+    return rw;
+}
+#endif
+
 /**
  * @brief Get the screen size
  * @param width The width of the screen (out)
@@ -443,7 +508,20 @@ SDL_Texture *load_texture(SDL_Renderer *renderer, const char* path) {
 	if (!renderer) {
 		return (NULL);
 	}
-	surface = SDL_LoadBMP(path);
+
+
+	#ifdef __ANDROID__
+		SDL_RWops *rw = loadAsset(path);
+		if (!rw) {
+			CHESS_LOG(LOG_ERROR, "%s: loadAsset failed\n", __func__);
+			return (NULL);
+		}
+		surface = SDL_LoadBMP_RW(rw, 1);
+	#else
+		surface = SDL_LoadBMP(path);
+	#endif
+
+
 	if (!surface) {
 		SDL_ERR_FUNC();
 		return (NULL);

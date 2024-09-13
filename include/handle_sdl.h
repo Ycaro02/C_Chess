@@ -4,12 +4,26 @@
 #include "chess.h"
 
 #ifdef __ANDROID__
-	/* Define to avoid SDL_main replace main */
-	#define SDL_MAIN_HANDLED
 	#include <SDL2/SDL.h>
 	#include <SDL2/SDL_video.h>
 	#include <SDL2/SDL_render.h>
 	#include <SDL2/SDL_ttf.h>
+
+	/* Texture path */
+	// #define BLACK_KING_TEXTURE "/sdcard/rsc/texture/piece/black_king.bmp"
+	// #define BLACK_QUEEN_TEXTURE "/sdcard/rsc/texture/piece/black_queen.bmp"
+	// #define BLACK_ROOK_TEXTURE "/sdcard/rsc/texture/piece/black_rook.bmp"
+	// #define BLACK_BISHOP_TEXTURE "/sdcard/rsc/texture/piece/black_bishop.bmp"
+	// #define BLACK_KNIGHT_TEXTURE "/sdcard/rsc/texture/piece/black_knight.bmp"
+	// #define BLACK_PAWN_TEXTURE "/sdcard/rsc/texture/piece/black_pawn.bmp"
+
+	// #define WHITE_KING_TEXTURE "/sdcard/rsc/texture/piece/white_king.bmp"
+	// #define WHITE_QUEEN_TEXTURE "/sdcard/rsc/texture/piece/white_queen.bmp"
+	// #define WHITE_ROOK_TEXTURE "/sdcard/rsc/texture/piece/white_rook.bmp"
+	// #define WHITE_BISHOP_TEXTURE "/sdcard/rsc/texture/piece/white_bishop.bmp"
+	// #define WHITE_KNIGHT_TEXTURE "/sdcard/rsc/texture/piece/white_knight.bmp"
+	// #define WHITE_PAWN_TEXTURE "/sdcard/rsc/texture/piece/white_pawn.bmp"
+	// #define	FONT_PATH "/sdcard/rsc/font/arial.ttf"
 #else 
 	/* Basic SDL include */
 	#include "../rsc/lib/install/include/SDL2/SDL.h"
@@ -33,6 +47,8 @@
 #define WHITE_BISHOP_TEXTURE "rsc/texture/piece/white_bishop.bmp"
 #define WHITE_KNIGHT_TEXTURE "rsc/texture/piece/white_knight.bmp"
 #define WHITE_PAWN_TEXTURE "rsc/texture/piece/white_pawn.bmp"
+#define	FONT_PATH "rsc/font/arial.ttf"
+
 
 /* Macro to convert RGBA to UINT32 and UINT32 to RGBA */
 #define		RGBA_TO_UINT32(r, g, b, a)		((u32)((a << 24) | (r << 16) | (g << 8) | b))
@@ -224,7 +240,6 @@ typedef struct s_sdl_handle {
 	s8				game_start;				/* Game start flag */
 }	SDLHandle ;
 
-#define	FONT_PATH "rsc/font/arial.ttf"
 
 /* Accepted char return if key pressed is uppercase */
 #define UPPERCASE_CHAR 2
