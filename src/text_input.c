@@ -2,6 +2,7 @@
 #include "../include/handle_sdl.h"
 #include "../include/chess_log.h"
 
+#include "../include/android_macro.h"
 
 s32 parse_dot(char *ip) {
 	s32 count = 0;
@@ -150,11 +151,13 @@ void handle_text_input(SDLHandle *h, SDL_Event *event, TextField *tf) {
         } else if (event->key.keysym.sym == SDLK_RETURN) {
 			// ip_server_update_data(h, tf);
 			tf->update_data(h, tf);
-			tf->is_active = FALSE;
-		} else if (event->key.keysym.sym == SDLK_ESCAPE) {
+			// tf->is_active = FALSE;
+			DISABLE_TEXTFIELD(&tf->is_active);
+		} else if (ESCAPE_KEY(event->key.keysym.sym)) {
 			// ip_server_update_data(h, tf);
 			tf->update_data(h, tf);
-			tf->is_active = FALSE;
+			// tf->is_active = FALSE;
+			DISABLE_TEXTFIELD(&tf->is_active);
 		}
 
     }

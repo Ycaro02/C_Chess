@@ -2,11 +2,7 @@
 #include "../include/handle_sdl.h"
 #include "../include/chess_log.h"
 
-
 #ifdef __ANDROID__
-	#include <jni.h>
-	#include <android/asset_manager.h>
-	#include <android/asset_manager_jni.h>
 
 	AAssetManager* g_asset_manager = NULL;
 

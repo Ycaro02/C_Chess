@@ -67,7 +67,7 @@ void profile_button_handling(SDLHandle *h, SDL_Event event) {
 	} else if (event.type == SDL_MOUSEMOTION) {
 		update_mouse_pos(h, pos.x, pos.y);
 		p->btn_hover = detect_button_click(p->btn, 0, p->nb_field, pos);
-	} else if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE) {
+	} else if (event.type == SDL_KEYDOWN && ESCAPE_KEY(event.key.keysym.sym)) {
 		CHESS_LOG(LOG_INFO, "Close profile menu\n");
 		unset_flag(&h->flag, FLAG_EDIT_PROFILE);
 	}
@@ -105,7 +105,7 @@ void button_event_handling(SDLHandle *h, SDL_Event event, s32 btn_start, s32 btn
 				menu_close(&h->menu);
 			}
 		}
-	} else if (btn_start == BTN_RESUME && event.type == SDL_KEYDOWN && (event.key.keysym.sym == SDLK_p || event.key.keysym.sym == SDLK_ESCAPE)) {
+	} else if (btn_start == BTN_RESUME && event.type == SDL_KEYDOWN && (event.key.keysym.sym == SDLK_p || ESCAPE_KEY(event.key.keysym.sym))) {
 		menu_close(&h->menu);
 	} else if (event.type == SDL_MOUSEMOTION) {
 		update_mouse_pos(h, pos.x, pos.y);
@@ -124,7 +124,7 @@ void game_event_handling(SDLHandle *h, SDL_Event event, s8 player_color) {
 		aly_pos = h->board->occupied;
 	}
 
-	if (event.type == SDL_KEYDOWN && (event.key.keysym.sym == SDLK_p || event.key.keysym.sym == SDLK_ESCAPE)) {
+	if (event.type == SDL_KEYDOWN && (event.key.keysym.sym == SDLK_p || ESCAPE_KEY(event.key.keysym.sym))) {
 		h->menu.is_open = TRUE;
 	}
 

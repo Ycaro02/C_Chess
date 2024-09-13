@@ -50,11 +50,14 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+// Asset manager for rsc
 import android.content.res.AssetManager;
+// handle input method
+import android.view.inputmethod.InputMethodManager;
+
 
 import java.util.Hashtable;
 import java.util.Locale;
-
 
 /**
     SDL Activity
@@ -64,6 +67,18 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
     private static final int SDL_MAJOR_VERSION = 2;
     private static final int SDL_MINOR_VERSION = 30;
     private static final int SDL_MICRO_VERSION = 5;
+
+	public static void showKeyboard() {
+        Activity activity = (Activity) SDL.getContext();
+        InputMethodManager imm = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+    }
+
+    public static void hideKeyboard() {
+        Activity activity = (Activity) SDL.getContext();
+        InputMethodManager imm = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(activity.getWindow().getDecorView().getWindowToken(), 0);
+    }
 /*
     // Display InputType.SOURCE/CLASS of events and devices
     //

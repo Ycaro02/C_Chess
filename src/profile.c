@@ -1,14 +1,23 @@
 #include "../include/chess.h"
 #include "../include/handle_sdl.h"
 #include "../include/chess_log.h"
+#include "../include/android_macro.h"
 
+void handle_keyboard_show(s8 *is_active) {
+	if (!(*is_active)) {
+		ENABLE_TEXFIELD(is_active);
+	} else {
+		DISABLE_TEXTFIELD(is_active);
+	}
+}
 
 void disable_active_field(SDLHandle *h, Profile *profile) {
 	for (s32 i = 0; i < profile->nb_field; i++) {
 		if (profile->tf[i]->is_active) {
 			profile->tf[i]->update_data(h, profile->tf[i]);
+			// profile->tf[i]->is_active = FALSE;
+			DISABLE_TEXTFIELD(&profile->tf[i]->is_active);
 		}
-		profile->tf[i]->is_active = FALSE;
 	}
 }
 
@@ -18,7 +27,9 @@ void edit_name_func(SDLHandle *h) {
 	} else {
 		disable_active_field(h, h->menu.profile);
 	}
-	h->menu.profile->tf[PFT_NAME]->is_active = !h->menu.profile->tf[PFT_NAME]->is_active;
+	// h->menu.profile->tf[PFT_NAME]->is_active = !h->menu.profile->tf[PFT_NAME]->is_active;
+	handle_keyboard_show(&h->menu.profile->tf[PFT_NAME]->is_active);
+
 }
 
 void edit_timer_func(SDLHandle *h) {
@@ -27,7 +38,8 @@ void edit_timer_func(SDLHandle *h) {
 	} else {
 		disable_active_field(h, h->menu.profile);
 	}
-	h->menu.profile->tf[PFT_TIMER]->is_active = !h->menu.profile->tf[PFT_TIMER]->is_active;
+	// h->menu.profile->tf[PFT_TIMER]->is_active = !h->menu.profile->tf[PFT_TIMER]->is_active;
+	handle_keyboard_show(&h->menu.profile->tf[PFT_TIMER]->is_active);
 }
 
 static void set_profile_btn_text_func(Profile *profile, s32 idx, ProfileFieldType type) {

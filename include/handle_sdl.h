@@ -8,22 +8,9 @@
 	#include <SDL2/SDL_video.h>
 	#include <SDL2/SDL_render.h>
 	#include <SDL2/SDL_ttf.h>
-
-	/* Texture path */
-	// #define BLACK_KING_TEXTURE "/sdcard/rsc/texture/piece/black_king.bmp"
-	// #define BLACK_QUEEN_TEXTURE "/sdcard/rsc/texture/piece/black_queen.bmp"
-	// #define BLACK_ROOK_TEXTURE "/sdcard/rsc/texture/piece/black_rook.bmp"
-	// #define BLACK_BISHOP_TEXTURE "/sdcard/rsc/texture/piece/black_bishop.bmp"
-	// #define BLACK_KNIGHT_TEXTURE "/sdcard/rsc/texture/piece/black_knight.bmp"
-	// #define BLACK_PAWN_TEXTURE "/sdcard/rsc/texture/piece/black_pawn.bmp"
-
-	// #define WHITE_KING_TEXTURE "/sdcard/rsc/texture/piece/white_king.bmp"
-	// #define WHITE_QUEEN_TEXTURE "/sdcard/rsc/texture/piece/white_queen.bmp"
-	// #define WHITE_ROOK_TEXTURE "/sdcard/rsc/texture/piece/white_rook.bmp"
-	// #define WHITE_BISHOP_TEXTURE "/sdcard/rsc/texture/piece/white_bishop.bmp"
-	// #define WHITE_KNIGHT_TEXTURE "/sdcard/rsc/texture/piece/white_knight.bmp"
-	// #define WHITE_PAWN_TEXTURE "/sdcard/rsc/texture/piece/white_pawn.bmp"
-	// #define	FONT_PATH "/sdcard/rsc/font/arial.ttf"
+	#include <jni.h>
+	#include <android/asset_manager.h>
+	#include <android/asset_manager_jni.h>
 #else 
 	/* Basic SDL include */
 	#include "../rsc/lib/install/include/SDL2/SDL.h"
@@ -32,6 +19,21 @@
 	/* TTF include */
 	#include "../rsc/lib/install/include/SDL2/SDL_ttf.h"
 #endif
+
+#include "chess_log.h"
+
+// #define ESCAPE_KEY(_sym_) ((_sym_) == SDLK_ESCAPE || (_sym_) == SDLK_AC_BACK || (_sym_) == SDLK_AC_HOME)
+
+FT_INLINE s8 ESCAPE_KEY(SDL_Keycode sym) {
+	if (sym == SDLK_AC_BACK) {
+		CHESS_LOG(LOG_INFO, "AC BACK KEY\n");
+		return (TRUE);
+	} else if (sym == SDLK_ESCAPE) {
+		CHESS_LOG(LOG_INFO, "ESCAPE KEY\n");
+		return (TRUE);
+	}
+	return (FALSE);
+}
 
 /* Texture path */
 #define BLACK_KING_TEXTURE "rsc/texture/piece/black_king.bmp"

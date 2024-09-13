@@ -1,6 +1,7 @@
 #include "../include/network.h"
 #include "../include/handle_sdl.h"
 #include "../include/chess_log.h"
+#include "../include/android_macro.h"
 
 /**
  * @brief Detect if a button is clicked
@@ -122,7 +123,14 @@ void edit_ip_click(SDLHandle *h) {
 		ip_server_update_data(h, h->menu.ip_field);
 	}
 
-	h->menu.ip_field->is_active = !h->menu.ip_field->is_active;
+	// h->menu.ip_field->is_active = !h->menu.ip_field->is_active;
+
+	if (!h->menu.ip_field->is_active) {
+		ENABLE_TEXFIELD(&h->menu.ip_field->is_active);
+	} else {
+		DISABLE_TEXTFIELD(&h->menu.ip_field->is_active);
+	}
+
 	CHESS_LOG(LOG_INFO, "Edit ip\n");
 }
 

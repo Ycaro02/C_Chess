@@ -1,11 +1,16 @@
 #include "../include/network.h"
 #include "../include/handle_sdl.h"
 #include "../include/chess_log.h"
+#include "../include/android_macro.h"
 
 void menu_close(ChessMenu *menu) {
 	menu->is_open = FALSE;
 	menu->btn_hover = BTN_INVALID;
-	menu->ip_field->is_active = FALSE;
+
+	if (menu->ip_field->is_active) {
+		// menu->ip_field->is_active = FALSE;
+		DISABLE_TEXTFIELD(&menu->ip_field->is_active );
+	}
 }
 
 /**
