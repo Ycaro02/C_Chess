@@ -18,5 +18,13 @@ echo "Copying libs to app/src/main/jniLibs"
 
 export APP_ALLOW_MISSING_DEPS=true && export ANDROID_HOME=~/Android/Sdk
 
+
+if [ "$1" == "clean" ]; then
+	./gradlew clean
+	exit 0
+fi
+
 ./gradlew clean
 ./gradlew assembleDebug
+
+cp app/build/outputs/apk/debug/app-debug.apk apk_release/chess_app.apk

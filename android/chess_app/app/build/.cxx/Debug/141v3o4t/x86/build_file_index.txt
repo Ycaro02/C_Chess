@@ -1,2 +1,0 @@
-/home/ycaro/chess/C_Chess/android/chess_app/app/jni/Android.mk
-/home/ycaro/chess/C_Chess/android/chess_app/app/jni/Application.mk
