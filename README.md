@@ -5,7 +5,6 @@ C_Chess is a chess engine written in C, utilizing SDL2 for graphics and bitboard
 ## Skills
 
 ![C](https://skillicons.dev/icons?i=c)
-![SDL](https://skillicons.dev/icons?i=sdl)
 ![Java](https://skillicons.dev/icons?i=java)
 ![GitHub](https://skillicons.dev/icons?i=github)
 
