@@ -28,29 +28,27 @@ C_Chess is a high-performance chess engine written in C, utilizing SDL2 for grap
 
 ### For Windows, follow these steps:
 
-```
-Download the Release:
+1 **Download the Release**:
 
 Go to the releases page and download the latest Windows release.
-Run the Installer:
+Run the Installer (.exe file):
 
 The release contains an installer executable created using Inno Setup. Run the installer and follow the on-screen instructions to install C_Chess on your system.
-Launch the Program:
+
+2 **Launch the Program**:
 
 After installation, you can launch C_Chess from the Start Menu or the installation directory.
-```
 
 ### For Android, follow these steps:
 
-```
-Download the APK:
+1 **Download the APK**:
 
-Go to the releases page and download the latest Android APK.
-Install the APK:
+Go to the releases page and download the latest Android APK from your Android device or another device.
+
+2 **Install the APK**:
 
 Transfer the APK to your Android device.
 Open the APK file on your device and follow the on-screen instructions to install the application.
-Launch the App:
 
+3 **Launch the App**:
 After installation, you can launch C_Chess from your app drawer.
-```
