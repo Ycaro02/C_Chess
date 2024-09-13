@@ -91,7 +91,7 @@ void get_screen_size(int *width, int *height) {
  * @note The window size is computed by removing 1/4 of the screen size on each dimension
  * @note The tile size is computed by dividing the minimum between the width and height by 8
 */
-void compute_win_size(SDLHandle *h) {
+void PC_compute_win_size(SDLHandle *h) {
 	s32 size_w=0, size_h=0, width = 0, height = 0;
 	s32 minus, tile_size, band_w, band_h;
 
@@ -145,6 +145,37 @@ void compute_win_size(SDLHandle *h) {
 	h->window_size.y = height;
 }
 
+/* In this we want to take the all width of the screen */
+void android_compute_size(SDLHandle *h) {
+	s32 size_w=0, size_h=0, width = 0, height = 0;
+	s32 tile_size, band_w, band_h;
+
+	get_screen_size(&size_w, &size_h);
+
+	// tile_size are width / 8
+	tile_size = size_w >> 3;
+	h->tile_size.x = tile_size;
+	h->tile_size.y = tile_size;
+
+	band_w = 0;
+	band_h = size_h - size_w;
+
+	// get the band size
+	h->band_size.bot = band_h >> 1;
+	h->band_size.top = band_h >> 1;
+	h->band_size.left = 0;
+	h->band_size.right = 0;
+	
+	// take all the screen size
+	width = size_w;
+	height = size_h;
+	CHESS_LOG(LOG_INFO, "Width: %d, Height: %d, tile_size %d\n", width, height, tile_size);
+	CHESS_LOG(LOG_INFO, "Band height: %d, Band width: %d\n", band_h, band_w);
+	CHESS_LOG(LOG_INFO, "Top: %d, Bot: %d, Left: %d, Right: %d\n", h->band_size.top, h->band_size.bot, h->band_size.left, h->band_size.right);
+	h->window_size.x = width;
+	h->window_size.y = height;
+}
+
 
 /**
  * @brief Create a window with SDL2
@@ -169,7 +200,11 @@ SDL_Window* create_sdl_windows(SDLHandle *h, const char* title) {
 		return (NULL);
 	}
 
-	compute_win_size(h);
+	#ifdef __ANDROID__
+		android_compute_size(h);
+	#else
+		PC_compute_win_size(h);
+	#endif
 
 	if (!init_menu(h, BTN_MAX)) {
 		TTF_Quit();
@@ -254,7 +289,7 @@ static s8 load_piece_texture(SDLHandle *handle) {
 }
 
 
-static SDL_Rect build_timer_rect(SDLHandle *h, s8 is_bot_band) {
+SDL_Rect pc_build_timer_rect(SDLHandle *h, s8 is_bot_band) {
 	SDL_Rect timer_rect = {0}; 
 
 	/* Window end width - size band right - (size_band_right / 16)*/
@@ -280,7 +315,40 @@ static SDL_Rect build_timer_rect(SDLHandle *h, s8 is_bot_band) {
 	return (timer_rect);
 }
 
-static SDL_Rect build_name_rect(SDLHandle *h, s8 is_bot_band) {
+SDL_Rect android_build_timer_rect(SDLHandle *h, s8 is_bot_band) {
+	SDL_Rect timer_rect = {0}; 
+
+	s32 height_pad = (h->band_size.bot >> 2) + (h->band_size.bot >> 3);
+	s32 width = (h->window_size.x >> 1) - (h->window_size.x >> 2);
+	s32 start_x = h->window_size.x - width - (h->window_size.x >> 4);
+	s32 height = h->tile_size.x;
+
+	timer_rect.x = start_x;
+
+	if (is_bot_band) {
+		/* Start to the bot of window - band_size_bot - height_pad */
+		timer_rect.y = h->window_size.y - h->band_size.bot + height_pad - (height);
+	} else {
+		// timer_rect.y = (height << 1);
+		timer_rect.y = 0 + h->band_size.top - height_pad;
+	}
+	
+
+	timer_rect.w = width;
+	timer_rect.h = height;
+
+	CHESS_LOG(LOG_INFO, "Timer rect start: %d, height: %d, width: %d\n", start_x, height, timer_rect.w);
+	return (timer_rect);
+}
+
+#ifdef __ANDROID__
+	#define BUILD_TIMER_RECT(_h_, _is_bot_) android_build_timer_rect(_h_, _is_bot_)
+#else
+	#define BUILD_TIMER_RECT(_h_, _is_bot_) pc_build_timer_rect(_h_, _is_bot_)
+#endif
+
+
+SDL_Rect pc_build_name_rect(SDLHandle *h, s8 is_bot_band) {
 	SDL_Rect name_rect = {0}; 
 
 	/* Window end width - size band right - (size_band_right / 16)*/
@@ -307,6 +375,39 @@ static SDL_Rect build_name_rect(SDLHandle *h, s8 is_bot_band) {
 	CHESS_LOG(LOG_INFO, ORANGE"Name rect start: %d, end: %d, height: %d, width: %d\n"RESET, start_x, rect_end_x, rect_height, name_rect.w);
 	return (name_rect);
 }
+
+SDL_Rect android_build_name_rect(SDLHandle *h, s8 is_bot_band) {
+	SDL_Rect name_rect = {0}; 
+
+	// s32 height_pad = (h->band_size.bot >> 2) + (h->band_size.bot >> 3);
+	s32 width = (h->window_size.x >> 1) - (h->window_size.x >> 2);
+	s32 height = h->tile_size.x >> 1;
+
+
+	s32 pad = height + (height >> 1);
+
+	if (is_bot_band) {
+		name_rect.x = h->timer_rect_bot.x;
+		name_rect.y = h->timer_rect_bot.y + h->timer_rect_bot.h + pad - height;
+	} else {
+		name_rect.x = h->timer_rect_top.x;
+		name_rect.y = h->timer_rect_top.y - (pad);
+	}
+	
+
+	name_rect.w = width;
+	name_rect.h = height;
+
+	CHESS_LOG(LOG_INFO, "Name rect start: %d, height: %d, width: %d\n", name_rect.x, height, name_rect.w);
+	return (name_rect);
+}
+
+#ifdef __ANDROID__
+	#define BUILD_NAME_RECT(_h_, _is_bot_) android_build_name_rect(_h_, _is_bot_)
+#else
+	#define BUILD_NAME_RECT(_h_, _is_bot_) pc_build_name_rect(_h_, _is_bot_)
+#endif
+
 
 
 static TTF_Font *safe_load_font(SDLHandle *h, const char *path, s32 fontSize) {
@@ -347,7 +448,8 @@ SDLHandle *create_sdl_handle(const char* title) {
 		SDL_DestroyWindow(handle->window);
 		free(handle);
 		return (NULL);
-	} else if (!(handle->tile_font = load_font(FONT_PATH, (handle->band_size.bot >> 1)))) {
+	// } else if (!(handle->tile_font = load_font(FONT_PATH, (handle->band_size.bot >> 1)))) {
+	} else if (!(handle->tile_font = load_font(FONT_PATH, (handle->tile_size.x >> 2)))) {
 		SDL_DestroyRenderer(handle->renderer);
 		SDL_DestroyWindow(handle->window);
 		free(handle);
@@ -360,8 +462,8 @@ SDLHandle *create_sdl_handle(const char* title) {
 	handle->game_start = FALSE;
 
 	/* Init timer rect and font */
-	handle->timer_rect_bot = build_timer_rect(handle, TRUE);
-	handle->timer_rect_top = build_timer_rect(handle, FALSE);
+	handle->timer_rect_bot = BUILD_TIMER_RECT(handle, TRUE);
+	handle->timer_rect_top = BUILD_TIMER_RECT(handle, FALSE);
 	if (!(handle->timer_font = safe_load_font(handle, FONT_PATH, (handle->timer_rect_bot.h >> 1)))) {
 		return (NULL);
 	}
@@ -370,8 +472,8 @@ SDLHandle *create_sdl_handle(const char* title) {
 	handle->enemy_remaining_time = 60 * 30;
 
 	/* Init name rect */
-	handle->name_rect_bot = build_name_rect(handle, TRUE);
-	handle->name_rect_top = build_name_rect(handle, FALSE);
+	handle->name_rect_bot = BUILD_NAME_RECT(handle, TRUE);
+	handle->name_rect_top = BUILD_NAME_RECT(handle, FALSE);
 	if (!(handle->name_font = safe_load_font(handle, FONT_PATH, (handle->name_rect_bot.h >> 1) + (handle->name_rect_bot.h >> 2)))) {
 		return (NULL);
 	}

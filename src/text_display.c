@@ -42,6 +42,7 @@ void write_text_in_rect(SDLHandle *h, TTF_Font *font, SDL_Rect rect, char *str, 
  */
 void left_band_center_text(iVec2 *char_pos, char *text, TTF_Font *font, s32 tile_size, s32 band_left_size) {
 	iVec2 text_size = {0, 0};
+	(void)band_left_size;
 
 	/* Get the text size */
 	TTF_SizeText(font, text, &text_size.x, &text_size.y);
@@ -49,10 +50,12 @@ void left_band_center_text(iVec2 *char_pos, char *text, TTF_Font *font, s32 tile
 	/* Center the number in height */
 	char_pos->y += (tile_size >> 1) - (text_size.y >> 1);
 
-	/* Center the number width in the left band */
-	char_pos->x -= (band_left_size >> 1);
-	char_pos->x -= (text_size.x >> 1);
-		
+	/* If not android version we had left band to display digit */
+	#ifndef __ANDROID__
+		/* Center the number width in the left band */
+		char_pos->x -= (band_left_size >> 1);
+		char_pos->x -= (text_size.x >> 1);
+	#endif
 }
 
 /* @brief Center the text in the bottom band
@@ -64,16 +67,14 @@ void left_band_center_text(iVec2 *char_pos, char *text, TTF_Font *font, s32 tile
  */
 void bot_band_center_text(iVec2 *char_pos, char *text, TTF_Font *font, s32 tile_size, s32 band_bot_size) {
 	iVec2 text_size = {0, 0};
+	(void)band_bot_size;
 
 	/* Get the text size */
 	TTF_SizeText(font, text, &text_size.x, &text_size.y);
 
 	/* Center the number in width */
 	char_pos->x += (tile_size >> 1) - (text_size.y >> 1);
-
-	/* Center the number height in the left band */
-	char_pos->y += (band_bot_size >> 1);
-	char_pos->y -= (text_size.x >> 1);
+	char_pos->y += text_size.x;
 }
 
 /* Draw letter and number for raw/column */
