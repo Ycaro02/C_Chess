@@ -52,7 +52,7 @@
         return rw;
     }
 
-	SDL_RWops* loadAsset(const char* file) {
+	SDL_RWops* load_asset(const char* file) {
     AAsset* asset = AAssetManager_open(g_asset_manager, file, AASSET_MODE_UNKNOWN);
     if (asset == NULL) {
         CHESS_LOG(LOG_ERROR, "Failed to open asset: %s\n", file);
@@ -511,9 +511,9 @@ SDL_Texture *load_texture(SDL_Renderer *renderer, const char* path) {
 
 
 	#ifdef __ANDROID__
-		SDL_RWops *rw = loadAsset(path);
+		SDL_RWops *rw = load_asset(path);
 		if (!rw) {
-			CHESS_LOG(LOG_ERROR, "%s: loadAsset failed\n", __func__);
+			CHESS_LOG(LOG_ERROR, "%s: load_asset failed\n", __func__);
 			return (NULL);
 		}
 		surface = SDL_LoadBMP_RW(rw, 1);

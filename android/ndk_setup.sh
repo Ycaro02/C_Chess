@@ -77,12 +77,10 @@ echo "Compiling SDL2 ${C_ARCHITECTURE}"
 
 compile_sdl_lib
 
-# Définir les variables NDK
+# Define NDK_VAR
 export NDK_TOOLCHAIN=${NDK_PATH}/toolchains/llvm/prebuilt/linux-x86_64
 export NDK_SYSROOT=${NDK_TOOLCHAIN}/sysroot
 
-# Compiler un fichier de test pour vérifier la configuration
+# Compile test file
 ${NDK_TOOLCHAIN}/bin/clang --sysroot=${NDK_SYSROOT} -target ${C_TARGET} -I${NDK_SYSROOT}/usr/include -I${NDK_SYSROOT}/usr/include/${SYSROOT_SUB_DIR} test_main.c -o test_main
-echo "Compilation test successful"
-
-# make
+echo "Compilation test successful" && rm test_main
