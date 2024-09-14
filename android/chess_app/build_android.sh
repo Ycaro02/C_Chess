@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 function update_lib_dir {
 	local archi="${1}"
 
@@ -28,3 +27,5 @@ fi
 ./gradlew assembleDebug
 
 cp app/build/outputs/apk/debug/app-debug.apk apk_release/chess_app.apk
+
+echo "APK generated at apk_release/chess_app.apk"

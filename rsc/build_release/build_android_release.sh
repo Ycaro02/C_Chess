@@ -13,7 +13,16 @@ GITHUB_TOKEN=$(cat ~/.tok_C_chess)
 APK_PATH="android/chess_app/apk_release/chess_app.apk"
 APK_NAME="chess_app.apk"
 
+
 display_color_msg ${LIGHT_BLUE} "Preparing the APK for release..."
+
+display_color_msg ${YELLOW} "From dir is $(pwd)"
+cd android/chess_app
+display_color_msg ${YELLOW} "Current dir is $(pwd)"
+
+./build_android.sh
+
+cd ../..
 
 # Check if the APK exists
 if [ ! -f "${APK_PATH}" ]; then

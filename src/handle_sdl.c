@@ -1,34 +1,37 @@
 #include "../include/network.h"
 #include "../include/handle_sdl.h"
 #include "../include/chess_log.h"
+#include "../include/android_macro.h"
 
 #ifdef __ANDROID__
 
+	// global asset manager pointer
 	AAssetManager* g_asset_manager = NULL;
-
-	JNIEXPORT void JNICALL
-	Java_org_libsdl_app_SDLActivity_nativeInit(JNIEnv* env, jobject obj, jobject assetManagerObj) {
+	// init asset manager function
+	JNIEXPORT void JNICALL Java_org_libsdl_app_SDLActivity_nativeInit(JNIEnv* env, jobject obj, jobject assetManagerObj) {
 		g_asset_manager = AAssetManager_fromJava(env, assetManagerObj);
 	}
 
-    static Sint64 android_rwops_size(SDL_RWops* context) {
+	// Function API for Android
+    Sint64 android_rwops_size(SDL_RWops* context) {
         return AAsset_getLength((AAsset*)context->hidden.unknown.data1);
     }
 
-    static Sint64 android_rwops_seek(SDL_RWops* context, Sint64 offset, int whence) {
+    Sint64 android_rwops_seek(SDL_RWops* context, Sint64 offset, int whence) {
         return AAsset_seek((AAsset*)context->hidden.unknown.data1, offset, whence);
     }
 
-    static size_t android_rwops_read(SDL_RWops* context, void* ptr, size_t size, size_t maxnum) {
+    size_t android_rwops_read(SDL_RWops* context, void* ptr, size_t size, size_t maxnum) {
         return AAsset_read((AAsset*)context->hidden.unknown.data1, ptr, size * maxnum) / size;
     }
 
-    static int android_rwops_close(SDL_RWops* context) {
+    int android_rwops_close(SDL_RWops* context) {
         AAsset_close((AAsset*)context->hidden.unknown.data1);
         SDL_FreeRW(context);
         return 0;
     }
 
+	// create SDL_RWops from AAsset
     SDL_RWops* SDL_RWFromAsset(AAsset* asset) {
         if (!asset) {
             return NULL;
@@ -48,20 +51,23 @@
         return rw;
     }
 
+	// load asset file in read only mode
 	SDL_RWops* load_asset(const char* file) {
-    AAsset* asset = AAssetManager_open(g_asset_manager, file, AASSET_MODE_UNKNOWN);
-    if (asset == NULL) {
-        CHESS_LOG(LOG_ERROR, "Failed to open asset: %s\n", file);
-        return NULL;
-    }
+    	AAsset* asset = AAssetManager_open(g_asset_manager, file, AASSET_MODE_UNKNOWN);
+    	if (asset == NULL) {
+    	    CHESS_LOG(LOG_ERROR, "Failed to open asset: %s\n", file);
+    	    return NULL;
+    	}
+	
+    	SDL_RWops* rw = SDL_RWFromAsset(asset);
+    	if (rw == NULL) {
+    	    CHESS_LOG(LOG_ERROR, "Failed to create RWops from asset: %s\n", file);
+    	    AAsset_close(asset);
+    	}
+		CHESS_LOG(LOG_INFO, "Load asset: |%s|\n", file);
+    	return rw;
+	}
 
-    SDL_RWops* rw = SDL_RWFromAsset(asset);
-    if (rw == NULL) {
-        CHESS_LOG(LOG_ERROR, "Failed to create RWops from asset: %s\n", file);
-        AAsset_close(asset);
-    }
-    return rw;
-}
 #endif
 
 /**

@@ -351,5 +351,6 @@ size_t		sdl_write(SDL_RWops* rw, const void* buffer, size_t size, size_t num);
 int			sdl_close(SDL_RWops* rw);
 size_t		sdl_read_complete_file(SDL_RWops *rw, void *buffer, size_t total_size);
 s64			get_file_size_sdl(const char *filename);
+void		sdl_erase_file_data(const char* filename);
 
 #endif /* HANDLE_SDL_H */

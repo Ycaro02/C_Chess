@@ -96,7 +96,8 @@ void chess_destroy(SDLHandle *h) {
 	CHESS_LOG(LOG_INFO, RED"Destroy chess game%s\n", RESET);
 
 	// print_call_stack();
-	register_nickname(h->player_info.name, NICKNAME_FILE);
+
+	register_data(DATA_SAVE_FILE, h->player_info.name, h->player_info.dest_ip);
 
 	if (h->board->lst) {
 		ft_lstclear(&h->board->lst, free);
@@ -143,6 +144,28 @@ void chess_game(SDLHandle *h) {
 	}
 }
 
+void update_data_from_file(SDLHandle *h) {
+	char *nickname = get_file_data(DATA_SAVE_FILE, "Nickname", 0, 8);
+	if (nickname) {
+		h->player_info.name = nickname;
+	} else {
+		h->player_info.name = ft_strdup("Default");
+	}
+	if (h->menu.profile->tf[PFT_NAME]->text) {
+		free(h->menu.profile->tf[PFT_NAME]->text);
+		h->menu.profile->tf[PFT_NAME]->text = ft_strdup(h->player_info.name);
+	}
+	char *ip = get_file_data(DATA_SAVE_FILE, "Server", 1, 15);
+	if (ip) {
+		CHESS_LOG(LOG_INFO, "Get In File Server IP: %s\n", ip);
+		h->player_info.dest_ip = ip;
+		if (h->menu.ip_field->text) {
+			free(h->menu.ip_field->text);
+			h->menu.ip_field->text = ft_strdup(h->player_info.dest_ip);
+		}
+	}
+}
+
 // int SDL_main(int argc, char **argv) {
 int main(int argc, char **argv) {
 	SDLHandle	*handle = NULL;
@@ -151,10 +174,10 @@ int main(int argc, char **argv) {
 	s8			error = 0;
 
 
-	set_log_level(LOG_DEBUG);
+	// set_log_level(LOG_DEBUG);
 	// set_log_level(LOG_INFO);
 	// set_log_level(LOG_ERROR);
-	// set_log_level(LOG_NONE);
+	set_log_level(LOG_NONE);
 
 	flag = handle_chess_flag(argc, argv, &error, &player_info);
 	if (error == -1) {
@@ -169,12 +192,7 @@ int main(int argc, char **argv) {
 	}
 	handle->flag = flag;
 	handle->player_info = player_info;
-	char *nickname = get_nickname_in_file();
-	if (nickname) {
-		handle->player_info.name = nickname;
-	} else {
-		handle->player_info.name = ft_strdup("Default");
-	}
+	update_data_from_file(handle);
 
 	#ifdef _EMSCRIPTEN_VERSION_
 		emscripten_setup();

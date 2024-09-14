@@ -1,11 +1,27 @@
 #include "../include/handle_sdl.h"
+#include "../include/android_macro.h"
 
+
+//	In the android version we need to split file_name to get
+//	only the file name without the directory does't exist in the internal storage
 SDL_RWops* sdl_open(const char* file, const char* mode) {
+#ifdef __ANDROID__
+	char **split = ft_split(file, '/');
+	char* fullPath = get_internal_storage_path(split[1]);
+	SDL_RWops* rw = SDL_RWFromFile(fullPath, mode);
+	if (!rw) {
+		CHESS_LOG(LOG_ERROR, RED"Failed to open file %s: %s\n"RESET, fullPath, SDL_GetError());
+	}
+	free_double_char(split);
+	free(fullPath);
+	return (rw);
+#else
     SDL_RWops* rw = SDL_RWFromFile(file, mode);
     if (!rw) {
-        fprintf(stderr, "Failed to open file %s: %s\n", file, SDL_GetError());
+        CHESS_LOG(LOG_ERROR, "Failed to open file %s: %s\n", file, SDL_GetError());
     }
     return (rw);
+#endif
 }
 
 size_t sdl_read(SDL_RWops* rw, void* buffer, size_t size, size_t maxnum) {
@@ -34,6 +50,16 @@ int sdl_close(SDL_RWops* rw) {
     return (0);
 }
 
+void sdl_erase_file_data(const char* filename) {
+	// SDL_RWops* rw = SDL_RWFromFile(filename, "w");
+	SDL_RWops* rw = sdl_open(filename, "w");
+	if (!rw) {
+		fprintf(stderr, "Failed to open file %s: %s\n", filename, SDL_GetError());
+		return;
+	}
+	SDL_RWclose(rw);
+}
+
 size_t sdl_read_complete_file(SDL_RWops *rw, void *buffer, size_t total_size) {
 	size_t num_read = SDL_RWread(rw, buffer, 1, total_size);
 	if (num_read != total_size) {
@@ -44,7 +70,8 @@ size_t sdl_read_complete_file(SDL_RWops *rw, void *buffer, size_t total_size) {
 }
 
 s64 get_file_size_sdl(const char *filename) {
-    SDL_RWops *rw = SDL_RWFromFile(filename, "rb");
+    // SDL_RWops *rw = SDL_RWFromFile(filename, "rb");
+	SDL_RWops* rw = sdl_open(filename, "rb");
     if (!rw) {
         fprintf(stderr, "Cannot open file %s: %s\n", filename, SDL_GetError());
         return (-1);

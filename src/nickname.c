@@ -2,67 +2,70 @@
 #include "../include/chess.h"
 #include "../include/handle_sdl.h"
 
+/** File data format:
+ * keyword: Nickanme,	max_size: 8, 	idx: 0
+ * keyword: Server,		max_size: 15,	idx: 1
+ */
 
-char *get_nickname_in_file() {
-    char		*nickname = NULL, *nickname_file = NULL, **split_file_line = NULL, **split_line = NULL;
+char *get_file_data(char *path, char *keyword, u32 line_idx, int max_size) {
+	    char		*data = NULL, *data_file = NULL, **split_file_line = NULL, **split_line = NULL;
     SDL_RWops	*rw = NULL;
     s64 		size = 0;
 
-
-    size = get_file_size_sdl(NICKNAME_FILE);
+    size = get_file_size_sdl(path);
     if (size < 0) {
         CHESS_LOG(LOG_ERROR, "Getting file size\n");
 		return (NULL);
     }
 
-    rw = sdl_open(NICKNAME_FILE, "r");
+    rw = sdl_open(path, "r");
     if (!rw) {
-        CHESS_LOG(LOG_ERROR, "Opening nickname file\n");
-        return (NULL);
+        CHESS_LOG(LOG_ERROR, "Opening data file\n");
+		return (NULL);
     }
 
-    nickname_file = ft_calloc(size + 1, sizeof(char));
-    if (!nickname_file) {
-        CHESS_LOG(LOG_ERROR, "Allocating memory for nickname file\n");
+    data_file = ft_calloc(size + 1, sizeof(char));
+    if (!data_file) {
+        CHESS_LOG(LOG_ERROR, "Allocating memory for data file\n");
         goto close_rw;
     }
 
-    if (sdl_read_complete_file(rw, nickname_file, size) != (size_t)size) {
-        CHESS_LOG(LOG_ERROR, "Reading nickname file\n");
+    if (sdl_read_complete_file(rw, data_file, size) != (size_t)size) {
+        CHESS_LOG(LOG_ERROR, "Reading data file\n");
         goto free_file;
     }
-    nickname_file[size] = '\0';
+    data_file[size] = '\0';
 
-    split_file_line = ft_split(nickname_file, '\n');
+    split_file_line = ft_split(data_file, '\n');
     if (!split_file_line) {
         CHESS_LOG(LOG_ERROR, "No first line\n");
         goto free_file;
-    } else if (double_char_size(split_file_line) < 1) {
-        CHESS_LOG(LOG_ERROR, "Missing line need at least 1 line\n");
+    } else if (double_char_size(split_file_line) < line_idx + 1) {
+        CHESS_LOG(LOG_ERROR, "Missing line need at least %d line\n", line_idx + 1);
         goto free_first_split;
     }
 
-    split_line = ft_split(split_file_line[0], ':');
+    split_line = ft_split(split_file_line[line_idx], ':');
     if (!split_line) {
         CHESS_LOG(LOG_ERROR, "First line error\n");
         goto free_first_split;
     } else if (double_char_size(split_line) != 2) {
         CHESS_LOG(LOG_ERROR, "Missing separator ':' or too many separator format is 'keyword:value'\n");
         goto free_second_split;
-    } else if (fast_strcmp(split_line[0], "nickname") != 0) {
-        CHESS_LOG(LOG_ERROR, "Wrong keyword need 'nickname'\n");
+    } else if (fast_strcmp(split_line[0], keyword) != 0) {
+        CHESS_LOG(LOG_ERROR, "Wrong keyword need '%s', got: |%s|\n"RESET, keyword, split_line[0]);
         goto free_second_split;
     }
 
-    CHESS_LOG(LOG_INFO, "Nickname_file line[0]: %s\n", split_file_line[0]);
-    nickname = ft_strtrim(split_line[1], " \t\n\r\v\f");
+    CHESS_LOG(LOG_INFO, "data_file line[%u]: %s\n", line_idx, split_file_line[0]);
+    data = ft_strtrim(split_line[1], " \t\n\r\v\f");
 
-    if (fast_strlen(nickname) >= 8) {
+    if (fast_strlen(data) >= max_size) {
         CHESS_LOG(LOG_ERROR, "Nickname too long max is 7 character\n");
-        free(nickname);
-        nickname = NULL;
+        free(data);
+        data = NULL;
     } else {
-        CHESS_LOG(LOG_INFO, "Nickname: |%s|\n", nickname);
+        CHESS_LOG(LOG_INFO, "Nickname: |%s|\n", data);
     }
 
 	free_second_split:
@@ -72,131 +75,46 @@ char *get_nickname_in_file() {
 		free_double_char(split_file_line);
 
 	free_file:
-		free(nickname_file);
+		free(data_file);
 
 	close_rw:
 		sdl_close(rw);
-		return nickname;
+
+	return (data);
 }
 
-void register_nickname(char *nickname, char *path) {
-    SDL_RWops	*rw = NULL;
-    char		*new_nickname = NULL;
+void register_file_data(char *path, char *keyword, char *data) {
+	SDL_RWops	*rw = NULL;
+	char		*new_data = NULL;
 
-    new_nickname = ft_strjoin("nickname:", nickname);
-    if (!new_nickname) {
-        CHESS_LOG(LOG_ERROR, "Malloc new nickname\n");
-        return;
-    }
+	new_data = ft_strjoin(keyword, data);
+	if (!new_data) {
+		CHESS_LOG(LOG_ERROR, "Malloc new data\n");
+		return;
+	}
 
-    rw = sdl_open(path, "w");
-    if (!rw) {
-        CHESS_LOG(LOG_ERROR, "Opening nickname file\n");
-	    free(new_nickname);
-    }
+	// open in append mode
+	rw = sdl_open(path, "a");
+	if (!rw) {
+		CHESS_LOG(LOG_ERROR, "Opening file\n");
+	    free(new_data);
+	}
 
-    if (sdl_write(rw, new_nickname, sizeof(char), fast_strlen(new_nickname)) < 0) {
-        CHESS_LOG(LOG_ERROR, "Writing nickname file\n");
-    }
+	if (sdl_write(rw, new_data, sizeof(char), fast_strlen(new_data)) < 0) {
+		CHESS_LOG(LOG_ERROR, "Writing file\n");
+	}
 
-    CHESS_LOG(LOG_INFO, "Registering nickname: %s\n", new_nickname);
+	CHESS_LOG(LOG_INFO, "Registering data: %s\n", new_data);
 
-	free(new_nickname);
-    sdl_close(rw);
+	free(new_data);
+	sdl_close(rw);
+
 }
 
-// char *get_nickname_in_file() {
-// 	u64		size = 0;
-// 	char	*nickname = NULL, *nickname_file, **split_file_line, **split_line = NULL;
-// 	int		fd = -1;
+void register_data(char *relatif_path, char *nickname, char *server_ip) {
+	sdl_erase_file_data(relatif_path);
+	register_file_data(relatif_path, "Nickname:", nickname);
+	register_file_data(relatif_path, "\nServer:", server_ip);
+}
 
-// 	fd = open(NICKNAME_FILE, O_RDONLY);
-// 	if (fd < 0) {
-// 		CHESS_LOG(LOG_ERROR, "Opening nickname file\n");
-// 		return (NULL);
-// 	}
 
-// 	nickname_file = sstring_read_fd(fd, NICKNAME_FILE, &size);
-// 	if (nickname_file == NULL) {
-// 		CHESS_LOG(LOG_ERROR, "Reading nickname file\n");
-// 		goto close_fd;
-// 	} else if (size < 0) {
-// 		CHESS_LOG(LOG_ERROR, "Empty nickname file\n");
-// 		goto free_file;
-// 	}
-
-// 	split_file_line = ft_split(nickname_file, '\n');
-
-// 	if (!split_file_line) {
-// 		CHESS_LOG(LOG_ERROR, "No first line\n");
-// 		goto free_file;
-// 	} else if (double_char_size(split_file_line) < 1) {
-// 		CHESS_LOG(LOG_ERROR, "Missing line need at least 1 line\n");
-// 		goto free_first_split;
-// 	}
-
-// 	split_line = ft_split(split_file_line[0], ':');
-
-// 	if (!split_line) {
-// 		CHESS_LOG(LOG_ERROR, "First line error\n");
-// 		goto free_first_split;
-// 	} else if (double_char_size(split_line) != 2) {
-// 		CHESS_LOG(LOG_ERROR, "Missing separator ':' or too many separator format is 'keyword:value'\n");
-// 		goto free_second_split;
-// 	} else if (fast_strcmp(split_line[0], "nickname") != 0) {
-// 		CHESS_LOG(LOG_ERROR, "Wrong keyword need 'nickname'\n");
-// 		goto free_second_split;
-// 	}
-
-// 	CHESS_LOG(LOG_INFO, "Nickname_file line[0]: %s\n", split_file_line[0]);
-// 	nickname = ft_strtrim(split_line[1], " \t\n\r\v\f");
-
-// 	if (fast_strlen(nickname) >= 8) {
-// 		CHESS_LOG(LOG_ERROR, "Nickname too long max is 7 character\n");
-// 		free(nickname);
-// 		nickname = NULL;
-// 	} else {
-// 		CHESS_LOG(LOG_INFO, "Nickname: |%s|\n", nickname);
-// 	}
-
-// 	free_second_split:
-// 		free_double_char(split_line);
-
-// 	free_first_split:
-// 		free_double_char(split_file_line);
-
-// 	free_file:
-// 		free(nickname_file);
-
-// 	close_fd:
-// 		close(fd);
-// 		return (nickname);
-// }
-
-// void register_nickname(char *nickname, char *path) {
-// 	int		fd = -1;
-// 	char	*new_nickname = NULL;
-
-// 	new_nickname = ft_strjoin("nickname:", nickname);
-// 	if (new_nickname == NULL) {
-// 		CHESS_LOG(LOG_ERROR, "Malloc new nickname\n");
-// 		return ;
-// 	}
-
-// 	fd = open(path, O_WRONLY | O_TRUNC);
-// 	if (fd < 0) {
-// 		CHESS_LOG(LOG_ERROR, "Opening nickname file\n");
-// 		goto free_new_nickname;
-// 	}
-
-// 	if (write(fd, new_nickname, fast_strlen(new_nickname)) < 0) {
-// 		CHESS_LOG(LOG_ERROR, "Writing nickname file\n");
-// 	}
-
-// 	CHESS_LOG(LOG_INFO, "Registering nickname: %s\n", new_nickname);
-
-// 	close(fd);
-
-// 	free_new_nickname:
-// 		free(new_nickname);
-// }

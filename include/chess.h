@@ -245,7 +245,7 @@ typedef t_flag_context ChessFlagContext;
 #define NETWORK_STR		"network"
 #define HELP_STR		"help"
 
-#define NICKNAME_FILE "rsc/nickname.txt"
+#define DATA_SAVE_FILE "rsc/C_chess_data.txt"
 
 /* Forward declarion for SDLHandle struct */
 typedef struct s_sdl_handle SDLHandle;
@@ -313,6 +313,7 @@ u64 		get_time_sec();
 void		draw_timer_rect(SDLHandle *h);
 
 /* nickname.c */
-char		*get_nickname_in_file();
-void register_nickname(char *nickname, char *path);
+// char		*get_nickname_in_file();
+char		*get_file_data(char *path, char *keyword, u32 line_idx, int max_size);
+void		register_data(char *path, char *nickname, char *server_ip);
 #endif /* CHESS_H */
