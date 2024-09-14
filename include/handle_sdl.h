@@ -343,4 +343,13 @@ Profile	*init_profile_page(SDLHandle *h, s32 nb_field);
 void	destroy_profile_page(Profile *profile);
 void	draw_profile_page(SDLHandle *h, Profile *profile);
 
+/* sdl_handle_file.c */
+
+SDL_RWops	*sdl_open(const char* file, const char* mode);
+size_t		sdl_read(SDL_RWops* rw, void* buffer, size_t size, size_t maxnum);
+size_t		sdl_write(SDL_RWops* rw, const void* buffer, size_t size, size_t num);
+int			sdl_close(SDL_RWops* rw);
+size_t		sdl_read_complete_file(SDL_RWops *rw, void *buffer, size_t total_size);
+s64			get_file_size_sdl(const char *filename);
+
 #endif /* HANDLE_SDL_H */
