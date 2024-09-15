@@ -1,1 +1,0 @@
-/home/ycaro/chess/C_Chess/android/chess_app/app/build/intermediates/cxx/Debug/141v3o4t/obj/local/x86_64
