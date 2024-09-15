@@ -269,12 +269,26 @@ static Bitboard verify_castle_move(ChessBoard *b, Bitboard king, s8 is_black){
 	}
 
 
-	/* Check if the king rook has ever moved */
-	if (!u8ValueGet(b->info, is_black ? BLACK_KING_ROOK_MOVED : WHITE_KING_ROOK_MOVED)) {
-		path = is_black ? BLACK_KING_CASTLE_PATH : WHITE_KING_CASTLE_PATH;
-		if (is_empty_path(b->occupied, path) && is_safe_path(enemy_control, path)) {
-			move |= (king << 2);
+	/* Check if the king rook is on the board */
+	ChessPiece	wanted_rook = is_black ? BLACK_ROOK : WHITE_ROOK;
+	ChessTile	rook_tile = is_black ? BLACK_KING_ROOK_START_POS : WHITE_KING_ROOK_START_POS;
+	ChessPiece	rook = get_piece_from_tile(b, rook_tile);
+	if (rook == wanted_rook) {
+		/* Check if the king rook has ever moved */
+		if (!u8ValueGet(b->info, is_black ? BLACK_KING_ROOK_MOVED : WHITE_KING_ROOK_MOVED)) {
+			path = is_black ? BLACK_KING_CASTLE_PATH : WHITE_KING_CASTLE_PATH;
+			if (is_empty_path(b->occupied, path) && is_safe_path(enemy_control, path)) {
+				move |= (king << 2);
+			}
 		}
+	}
+
+	/* Check if the queen rook is on the board */
+	wanted_rook = is_black ? BLACK_ROOK : WHITE_ROOK;
+	rook_tile = is_black ? BLACK_QUEEN_ROOK_START_POS : WHITE_QUEEN_ROOK_START_POS;
+	rook = get_piece_from_tile(b, rook_tile);
+	if (rook != wanted_rook) {
+		return (move);
 	}
 
 	/* Check if the queen rook has ever moved */

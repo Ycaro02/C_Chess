@@ -6,6 +6,27 @@
 #ifdef __ANDROID__
 
 	// Get internal storage path
+	/**
+	 * @file android_macro.h
+	 * @brief This file contains inline functions and macros for handling Android-specific operations such as retrieving internal storage paths and showing/hiding the keyboard.
+	 *
+	 * The functions in this file utilize JNI (Java Native Interface) to interact with Android's Java environment.
+	 *
+	 * Functions:
+	 * - get_internal_storage_path: Retrieves the internal storage path for a given file.
+	 * - android_show_keyboard: Shows the Android keyboard.
+	 * - android_hide_keyboard: Hides the Android keyboard.
+	 * - pc_show_keyboard: Dummy function to simulate showing the keyboard on non-Android platforms.
+	 * - pc_hide_keyboard: Dummy function to simulate hiding the keyboard on non-Android platforms.
+	 *
+	 * Macros:
+	 * - ENABLE_TEXFIELD: Macro to enable the text field (show the keyboard).
+	 * - DISABLE_TEXTFIELD: Macro to disable the text field (hide the keyboard).
+	 *
+	 * JNIEXPORT Declarations:
+	 * - Java_org_libsdl_app_SDLActivity_showKeyboard: JNI function to show the keyboard.
+	 * - Java_org_libsdl_app_SDLActivity_hideKeyboard: JNI function to hide the keyboard.
+	 */
 	FT_INLINE char *get_internal_storage_path(const char* file) {
 		JNIEnv* env = (JNIEnv*)SDL_AndroidGetJNIEnv();
 		jobject activity = (jobject)SDL_AndroidGetActivity();

@@ -1,9 +1,16 @@
+/**
+ * @file sdl_handle_file.c
+ * @brief SDL file handling functions for the chess application.
+ * 
+ * This file contains functions to handle file operations using SDL_RWops.
+ * It includes functions for opening, reading, writing, and closing files,
+ * as well as some utility functions for file operations specific to the 
+ * Android platform.
+ */
+
 #include "../include/handle_sdl.h"
 #include "../include/android_macro.h"
 
-
-//	In the android version we need to split file_name to get
-//	only the file name without the directory does't exist in the internal storage
 SDL_RWops* sdl_open(const char* file, const char* mode) {
 #ifdef __ANDROID__
 	char **split = ft_split(file, '/');

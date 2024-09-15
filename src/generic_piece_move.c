@@ -17,9 +17,11 @@ void board_special_info_handler(ChessBoard *b, ChessPiece type, ChessTile tile_f
 		{BLACK_ROOK, BLACK_KING_ROOK_MOVED, BLACK_KING_ROOK_START_POS},
 		{BLACK_ROOK, BLACK_QUEEN_ROOK_MOVED, BLACK_QUEEN_ROOK_START_POS},
 	};
+	s32 idx = -1;
 
 	for (s32 i = 0; i < SPECIAL_INFO_SIZE; i++) {
-		s32 idx = special_info[i].info_idx;
+		idx = special_info[i].info_idx;
+		/* Check if the piece is the king or rook and if the piece is at the start position */
 		if (special_info[i].type == type && special_info[i].tile_from == tile_from && u8ValueGet(b->info, idx) == FALSE) {
 			b->info = u8ValueSet(b->info, idx, TRUE);
 		}
