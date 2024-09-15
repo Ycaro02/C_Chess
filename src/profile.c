@@ -68,7 +68,7 @@ TextField * init_profile_text_field(TTF_Font *font, SDL_Rect profile_rect, Profi
 	SDL_Rect rect;
 
 	rect.x = profile_rect.x + (profile_rect.w >> 3);
-	rect.y = profile_rect.y + (profile_rect.y >> 1) + ((i * info.height_pad) * 2)+ (i * info.height) + info.height_pad;
+	rect.y = profile_rect.y + ((profile_rect.h >> 2) - (profile_rect.h >> 3)) + ((i * info.height_pad) * 2)+ (i * info.height) + info.height_pad;
 	rect.w = info.width >> 1;
 	rect.h = info.height;
 

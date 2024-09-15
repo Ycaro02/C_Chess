@@ -80,8 +80,9 @@ endif
 
 fclean:		clean_lib clean
 	@make -s -C windows fclean
-	@$(RM) $(NAME) $(SERVER_EXE) $(SERVER_EXE)
-	@printf "$(RED)Clean $(NAME) $(SERVER_EXE) $(RESET)\n"
+	@cd android/chess_app && ./build_android.sh clean && cd ../..
+	@$(RM) $(NAME) $(SERVER_EXE) $(SERVER_EXE) 
+	@printf "$(RED)Clean $(NAME) $(SERVER_EXE) android dir $(RESET)\n"
 
 clean_lib:
 	@$(MAKE_LIST) fclean

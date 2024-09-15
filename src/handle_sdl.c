@@ -322,18 +322,21 @@ SDL_Rect android_build_timer_rect(SDLHandle *h, s8 is_bot_band) {
 
 	s32 height_pad = (h->band_size.bot >> 2) + (h->band_size.bot >> 3);
 	s32 width = (h->window_size.x >> 1) - (h->window_size.x >> 2);
-	s32 start_x = h->window_size.x - width - (h->window_size.x >> 4);
+	s32 start_x = 0;
 	s32 height = h->tile_size.x;
 
-	timer_rect.x = start_x;
 
 	if (is_bot_band) {
+		start_x = h->window_size.x - width - (h->window_size.x >> 4);
 		/* Start to the bot of window - band_size_bot - height_pad */
 		timer_rect.y = h->window_size.y - h->band_size.bot + height_pad - (height);
 	} else {
+		start_x = (h->window_size.x >> 4);
 		// timer_rect.y = (height << 1);
 		timer_rect.y = 0 + h->band_size.top - height_pad;
 	}
+	
+	timer_rect.x = start_x;
 	
 
 	timer_rect.w = width;
