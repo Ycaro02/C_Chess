@@ -40,6 +40,7 @@ typedef struct s_chess_room {
 	u64				room_id;		/* Room ID */
 	RoomState		state;			/* Room state */
 	u16				msg_id;			/* Message ID of the cli communication */
+	u16				last_move_id_saved; /* Last move id saved */
 } ChessRoom;
 
 typedef struct s_chess_server {
@@ -70,11 +71,13 @@ void update_chess_game_state(ChessRoom *r) {
 	ft_memcpy(r->game_state.cliB_nickname, r->cliB.nickname, 8);
 	r->game_state.move_lst = r->move_lst;
 	r->game_state.room_id = r->room_id;
-	r->game_state.cliA_timer = r->cliA.my_remain_time;
-	r->game_state.cliB_timer = r->cliB.my_remain_time;
 	r->game_state.msg_id = r->msg_id;
-	r->game_state.cliA_color = r->cliA.color;
-	r->game_state.cliB_color = r->cliB.color;
+	// printf(RED"GAME STATE UPDATED\n"RESET);
+	// printf(ORANGE"time: %ld\n"RESET, r->game_state.cliA_timer);
+	// printf(ORANGE"Cli A: %s -> [%d] %s\n"RESET, r->cliA.nickname, r->cliA.color, r->cliA.color == IS_WHITE ? "WHITE" : "BLACK");
+	// printf(ORANGE"Cli B: %s -> [%d] %s\n"RESET, r->cliB.nickname, r->cliB.color, r->cliB.color == IS_WHITE ? "WHITE" : "BLACK");
+	// printf(GREEN"STATE Cli A: %s -> [%d] %s\n"RESET, r->cliA.nickname, r->game_state.cliA_color, r->game_state.cliA_color == IS_WHITE ? "WHITE" : "BLACK");
+	// printf(GREEN"STATE Cli B: %s -> [%d] %s\n"RESET, r->cliB.nickname, r->game_state.cliB_color, r->game_state.cliB_color == IS_WHITE ? "WHITE" : "BLACK");
 }
 
 /* @brief Store the move list in list
@@ -121,6 +124,9 @@ ChessRoom *room_create(u32 id) {
 	fast_bzero(&room->cliA, sizeof(ChessClient));
 	fast_bzero(&room->cliB, sizeof(ChessClient));
 	room->state = ROOM_STATE_WAITING;
+	room->move_lst = NULL;
+	room->msg_id = 0;
+	room->last_move_id_saved = 0;
 	return (room);
 }
 
@@ -296,6 +302,7 @@ void send_reconnect_packet(ChessRoom *r, int sockfd, s8 last_connected) {
 	}
 
 	/* Send it */
+	msg_size += MAGIC_SIZE;
 	if (last_connected == CLIENT_A) {
 		printf("Send reconnect packet to %s\n", r->cliA.nickname);
 		sendto(sockfd, format_reconnect_msg, msg_size, 0, (Sockaddr *)&r->cliA.addr, sizeof(r->cliA.addr));
@@ -345,11 +352,21 @@ void connect_client_together(int sockfd, ChessRoom *r, s8 last_connected) {
  * @param r The room
  * @param timer The timer
  */
-void set_first_timer_data(ChessRoom *r, u64 timer) {
+void init_game_state_data(ChessRoom *r, u64 timer) {
 	r->cliA.my_remain_time = timer;
 	r->cliA.enemy_remain_time = timer;
 	r->cliB.my_remain_time = timer;
 	r->cliB.enemy_remain_time = timer;
+
+	r->game_state.cliA_timer = timer;
+	r->game_state.cliB_timer = timer;
+	r->game_state.cliA_color = r->cliA.color;
+	r->game_state.cliB_color = r->cliB.color;
+}
+
+s8 is_first_move(u32 lst_size, u16 msg_id, u16 last_move_id_saved) {
+	printf("List size: %u, msg_id: %u, last_move_id_saved: %u\n", lst_size, msg_id, last_move_id_saved);
+	return (lst_size == 0 && msg_id == 0 && last_move_id_saved == 0);
 }
 
 /* @brief Save the information of the client
@@ -359,26 +376,31 @@ void set_first_timer_data(ChessRoom *r, u64 timer) {
  */
 void server_save_info(ChessRoom *r, char *msg, s8 is_client_a) {
 	s8 msg_type = msg[IDX_TYPE];
+	u32 lst_size = ft_lstsize(r->move_lst);
 
 	if (msg_type >= MSG_TYPE_COLOR && msg_type <= MSG_TYPE_PROMOTION) {
 		r->msg_id = GET_MESSAGE_ID(msg);
 		printf("Message ID rcv: %d in |%s|\n", r->msg_id, MsgType_to_str(msg_type));
 
-		if (msg_type == MSG_TYPE_MOVE || msg_type == MSG_TYPE_PROMOTION) {
+		// if is message move and is last_msg_id + 1 or is the first move message
+		if ((msg_type == MSG_TYPE_MOVE || msg_type == MSG_TYPE_PROMOTION) \
+			&& ((is_first_move(lst_size, r->msg_id, r->last_move_id_saved)) || (r->msg_id == r->last_move_id_saved + 1)))
+		{
 			server_store_movelist(&r->move_lst, msg);
 			// display_move_list(r->move_lst);
+			r->last_move_id_saved = r->msg_id;
 		} else if (msg_type == MSG_TYPE_COLOR) {
 				if (is_client_a) {
 					r->cliB.color = msg[IDX_FROM];
 					r->cliA.color = !r->cliB.color;
-					set_first_timer_data(r, *(u64 *)&msg[IDX_TIMER]);
+					init_game_state_data(r, *(u64 *)&msg[IDX_TIMER]);
 				} else {
 					r->cliA.color = msg[IDX_FROM];
 					r->cliB.color = !r->cliA.color;
-					set_first_timer_data(r, *(u64 *)&msg[IDX_TIMER]);
+					init_game_state_data(r, *(u64 *)&msg[IDX_TIMER]);
 				}
-				// printf("Client A |%s| color: %s\n", r->cliA.nickname, r->cliA.color == IS_WHITE ? "WHITE" : "BLACK");
-				// printf("Client B |%s| color: %s\n", r->cliB.nickname, r->cliB.color == IS_WHITE ? "WHITE" : "BLACK");
+				printf("Client A |%s| color: %s\n", r->cliA.nickname, r->cliA.color == IS_WHITE ? "WHITE" : "BLACK");
+				printf("Client B |%s| color: %s\n", r->cliB.nickname, r->cliB.color == IS_WHITE ? "WHITE" : "BLACK");
 		}
 		if (msg_type != MSG_TYPE_COLOR) {
 			if (is_client_a) {

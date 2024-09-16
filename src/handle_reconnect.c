@@ -74,6 +74,9 @@
 		/* Set the move list */
 		h->board->lst = array_to_list(move_arr, list_size, sizeof(MoveSave));
 
+		// CHESS_LOG(LOG_INFO, PURPLE"Timer Receive %ld %ld\n"RESET, my_remaining_time, enemy_remaining_time);
+
+
 		/* Detect player turn */
 		detect_player_turn(h, last_piece_moved, h->player_info.color);
 	}
@@ -130,6 +133,7 @@ char *build_reconnect_message(ChessMoveList *move_lst, u16 *msg_size, u64 my_tim
 	ft_memcpy(&buff[MOVE_ARRAY_IDX], move_arr, array_byte_size);
 	ft_memcpy(&buff[MOVE_ARRAY_IDX + array_byte_size], &enemy_time, sizeof(u64));
 	ft_memcpy(&buff[MOVE_ARRAY_IDX + array_byte_size + 8], &my_time, sizeof(u64));
+
 	free(move_arr);
 	return (buff);
 }
