@@ -92,6 +92,8 @@ void local_chess_routine() {
 	update_graphic_board(h);
 }
 
+
+
 void chess_destroy(SDLHandle *h) {
 	CHESS_LOG(LOG_INFO, RED"Destroy chess game%s\n", RESET);
 
@@ -120,6 +122,18 @@ SDLHandle *get_SDL_handle() {
 
 	return (stat);
 }
+
+#ifdef __ANDROID__
+	JNIEXPORT void JNICALL Java_org_libsdl_app_SDLActivity_chessOnDestroy(JNIEnv* env, jobject obj) {
+		// CHESS_LOG(LOG_INFO, "chessOnDestroy() Call\n");
+		SDLHandle *h = get_SDL_handle();
+		register_data(DATA_SAVE_FILE, h->player_info.name, h->player_info.dest_ip);
+		if (h->player_info.nt_info) {
+			send_disconnect_to_server(h->player_info.nt_info->sockfd, h->player_info.nt_info->servaddr);
+		}
+	}
+#endif
+
 
 void chess_game(SDLHandle *h) {
 	struct timeval	timeout = {0, 10000}; /* 10000 microseconds = 0.01 seconds */
@@ -175,9 +189,9 @@ int main(int argc, char **argv) {
 
 
 	// set_log_level(LOG_DEBUG);
-	// set_log_level(LOG_INFO);
+	set_log_level(LOG_INFO);
 	// set_log_level(LOG_ERROR);
-	set_log_level(LOG_NONE);
+	// set_log_level(LOG_NONE);
 
 	flag = handle_chess_flag(argc, argv, &error, &player_info);
 	if (error == -1) {

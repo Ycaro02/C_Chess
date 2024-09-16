@@ -608,27 +608,30 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
         }
     }
 
+	public static native void chessOnDestroy();
+
     @Override
     protected void onDestroy() {
-        Log.v(TAG, "onDestroy()");
-
+        Log.v(TAG, "onDestroy() Detecting thread: " + Thread.currentThread().getName());
         if (mHIDDeviceManager != null) {
             HIDDeviceManager.release(mHIDDeviceManager);
             mHIDDeviceManager = null;
         }
-
         SDLAudioManager.release(this);
+
+		// My own on destroy to save data and send disconect to server
+		SDLActivity.chessOnDestroy();
 
         if (SDLActivity.mBrokenLibraries) {
            super.onDestroy();
            return;
         }
 
+
         if (SDLActivity.mSDLThread != null) {
 
             // Send Quit event to "SDLThread" thread
             SDLActivity.nativeSendQuit();
-
             // Wait for "SDLThread" thread to end
             try {
                 SDLActivity.mSDLThread.join();

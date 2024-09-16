@@ -31,6 +31,7 @@
 	JNIEXPORT void JNICALL Java_org_libsdl_app_SDLActivity_showKeyboard(JNIEnv* env, jobject obj);
 	JNIEXPORT void JNICALL Java_org_libsdl_app_SDLActivity_hideKeyboard(JNIEnv* env, jobject obj);
 
+
 	/**
 	 * @brief Retrieves the internal storage path for a given file.
 	 *
