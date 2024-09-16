@@ -132,10 +132,11 @@ SDLHandle *get_SDL_handle() {
 		if (h->player_info.nt_info) {
 			send_disconnect_to_server(h->player_info.nt_info->sockfd, h->player_info.nt_info->servaddr);
 		}
-		if (has_flag(h->flag, FLAG_GAME_NETWORK_PAUSE)) {
-			reconnect_game(h);
-			send_disconnect_to_server(h->player_info.nt_info->sockfd, h->player_info.nt_info->servaddr);
-		}
+		// if (has_flag(h->flag, FLAG_GAME_NETWORK_PAUSE)) {
+		// 	unset_flag(&h->flag, FLAG_GAME_NETWORK_PAUSE);
+		// 	reconnect_game(h);
+		// 	send_disconnect_to_server(h->player_info.nt_info->sockfd, h->player_info.nt_info->servaddr);
+		// }
 	}
 
 	JNIEXPORT void JNICALL Java_org_libsdl_app_SDLActivity_chessOnPause(JNIEnv* env, jobject obj) {

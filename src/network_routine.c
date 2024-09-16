@@ -140,8 +140,8 @@ void network_chess_routine(SDLHandle *h) {
 		}
 	}
 
-	CHESS_LOG(LOG_INFO, "Network routine: peer conected %s\n", h->player_info.nt_info->peer_conected ? GREEN"TRUE"RESET : RED"FALSE"RESET);
-	CHESS_LOG(LOG_INFO, "Network routine: TEXT_CENTER %s\n", has_flag(h->flag, FLAG_CENTER_TEXT_INPUT) ? GREEN"TRUE"RESET : RED"FALSE"RESET);
+	// CHESS_LOG(LOG_INFO, "Network routine: peer conected %s\n", h->player_info.nt_info->peer_conected ? GREEN"TRUE"RESET : RED"FALSE"RESET);
+	// CHESS_LOG(LOG_INFO, "Network routine: TEXT_CENTER %s\n", has_flag(h->flag, FLAG_CENTER_TEXT_INPUT) ? GREEN"TRUE"RESET : RED"FALSE"RESET);
 
 	/* Draw logic */
 	update_graphic_board(h);
