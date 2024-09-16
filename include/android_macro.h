@@ -3,29 +3,39 @@
 #ifndef _ANDROID_MACRO_HANDLE_SDL_H_
 #define _ANDROID_MACRO_HANDLE_SDL_H_
 
+/**
+ * @file android_macro.h
+ * @brief This file contains inline functions and macros for handling Android-specific operations such as retrieving internal storage paths and showing/hiding the keyboard.
+ *
+ * The functions in this file utilize JNI (Java Native Interface) to interact with Android's Java environment.
+ *
+ * Functions:
+ * - get_internal_storage_path: Retrieves the internal storage path for a given file.
+ * - android_show_keyboard: Shows the Android keyboard.
+ * - android_hide_keyboard: Hides the Android keyboard.
+ * - pc_show_keyboard: Dummy function to simulate showing the keyboard on non-Android platforms.
+ * - pc_hide_keyboard: Dummy function to simulate hiding the keyboard on non-Android platforms.
+ *
+ * Macros:
+ * - ENABLE_TEXFIELD: Macro to enable the text field (show the keyboard).
+ * - DISABLE_TEXTFIELD: Macro to disable the text field (hide the keyboard).
+ *
+ * JNIEXPORT Declarations:
+ * - Java_org_libsdl_app_SDLActivity_showKeyboard: JNI function to show the keyboard.
+ * - Java_org_libsdl_app_SDLActivity_hideKeyboard: JNI function to hide the keyboard.
+ */
+
 #ifdef __ANDROID__
 
-	// Get internal storage path
+	/* Declaration for showing and hiding the keyboard java function */
+	JNIEXPORT void JNICALL Java_org_libsdl_app_SDLActivity_showKeyboard(JNIEnv* env, jobject obj);
+	JNIEXPORT void JNICALL Java_org_libsdl_app_SDLActivity_hideKeyboard(JNIEnv* env, jobject obj);
+
 	/**
-	 * @file android_macro.h
-	 * @brief This file contains inline functions and macros for handling Android-specific operations such as retrieving internal storage paths and showing/hiding the keyboard.
+	 * @brief Retrieves the internal storage path for a given file.
 	 *
-	 * The functions in this file utilize JNI (Java Native Interface) to interact with Android's Java environment.
-	 *
-	 * Functions:
-	 * - get_internal_storage_path: Retrieves the internal storage path for a given file.
-	 * - android_show_keyboard: Shows the Android keyboard.
-	 * - android_hide_keyboard: Hides the Android keyboard.
-	 * - pc_show_keyboard: Dummy function to simulate showing the keyboard on non-Android platforms.
-	 * - pc_hide_keyboard: Dummy function to simulate hiding the keyboard on non-Android platforms.
-	 *
-	 * Macros:
-	 * - ENABLE_TEXFIELD: Macro to enable the text field (show the keyboard).
-	 * - DISABLE_TEXTFIELD: Macro to disable the text field (hide the keyboard).
-	 *
-	 * JNIEXPORT Declarations:
-	 * - Java_org_libsdl_app_SDLActivity_showKeyboard: JNI function to show the keyboard.
-	 * - Java_org_libsdl_app_SDLActivity_hideKeyboard: JNI function to hide the keyboard.
+	 * @param file The file name.
+	 * @return The full path to the file in the internal storage.
 	 */
 	FT_INLINE char *get_internal_storage_path(const char* file) {
 		JNIEnv* env = (JNIEnv*)SDL_AndroidGetJNIEnv();
@@ -55,9 +65,12 @@
 		return (fullPath);
 	}
 
-    JNIEXPORT void JNICALL Java_org_libsdl_app_SDLActivity_showKeyboard(JNIEnv* env, jobject obj);
-    JNIEXPORT void JNICALL Java_org_libsdl_app_SDLActivity_hideKeyboard(JNIEnv* env, jobject obj);
 
+	/**
+	 * @brief Shows the Android keyboard.
+	 *
+	 * @param is_active Pointer to a boolean value that indicates whether the keyboard is active.
+	 */
 	FT_INLINE void android_show_keyboard(s8 *is_active) {
 		JNIEnv* env = (JNIEnv*) SDL_AndroidGetJNIEnv();
 		jobject activity = (jobject) SDL_AndroidGetActivity();
@@ -70,6 +83,11 @@
 		*is_active = TRUE;
 	}
 
+	/**
+	 * @brief Hides the Android keyboard.
+	 *
+	 * @param is_active Pointer to a boolean value that indicates whether the keyboard is active.
+	 */
 	FT_INLINE void android_hide_keyboard(s8 *is_active) {
 		JNIEnv* env = (JNIEnv*) SDL_AndroidGetJNIEnv();
 		jobject activity = (jobject) SDL_AndroidGetActivity();
@@ -82,20 +100,34 @@
 		*is_active = FALSE;
 	}
 
+	/* Macros for enabling and disabling the text field */
 	#define ENABLE_TEXFIELD(_is_active_) android_show_keyboard(_is_active_)
 	#define DISABLE_TEXTFIELD(_is_active_) android_hide_keyboard(_is_active_)
 
 #else 
 
+	/**
+	 * @brief Dummy function to simulate showing the keyboard on non-Android platforms.
+	 *
+	 * @param is_active Pointer to a boolean value that indicates whether the keyboard is active.
+	 */
 	FT_INLINE void pc_show_keyboard(s8 *is_active) {
 		*is_active = TRUE;
 	}
+
+	/**
+	 * @brief Dummy function to simulate hiding the keyboard on non-Android platforms.
+	 *
+	 * @param is_active Pointer to a boolean value that indicates whether the keyboard is active.
+	 */
 	FT_INLINE void pc_hide_keyboard(s8 *is_active) {
 		*is_active = FALSE;
 	}
+
+	/* Macros for enabling and disabling the text field */
 	#define ENABLE_TEXFIELD(_is_active_) 	pc_show_keyboard(_is_active_)
 	#define DISABLE_TEXTFIELD(_is_active_)	pc_hide_keyboard(_is_active_)
 
-#endif // __ANDROID__
+#endif /* __ANDROID__ */
 
-#endif // _ANDROID_MACRO_HANDLE_SDL_H_
+#endif /* _ANDROID_MACRO_HANDLE_SDL_H_ */
