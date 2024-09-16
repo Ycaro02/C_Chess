@@ -30,7 +30,7 @@ jobs:
       id: increment_version
       run: |
         increment=$(echo "$increment" | tr -d '\n')
-        old_version=$(awk -F '"' '/#define GAME_VERSION/ {print $2}' rsc/version/test_version.h)
+        old_version=$(awk -F '"' '/#define CHESS_VERSION/ {print $2}' rsc/version/version.h)
         new_version=""
         echo old version in fun $old_version
         if [ "$increment" == "major" ]; then
@@ -43,7 +43,7 @@ jobs:
         echo "new_version=$new_version" >> $GITHUB_ENV
 
     - name: Update version in header file
-      run: sed -i "s/#define GAME_VERSION .*/#define GAME_VERSION \"$new_version\"/g" rsc/version/test_version.h
+      run: sed -i "s/#define CHESS_VERSION .*/#define CHESS_VERSION \"$new_version\"/g" rsc/version/version.h
 
     - name: Update Readme.md
       run: sed -i "s/### Current Version .*/### Current Version $new_version/g" README.md
@@ -52,6 +52,6 @@ jobs:
       run: |
         git config --local user.email "actions@github.com"
         git config --local user.name "GitHub Actions"
-        git add rsc/version/test_version.h README.md
+        git add rsc/version/version.h README.md
         git commit -m "Bump version to ${{ env.new_version }}"
         git push
