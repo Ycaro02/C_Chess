@@ -1,0 +1,57 @@
+name: Versioning Workflow
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  versioning:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Extract commit message
+      id: commit_message
+      run: |
+        commit_message=$(git log -1 --pretty=%B | tr -d "\n'-")
+        echo "commit_message=$commit_message" >> $GITHUB_ENV
+
+    - name: Determine version increment
+      id: version_increment
+      run: |
+        commit_message=$(echo "$commit_message" | tr -d "\n")
+        increment=$(echo "$commit_message" | grep -iE '^(MAJOR_UPDATE|minor|fix)' | awk '{ if ($1 == "MAJOR_UPDATE") { print "major" } else if ($1 == "minor") { print "minor" } else { print "patch" } }')
+        echo "increment=$increment" >> $GITHUB_ENV
+
+    - name: Increment version
+      id: increment_version
+      run: |
+        increment=$(echo "$increment" | tr -d '\n')
+        old_version=$(awk -F '"' '/#define GAME_VERSION/ {print $2}' rsc/version/test_version.h)
+        new_version=""
+        echo old version in fun $old_version
+        if [ "$increment" == "major" ]; then
+          new_version="$(awk -F. '{print $1+1 ".0.0"}' <<<"$old_version")"
+        elif [ "$increment" == "minor" ]; then
+          new_version="$(awk -F. '{print $1 "." $2+1 ".0"}' <<<"$old_version")"
+        else
+          new_version="$(awk -F. '{print $1 "." $2 "." $3+1}' <<<"$old_version")"
+        fi
+        echo "new_version=$new_version" >> $GITHUB_ENV
+
+    - name: Update version in header file
+      run: sed -i "s/#define GAME_VERSION .*/#define GAME_VERSION \"$new_version\"/g" rsc/version/test_version.h
+
+    - name: Update Readme.md
+      run: sed -i "s/### Current Version .*/### Current Version $new_version/g" README.md
+
+    - name: Commit and push header modification
+      run: |
+        git config --local user.email "actions@github.com"
+        git config --local user.name "GitHub Actions"
+        git add rsc/version/test_version.h README.md
+        git commit -m "Bump version to ${{ env.new_version }}"
+        git push

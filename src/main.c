@@ -18,6 +18,7 @@
 	}
 #endif
 
+void chess_start_program(void);
 
 void set_local_info(SDLHandle *h) {
 	h->player_info.turn = TRUE;
@@ -143,22 +144,26 @@ SDLHandle *get_SDL_handle() {
 		SDLHandle *h = get_SDL_handle();
 		CHESS_LOG(LOG_INFO, "Call chessOnPause()\n");
 		if (has_flag(h->flag, FLAG_NETWORK)) {
-			destroy_network_info(h);
-			unset_flag(&h->flag, FLAG_NETWORK);
-			CHESS_LOG(LOG_INFO, "Pause Game set flag\n");			
-			set_flag(&h->flag, FLAG_GAME_NETWORK_PAUSE);
-			init_board(h->board);
+			chess_destroy(h);
+		// 	destroy_network_info(h);
+		// 	unset_flag(&h->flag, FLAG_NETWORK);
+		// 	CHESS_LOG(LOG_INFO, "Pause Game set flag\n");			
+		// 	set_flag(&h->flag, FLAG_GAME_NETWORK_PAUSE);
+		// 	init_board(h->board);
 		}
 	}
 
 	JNIEXPORT void JNICALL Java_org_libsdl_app_SDLActivity_chessOnResume(JNIEnv* env, jobject obj) {
 		SDLHandle *h = get_SDL_handle();
 		CHESS_LOG(LOG_INFO, "Call chessOnResume()\n");
-		if (has_flag(h->flag, FLAG_GAME_NETWORK_PAUSE)) {
-			CHESS_LOG(LOG_INFO, "chessOnResume() %s is set\n", "FLAG_GAME_NETWORK_PAUSE");
-			unset_flag(&h->flag, FLAG_GAME_NETWORK_PAUSE);
+		// set_flag(&h->flag, FLAG_NETWORK);
+		// set_flag(&h->flag, FLAG_RECONNECT);
+		chess_start_program();
+		// if (has_flag(h->flag, FLAG_GAME_NETWORK_PAUSE)) {
+		// 	CHESS_LOG(LOG_INFO, "chessOnResume() %s is set\n", "FLAG_GAME_NETWORK_PAUSE");
+		// 	unset_flag(&h->flag, FLAG_GAME_NETWORK_PAUSE);
 			// reconnect_game(h);
-		}
+		// }
 	}
 
 #endif
@@ -212,42 +217,48 @@ void update_data_from_file(SDLHandle *h) {
 	}
 }
 
-// int SDL_main(int argc, char **argv) {
-int main(int argc, char **argv) {
-	SDLHandle	*handle = NULL;
+void chess_start_program() {
+	SDLHandle	*h = NULL;
 	PlayerInfo	player_info = {0};
-	u32			flag = 0;
-	s8			error = 0;
-
 
 	// set_log_level(LOG_DEBUG);
 	set_log_level(LOG_INFO);
 	// set_log_level(LOG_ERROR);
 	// set_log_level(LOG_NONE);
 
-	flag = handle_chess_flag(argc, argv, &error, &player_info);
-	if (error == -1) {
-		return (1);
-	}
-
-
-	handle = get_SDL_handle();
-	if (!handle) {
+	h = get_SDL_handle();
+	if (!h) {
 		CHESS_LOG(LOG_ERROR, "%s: get_SDL_handle failed init\n", __func__);
-		return (1);
+		return ;
 	}
-	handle->flag = flag;
-	handle->player_info = player_info;
-	update_data_from_file(handle);
+	fast_bzero(&player_info, sizeof(PlayerInfo));
+	player_info.dest_ip = ft_strdup("127.0.0.1");
+	player_info.dest_port = SERVER_PORT;
+	h->flag = 0;
+	h->player_info = player_info;
+	update_data_from_file(h);
 
 	#ifdef _EMSCRIPTEN_VERSION_
 		emscripten_setup();
 	#else
-		chess_game(handle);	
+		chess_game(h);	
 	#endif
 	
 
 	/* Free memory */
-	chess_destroy(handle);
+	chess_destroy(h);
+}
+
+// int SDL_main(int argc, char **argv) {
+int main(int argc, char **argv) {
+	// s8			error = 0;
+	// u32			flag = 0;
+	// flag = handle_chess_flag(argc, argv, &error, &player_info);
+	// if (error == -1) {
+	// 	return (1);
+	// }
+
+	(void)argc, (void)argv;
+	chess_start_program();
 	return (0);
 }
