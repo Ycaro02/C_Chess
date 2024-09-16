@@ -133,23 +133,21 @@ SDLHandle *get_SDL_handle() {
 		if (h->player_info.nt_info) {
 			send_disconnect_to_server(h->player_info.nt_info->sockfd, h->player_info.nt_info->servaddr);
 		}
-		// if (has_flag(h->flag, FLAG_GAME_NETWORK_PAUSE)) {
-		// 	unset_flag(&h->flag, FLAG_GAME_NETWORK_PAUSE);
-		// 	reconnect_game(h);
-		// 	send_disconnect_to_server(h->player_info.nt_info->sockfd, h->player_info.nt_info->servaddr);
-		// }
 	}
+
+	/**
+	 * For the auto reconection we can implement a new static variable with singleton pattern
+	 * to check if the game is running or not if do this we can't exit the program
+	 * Otherwise we can store this in java side and call the function to reconnect
+	 * One last solution is to store the flag in a file and check in this file if the game is running or not
+	 */
+
 
 	JNIEXPORT void JNICALL Java_org_libsdl_app_SDLActivity_chessOnPause(JNIEnv* env, jobject obj) {
 		SDLHandle *h = get_SDL_handle();
 		CHESS_LOG(LOG_INFO, "Call chessOnPause()\n");
 		if (has_flag(h->flag, FLAG_NETWORK)) {
 			chess_destroy(h);
-		// 	destroy_network_info(h);
-		// 	unset_flag(&h->flag, FLAG_NETWORK);
-		// 	CHESS_LOG(LOG_INFO, "Pause Game set flag\n");			
-		// 	set_flag(&h->flag, FLAG_GAME_NETWORK_PAUSE);
-		// 	init_board(h->board);
 		}
 	}
 
