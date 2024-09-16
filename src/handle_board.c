@@ -167,13 +167,13 @@ void game_event_handling(SDLHandle *h, SDL_Event event, s8 player_color) {
 s32 event_handler(SDLHandle *h, s8 player_color) {
 	SDL_Event event;
 
+
 	while (SDL_PollEvent(&event)) {
 		if (event.type == SDL_QUIT) {
 			return (CHESS_QUIT);
 		}
 		if (has_flag(h->flag, FLAG_CENTER_TEXT_INPUT)) {
 			button_event_handling(h, event, BTN_CENTER1, h->center_text->curent_btn_enable);
-			// center_text_event_handling(h, event);
 		} else if (has_flag(h->flag, FLAG_EDIT_PROFILE)) {
 			profile_button_handling(h, event);
 		} else {

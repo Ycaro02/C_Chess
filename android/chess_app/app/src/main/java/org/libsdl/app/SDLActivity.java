@@ -68,6 +68,9 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
     private static final int SDL_MINOR_VERSION = 30;
     private static final int SDL_MICRO_VERSION = 5;
 
+	private static boolean is_first_init = true;
+
+
 	public static void showKeyboard() {
         Activity activity = (Activity) SDL.getContext();
         InputMethodManager imm = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -480,6 +483,9 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
         SDLActivity.handleNativeState();
     }
 
+	public static native void chessOnPause();
+	public static native void chessOnResume();
+
     // Events
     @Override
     protected void onPause() {
@@ -492,6 +498,9 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
         if (!mHasMultiWindow) {
             pauseNativeThread();
         }
+
+		// My own on pause to save data and send disconect to server
+		SDLActivity.chessOnPause();
     }
 
     @Override
@@ -505,6 +514,12 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
         if (!mHasMultiWindow) {
             resumeNativeThread();
         }
+
+		// My own on resume reinit the game
+		if (!is_first_init) {
+			SDLActivity.chessOnResume();
+		} 
+		is_first_init = false;
     }
 
     @Override

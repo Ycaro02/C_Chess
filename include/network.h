@@ -132,4 +132,7 @@ void		process_reconnect_message(SDLHandle *h, char *msg);
 void		network_chess_routine(SDLHandle *h);
 void 		send_alive_packet(NetworkInfo *info);
 
+/* src/button.c */
+void		reconnect_game(SDLHandle *h);
+
 #endif /* CHESS_NETWORK_H */

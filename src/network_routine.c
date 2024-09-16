@@ -73,8 +73,20 @@ void send_alive_packet(NetworkInfo *info) {
 	}
 }
 
+void dont_wait_peer(SDLHandle *h) {
+	(void)h;
+	center_text_string_set(h, NULL, NULL);
+	if (has_flag(h->flag, FLAG_NETWORK)) {
+		unset_flag(&h->flag, FLAG_NETWORK);
+		destroy_network_info(h);
+	}
+	unset_flag(&h->flag, FLAG_CENTER_TEXT_INPUT);
+	CHESS_LOG(LOG_INFO, "BtnCenter1: dont_wait_peer\n");
+}
+
 s8 reconnect_handling(SDLHandle *h) {
 	center_text_string_set(h, "Wait peer reconnection", NULL);
+	center_text_function_set(h, h->center_text, (BtnCenterText){"Cancel", dont_wait_peer}, (BtnCenterText){NULL, NULL});
 	if (!has_flag(h->flag, FLAG_CENTER_TEXT_INPUT)) {
 		set_flag(&h->flag, FLAG_CENTER_TEXT_INPUT);
 	}
@@ -82,6 +94,8 @@ s8 reconnect_handling(SDLHandle *h) {
 	if (!has_flag(h->flag, FLAG_NETWORK)) {
 		// instead of just return, we should display a new center text
 		// to ask user if he really want to quit the application and destroy the game
+		// CHESS_LOG(LOG_INFO, RED"Network flag is not set\n"RESET);
+		// unset_flag(&h->flag, FLAG_CENTER_TEXT_INPUT);
 		return (FALSE);
 	}
  	if (wait_peer_info(h->player_info.nt_info, "Wait reconnect peer info")) {
@@ -126,16 +140,18 @@ void network_chess_routine(SDLHandle *h) {
 		}
 	}
 
-	if (h->player_info.nt_info == NULL) {
-		CHESS_LOG(LOG_INFO, RED"Network info is NULL call Chess destroy\n"RESET);
-		chess_destroy(h);
-	}
+	CHESS_LOG(LOG_INFO, "Network routine: peer conected %s\n", h->player_info.nt_info->peer_conected ? GREEN"TRUE"RESET : RED"FALSE"RESET);
+	CHESS_LOG(LOG_INFO, "Network routine: TEXT_CENTER %s\n", has_flag(h->flag, FLAG_CENTER_TEXT_INPUT) ? GREEN"TRUE"RESET : RED"FALSE"RESET);
 
 	/* Draw logic */
 	update_graphic_board(h);
 
 	/* Send alive message to the server */
-	send_alive_packet(h->player_info.nt_info);
+	if (h->player_info.nt_info != NULL) {
+		send_alive_packet(h->player_info.nt_info);
+	} else {
+		CHESS_LOG(LOG_INFO, RED"Network info is NULL call in chess network routine\n"RESET);
+	}
 	SDL_Delay(16);
 
 }

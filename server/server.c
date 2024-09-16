@@ -387,7 +387,7 @@ void server_save_info(ChessRoom *r, char *msg, s8 is_client_a) {
 			&& ((is_first_move(lst_size, r->msg_id, r->last_move_id_saved)) || (r->msg_id == r->last_move_id_saved + 1)))
 		{
 			server_store_movelist(&r->move_lst, msg);
-			// display_move_list(r->move_lst);
+			display_move_list(r->move_lst);
 			r->last_move_id_saved = r->msg_id;
 		} else if (msg_type == MSG_TYPE_COLOR) {
 				if (is_client_a) {
@@ -478,13 +478,7 @@ s8 is_alive_message(ChessRoom *r, SockaddrIn *addr, char *buffer, ssize_t msg_si
 s8 client_timeout_alive(struct timeval *last_alive) {
 	struct timeval now;
 	gettimeofday(&now, NULL);
-	
 	return ((now.tv_sec - last_alive->tv_sec) > CLIENT_NOT_ALIVE_TIMEOUT);
-	// s64 diff = (now.tv_sec - last_alive->tv_sec);
-	// if (diff > CLIENT_NOT_ALIVE_TIMEOUT) {
-	// 	return (TRUE);
-	// }
-	// return (FALSE);
 }
 
 /* @brief Handle the client timeout
@@ -505,6 +499,7 @@ void handle_client_timeout(ChessRoom *r) {
 		if (r->move_lst != NULL) {
 			printf(ORANGE"Room reset to waiting\n"RESET);
 			ft_lstclear(&r->move_lst, free);
+			fast_bzero(r, sizeof(ChessRoom));
 		}
 	}
 }

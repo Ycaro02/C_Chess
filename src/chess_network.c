@@ -15,6 +15,7 @@ void wait_message_receive(SDLHandle *h, char *buff) {
 	s8				ret = FALSE;
 
 	while (ret == FALSE) {
+		CHESS_LOG(LOG_INFO, "Wait for message reconnect receive\n");
 		ret = chess_msg_receive(h, h->player_info.nt_info, buff);
 		update_graphic_board(h);
 		SDL_Delay(1000);

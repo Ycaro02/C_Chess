@@ -49,7 +49,7 @@ void set_client_search_flag(SDLHandle *h) {
 void start_network_game(SDLHandle *h) {
 	/* Connect client together */
 	handle_network_client_state(h, h->flag, &h->player_info);
-	
+	CHESS_LOG(LOG_INFO, "2: After clien state: nt_info is %s\n", h->player_info.nt_info ? GREEN"Not NULL"RESET : RED"NULL"RESET);
 	/* Remove center text */
 	center_text_string_set(h, NULL, NULL);
 	
@@ -57,6 +57,10 @@ void start_network_game(SDLHandle *h) {
 	h->game_start = TRUE;
 	while (1) {
 		network_chess_routine(h);
+		if (h->player_info.nt_info == NULL) {
+			CHESS_LOG(LOG_INFO, RED"Network chess routine break\n"RESET);
+			break ;
+		}
 	}
 	
 	/* Destroy the game when we exit the routine */
@@ -107,6 +111,7 @@ void reconnect_game(SDLHandle *h) {
 		if (!wait_player_handling(h)) {
 			return ;
 		}
+		CHESS_LOG(LOG_INFO, "After wait player: nt_info is %s\n", h->player_info.nt_info ? GREEN"Not NULL"RESET : RED"NULL"RESET);
 		start_network_game(h);
 	}
 }
