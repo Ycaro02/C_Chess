@@ -6,7 +6,7 @@
 
 C_Chess is a chess engine written in C, utilizing SDL2 for graphics and bitboards for board representation to optimize move calculations. The project is designed to be cross-platform, initially supporting Unix-like systems, and later extended to Windows and Android. A WebAssembly version using Emscripten is currently in development. The latest releases for Windows and Android are available on the repository.
 
-### Current Version 1.0.3
+### Current Version 1.0.4
 
 ## Technical Choices
 
