@@ -9,7 +9,42 @@
  */
 
 #include "../include/handle_sdl.h"
-#include "../include/android_macro.h"
+
+#ifdef __ANDROID__
+	/**
+	 * @brief Retrieves the internal storage path for a given file.
+	 *
+	 * @param file The file name.
+	 * @return The full path to the file in the internal storage.
+	 */
+	static char *get_internal_storage_path(const char* file) {
+		JNIEnv* env = (JNIEnv*)SDL_AndroidGetJNIEnv();
+		jobject activity = (jobject)SDL_AndroidGetActivity();
+		jclass activityClass = (*env)->GetObjectClass(env, activity);
+
+		jmethodID methodID = (*env)->GetMethodID(env, activityClass, "getFilesDir", "()Ljava/io/File;");
+		jobject fileObject = (*env)->CallObjectMethod(env, activity, methodID);
+		jclass fileClass = (*env)->GetObjectClass(env, fileObject);
+
+		jmethodID getPathMethodID = (*env)->GetMethodID(env, fileClass, "getPath", "()Ljava/lang/String;");
+		jstring pathString = (jstring)(*env)->CallObjectMethod(env, fileObject, getPathMethodID);
+
+		const char* basePath = (*env)->GetStringUTFChars(env, pathString, NULL);
+		size_t fullPathLength = strlen(basePath) + strlen(file) + 2;
+		char* fullPath = (char*)malloc(fullPathLength);
+		snprintf(fullPath, fullPathLength, "%s/%s", basePath, file);
+
+		(*env)->ReleaseStringUTFChars(env, pathString, basePath);
+		(*env)->DeleteLocalRef(env, pathString);
+		(*env)->DeleteLocalRef(env, fileObject);
+		(*env)->DeleteLocalRef(env, fileClass);
+		(*env)->DeleteLocalRef(env, activityClass);
+		(*env)->DeleteLocalRef(env, activity);
+
+		CHESS_LOG(LOG_INFO, ORANGE"Internal storage path: %s\n"RESET, fullPath);
+		return (fullPath);
+	}
+#endif
 
 SDL_RWops* sdl_open(const char* file, const char* mode) {
 #ifdef __ANDROID__
@@ -58,7 +93,6 @@ int sdl_close(SDL_RWops* rw) {
 }
 
 void sdl_erase_file_data(const char* filename) {
-	// SDL_RWops* rw = SDL_RWFromFile(filename, "w");
 	SDL_RWops* rw = sdl_open(filename, "w");
 	if (!rw) {
 		fprintf(stderr, "Failed to open file %s: %s\n", filename, SDL_GetError());
@@ -77,7 +111,6 @@ size_t sdl_read_complete_file(SDL_RWops *rw, void *buffer, size_t total_size) {
 }
 
 s64 get_file_size_sdl(const char *filename) {
-    // SDL_RWops *rw = SDL_RWFromFile(filename, "rb");
 	SDL_RWops* rw = sdl_open(filename, "rb");
     if (!rw) {
         fprintf(stderr, "Cannot open file %s: %s\n", filename, SDL_GetError());

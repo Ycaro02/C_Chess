@@ -33,6 +33,8 @@ SRCS			=	chess_board.c \
 					profile.c \
 					nickname.c \
 					sdl_handle_file.c \
+					display_piece_kill.c \
+					handle_textfield_keyboard.c \
 
 MAKE_LIBFT		=	make -s -C libft -j
 

@@ -1,4 +1,7 @@
 
+#ifndef CHESS_ENUM_DEFINITIONS_H
+#define CHESS_ENUM_DEFINITIONS_H
+
 #include "../libft/basic_define.h"
 
 /*
@@ -176,3 +179,4 @@
 	X(FLAG_EDIT_PROFILE, =1<<8) \
 	X(FLAG_NETWORK_PAUSE, =1<<9) \
 
+#endif /* CHESS_ENUM_DEFINITIONS_H */

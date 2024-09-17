@@ -68,6 +68,35 @@
     	return rw;
 	}
 
+	SDL_Texture  *android_load_texture(SDL_Renderer *renderer, const char* path) {
+		SDL_Texture		*texture = NULL;
+		SDL_Surface		*surface = NULL;
+		SDL_RWops		*rw = NULL;
+
+		if (!renderer) {
+			return (NULL);
+		}
+
+		rw = load_asset(path);
+		if (!rw) {
+			CHESS_LOG(LOG_ERROR, "%s: load_asset failed\n", __func__);
+			return (NULL);
+		}
+		surface = SDL_LoadBMP_RW(rw, 1);
+		if (!surface) {
+			SDL_ERR_FUNC();
+			return (NULL);
+		}
+		texture = SDL_CreateTextureFromSurface(renderer, surface);
+		if (!texture) {
+			SDL_ERR_FUNC();
+			return (NULL);
+		}
+		SDL_FreeSurface(surface);
+		// SDL_RWclose(rw);
+		return (texture);
+	}
+
 #endif
 
 /**
@@ -93,7 +122,7 @@ void get_screen_size(int *width, int *height) {
  * @note The window size is computed by removing 1/4 of the screen size on each dimension
  * @note The tile size is computed by dividing the minimum between the width and height by 8
 */
-void PC_compute_win_size(SDLHandle *h) {
+void pc_compute_win_size(SDLHandle *h) {
 	s32 size_w=0, size_h=0, width = 0, height = 0;
 	s32 minus, tile_size, band_w, band_h;
 
@@ -148,7 +177,7 @@ void PC_compute_win_size(SDLHandle *h) {
 }
 
 /* In this we want to take the all width of the screen */
-void android_compute_size(SDLHandle *h) {
+void android_compute_win_size(SDLHandle *h) {
 	s32 size_w=0, size_h=0, width = 0, height = 0;
 	s32 tile_size, band_w, band_h;
 
@@ -202,11 +231,13 @@ SDL_Window* create_sdl_windows(SDLHandle *h, const char* title) {
 		return (NULL);
 	}
 
-	#ifdef __ANDROID__
-		android_compute_size(h);
-	#else
-		PC_compute_win_size(h);
-	#endif
+	// #ifdef __ANDROID__
+	// 	android_compute_size(h);
+	// #else
+	// 	pc_compute_win_size(h);
+	// #endif
+
+	COMPUTE_WIN_BAND_SIZE(h);
 
 	if (!init_menu(h, BTN_MAX)) {
 		TTF_Quit();
@@ -241,7 +272,7 @@ SDL_Window* create_sdl_windows(SDLHandle *h, const char* title) {
  * @return The texture pointer
 */
 static SDL_Texture *safe_load_texture(SDL_Renderer *renderer, const char *path) {
-	SDL_Texture *texture = load_texture(renderer, path);
+	SDL_Texture *texture = BMP_TO_TEXTURE(renderer, path);
 	if (!texture) {
 		CHESS_LOG(LOG_ERROR, "%s: load_texture %s failed\n", __func__, path);
 		return (NULL);
@@ -346,11 +377,11 @@ SDL_Rect android_build_timer_rect(SDLHandle *h, s8 is_bot_band) {
 	return (timer_rect);
 }
 
-#ifdef __ANDROID__
-	#define BUILD_TIMER_RECT(_h_, _is_bot_) android_build_timer_rect(_h_, _is_bot_)
-#else
-	#define BUILD_TIMER_RECT(_h_, _is_bot_) pc_build_timer_rect(_h_, _is_bot_)
-#endif
+// #ifdef __ANDROID__
+// 	#define BUILD_TIMER_RECT(_h_, _is_bot_) android_build_timer_rect(_h_, _is_bot_)
+// #else
+// 	#define BUILD_TIMER_RECT(_h_, _is_bot_) pc_build_timer_rect(_h_, _is_bot_)
+// #endif
 
 
 SDL_Rect pc_build_name_rect(SDLHandle *h, s8 is_bot_band) {
@@ -407,11 +438,11 @@ SDL_Rect android_build_name_rect(SDLHandle *h, s8 is_bot_band) {
 	return (name_rect);
 }
 
-#ifdef __ANDROID__
-	#define BUILD_NAME_RECT(_h_, _is_bot_) android_build_name_rect(_h_, _is_bot_)
-#else
-	#define BUILD_NAME_RECT(_h_, _is_bot_) pc_build_name_rect(_h_, _is_bot_)
-#endif
+// #ifdef __ANDROID__
+// 	#define BUILD_NAME_RECT(_h_, _is_bot_) android_build_name_rect(_h_, _is_bot_)
+// #else
+// 	#define BUILD_NAME_RECT(_h_, _is_bot_) pc_build_name_rect(_h_, _is_bot_)
+// #endif
 
 
 
@@ -608,7 +639,7 @@ void draw_texure(SDLHandle *handle, SDL_Texture *texture, iVec2 pos, iVec2 scale
  * @param path The path of the texture
  * @return The texture pointer
 */
-SDL_Texture *load_texture(SDL_Renderer *renderer, const char* path) {
+SDL_Texture *pc_load_texture(SDL_Renderer *renderer, const char* path) {
 	SDL_Texture		*texture = NULL;
 	SDL_Surface		*surface = NULL;
 
@@ -616,19 +647,8 @@ SDL_Texture *load_texture(SDL_Renderer *renderer, const char* path) {
 		return (NULL);
 	}
 
-
-	#ifdef __ANDROID__
-		SDL_RWops *rw = load_asset(path);
-		if (!rw) {
-			CHESS_LOG(LOG_ERROR, "%s: load_asset failed\n", __func__);
-			return (NULL);
-		}
-		surface = SDL_LoadBMP_RW(rw, 1);
-	#else
-		surface = SDL_LoadBMP(path);
-	#endif
-
-
+	// surface = BMP_TO_SURFACE(path);
+	surface = SDL_LoadBMP(path);
 	if (!surface) {
 		SDL_ERR_FUNC();
 		return (NULL);

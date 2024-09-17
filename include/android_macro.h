@@ -1,133 +1,69 @@
-#include "../include/handle_sdl.h"
 
 #ifndef _ANDROID_MACRO_HANDLE_SDL_H_
 #define _ANDROID_MACRO_HANDLE_SDL_H_
 
+#include "../include/handle_sdl.h"
+
 /**
  * @file android_macro.h
- * @brief This file contains inline functions and macros for handling Android-specific operations such as retrieving internal storage paths and showing/hiding the keyboard.
- *
- * The functions in this file utilize JNI (Java Native Interface) to interact with Android's Java environment.
- *
- * Functions:
- * - get_internal_storage_path: Retrieves the internal storage path for a given file.
- * - android_show_keyboard: Shows the Android keyboard.
- * - android_hide_keyboard: Hides the Android keyboard.
- * - pc_show_keyboard: Dummy function to simulate showing the keyboard on non-Android platforms.
- * - pc_hide_keyboard: Dummy function to simulate hiding the keyboard on non-Android platforms.
- *
+
  * Macros:
  * - ENABLE_TEXFIELD: Macro to enable the text field (show the keyboard).
  * - DISABLE_TEXTFIELD: Macro to disable the text field (hide the keyboard).
- *
- * JNIEXPORT Declarations:
- * - Java_org_libsdl_app_SDLActivity_showKeyboard: JNI function to show the keyboard.
- * - Java_org_libsdl_app_SDLActivity_hideKeyboard: JNI function to hide the keyboard.
+ * - DRAW_PIECE_KILL: Macro to draw a piece kill on the screen.
+ * - COMPUTE_WIN_BAND_SIZE: Macro to compute the size of the window band.
+ * - BUILD_TIMER_RECT: Macro to build the timer rectangle.
+ * - BUILD_NAME_RECT: Macro to build the name rectangle.
+ * - BMP_TO_TEXTURE: Macro to load a texture from a BMP file.
  */
 
 #ifdef __ANDROID__
 
-	/* Declaration for showing and hiding the keyboard java function */
-	JNIEXPORT void JNICALL Java_org_libsdl_app_SDLActivity_showKeyboard(JNIEnv* env, jobject obj);
-	JNIEXPORT void JNICALL Java_org_libsdl_app_SDLActivity_hideKeyboard(JNIEnv* env, jobject obj);
+	/* src/handle_textfield_keyboard.c */
+	void android_show_keyboard(s8 *is_active);
+	void android_hide_keyboard(s8 *is_active);
 
+	/* src/display_piece_kill.c */
+	void android_draw_piece_kill(SDLHandle *h, s8 is_bot, s8 is_black);
 
-	/**
-	 * @brief Retrieves the internal storage path for a given file.
-	 *
-	 * @param file The file name.
-	 * @return The full path to the file in the internal storage.
-	 */
-	FT_INLINE char *get_internal_storage_path(const char* file) {
-		JNIEnv* env = (JNIEnv*)SDL_AndroidGetJNIEnv();
-		jobject activity = (jobject)SDL_AndroidGetActivity();
-		jclass activityClass = (*env)->GetObjectClass(env, activity);
-
-		jmethodID methodID = (*env)->GetMethodID(env, activityClass, "getFilesDir", "()Ljava/io/File;");
-		jobject fileObject = (*env)->CallObjectMethod(env, activity, methodID);
-		jclass fileClass = (*env)->GetObjectClass(env, fileObject);
-
-		jmethodID getPathMethodID = (*env)->GetMethodID(env, fileClass, "getPath", "()Ljava/lang/String;");
-		jstring pathString = (jstring)(*env)->CallObjectMethod(env, fileObject, getPathMethodID);
-
-		const char* basePath = (*env)->GetStringUTFChars(env, pathString, NULL);
-		size_t fullPathLength = strlen(basePath) + strlen(file) + 2;
-		char* fullPath = (char*)malloc(fullPathLength);
-		snprintf(fullPath, fullPathLength, "%s/%s", basePath, file);
-
-		(*env)->ReleaseStringUTFChars(env, pathString, basePath);
-		(*env)->DeleteLocalRef(env, pathString);
-		(*env)->DeleteLocalRef(env, fileObject);
-		(*env)->DeleteLocalRef(env, fileClass);
-		(*env)->DeleteLocalRef(env, activityClass);
-		(*env)->DeleteLocalRef(env, activity);
-
-		CHESS_LOG(LOG_INFO, ORANGE"Internal storage path: %s\n"RESET, fullPath);
-		return (fullPath);
-	}
-
-
-	/**
-	 * @brief Shows the Android keyboard.
-	 *
-	 * @param is_active Pointer to a boolean value that indicates whether the keyboard is active.
-	 */
-	FT_INLINE void android_show_keyboard(s8 *is_active) {
-		JNIEnv* env = (JNIEnv*) SDL_AndroidGetJNIEnv();
-		jobject activity = (jobject) SDL_AndroidGetActivity();
-		jclass clazz = (*env)->GetObjectClass(env, activity);
-		jmethodID method_id = (*env)->GetStaticMethodID(env, clazz, "showKeyboard", "()V");
-
-		(*env)->CallStaticVoidMethod(env, clazz, method_id);
-		(*env)->DeleteLocalRef(env, activity);
-		(*env)->DeleteLocalRef(env, clazz);
-		*is_active = TRUE;
-	}
-
-	/**
-	 * @brief Hides the Android keyboard.
-	 *
-	 * @param is_active Pointer to a boolean value that indicates whether the keyboard is active.
-	 */
-	FT_INLINE void android_hide_keyboard(s8 *is_active) {
-		JNIEnv* env = (JNIEnv*) SDL_AndroidGetJNIEnv();
-		jobject activity = (jobject) SDL_AndroidGetActivity();
-		jclass clazz = (*env)->GetObjectClass(env, activity);
-		jmethodID method_id = (*env)->GetStaticMethodID(env, clazz, "hideKeyboard", "()V");
-
-		(*env)->CallStaticVoidMethod(env, clazz, method_id);
-		(*env)->DeleteLocalRef(env, activity);
-		(*env)->DeleteLocalRef(env, clazz);
-		*is_active = FALSE;
-	}
+	// sdl_handle (need to split)
+	void android_compute_win_size(SDLHandle *h);
+	SDL_Rect android_build_timer_rect(SDLHandle *h, s8 is_bot_band);
+	SDL_Rect android_build_name_rect(SDLHandle *h, s8 is_bot_band);
+	SDL_Texture *android_load_texture(SDL_Renderer *renderer, const char* path);
 
 	/* Macros for enabling and disabling the text field */
 	#define ENABLE_TEXFIELD(_is_active_) android_show_keyboard(_is_active_)
 	#define DISABLE_TEXTFIELD(_is_active_) android_hide_keyboard(_is_active_)
+	#define DRAW_PIECE_KILL(_h_, _is_bot_, _is_black_) android_draw_piece_kill(_h_, _is_bot_, _is_black_)
+	#define COMPUTE_WIN_BAND_SIZE(_h_) android_compute_win_size(_h_)
+	#define BUILD_TIMER_RECT(_h_, _is_bot_) android_build_timer_rect(_h_, _is_bot_)
+	#define BUILD_NAME_RECT(_h_, _is_bot_) android_build_name_rect(_h_, _is_bot_)
+	#define BMP_TO_TEXTURE(_r_, _bmp_path_) android_load_texture(_r_, _bmp_path_)
 
 #else 
 
-	/**
-	 * @brief Dummy function to simulate showing the keyboard on non-Android platforms.
-	 *
-	 * @param is_active Pointer to a boolean value that indicates whether the keyboard is active.
-	 */
-	FT_INLINE void pc_show_keyboard(s8 *is_active) {
-		*is_active = TRUE;
-	}
-
-	/**
-	 * @brief Dummy function to simulate hiding the keyboard on non-Android platforms.
-	 *
-	 * @param is_active Pointer to a boolean value that indicates whether the keyboard is active.
-	 */
-	FT_INLINE void pc_hide_keyboard(s8 *is_active) {
-		*is_active = FALSE;
-	}
-
+	/* src/handle_textfield_keyboard.c */
+	void pc_show_keyboard(s8 *is_active);
+	void pc_hide_keyboard(s8 *is_active);
+	
+	/* src/display_piece_kill.c */
+	void pc_draw_piece_kill(SDLHandle *h, s8 is_bot, s8 is_black);
+	
+	// sdl_handle (need to split)
+	void pc_compute_win_size(SDLHandle *h);
+	SDL_Rect pc_build_timer_rect(SDLHandle *h, s8 is_bot_band);
+	SDL_Rect pc_build_name_rect(SDLHandle *h, s8 is_bot_band);
+	SDL_Texture *pc_load_texture(SDL_Renderer *renderer, const char* path);
+	
 	/* Macros for enabling and disabling the text field */
 	#define ENABLE_TEXFIELD(_is_active_) 	pc_show_keyboard(_is_active_)
 	#define DISABLE_TEXTFIELD(_is_active_)	pc_hide_keyboard(_is_active_)
+	#define DRAW_PIECE_KILL(_h_, _is_bot_, _is_black_) pc_draw_piece_kill(_h_, _is_bot_, _is_black_)
+	#define COMPUTE_WIN_BAND_SIZE(_h_) pc_compute_win_size(_h_)
+	#define BUILD_TIMER_RECT(_h_, _is_bot_) pc_build_timer_rect(_h_, _is_bot_)
+	#define BUILD_NAME_RECT(_h_, _is_bot_) pc_build_name_rect(_h_, _is_bot_)
+	#define BMP_TO_TEXTURE(_r_, _bmp_path_) pc_load_texture(_r_, _bmp_path_)
 
 #endif /* __ANDROID__ */
 

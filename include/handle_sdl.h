@@ -22,18 +22,18 @@
 
 #include "chess_log.h"
 
-// #define ESCAPE_KEY(_sym_) ((_sym_) == SDLK_ESCAPE || (_sym_) == SDLK_AC_BACK || (_sym_) == SDLK_AC_HOME)
+#define ESCAPE_KEY(_sym_) ((_sym_) == SDLK_ESCAPE || (_sym_) == SDLK_AC_BACK)
 
-FT_INLINE s8 ESCAPE_KEY(SDL_Keycode sym) {
-	if (sym == SDLK_AC_BACK) {
-		CHESS_LOG(LOG_INFO, "AC BACK KEY\n");
-		return (TRUE);
-	} else if (sym == SDLK_ESCAPE) {
-		CHESS_LOG(LOG_INFO, "ESCAPE KEY\n");
-		return (TRUE);
-	}
-	return (FALSE);
-}
+// FT_INLINE s8 ESCAPE_KEY(SDL_Keycode sym) {
+// 	if (sym == SDLK_AC_BACK) {
+// 		CHESS_LOG(LOG_INFO, "AC BACK KEY\n");
+// 		return (TRUE);
+// 	} else if (sym == SDLK_ESCAPE) {
+// 		CHESS_LOG(LOG_INFO, "ESCAPE KEY\n");
+// 		return (TRUE);
+// 	}
+// 	return (FALSE);
+// }
 
 /* Texture path */
 #define BLACK_KING_TEXTURE "rsc/texture/piece/black_king.bmp"
@@ -292,7 +292,7 @@ SDLHandle	*create_sdl_handle(const char* title);
 u8 			window_is_open(SDL_Window* window);
 void		window_clear(SDL_Renderer* renderer);
 void		window_close(SDL_Window* window, SDL_Renderer *renderer);
-SDL_Texture	*load_texture(SDL_Renderer *renderer, const char* path);
+// SDL_Texture	*load_texture(SDL_Renderer *renderer, const char* path);
 void		unload_texture(SDL_Texture *texture);
 void		draw_texture_tile(SDLHandle *h, SDL_Texture *texture, iVec2 tilePos, iVec2 scale);
 void		draw_texure(SDLHandle *handle, SDL_Texture *texture, iVec2 pos, iVec2 scale);
