@@ -104,8 +104,7 @@ void chess_destroy(SDLHandle *h) {
 	CHESS_LOG(LOG_INFO, RED"Destroy chess game%s\n", RESET);
 
 	// print_call_stack();
-
-	register_data(DATA_SAVE_FILE, h->player_info.name, h->player_info.dest_ip);
+	register_data(h, DATA_SAVE_FILE);
 
 	if (h->board->lst) {
 		ft_lstclear(&h->board->lst, free);
@@ -133,39 +132,27 @@ SDLHandle *get_SDL_handle() {
 	JNIEXPORT void JNICALL Java_org_libsdl_app_SDLActivity_chessOnDestroy(JNIEnv* env, jobject obj) {
 		// CHESS_LOG(LOG_INFO, "chessOnDestroy() Call\n");
 		SDLHandle *h = get_SDL_handle();
-		register_data(DATA_SAVE_FILE, h->player_info.name, h->player_info.dest_ip);
+		register_data(h, DATA_SAVE_FILE);
 		if (h->player_info.nt_info) {
 			send_disconnect_to_server(h->player_info.nt_info->sockfd, h->player_info.nt_info->servaddr);
 		}
 	}
 
 	/**
-	 * For the auto reconection we can implement a new static variable with singleton pattern
-	 * to check if the game is running or not if do this we can't exit the program
-	 * Otherwise we can store this in java side and call the function to reconnect
-	 * One last solution is to store the flag in a file and check in this file if the game is running or not
+	 * For the auto reconection 
+	 * We store the flag in a file and check in this file if the game is running or not
 	 */
-
 
 	JNIEXPORT void JNICALL Java_org_libsdl_app_SDLActivity_chessOnPause(JNIEnv* env, jobject obj) {
 		SDLHandle *h = get_SDL_handle();
 		CHESS_LOG(LOG_INFO, "Call chessOnPause()\n");
-		if (has_flag(h->flag, FLAG_NETWORK)) {
-			chess_destroy(h);
-		}
+		chess_destroy(h);
 	}
 
 	JNIEXPORT void JNICALL Java_org_libsdl_app_SDLActivity_chessOnResume(JNIEnv* env, jobject obj) {
 		SDLHandle *h = get_SDL_handle();
 		CHESS_LOG(LOG_INFO, "Call chessOnResume()\n");
-		// set_flag(&h->flag, FLAG_NETWORK);
-		// set_flag(&h->flag, FLAG_RECONNECT);
 		chess_start_program();
-		// if (has_flag(h->flag, FLAG_GAME_NETWORK_PAUSE)) {
-		// 	CHESS_LOG(LOG_INFO, "chessOnResume() %s is set\n", "FLAG_GAME_NETWORK_PAUSE");
-		// 	unset_flag(&h->flag, FLAG_GAME_NETWORK_PAUSE);
-			// reconnect_game(h);
-		// }
 	}
 
 #endif
@@ -175,15 +162,22 @@ void chess_game(SDLHandle *h) {
 	struct timeval	timeout = {0, 10000}; /* 10000 microseconds = 0.01 seconds */
 	
 	INIT_SIGNAL_HANDLER(chess_signal_handler);
-	update_graphic_board(h);
+	// update_graphic_board(h);
 
 	if (has_flag(h->flag, FLAG_NETWORK)) {
 		CHESS_LOG(LOG_INFO, ORANGE"Try to connect to Server at : %s:%d\n"RESET, h->player_info.dest_ip, SERVER_PORT);
-		// network_setup(h, h->flag, &h->player_info, h->player_info.dest_ip);
+		
+		center_text_string_set(h, "Reconnect game on:", h->player_info.dest_ip);
+		
+		/* Init network and player state */
 		h->player_info.nt_info = init_network(h->player_info.dest_ip, h->player_info.name, timeout);
-		handle_network_client_state(h, h->flag, &h->player_info);
-		h->game_start = TRUE;
-		h->routine_func = network_chess_routine;
+		
+		
+		/* Wait for player */
+		if (!wait_player_handling(h)) {
+			return ;
+		}
+		start_network_game(h);
 	} else {
 		set_local_info(h);
 		h->routine_func = local_chess_routine;
@@ -215,6 +209,14 @@ void update_data_from_file(SDLHandle *h) {
 			free(h->menu.ip_field->text);
 			h->menu.ip_field->text = ft_strdup(h->player_info.dest_ip);
 		}
+	} else {
+		h->player_info.dest_ip = ft_strdup("127.0.0.1");
+	}
+	char *network_pause = get_file_data(DATA_SAVE_FILE, "NetworkPause", 2, 2);
+	if (network_pause && network_pause[0] == '1') {
+		CHESS_LOG(LOG_INFO, CYAN"NetworkPause: %s\n"RESET, network_pause);
+		set_flag(&h->flag, FLAG_NETWORK);
+		set_flag(&h->flag, FLAG_RECONNECT);
 	}
 }
 
@@ -233,7 +235,6 @@ void chess_start_program() {
 		return ;
 	}
 	fast_bzero(&player_info, sizeof(PlayerInfo));
-	player_info.dest_ip = ft_strdup("127.0.0.1");
 	player_info.dest_port = SERVER_PORT;
 	h->flag = 0;
 	h->player_info = player_info;

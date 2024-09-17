@@ -3,8 +3,9 @@
 #include "../include/handle_sdl.h"
 
 /** File data format:
- * keyword: Nickanme,	max_size: 8, 	idx: 0
- * keyword: Server,		max_size: 15,	idx: 1
+ * keyword: Nickanme,		max_size: 8, 	idx: 0
+ * keyword: Server,			max_size: 15,	idx: 1
+ * keyword: NetworkPause,	max_size: 1,	idx: 2
  */
 
 char *get_file_data(char *path, char *keyword, u32 line_idx, int max_size) {
@@ -111,10 +112,18 @@ void register_file_data(char *path, char *keyword, char *data) {
 
 }
 
-void register_data(char *relatif_path, char *nickname, char *server_ip) {
+void set_netword_pause_data(char *path, s8 state) {
+	char data[2] = {0};
+
+	data[0] = state ? '1' : '0';
+	register_file_data(path, "\nNetworkPause:", data);
+}
+
+void register_data(SDLHandle *h, char *relatif_path) {
 	sdl_erase_file_data(relatif_path);
-	register_file_data(relatif_path, "Nickname:", nickname);
-	register_file_data(relatif_path, "\nServer:", server_ip);
+	register_file_data(relatif_path, "Nickname:", h->player_info.name);
+	register_file_data(relatif_path, "\nServer:", h->player_info.dest_ip);
+	set_netword_pause_data(relatif_path, (h->game_start && has_flag(h->flag, FLAG_NETWORK)));
 }
 
 

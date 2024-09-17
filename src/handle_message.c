@@ -208,6 +208,8 @@ s8 chess_msg_receive(SDLHandle *h, NetworkInfo *info, char *rcv_buffer) {
 	rcv_len = recvfrom(info->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&info->servaddr, &info->addr_len);
 	if (rcv_len > 0) {
 		if (check_magic_value(buffer) == FALSE || ignore_msg(h, buffer + MAGIC_SIZE)) {
+			// msg_data = buffer + MAGIC_SIZE;
+			// CHESS_LOG(LOG_INFO, RED"Ignore message %s, ID: [%u]\n"RESET, MsgType_to_str(msg_data[IDX_TYPE]), GET_MESSAGE_ID(msg_data));
 			return (FALSE);
 		}
 		buffer[rcv_len] = '\0';

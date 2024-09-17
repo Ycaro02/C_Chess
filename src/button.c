@@ -49,16 +49,10 @@ void set_client_search_flag(SDLHandle *h) {
 void start_network_game(SDLHandle *h) {
 	/* Connect client together */
 	handle_network_client_state(h, h->flag, &h->player_info);
-	CHESS_LOG(LOG_INFO, "2: After clien state: nt_info is %s\n", h->player_info.nt_info ? GREEN"Not NULL"RESET : RED"NULL"RESET);
 	/* Remove center text */
 	center_text_string_set(h, NULL, NULL);
-	
 	h->game_start = TRUE;
 	h->routine_func = network_chess_routine;
-	
-	// while (1) {
-	// 	h->routine_func();
-	// }
 }
 
 /**

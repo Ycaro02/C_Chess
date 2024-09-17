@@ -324,5 +324,10 @@ void		draw_timer_rect(SDLHandle *h);
 /* nickname.c */
 // char		*get_nickname_in_file();
 char		*get_file_data(char *path, char *keyword, u32 line_idx, int max_size);
-void		register_data(char *path, char *nickname, char *server_ip);
+void		register_data(SDLHandle *h, char *path);
+
+// button.c
+void start_network_game(SDLHandle *h);
+s8 wait_player_handling(SDLHandle *h);
+
 #endif /* CHESS_H */

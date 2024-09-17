@@ -23,15 +23,6 @@ else
 	adb shell monkey -p org.libsdl.app -c android.intent.category.LAUNCHER 1	
 fi
 
-# Get the PID of the application
-PID=$(adb shell ps | grep ${PACKAGE_NAME} | awk '{print $2}')
+echo "Logcat ..."
+adb logcat -c && adb logcat > log
 
-if [ -z "$PID" ]; then
-    echo "Failed to get PID for package ${PACKAGE_NAME}. Make sure the app is running."
-    exit 1
-fi
-
-echo "PID of ${PACKAGE_NAME} is ${PID}"
-
-# Filter logcat output for the application's PID
-adb logcat | grep "$PID"
