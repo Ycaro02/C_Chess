@@ -247,12 +247,21 @@ typedef t_flag_context ChessFlagContext;
 
 #define DATA_SAVE_FILE "rsc/C_chess_data.txt"
 
+
+#define GR_TRUE GREEN"TRUE"RESET
+#define GR_FALSE GREEN"FALSE"RESET
+#define RED_TRUE RED"TRUE"RESET
+#define RED_FALSE RED"FALSE"RESET
+
+
 /* Forward declarion for SDLHandle struct */
 typedef struct s_sdl_handle SDLHandle;
 
 /* src/main.c */
 /* Singleton to get the sdl pointer */
 SDLHandle	*get_SDL_handle();
+void		local_chess_routine();
+void		reset_local_board(SDLHandle *h);
 void		chess_destroy(SDLHandle *h);
 
 /* src/chess_flag.c */

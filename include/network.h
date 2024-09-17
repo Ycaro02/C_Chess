@@ -129,7 +129,7 @@ char		*build_reconnect_message(ChessMoveList *move_lst, u16 *msg_size, u64 my_ti
 void		process_reconnect_message(SDLHandle *h, char *msg);
 
 /* src/network_routine.c */
-void		network_chess_routine(SDLHandle *h);
+void		network_chess_routine();
 void 		send_alive_packet(NetworkInfo *info);
 
 /* src/button.c */

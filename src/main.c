@@ -8,7 +8,6 @@
 	#include <emscripten.h>
 	
 	void	set_local_info(SDLHandle *h);
-	void	local_chess_routine();
 
 	void emscripten_setup() {
 		SDLHandle *h = get_SDL_handle();
@@ -28,6 +27,11 @@ void set_local_info(SDLHandle *h) {
 	h->player_info.piece_end = BLACK_KING;
 }
 
+
+void reset_local_board(SDLHandle *h) {
+	set_local_info(h);
+	init_board(h->board);
+}
 
 void chess_signal_handler(int signum)
 {
@@ -179,18 +183,17 @@ void chess_game(SDLHandle *h) {
 		h->player_info.nt_info = init_network(h->player_info.dest_ip, h->player_info.name, timeout);
 		handle_network_client_state(h, h->flag, &h->player_info);
 		h->game_start = TRUE;
-		while (1) {
-			network_chess_routine(h);
-			if (h->player_info.nt_info == NULL) {
-				break ;
-			}
-		}
+		h->routine_func = network_chess_routine;
 	} else {
 		set_local_info(h);
-		while (1) {
-			local_chess_routine();
-		}
+		h->routine_func = local_chess_routine;
 	}
+
+	while (1) {
+		h->routine_func();
+	}
+
+
 }
 
 void update_data_from_file(SDLHandle *h) {

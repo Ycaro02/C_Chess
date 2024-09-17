@@ -113,7 +113,8 @@ s8 reconnect_handling(SDLHandle *h) {
  * @brief Network chess routine
  * @param h The SDLHandle pointer
  */
-void network_chess_routine(SDLHandle *h) {
+void network_chess_routine() {
+	SDLHandle	*h = get_SDL_handle();
 	s32			event = 0;
 	s8			msg_recv = FALSE;
 	
@@ -140,9 +141,6 @@ void network_chess_routine(SDLHandle *h) {
 		}
 	}
 
-	// CHESS_LOG(LOG_INFO, "Network routine: peer conected %s\n", h->player_info.nt_info->peer_conected ? GREEN"TRUE"RESET : RED"FALSE"RESET);
-	// CHESS_LOG(LOG_INFO, "Network routine: TEXT_CENTER %s\n", has_flag(h->flag, FLAG_CENTER_TEXT_INPUT) ? GREEN"TRUE"RESET : RED"FALSE"RESET);
-
 	/* Draw logic */
 	update_graphic_board(h);
 
@@ -150,7 +148,10 @@ void network_chess_routine(SDLHandle *h) {
 	if (h->player_info.nt_info != NULL) {
 		send_alive_packet(h->player_info.nt_info);
 	} else {
-		CHESS_LOG(LOG_INFO, RED"Network info is NULL call in chess network routine\n"RESET);
+		CHESS_LOG(LOG_INFO, RED"Network info is NULL set local routine\n"RESET);
+		CHESS_LOG(LOG_INFO, YELLOW"Flag network is %s\n"RESET, has_flag(h->flag, FLAG_NETWORK) ? GR_TRUE : RED_FALSE);
+		reset_local_board(h);
+		h->routine_func = local_chess_routine;
 	}
 	SDL_Delay(16);
 

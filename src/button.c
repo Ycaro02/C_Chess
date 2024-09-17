@@ -53,18 +53,12 @@ void start_network_game(SDLHandle *h) {
 	/* Remove center text */
 	center_text_string_set(h, NULL, NULL);
 	
-	/* Start network chess routine (programme block here in routine while 1) */
 	h->game_start = TRUE;
-	while (1) {
-		network_chess_routine(h);
-		if (h->player_info.nt_info == NULL) {
-			CHESS_LOG(LOG_INFO, RED"Network chess routine break\n"RESET);
-			break ;
-		}
-	}
+	h->routine_func = network_chess_routine;
 	
-	/* Destroy the game when we exit the routine */
-	// chess_destroy(h);
+	// while (1) {
+	// 	h->routine_func();
+	// }
 }
 
 /**

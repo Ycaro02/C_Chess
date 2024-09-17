@@ -78,11 +78,16 @@ ifeq ($(shell [ -d "rsc/lib" ] && echo 0 || echo 1), 0)
 	@printf "$(RED)Remove rsc/lib rsc/log$(RESET)\n"
 endif
 
-fclean:		clean_lib clean
+fclean:	clean_android clean_lib clean
 	@make -s -C windows fclean
-	@cd android/chess_app && ./build_android.sh clean && cd ../..
 	@$(RM) $(NAME) $(SERVER_EXE) $(SERVER_EXE) 
-	@printf "$(RED)Clean $(NAME) $(SERVER_EXE) android dir $(RESET)\n"
+	@printf "$(RED)Clean $(NAME) $(SERVER_EXE)$(RESET)\n"
+
+clean_android:
+ifeq ($(shell [ -d "android/chess_app/app/build" ] && echo 0 || echo 1), 0)
+	@cd android/chess_app && ./build_android.sh clean && cd ../..
+	@printf "$(RED)Remove android/chess_app/app/build$(RESET)\n"
+endif
 
 clean_lib:
 	@$(MAKE_LIST) fclean

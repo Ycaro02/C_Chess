@@ -207,13 +207,18 @@ typedef struct s_center_text {
 	s32			curent_btn_enable;	/* The current button enable 1 or 2 (btn are stored in menu struct)*/
 } CenterText;
 
+
 #define TIME_STR_SIZE 16
+
+typedef void (*RoutineFunc)();
+
 
 typedef struct s_sdl_handle {
 	SDL_Window		*window;			/* The window ptr */
 	SDL_Renderer	*renderer;			/* The renderer ptr */
 	SDL_Texture		**piece_texture;	/* Array of texture for each piece */
 	ChessBoard		*board;				/* The chess board */
+	RoutineFunc		routine_func;			/* The routine function */
 
 	/* GUI */
 	ChessMenu		menu;						/* The menu */
