@@ -1,6 +1,6 @@
 #include "../include/chess_log.h"
-#include "../include/chess.h"
 #include "../include/handle_sdl.h"
+#include "../include/network.h"
 
 /** File data format:
  * keyword: Nickanme,		max_size: 8, 	idx: 0
@@ -123,7 +123,15 @@ void register_data(SDLHandle *h, char *relatif_path) {
 	sdl_erase_file_data(relatif_path);
 	register_file_data(relatif_path, "Nickname:", h->player_info.name);
 	register_file_data(relatif_path, "\nServer:", h->player_info.dest_ip);
-	set_netword_pause_data(relatif_path, (h->game_start && has_flag(h->flag, FLAG_NETWORK)));
+
+	s8 to_reconnect = FALSE;
+	if (has_flag(h->flag, FLAG_NETWORK) && h->game_start) {
+		if (h->player_info.nt_info && h->player_info.nt_info->peer_conected) {
+			to_reconnect = TRUE;
+		}
+	}
+
+	set_netword_pause_data(relatif_path, to_reconnect);
 }
 
 
