@@ -9,3 +9,5 @@ windows/license
 webasm/emsdk
 webasm/rsc
 rsc/*.txt
+android/chess_app/.gradle
+android/chess_app/apk_release/*.apk
