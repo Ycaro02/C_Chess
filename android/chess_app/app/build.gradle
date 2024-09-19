@@ -7,6 +7,14 @@ else {
     apply plugin: 'com.android.library'
 }
 
+def getVersionFromHeader() {
+    def versionFile = file('../../../rsc/version/version.h')
+    def versionLine = versionFile.readLines().find { it.contains('CHESS_VERSION') }
+    def versionMatcher = (versionLine =~ /"(\d+\.\d+\.\d+)"/)
+    println "Version: ${versionMatcher ? versionMatcher[0][1] : '1.0.0'}"
+	return versionMatcher ? versionMatcher[0][1] : '1.0.0'
+}
+
 android {
     if (buildAsApplication) {
         namespace "org.libsdl.app"
@@ -16,7 +24,8 @@ android {
         minSdkVersion 19
         targetSdkVersion 34
         versionCode 1
-        versionName "1.0"
+        // versionName "1.0"
+        versionName getVersionFromHeader()
         externalNativeBuild {
             ndkBuild {
                 arguments "APP_PLATFORM=android-21"
