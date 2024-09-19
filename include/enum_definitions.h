@@ -164,8 +164,8 @@
 	X(IDX_FROM, =3) \
 	X(IDX_TO, =4) \
 	X(IDX_PIECE, =5) \
-	X(IDX_TIMER, =6) \
-	X(IDX_TIMER_END, ) \
+	X(IDX_MY_TIMER, =6) \
+	X(IDX_ENEMY_TIMER, =10) \
 
 #define CHESS_FLAG_ENUM \
 	X(FLAG_LISTEN, =1<<0) \

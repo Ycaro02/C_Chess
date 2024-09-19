@@ -6,6 +6,8 @@
 #define CLIENT_A 0
 #define CLIENT_B 1
 
+#define DISCONNECT_TIMER_IDX (DISCONNECT_LEN + 2)
+
 typedef t_list RoomList;
 
 typedef struct s_chess_client {
@@ -201,12 +203,16 @@ void send_quit_msg(int sockfd, ChessRoom *r, ChessClient *client) {
  * @return TRUE if the message is a disconnect message, FALSE otherwise
  */
 s8 client_disconnect_msg(ChessRoom *r, SockaddrIn *cliaddr, char *buff) {
-	if (fast_strcmp(buff, DISCONNECT_MSG) == 0) {
+	if (ft_strncmp(buff, DISCONNECT_MSG, DISCONNECT_LEN) == 0) {
 		if (r->cliA.connected && addr_cmp(cliaddr, &r->cliA.addr)) {
+			r->game_state.cliA_timer = *(u32 *)&buff[DISCONNECT_TIMER_IDX];
+			printf("Client A disconnected, timer: %u\n", r->game_state.cliA_timer);
 			send_quit_msg(g_server->sockfd, r, &r->cliB);
 			fast_bzero(&r->cliA, sizeof(ChessClient));
         } else if (r->cliB.connected && addr_cmp(cliaddr, &r->cliB.addr)) {
+			r->game_state.cliB_timer = *(u32 *)&buff[DISCONNECT_TIMER_IDX];
 			send_quit_msg(g_server->sockfd, r, &r->cliA);
+			printf("Client B disconnected, timer: %u\n", r->game_state.cliB_timer);
 			fast_bzero(&r->cliB, sizeof(ChessClient));
         }
 		printf(RED"Client disconnected: %s:%hu\n"RESET, inet_ntoa(cliaddr->sin_addr), ntohs(cliaddr->sin_port));
@@ -390,23 +396,25 @@ void server_save_info(ChessRoom *r, char *msg, s8 is_client_a) {
 				if (is_client_a) {
 					r->cliB.color = msg[IDX_FROM];
 					r->cliA.color = !r->cliB.color;
-					init_game_state_data(r, *(u64 *)&msg[IDX_TIMER]);
+					init_game_state_data(r, *(u64 *)&msg[IDX_MY_TIMER]);
 				} else {
 					r->cliA.color = msg[IDX_FROM];
 					r->cliB.color = !r->cliA.color;
-					init_game_state_data(r, *(u64 *)&msg[IDX_TIMER]);
+					init_game_state_data(r, *(u64 *)&msg[IDX_MY_TIMER]);
 				}
 				printf("Client A |%s| color: %s\n", r->cliA.nickname, r->cliA.color == IS_WHITE ? "WHITE" : "BLACK");
 				printf("Client B |%s| color: %s\n", r->cliB.nickname, r->cliB.color == IS_WHITE ? "WHITE" : "BLACK");
 		}
 		if (msg_type != MSG_TYPE_COLOR) {
 			if (is_client_a) {
-				r->cliA.remain_time = *(u64 *)&msg[IDX_TIMER];
+				r->cliA.remain_time = *(u64 *)&msg[IDX_MY_TIMER];
+				r->game_state.cliA_timer = r->cliA.remain_time;
+				r->game_state.cliB_timer = *(u64 *)&msg[IDX_ENEMY_TIMER];
 			} else {
-				r->cliB.remain_time = *(u64 *)&msg[IDX_TIMER];
+				r->cliB.remain_time = *(u64 *)&msg[IDX_MY_TIMER];
+				r->game_state.cliB_timer = r->cliB.remain_time;
+				r->game_state.cliA_timer = *(u64 *)&msg[IDX_ENEMY_TIMER];
 			}
-			r->game_state.cliA_timer = r->cliA.remain_time;
-			r->game_state.cliB_timer = r->cliB.remain_time;
 		}
 		update_chess_game_state(r);
 		// printf("Client A |%s| remain time: %ld, enemy: %ld\n", r->cliA.nickname, r->cliA.remain_time, r->cliA.eneremain_time);

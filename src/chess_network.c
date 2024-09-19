@@ -160,7 +160,7 @@ void wait_for_player(SDLHandle *h) {
 void destroy_network_info(SDLHandle *h) {
 	if (h->player_info.nt_info) {
 		CHESS_LOG(LOG_INFO, ORANGE"Send disconnect to server%s\n", RESET);
-		send_disconnect_to_server(h->player_info.nt_info->sockfd, h->player_info.nt_info->servaddr);
+		send_disconnect_to_server(h->player_info.nt_info->sockfd, h->player_info.nt_info->servaddr, h->my_remaining_time);
 		close(h->player_info.nt_info->sockfd);
 		free(h->player_info.nt_info);
 		h->player_info.nt_info = NULL;
@@ -228,8 +228,17 @@ void send_game_end_to_server(int sockfd, struct sockaddr_in servaddr) {
 	sendto(sockfd, GAME_END_MSG, strlen(GAME_END_MSG), 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
 }
 
-void send_disconnect_to_server(int sockfd, struct sockaddr_in servaddr) {
-	sendto(sockfd, DISCONNECT_MSG, fast_strlen(DISCONNECT_MSG), 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
+void send_disconnect_to_server(int sockfd, struct sockaddr_in servaddr, u32 my_timer) {
+	char buff[DISCONNECT_MSG_SIZE];
+
+	fast_bzero(buff, DISCONNECT_MSG_SIZE);
+	ft_memcpy(buff, DISCONNECT_MSG, DISCONNECT_LEN);
+	ft_memcpy(buff + DISCONNECT_LEN + 2, &my_timer, SIZEOF_TIMER);	
+	
+	CHESS_LOG(LOG_INFO, ORANGE"Disconnect timer send: %u\n"RESET, my_timer);
+
+	sendto(sockfd, buff, DISCONNECT_MSG_SIZE, 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
+	// sendto(sockfd, DISCONNECT_MSG, fast_strlen(DISCONNECT_MSG), 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
 }
 
 void send_alive_to_server(int sockfd, struct sockaddr_in servaddr) {

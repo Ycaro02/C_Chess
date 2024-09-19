@@ -60,7 +60,8 @@ void build_message(SDLHandle *h, char *msg, MsgType msg_type, ChessTile tile_fro
 	fast_bzero(msg, MSG_SIZE);
 
 	/* Set the elapsed time */
-	ft_memcpy(&msg[IDX_TIMER], &h->my_remaining_time, SIZEOF_TIMER);
+	ft_memcpy(&msg[IDX_MY_TIMER], &h->my_remaining_time, SIZEOF_TIMER);
+	ft_memcpy(&msg[IDX_ENEMY_TIMER], &h->enemy_remaining_time, SIZEOF_TIMER);
 
 	/* Set the message type */
 	msg[IDX_TYPE] = msg_type;
@@ -115,7 +116,7 @@ void display_message(char *msg) {
 	tile_from = msg[IDX_FROM];
 	tile_to = msg[IDX_TO];
 	piece_type = msg[IDX_PIECE];
-	// CHESS_LOG(LOG_INFO, PURPLE"brut data: |%d||%d||%d| Timer:|%lu|\n"RESET, msg[IDX_FROM], msg[IDX_TO], msg[IDX_PIECE], *(u64 *)&msg[IDX_TIMER]);
+	// CHESS_LOG(LOG_INFO, PURPLE"brut data: |%d||%d||%d| Timer:|%lu|\n"RESET, msg[IDX_FROM], msg[IDX_TO], msg[IDX_PIECE], *(u64 *)&msg[IDX_MY_TIMER]);
 	if (msg_type == MSG_TYPE_MOVE) {
 		CHESS_LOG(LOG_INFO, ORANGE"Move from %s to %s with piece %s\n"RESET, ChessTile_to_str(tile_from), ChessTile_to_str(tile_to), ChessPiece_to_str(piece_type));
 
@@ -179,7 +180,7 @@ void process_message_receive(SDLHandle *handle, char *msg) {
 			do_promotion_move(handle, tile_from, tile_to, piece_type, TRUE);			
 		}
 		handle->player_info.turn = TRUE;
-		handle->enemy_remaining_time = *(u64 *)&msg[IDX_TIMER];
+		handle->enemy_remaining_time = *(u64 *)&msg[IDX_MY_TIMER];
 	} else if (msg_type == MSG_TYPE_RECONNECT)  {
 		process_reconnect_message(handle, msg);
 		update_msg_store(handle->player_info.last_msg, msg);

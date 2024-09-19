@@ -134,7 +134,7 @@ SDLHandle *get_SDL_handle() {
 		SDLHandle *h = get_SDL_handle();
 		register_data(h, DATA_SAVE_FILE);
 		if (h->player_info.nt_info) {
-			send_disconnect_to_server(h->player_info.nt_info->sockfd, h->player_info.nt_info->servaddr);
+			send_disconnect_to_server(h->player_info.nt_info->sockfd, h->player_info.nt_info->servaddr, h->my_remaining_time);
 		}
 	}
 
