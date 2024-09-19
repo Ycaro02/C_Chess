@@ -268,7 +268,7 @@ void		chess_destroy(SDLHandle *h);
 u32			handle_chess_flag(int argc, char **argv, s8 *error, PlayerInfo *player_info);
 
 /* src/chess_board.c */
-void		init_board(ChessBoard *board);
+void		init_board(ChessBoard *board, u32 *app_flag);
 void		update_piece_state(ChessBoard *b);
 void		display_bitboard(Bitboard board, const char *msg);
 s8			is_selected_possible_move(Bitboard possible_moves, ChessTile tile);

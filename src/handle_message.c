@@ -10,9 +10,9 @@
  * 		u8 tile_from;	The tile from
  * 		u8 tile_to;		The tile to
  * 		u8 piece_type;	The piece type
- * 		u64 remaining_time;	The remaining time
+ * 		u32 remaining_time;	The remaining time
  * } Message;
- * Total size 1 + 2 + 1 + 1 + 1 + 8 = 14: MSG_SIZE is set to 16
+ * Total size 1 + 2 + 1 + 1 + 1 + TIMER_NB_BYTE = 14: MSG_SIZE is set to 16
  * 
  * General structure:
  * - 1	:	msg_type
@@ -27,13 +27,13 @@
  * - 3: tile_from
  * - 4: tile_to
  * - 5: piece_type
- * - 6-13: remaining_time (u64)
+ * - 6-13: remaining_time (u32)
  * 
  * MSG_TYPE_PROMOTION:
  * - 3: tile_from
  * - 4: tile_to
  * - 5: NEW_piece_type (QUEEN, ROOK, BISHOP, KNIGHT)
- * - 6-13: remaining_time (u64)
+ * - 6-13: remaining_time (u32)
  * - @note: The piece type is the new piece type, not the pawn type (WHITE_PAWN, BLACK_PAWN)
  * 
  * MSG_TYPE_RECONNECT: Special message to reconnect to the server containing all the move list
@@ -42,8 +42,8 @@
  * - 5-6: list_size: Len of the move list (u16), is the number of element in the move list transmitted
  * - 6-7: list_byte_size: The len of the list is the list_size * sizeof(MoveSave) (u16)
  * 	- After this we store the move list in array format to be send
- * - list_byte_size-(list_byte_size + 8): enemy_remaining_time (u64)
- * - list_byte_size + 8 - end: my_remaining_time (u64)
+ * - list_byte_size-(list_byte_size + TIMER_NB_BYTE): enemy_remaining_time (u64)
+ * - list_byte_size + TIMER_NB_BYTE - end: my_remaining_time (u32)
  */
 
 
@@ -60,7 +60,7 @@ void build_message(SDLHandle *h, char *msg, MsgType msg_type, ChessTile tile_fro
 	fast_bzero(msg, MSG_SIZE);
 
 	/* Set the elapsed time */
-	ft_memcpy(&msg[IDX_TIMER], &h->my_remaining_time, sizeof(u64));
+	ft_memcpy(&msg[IDX_TIMER], &h->my_remaining_time, SIZEOF_TIMER);
 
 	/* Set the message type */
 	msg[IDX_TYPE] = msg_type;

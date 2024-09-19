@@ -29,6 +29,9 @@
 #endif
 
 
+#define TIMER_NB_BYTE	4
+#define SIZEOF_TIMER	(sizeof(u32))
+
 /* src/network_os.c */
 /* Function prototypes posix */
 int		init_network_posix();
@@ -125,7 +128,7 @@ s8			chess_msg_send(NetworkInfo *info, char *msg, u16 msg_size);
 s8			safe_msg_send(SDLHandle *h);
 
 /* src/handle_reconnect.c */
-char		*build_reconnect_message(ChessMoveList *move_lst, u16 *msg_size, u64 my_time, u64 enemy_time, u16 msg_id, s8 color);
+char		*build_reconnect_message(ChessMoveList *move_lst, u16 *msg_size, u32 my_time, u32 enemy_time, u16 msg_id, s8 color);
 void		process_reconnect_message(SDLHandle *h, char *msg);
 
 /* src/network_routine.c */

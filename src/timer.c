@@ -3,14 +3,14 @@
 #include "../include/network.h"
 #include "../include/chess_log.h"
 
-void fill_timer_str(SDLHandle *h, u64 time) {
+void fill_timer_str(SDLHandle *h, u32 time) {
 	s32 min = time / 60;
 	s32 sec = time % 60;
 
 	snprintf(h->timer_str, TIME_STR_SIZE, "%02d:%02d", min, sec);
 }
 
-void write_timer_in_rect(SDLHandle *h, SDL_Rect rect, u64 time) {
+void write_timer_in_rect(SDLHandle *h, SDL_Rect rect, u32 time) {
 	u32 color = RGBA_TO_UINT32(0, 0, 0, 255);
 	iVec2 pos = {0, 0};
 	iVec2 text_size = {0, 0};
@@ -34,9 +34,9 @@ u64 get_time_sec() {
 
 void draw_timer_rect(SDLHandle *h) {
 	static u64	prev_tick = 0;
-	u64 		*timer_to_update = NULL;
 	u64 		now = 0, elapsed_time = 0;
-	s8 			decrement_time = has_flag(h->flag, FLAG_NETWORK) && h->player_info.nt_info && h->player_info.nt_info->peer_conected && h->first_move_played;
+	u32 		*timer_to_update = NULL;
+	s8 			decrement_time = has_flag(h->flag, FLAG_NETWORK) && h->player_info.nt_info && h->player_info.nt_info->peer_conected && has_flag(h->flag, FLAG_FIRST_MOVE_PLAYED);
 
 	/* Draw timer rect */
 	SDL_SetRenderDrawColor(h->renderer, 180, 180, 180, 255);

@@ -12,8 +12,7 @@ typedef struct s_chess_client {
 	char 			nickname[8];		/* Client nickname */
     SockaddrIn		addr;				/* Client address */
 	struct timeval 	last_alive;			/* Last alive packet */
-	u64				my_remain_time;	/* Client remaining time */
-	u64				enemy_remain_time;	/* Enemy remaining time */
+	u32				remain_time;	/* Client remaining time */
 	s8				color;				/* Client color */
 	s8				client_state;		/* Client state */
     s8				connected;			/* Client connected */
@@ -25,8 +24,8 @@ typedef struct s_chess_game_state {
 	char 			cliB_nickname[8];
 	ChessMoveList	*move_lst;
 	u64 			room_id;
-	u64 			cliA_timer;
-	u64 			cliB_timer;
+	u32 			cliA_timer;
+	u32 			cliB_timer;
 	u16 			msg_id;
 	s8 				cliA_color;
 	s8 				cliB_color;
@@ -72,6 +71,7 @@ void update_chess_game_state(ChessRoom *r) {
 	r->game_state.move_lst = r->move_lst;
 	r->game_state.room_id = r->room_id;
 	r->game_state.msg_id = r->msg_id;
+
 	// printf(RED"GAME STATE UPDATED\n"RESET);
 	// printf(ORANGE"time: %ld\n"RESET, r->game_state.cliA_timer);
 	// printf(ORANGE"Cli A: %s -> [%d] %s\n"RESET, r->cliA.nickname, r->cliA.color, r->cliA.color == IS_WHITE ? "WHITE" : "BLACK");
@@ -271,18 +271,18 @@ char *format_connect_packet(char *msg, u64 message_size, s8 player_state){
 
 void send_reconnect_packet(ChessRoom *r, int sockfd, s8 last_connected) {
 	char *reconnect_msg, *format_reconnect_msg;
-	u64 my_timer = 0, enemy_timer = 0;
+	u32 my_timer = 0, enemy_timer = 0;
 	u16 msg_size = 0;
 	s8 color = -1;
 	
 	/* Get the right timer and color */
 	if (last_connected == CLIENT_A) {
-		my_timer = r->game_state.cliA_timer;
-		enemy_timer = r->game_state.cliB_timer;
-		color = r->game_state.cliB_color; /* need to send the reverse color */
-	} else if (last_connected == CLIENT_B) {
 		my_timer = r->game_state.cliB_timer;
 		enemy_timer = r->game_state.cliA_timer;
+		color = r->game_state.cliB_color; /* need to send the reverse color */
+	} else if (last_connected == CLIENT_B) {
+		my_timer = r->game_state.cliA_timer;
+		enemy_timer = r->game_state.cliB_timer;
 		color = r->game_state.cliA_color; /* need to send the reverse color */
 	}
 	
@@ -353,11 +353,8 @@ void connect_client_together(int sockfd, ChessRoom *r, s8 last_connected) {
  * @param timer The timer
  */
 void init_game_state_data(ChessRoom *r, u64 timer) {
-	r->cliA.my_remain_time = timer;
-	r->cliA.enemy_remain_time = timer;
-	r->cliB.my_remain_time = timer;
-	r->cliB.enemy_remain_time = timer;
-
+	r->cliA.remain_time = timer;
+	r->cliB.remain_time = timer;
 	r->game_state.cliA_timer = timer;
 	r->game_state.cliB_timer = timer;
 	r->game_state.cliA_color = r->cliA.color;
@@ -389,7 +386,7 @@ void server_save_info(ChessRoom *r, char *msg, s8 is_client_a) {
 			server_store_movelist(&r->move_lst, msg);
 			display_move_list(r->move_lst);
 			r->last_move_id_saved = r->msg_id;
-		} else if (msg_type == MSG_TYPE_COLOR) {
+		} else if (msg_type == MSG_TYPE_COLOR && r->msg_id == 0) {
 				if (is_client_a) {
 					r->cliB.color = msg[IDX_FROM];
 					r->cliA.color = !r->cliB.color;
@@ -404,17 +401,17 @@ void server_save_info(ChessRoom *r, char *msg, s8 is_client_a) {
 		}
 		if (msg_type != MSG_TYPE_COLOR) {
 			if (is_client_a) {
-				r->cliA.my_remain_time = *(u64 *)&msg[IDX_TIMER];
-				r->cliB.enemy_remain_time = *(u64 *)&msg[IDX_TIMER];
+				r->cliA.remain_time = *(u64 *)&msg[IDX_TIMER];
 			} else {
-				r->cliB.my_remain_time = *(u64 *)&msg[IDX_TIMER];
-				r->cliA.enemy_remain_time = *(u64 *)&msg[IDX_TIMER];
+				r->cliB.remain_time = *(u64 *)&msg[IDX_TIMER];
 			}
+			r->game_state.cliA_timer = r->cliA.remain_time;
+			r->game_state.cliB_timer = r->cliB.remain_time;
 		}
 		update_chess_game_state(r);
-		// printf("Client A |%s| remain time: %ld, enemy: %ld\n", r->cliA.nickname, r->cliA.my_remain_time, r->cliA.enemy_remain_time);
-		// printf("Client B |%s| remain time: %ld, enemy: %ld\n", r->cliB.nickname, r->cliB.my_remain_time, r->cliB.enemy_remain_time);
-	}
+		// printf("Client A |%s| remain time: %ld, enemy: %ld\n", r->cliA.nickname, r->cliA.remain_time, r->cliA.eneremain_time);
+		// printf("Client B |%s| remain time: %ld, enemy: %ld\n", r->cliB.nickname, r->cliB.remain_time, r->cliB.eneremain_time);
+	} /* End msg type color || move || promotion */
 }
 
 /* @brief Transmit a message to the other client

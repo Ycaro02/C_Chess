@@ -30,7 +30,7 @@ void set_local_info(SDLHandle *h) {
 
 void reset_local_board(SDLHandle *h) {
 	set_local_info(h);
-	init_board(h->board);
+	init_board(h->board, &h->flag);
 }
 
 void chess_signal_handler(int signum)
@@ -55,7 +55,7 @@ SDLHandle *init_game() {
 		free(handle);
 		return (NULL);
 	}
-	init_board(handle->board);
+	init_board(handle->board, &handle->flag);
 
 	return (handle);
 }

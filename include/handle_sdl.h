@@ -224,8 +224,8 @@ typedef struct s_sdl_handle {
 	ChessPiece		over_piece_select;			/* The piece selected (over display) */
 
 	/* Player info */
-	u64				my_remaining_time;		/* Current player ramaining time */
-	u64				enemy_remaining_time;	/* Enemy player ramaining time */
+	u32				my_remaining_time;		/* Current player ramaining time */
+	u32				enemy_remaining_time;	/* Enemy player ramaining time */
 	PlayerInfo		player_info;			/* Player info */
 	u32				flag;					/* App Flag */
 	u16				msg_id;					/* Over flag */

@@ -63,7 +63,7 @@ void start_network_game(SDLHandle *h) {
 void search_game(SDLHandle *h) {
 	menu_close(&h->menu);
 	/* Reset board */
-	init_board(h->board);
+	init_board(h->board, &h->flag);
 	center_text_string_set(h, "Searching game on :", h->player_info.dest_ip);
 	update_graphic_board(h);
 
@@ -86,7 +86,7 @@ void reconnect_game(SDLHandle *h) {
 	menu_close(&h->menu);
 	CHESS_LOG(LOG_INFO, "Reconnect to game\n");
 	/* Reset board */
-	init_board(h->board);
+	init_board(h->board, &h->flag);
 	center_text_string_set(h, "Reconnect game on:", h->player_info.dest_ip);
 	update_graphic_board(h);
 

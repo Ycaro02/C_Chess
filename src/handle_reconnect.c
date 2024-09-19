@@ -28,8 +28,8 @@
 		/* Get size and time */
 		ft_memcpy(&list_size, &msg[6], sizeof(u16));
 		ft_memcpy(&array_byte_size, &msg[8], sizeof(u16));
-		ft_memcpy(&my_remaining_time, &msg[MOVE_ARRAY_IDX + array_byte_size], sizeof(u64));
-		ft_memcpy(&enemy_remaining_time, &msg[MOVE_ARRAY_IDX + array_byte_size + 8], sizeof(u64));
+		ft_memcpy(&my_remaining_time, &msg[MOVE_ARRAY_IDX + array_byte_size], SIZEOF_TIMER);
+		ft_memcpy(&enemy_remaining_time, &msg[MOVE_ARRAY_IDX + array_byte_size + TIMER_NB_BYTE], SIZEOF_TIMER);
 
 		/* Set message ID and player color */
 		h->msg_id = GET_MESSAGE_ID(msg);
@@ -87,7 +87,7 @@
  * @param msg_size The size of the message
  * @return The message
  */
-char *build_reconnect_message(ChessMoveList *move_lst, u16 *msg_size, u64 my_time, u64 enemy_time, u16 msg_id, s8 color) {
+char *build_reconnect_message(ChessMoveList *move_lst, u16 *msg_size, u32 my_time, u32 enemy_time, u16 msg_id, s8 color) {
 	ChessMoveList	*move_list = move_lst;
 	MoveSave		*move_arr = NULL;
 	char			*buff = NULL;
@@ -108,10 +108,10 @@ char *build_reconnect_message(ChessMoveList *move_lst, u16 *msg_size, u64 my_tim
 		4 byte for the size of the message and the size of the list
 		2 byte for the size of the list in byte
 		size of array
-		8 byte for enemy_remaining time
-		8 byte for my_remaining time
+		TIMER_NB_BYTE byte for enemy_remaining time
+		TIMER_NB_BYTE byte for my_remaining time
 	*/
-	*msg_size = 2 + 2 + 4 + 2 + array_byte_size + 8 + 8;
+	*msg_size = 2 + 2 + 4 + 2 + array_byte_size + TIMER_NB_BYTE + TIMER_NB_BYTE;
 	buff = ft_calloc(*msg_size, sizeof(char));
 	if (!buff) {
 		return (NULL);
@@ -131,9 +131,10 @@ char *build_reconnect_message(ChessMoveList *move_lst, u16 *msg_size, u64 my_tim
 	ft_memcpy(&buff[6], &list_size, sizeof(u16));
 	ft_memcpy(&buff[8], &array_byte_size, sizeof(u16));
 	ft_memcpy(&buff[MOVE_ARRAY_IDX], move_arr, array_byte_size);
-	ft_memcpy(&buff[MOVE_ARRAY_IDX + array_byte_size], &enemy_time, sizeof(u64));
-	ft_memcpy(&buff[MOVE_ARRAY_IDX + array_byte_size + 8], &my_time, sizeof(u64));
+	ft_memcpy(&buff[MOVE_ARRAY_IDX + array_byte_size], &enemy_time, SIZEOF_TIMER);
+	ft_memcpy(&buff[MOVE_ARRAY_IDX + array_byte_size + TIMER_NB_BYTE], &my_time, SIZEOF_TIMER);
 
 	free(move_arr);
 	return (buff);
 }
+

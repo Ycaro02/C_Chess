@@ -31,7 +31,7 @@ void update_piece_state(ChessBoard *b) {
 	update_piece_control(b);
 }
 
-void init_board(ChessBoard *b) {
+void init_board(ChessBoard *b, u32 *app_flag) {
 
 	if (b->lst) {
 		CHESS_LOG(LOG_DEBUG, "Free Movelist\n");
@@ -45,6 +45,11 @@ void init_board(ChessBoard *b) {
 			ft_lstclear(&b->black_kill_lst, free);
 		}
 	}	
+
+	if (has_flag(*app_flag, FLAG_FIRST_MOVE_PLAYED)) {
+		CHESS_LOG(LOG_DEBUG, "First move played unset\n");
+		unset_flag(app_flag, FLAG_FIRST_MOVE_PLAYED);
+	}
 
 	/* Set all pieces to 0 */
 	fast_bzero(b, sizeof(ChessBoard));
@@ -125,7 +130,7 @@ void replay_func(SDLHandle *h) {
 	s8 network_flag = FALSE;
 
 	CHESS_LOG(LOG_INFO, "Replay game\n");
-	init_board(h->board);
+	init_board(h->board, &h->flag);
 
 	if (has_flag(h->flag, FLAG_NETWORK)) {
 		network_flag = TRUE;
