@@ -38,6 +38,15 @@ android {
             // }
         }
     }
+
+    /*Add Compile options in following block*/
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+	
+
+
     buildTypes {
         release {
             minifyEnabled false
@@ -78,6 +87,11 @@ android {
         }
     }
 }
+
+// tasks.withType(JavaCompile) {
+// 	options.compilerArgs << "-Xlint:deprecation"
+// }
+
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
