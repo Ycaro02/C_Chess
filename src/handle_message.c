@@ -239,17 +239,20 @@ s8 chess_msg_send(NetworkInfo *info, char *msg, u16 msg_len) {
 	int		ack_received = 0, attempts = 0;
 	char	buffer[4096];
 	u16		message_id = GET_MESSAGE_ID(msg);
+	u64		tick_send = 0, tick_receive = 0;
 
 	fast_bzero(buffer, 4096);
 	CHESS_LOG(LOG_INFO, CYAN"Send msg |%s| ID: [%u] -> "RESET, MsgType_to_str(msg[0]), message_id);
+	tick_send = SDL_GetTicks64();
 	while (attempts < MAX_ATTEMPTS && !ack_received) {
 		sendto(info->sockfd, msg, msg_len, 0, (struct sockaddr *)&info->servaddr, info->addr_len);
 		rcv_len = recvfrom(info->sockfd, buffer, sizeof(buffer), 0, (struct sockaddr *)&info->servaddr, &info->addr_len);
 		if (rcv_len > 0) {
+			tick_receive = SDL_GetTicks64();
 			buffer[rcv_len] = '\0';
 			if (check_magic_value(buffer) == TRUE && ft_memcmp(buffer + MAGIC_SIZE, ACK_STR, 3) == 0) {
 				if (*(u16 *)&buffer[MAGIC_SIZE + ACK_LEN] == message_id) {
-					CHESS_LOG(LOG_INFO, CYAN"ACK rcv ID: [%u]\n"RESET, *(u16 *)&buffer[MAGIC_SIZE + ACK_LEN]);
+					CHESS_LOG(LOG_INFO, CYAN"ACK rcv ID: [%u]: "YELLOW"[%lu] ms\n"RESET, *(u16 *)&buffer[MAGIC_SIZE + ACK_LEN], tick_receive - tick_send);
 					ack_received = 1;
 					break ;
 				} 
@@ -257,10 +260,10 @@ s8 chess_msg_send(NetworkInfo *info, char *msg, u16 msg_len) {
 			}
 		} 
 		attempts++;
-		SDL_Delay(1000);
+		SDL_Delay(16);
 	}
 	if (!ack_received) {
-		CHESS_LOG(LOG_ERROR, "No ACK received for |%s| after %d sending try\nVerify your network connection\n",MsgType_to_str(msg[0]), MAX_ATTEMPTS);
+		CHESS_LOG(LOG_DEBUG, "No ACK received for |%s| after %d sending try\nVerify your network connection\n",MsgType_to_str(msg[0]), MAX_ATTEMPTS);
 		return (FALSE);
 	}
 	return (TRUE);
