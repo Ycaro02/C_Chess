@@ -26,10 +26,12 @@
 	/* src/display_piece_kill.c */
 	void android_draw_piece_kill(SDLHandle *h, s8 is_bot, s8 is_black);
 
-	// sdl_handle (need to split)
+	/* src/compute_win_elem_size.c */
 	void android_compute_win_size(SDLHandle *h);
 	SDL_Rect android_build_timer_rect(SDLHandle *h, s8 is_bot_band);
 	SDL_Rect android_build_name_rect(SDLHandle *h, s8 is_bot_band);
+	
+	/* src/android_asset_manager.c */
 	SDL_Texture *android_load_texture(SDL_Renderer *renderer, const char* path);
 
 	/* Macros for enabling and disabling the text field */
@@ -50,10 +52,12 @@
 	/* src/display_piece_kill.c */
 	void pc_draw_piece_kill(SDLHandle *h, s8 is_bot, s8 is_black);
 	
-	// sdl_handle (need to split)
+	/* src/compute_win_elem_size.c */
 	void pc_compute_win_size(SDLHandle *h);
 	SDL_Rect pc_build_timer_rect(SDLHandle *h, s8 is_bot_band);
 	SDL_Rect pc_build_name_rect(SDLHandle *h, s8 is_bot_band);
+	
+	/* src/sdl_handle.c */
 	SDL_Texture *pc_load_texture(SDL_Renderer *renderer, const char* path);
 	
 	/* Macros for enabling and disabling the text field */

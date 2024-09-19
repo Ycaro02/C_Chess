@@ -9,6 +9,7 @@
  */
 
 #include "../include/handle_sdl.h"
+#include "../include/chess_log.h"
 
 #ifdef __ANDROID__
 	/**

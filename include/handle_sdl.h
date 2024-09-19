@@ -20,20 +20,9 @@
 	#include "../rsc/lib/install/include/SDL2/SDL_ttf.h"
 #endif
 
-#include "chess_log.h"
+#include "sdl_handle_file.h"
 
 #define ESCAPE_KEY(_sym_) ((_sym_) == SDLK_ESCAPE || (_sym_) == SDLK_AC_BACK)
-
-// FT_INLINE s8 ESCAPE_KEY(SDL_Keycode sym) {
-// 	if (sym == SDLK_AC_BACK) {
-// 		CHESS_LOG(LOG_INFO, "AC BACK KEY\n");
-// 		return (TRUE);
-// 	} else if (sym == SDLK_ESCAPE) {
-// 		CHESS_LOG(LOG_INFO, "ESCAPE KEY\n");
-// 		return (TRUE);
-// 	}
-// 	return (FALSE);
-// }
 
 /* Texture path */
 #define BLACK_KING_TEXTURE "rsc/texture/piece/black_king.bmp"
@@ -64,11 +53,6 @@
 	} while (0)
 
 
-/* Element size in pixel */
-#define		TOP_BAND_HEIGHT		0
-// #define		TILE_SIZE			80
-#define		TILE_SPACING		0
-
 /* Circle size */
 #define		CIRCLE_RADIUS(_ts_) ((_ts_ >> 3) + (_ts_ >> 5))
 #define		OUTLINE_CIRCLE_RADIUS(_ts_) (_ts_ >> 1)
@@ -96,7 +80,6 @@ typedef struct s_window_band {
 #define WHITE_COLOR 	255, 255, 255, 255
 #define U32_WHITE_COLOR RGBA_TO_UINT32(255, 255, 255, 255)
 #define U32_BLACK_COLOR RGBA_TO_UINT32(0, 0, 0, 255)
-
 
 /* Clear color */
 #define CLEAR_COLOR 70, 70, 70, 255
@@ -141,6 +124,7 @@ typedef struct s_button {
 	s8			state;		/* The button state */
 } Button;
 
+/* Enum used to place the text in rect */
 typedef enum s_rect_text_pos {
 	TOP_CENTER,
 	BOT_CENTER,
@@ -148,6 +132,7 @@ typedef enum s_rect_text_pos {
 	TOP,
 } RectTextPos;
 
+/* Enum used to give an id to the texfield in profile page */
 typedef enum e_profile_field_type {
 	PFT_INVALID=-1,
 	PFT_NAME,
@@ -210,15 +195,15 @@ typedef struct s_center_text {
 
 #define TIME_STR_SIZE 16
 
+/* Routine function, (local_chess_routine or network_chess_routine) */
 typedef void (*RoutineFunc)();
-
 
 typedef struct s_sdl_handle {
 	SDL_Window		*window;			/* The window ptr */
 	SDL_Renderer	*renderer;			/* The renderer ptr */
 	SDL_Texture		**piece_texture;	/* Array of texture for each piece */
 	ChessBoard		*board;				/* The chess board */
-	RoutineFunc		routine_func;			/* The routine function */
+	RoutineFunc		routine_func;		/* The routine function */
 
 	/* GUI */
 	ChessMenu		menu;						/* The menu */
@@ -289,10 +274,8 @@ FT_INLINE void get_keyboard_mod(u8 *container) {
 
 /* src/sdl_handle */
 SDLHandle	*create_sdl_handle(const char* title);
-u8 			window_is_open(SDL_Window* window);
 void		window_clear(SDL_Renderer* renderer);
 void		window_close(SDL_Window* window, SDL_Renderer *renderer);
-// SDL_Texture	*load_texture(SDL_Renderer *renderer, const char* path);
 void		unload_texture(SDL_Texture *texture);
 void		draw_texture_tile(SDLHandle *h, SDL_Texture *texture, iVec2 tilePos, iVec2 scale);
 void		draw_texure(SDLHandle *handle, SDL_Texture *texture, iVec2 pos, iVec2 scale);
@@ -347,74 +330,5 @@ void	edit_ip_click(SDLHandle *h);
 Profile	*init_profile_page(SDLHandle *h, s32 nb_field);
 void	destroy_profile_page(Profile *profile);
 void	draw_profile_page(SDLHandle *h, Profile *profile);
-
-/* sdl_handle_file.c */
-
-/**
- * @brief Opens a file using SDL_RWops.
- * 
- * On Android, it splits the file path to get the internal storage path.
- * 
- * @param file The path to the file to open.
- * @param mode The mode in which to open the file.
- * @return SDL_RWops* Pointer to the SDL_RWops structure, or NULL on failure.
- */
-SDL_RWops* sdl_open(const char* file, const char* mode);
-
-/**
- * @brief Reads data from an SDL_RWops file.
- * 
- * @param rw Pointer to the SDL_RWops structure.
- * @param buffer Buffer to store the read data.
- * @param size Size of each element to read.
- * @param maxnum Maximum number of elements to read.
- * @return size_t Number of elements read, or -1 on failure.
- */
-size_t sdl_read(SDL_RWops* rw, void* buffer, size_t size, size_t maxnum);
-
-/**
- * @brief Writes data to an SDL_RWops file.
- * 
- * @param rw Pointer to the SDL_RWops structure.
- * @param buffer Buffer containing the data to write.
- * @param size Size of each element to write.
- * @param num Number of elements to write.
- * @return size_t Number of elements written, or -1 on failure.
- */
-size_t sdl_write(SDL_RWops* rw, const void* buffer, size_t size, size_t num);
-
-/**
- * @brief Closes an SDL_RWops file.
- * 
- * @param rw Pointer to the SDL_RWops structure.
- * @return int 0 on success, -1 on failure.
- */
-int sdl_close(SDL_RWops* rw);
-
-/**
- * @brief Erases the data in a file by opening it in write mode.
- * 
- * @param filename The path to the file to erase.
- */
-void sdl_erase_file_data(const char* filename);
-
-/**
- * @brief Reads the entire content of a file into a buffer.
- * 
- * @param rw Pointer to the SDL_RWops structure.
- * @param buffer Buffer to store the read data.
- * @param total_size Total size of the data to read.
- * @return size_t Number of elements read, or -1 on failure.
- */
-size_t sdl_read_complete_file(SDL_RWops *rw, void *buffer, size_t total_size);
-
-/**
- * @brief Gets the size of a file.
- * 
- * @param filename The path to the file.
- * @return s64 Size of the file, or -1 on failure.
- */
-s64 get_file_size_sdl(const char *filename);
-
 
 #endif /* HANDLE_SDL_H */

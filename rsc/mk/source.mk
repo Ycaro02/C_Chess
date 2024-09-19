@@ -35,6 +35,8 @@ SRCS			=	chess_board.c \
 					sdl_handle_file.c \
 					display_piece_kill.c \
 					handle_textfield_keyboard.c \
+					compute_win_elem_size.c \
+					android_asset_manager.c \
 
 MAKE_LIBFT		=	make -s -C libft -j
 
