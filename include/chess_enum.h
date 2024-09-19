@@ -1,3 +1,6 @@
+#ifndef _CHESS_ENUM_H
+#define _CHESS_ENUM_H
+
 #include "enum_definitions.h"
 
 /* Define the X-Macro enums */
@@ -38,3 +41,5 @@ ENUM_TO_STRING_FUNC(MsgType, MSG_TYPE_ENUM)
 ENUM_TO_STRING_FUNC(MsgIdx, MSG_IDX_ENUM)
 ENUM_TO_STRING_FUNC(ChessFlag, CHESS_FLAG_ENUM)
 #undef X
+
+#endif /* _CHESS_ENUM_H */
