@@ -53,7 +53,7 @@ char *get_file_data(char *path, char *keyword, u32 line_idx, int max_size) {
     } else if (double_char_size(split_line) != 2) {
         CHESS_LOG(LOG_ERROR, "Missing separator ':' or too many separator format is 'keyword:value'\n");
         goto free_second_split;
-    } else if (fast_strcmp(split_line[0], keyword) != 0) {
+    } else if (ft_strncmp(split_line[0], keyword, ft_strlen(keyword)) != 0) {
         CHESS_LOG(LOG_ERROR, "Wrong keyword need '%s', got: |%s|\n"RESET, keyword, split_line[0]);
         goto free_second_split;
     }

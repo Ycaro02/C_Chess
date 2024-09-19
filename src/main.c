@@ -198,16 +198,14 @@ void update_data_from_file(SDLHandle *h) {
 		h->player_info.name = ft_strdup("Default");
 	}
 	if (h->menu.profile->tf[PFT_NAME]->text) {
-		free(h->menu.profile->tf[PFT_NAME]->text);
-		h->menu.profile->tf[PFT_NAME]->text = ft_strdup(h->player_info.name);
+		ft_memcpy(h->menu.profile->tf[PFT_NAME]->text, h->player_info.name, fast_strlen(h->player_info.name));
 	}
 	char *ip = get_file_data(DATA_SAVE_FILE, "Server", 1, 15);
 	if (ip) {
 		CHESS_LOG(LOG_INFO, "Get In File Server IP: %s\n", ip);
 		h->player_info.dest_ip = ip;
 		if (h->menu.ip_field->text) {
-			free(h->menu.ip_field->text);
-			h->menu.ip_field->text = ft_strdup(h->player_info.dest_ip);
+			ft_memcpy(h->menu.ip_field->text, h->player_info.dest_ip, fast_strlen(h->player_info.dest_ip));
 		}
 	} else {
 		h->player_info.dest_ip = ft_strdup("127.0.0.1");

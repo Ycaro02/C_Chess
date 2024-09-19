@@ -230,6 +230,7 @@ typedef struct s_sdl_handle {
 	u32				flag;					/* App Flag */
 	u16				msg_id;					/* Over flag */
 	s8				game_start;				/* Game start flag */
+	s8				first_move_played;		/* First move played flag */
 }	SDLHandle ;
 
 

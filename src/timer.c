@@ -35,8 +35,8 @@ u64 get_time_sec() {
 void draw_timer_rect(SDLHandle *h) {
 	static u64	prev_tick = 0;
 	u64 		*timer_to_update = NULL;
-	u64 		now = get_time_sec();
-	u64 		elapsed_time = now - prev_tick;
+	u64 		now = 0, elapsed_time = 0;
+	s8 			decrement_time = has_flag(h->flag, FLAG_NETWORK) && h->player_info.nt_info && h->player_info.nt_info->peer_conected && h->first_move_played;
 
 	/* Draw timer rect */
 	SDL_SetRenderDrawColor(h->renderer, 180, 180, 180, 255);
@@ -48,6 +48,8 @@ void draw_timer_rect(SDLHandle *h) {
 	SDL_RenderFillRect(h->renderer, &h->name_rect_top);
 
 	if (h->game_start) {
+		now = get_time_sec();
+		elapsed_time = now - prev_tick;
 		SDL_SetRenderDrawColor(h->renderer, 0, 0, 150, 150);
 		/* Get the timer to update */
 		if (h->player_info.turn == TRUE) {
@@ -61,11 +63,10 @@ void draw_timer_rect(SDLHandle *h) {
 		} 
 
 		/* Update timer every second */
-		if (elapsed_time >= 1) {
+		if (decrement_time && elapsed_time >= 1) {
 			if (*timer_to_update > 0) { (*timer_to_update)-- ; }
 			prev_tick = now;
 		}
-
 	}
 	/* Draw timer text */
 	write_timer_in_rect(h, h->timer_rect_bot, h->my_remaining_time);
@@ -75,7 +76,7 @@ void draw_timer_rect(SDLHandle *h) {
 	write_text_in_rect(h, h->name_font, h->name_rect_bot, h->player_info.name, CENTER, U32_BLACK_COLOR);
 	char *enemy_name = "Bot";
 
-	if (has_flag(h->flag, FLAG_NETWORK) && h->player_info.nt_info->peer_nickname[0] != '\0') {
+	if (has_flag(h->flag, FLAG_NETWORK) && h->player_info.nt_info && h->player_info.nt_info->peer_nickname[0] != '\0') {
 		enemy_name = h->player_info.nt_info->peer_nickname;
 	}
 	write_text_in_rect(h, h->name_font, h->name_rect_top, enemy_name, CENTER, U32_BLACK_COLOR);

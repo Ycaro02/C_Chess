@@ -203,6 +203,10 @@ s32 move_piece(SDLHandle *handle, ChessTile tile_from, ChessTile tile_to, ChessP
 		move_save_add(&handle->board->lst, tile_from, tile_to, type, get_piece_from_tile(handle->board, tile_to));
 	}
 
+	if (!handle->first_move_played) {
+		handle->first_move_played = TRUE;
+	}
+
 	// display_move_list(handle->board->lst);
 	return (ret);
 }
