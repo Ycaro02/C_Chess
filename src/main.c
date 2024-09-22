@@ -208,12 +208,11 @@ void update_data_from_file(SDLHandle *h) {
 	if (ip) {
 		CHESS_LOG(LOG_INFO, "Get In File Server IP: %s\n", ip);
 		h->player_info.dest_ip = ip;
-		if (h->menu.ip_field->text) {
-			fast_bzero(h->menu.profile->tf[PFT_NAME]->text, IP_INPUT_SIZE);
-			ft_memcpy(h->menu.ip_field->text, h->player_info.dest_ip, fast_strlen(h->player_info.dest_ip));
-		}
 	} else {
 		h->player_info.dest_ip = ft_strdup("127.0.0.1");
+	}
+	if (h->menu.ip_field->text) {
+		ft_memcpy(h->menu.ip_field->text, h->player_info.dest_ip, fast_strlen(h->player_info.dest_ip));
 	}
 	/* handle auto reconnect */
 	char *network_pause = get_file_data(DATA_SAVE_FILE, "NetworkPause", 2, 2);
