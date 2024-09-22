@@ -8,6 +8,7 @@ source rsc/sh/color.sh
 # Global Variables
 REPO="Ycaro02/C_Chess"
 GITHUB_TOKEN=$(cat ~/.tok_C_chess)
+# RELEASE_LOG_FILE="rsc/log/release_log.txt"
 
 source rsc/build_release/release_utils.sh
 
@@ -58,24 +59,20 @@ function compile_linux_version {
 # $1: zip file path
 function compile_window_version {
 	local zip_file="${1}"
-
 	local ino_out="Inno_out"
 
 	display_color_msg ${LIGHT_BLUE} "Building Windows Release directory..."
 
 	# Build the game
 	make -s -C windows
-
 	# Clean the release directory remove .o files
 	make -s -C windows clean
 
 	# wine "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /O"${INO_OUTPUT_DIR}" /F"Chess Install" windows/setup.iss > /dev/null 2>&1
 	wine "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /O"${ino_out}" /F"Chess Install" windows/setup.iss
-
 	mv "${ino_out}/Chess Install.exe" .
 
 	display_color_msg ${LIGHT_BLUE} "Creating the zip file from Chess Install.exe..."
-
 	zip -r ${zip_file} "Chess Install.exe" > /dev/null
 
 	display_color_msg ${GREEN} "Zip file created: ${zip_file}, clean ${ino_out} Chess Install.exe"
