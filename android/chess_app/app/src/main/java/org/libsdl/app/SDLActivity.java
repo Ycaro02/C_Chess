@@ -438,7 +438,8 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
         Log.v(TAG, "onCreate()");
         super.onCreate(savedInstanceState);
 
-		// checkForUpdate();
+		// Check for update release available on github
+		checkForUpdate();
 
         try {
             Thread.currentThread().setName("SDLActivity");
