@@ -98,9 +98,22 @@ function remove_old_release_tags {
 	done
 }
 
+function remove_old_release {
+	local release_name="${1}"
+	local release_id=$(get_release_by_name "${release_name}")
+
+	if [ "${release_id}" != "" ]; then
+		display_color_msg ${LIGHT_BLUE} "Deleting the existing release with ID: ${release_id}"
+		curl -s -X DELETE -H "Authorization: token ${GITHUB_TOKEN}" \
+			"https://api.github.com/repos/${REPO}/releases/${release_id}"
+	fi
+}
+
+START_TAG="AndroidRelease_"
+
 VERSION=$(get_version)
 display_color_msg ${YELLOW} "Version: ${VERSION}"
-RELEASE_TAG="AndroidRelease_${VERSION}"
+RELEASE_TAG="${START_TAG}${VERSION}"
 
 
 compile_apk
@@ -111,6 +124,7 @@ if [ ! -f "${APK_PATH}" ]; then
     exit 1
 fi
 
-remove_old_release_tags "AndroidRelease_"
+remove_old_release_tags ${START_TAG}
+remove_old_release ${RELEASE_NAME}
 
 update_release
