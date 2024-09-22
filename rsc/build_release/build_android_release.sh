@@ -7,22 +7,37 @@ source rsc/sh/color.sh
 
 # Variables
 REPO="Ycaro02/C_Chess"
-RELEASE_TAG="AndroidRelease"
+# RELEASE_TAG="AndroidRelease"
 RELEASE_NAME="C_Chess_Android"
 GITHUB_TOKEN=$(cat ~/.tok_C_chess)
 APK_PATH="android/chess_app/apk_release/chess_app.apk"
 APK_NAME="chess_app.apk"
 
 
-display_color_msg ${LIGHT_BLUE} "Preparing the APK for release..."
+function get_version {
+	local version_file="rsc/version/version.h"
+	if [ ! -f "${version_file}" ]; then
+		display_color_msg ${RED} "Version file not found: ${version_file}"
+		exit 1
+	fi
+	echo $(grep -oP '(?<=#define CHESS_VERSION ")[^"]*' ${version_file})
+}
 
-display_color_msg ${YELLOW} "From dir is $(pwd)"
-cd android/chess_app
-display_color_msg ${YELLOW} "Current dir is $(pwd)"
+VERSION=$(get_version)
+display_color_msg ${YELLOW} "Version: ${VERSION}"
+RELEASE_TAG="AndroidRelease_${VERSION}"
 
-./build_android.sh
 
-cd ../..
+function compile_apk {
+	display_color_msg ${LIGHT_BLUE} "Preparing the APK for release..."
+	display_color_msg ${YELLOW} "From dir is $(pwd)"
+	cd android/chess_app
+	display_color_msg ${YELLOW} "Current dir is $(pwd)"
+	./build_android.sh
+	cd ../..
+}
+
+compile_apk
 
 # Check if the APK exists
 if [ ! -f "${APK_PATH}" ]; then
@@ -31,8 +46,12 @@ if [ ! -f "${APK_PATH}" ]; then
 fi
 
 # Create or update the release on GitHub
+# RELEASE_ID=$(curl -s -H "Authorization: token ${GITHUB_TOKEN}" \
+#     "https://api.github.com/repos/${REPO}/releases/tags/${RELEASE_TAG}" | jq -r '.id')
+
+# List all releases and filter by name, to update the release if it already exists
 RELEASE_ID=$(curl -s -H "Authorization: token ${GITHUB_TOKEN}" \
-    "https://api.github.com/repos/${REPO}/releases/tags/${RELEASE_TAG}" | jq -r '.id')
+    "https://api.github.com/repos/${REPO}/releases" | jq -r ".[] | select(.name == \"${RELEASE_NAME}\") | .id")
 
 if [ "${RELEASE_ID}" == "null" ]; then
     # Create a new release
