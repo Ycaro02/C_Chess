@@ -44,7 +44,7 @@ function update_release {
 
 	local release_id=$(get_release_by_name "${RELEASE_NAME}")
 
-	if [ "${release_id}" == "null" ]; then
+	if [ "${release_id}" == "" ]; then
 		# Create a new release
 		display_color_msg ${LIGHT_BLUE} "Creating a new release..."
 		RESPONSE=$(curl -s -X POST -H "Authorization: token ${GITHUB_TOKEN}" \
