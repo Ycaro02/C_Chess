@@ -9,143 +9,89 @@ source rsc/sh/color.sh
 REPO="Ycaro02/C_Chess"
 GITHUB_TOKEN=$(cat ~/.tok_C_chess)
 
-
-
-# Get the version from the version file
-# $1: version file path
-function get_version {
-	local version_file="${1}"
-	if [ ! -f "${version_file}" ]; then
-		display_color_msg ${RED} "Version file not found: ${version_file}"
-		exit 1
-	fi
-	echo $(grep -oP '(?<=#define CHESS_VERSION ")[^"]*' ${version_file})
-}
+source rsc/build_release/release_utils.sh
 
 # Compile the APK
+# $1: data path (APK path)
 function compile_apk {
+	local data_path="${1}"
 	display_color_msg ${LIGHT_BLUE} "Preparing the APK for release..."
 	display_color_msg ${YELLOW} "From dir is $(pwd)"
 	cd android/chess_app
 	display_color_msg ${YELLOW} "Current dir is $(pwd)"
 	./build_android.sh
 	cd ../..
+	# Check if the APK exists
+	if [ ! -f "${data_path}" ]; then
+		display_color_msg ${RED} "APK file not found: ${data_path}"
+		exit 1
+	fi
 }
 
-# List all releases and filter by name, to update the release if it already exists
-# $1: release names
-function get_release_by_name() {
-	local release_name="${1}"
-	local release_id=$(curl -s -H "Authorization: token ${GITHUB_TOKEN}" \
-		"https://api.github.com/repos/${REPO}/releases" | jq -r ".[] | select(.name == \"${release_name}\") | .id")
-	echo "${release_id}"
+# Compile the Unix version
+# $1 Tar file path 
+function compile_linux_version {
+	local tar_file="${1}"
+	display_color_msg ${LIGHT_BLUE} "Building Unix Release directory..."
+
+	# Build the game
+	make -s
+
+	mkdir -p linux_dir/rsc/lib/install/lib
+	cp -r rsc/font rsc/texture linux_dir/rsc
+	cp rsc/lib/install/lib/libSDL2* linux_dir/rsc/lib/install/lib
+	cp C_Chess chess_server linux_dir
+
+	display_color_msg ${LIGHT_BLUE} "Creating the tar.gz file from the build..."
+
+	tar -cvf ${tar_file} -C linux_dir .
+	display_color_msg ${GREEN} "Tar file created: ${tar_file}"
+	rm -rf linux_dir
+	if [ ! -f "${tar_file}" ]; then
+		display_color_msg ${RED} "Tar file not found: ${tar_file}"
+		exit 1
+	fi
+
 }
 
-# Get the last word of a string by a separator
-# $1: string
-# $2: separator
-function get_last_word_by_sep {
-	local string="${1}"
-	local separator="${2}"
-	echo $(echo "${string}" | rev | cut -d"${separator}" -f1 | rev)
+# Compile the Windows version
+# $1: zip file path
+function compile_window_version {
+	local zip_file="${1}"
+
+	local ino_out="Inno_out"
+
+	display_color_msg ${LIGHT_BLUE} "Building Windows Release directory..."
+
+	# Build the game
+	make -s -C windows
+
+	# Clean the release directory remove .o files
+	make -s -C windows clean
+
+	# wine "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /O"${INO_OUTPUT_DIR}" /F"Chess Install" windows/setup.iss > /dev/null 2>&1
+	wine "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /O"${ino_out}" /F"Chess Install" windows/setup.iss
+
+	mv "${ino_out}/Chess Install.exe" .
+
+	display_color_msg ${LIGHT_BLUE} "Creating the zip file from Chess Install.exe..."
+
+	zip -r ${zip_file} "Chess Install.exe" > /dev/null
+
+	display_color_msg ${GREEN} "Zip file created: ${zip_file}, clean ${ino_out} Chess Install.exe"
+	rm -rf ${ino_out} "Chess Install.exe"
 }
 
-# Create or update a release on GitHub, and upload the data file
+# Update the release
 # $1: release name
 # $2: release tag
-# $3: data file path
-function update_release {
-
+# $3: APK path
+# $4: Compile function
+function release_create {
 	local release_name="${1}"
-	local release_tag="${2}"
+	local start_tag="${2}"
 	local data_path="${3}"
-
-	local file_name=$(get_last_word_by_sep "${data_path}" "/")
-	display_color_msg ${YELLOW} "Uploading APK file: ${file_name} from ${data_path}"
-
-	local version=$(get_last_word_by_sep "${release_tag}" "_")
-	display_color_msg ${YELLOW} "Version: ${version} from release_tag ${release_tag}"
-
-	local release_id=$(get_release_by_name "${release_name}")
-
-
-
-	local response=""
-
-	if [ "${release_id}" == "" ]; then
-		# Create a new release
-		display_color_msg ${LIGHT_BLUE} "Creating a new release..."
-		response=$(curl -s -X POST -H "Authorization: token ${GITHUB_TOKEN}" \
-			-H "Content-Type: application/json" \
-			-d "{\"tag_name\": \"${release_tag}\", \"name\": \"${release_name}\", \"body\": \"Release of ${release_name}: Version ${version}\", \"draft\": false, \"prerelease\": false}" \
-			"https://api.github.com/repos/${REPO}/releases")
-		release_id=$(echo "${response}" | jq -r '.id')
-	else
-		# Update the existing release
-		display_color_msg ${LIGHT_BLUE} "Updating the existing release : ID: ${release_id}, TAG: ${release_tag}"
-		response=$(curl -s -X PATCH -H "Authorization: token ${GITHUB_TOKEN}" \
-			-H "Content-Type: application/json" \
-			-d "{\"tag_name\": \"${release_tag}\", \"name\": \"${release_name}\", \"body\": \"Updated release of ${release_name}: Version ${version}\", \"draft\": false, \"prerelease\": false}" \
-			"https://api.github.com/repos/${REPO}/releases/${release_id}")
-	fi
-
-	# Get the asset ID of the existing APK file
-	ASSET_ID=$(curl -s -H "Authorization: token ${GITHUB_TOKEN}" \
-		"https://api.github.com/repos/${REPO}/releases/${release_id}/assets" | jq -r ".[] | select(.name == \"${file_name}\") | .id")
-
-	# Delete the existing APK file if it exists
-	if [ "${ASSET_ID}" != "" ]; then
-		display_color_msg ${LIGHT_BLUE} "Deleting the existing asset with ID: ${ASSET_ID}"
-		curl -s -X DELETE -H "Authorization: token ${GITHUB_TOKEN}" \
-			"https://api.github.com/repos/${REPO}/releases/assets/${ASSET_ID}"
-	fi
-
-	# Upload the new APK file to the release
-	display_color_msg ${LIGHT_BLUE} "Uploading the new APK file..."
-	curl -s -X POST -H "Authorization: token ${GITHUB_TOKEN}" \
-		-H "Content-Type: application/vnd.android.package-archive" \
-		--data-binary @"${data_path}" \
-		"https://uploads.github.com/repos/${REPO}/releases/${release_id}/assets?name=${file_name}"
-
-	display_color_msg ${GREEN} "\nAndroid release APK uploaded to GitHub!"
-
-}
-
-# Remove the old release tags
-# $1: tag name
-function remove_old_release_tags {
-	local tag_name="${1}"
-	# List all tags and delete those starting with ${tag_name}
-	TAGS=$(curl -s -H "Authorization: token ${GITHUB_TOKEN}" \
-		"https://api.github.com/repos/${REPO}/git/refs/tags")
-
-	ALL_TAGS=$(echo "${TAGS}" | jq -r ".[] | select(.ref | startswith(\"refs/tags/${tag_name}\")) | .ref")
-
-	for TAG_NAME in ${ALL_TAGS}; do
-		display_color_msg ${LIGHT_BLUE} "Deleting tag: ${TAG_NAME}"
-		curl -s -X DELETE -H "Authorization: token ${GITHUB_TOKEN}" \
-			"https://api.github.com/repos/${REPO}/git/${TAG_NAME}"
-	done
-}
-
-# Remove the old release by name
-# $1: release name
-function remove_old_release_name {
-	local release_name="${1}"
-	local release_id=$(get_release_by_name "${release_name}")
-
-	if [ "${release_id}" != "" ]; then
-		display_color_msg ${LIGHT_BLUE} "Deleting the existing release with ID: ${release_id}"
-		curl -s -X DELETE -H "Authorization: token ${GITHUB_TOKEN}" \
-			"https://api.github.com/repos/${REPO}/releases/${release_id}"
-	fi
-}
-
-
-function android_update_release {
-	local release_name="C_Chess_Android"
-	local start_tag="AndroidRelease_"
-	local apk_path="android/chess_app/apk_release/chess_app.apk"
+	local compile_func="${4}"
 
 
 	local version=$(get_version "rsc/version/version.h")
@@ -153,19 +99,22 @@ function android_update_release {
 	local release_tag="${start_tag}${version}"
 
 
-	compile_apk
-
-	# Check if the APK exists
-	if [ ! -f "${apk_path}" ]; then
-		display_color_msg ${RED} "APK file not found: ${apk_path}"
-		exit 1
-	fi
+	# compile_apk
+	${compile_func} ${data_path}
 
 	remove_old_release_tags ${start_tag}
 	remove_old_release_name ${release_name}
 
-	update_release ${release_name} ${release_tag} ${apk_path}
+	update_release ${release_name} ${release_tag} ${data_path}
+
+	if [ "${release_name}" != "C_Chess_Android" ]; then
+		# Clean up the tar.gz file
+		rm -rf ${data_path}
+		make fclean
+		display_color_msg ${YELLOW} "\nRemoved ${data_path}!" 
+	fi
 }
 
-android_update_release
-
+release_create "C_Chess_Android" "AndroidRelease_" "android/chess_app/apk_release/chess_app.apk" "compile_apk"
+release_create "C_Chess_Win" "WindowsRelease_" "C_Chess_Win.zip" "compile_window_version"
+release_create "C_Chess_Linux" "LinuxRelease_" "C_Chess.tar.gz" "compile_linux_version"
