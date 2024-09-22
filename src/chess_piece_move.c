@@ -171,7 +171,8 @@ Bitboard get_bishop_moves(ChessBoard *b, Bitboard bishop, ChessPiece type, s8 is
 			if (occupied_tile == ALLY_TILE) { break ; }
 
 			/* Check if is a legal move */
-			if (check_legal && verify_legal_move(b, type, bishop, move, is_black) == FALSE) { continue ; }
+			// if (check_legal && verify_legal_move(b, type, bishop, move, is_black) == FALSE) { continue ; }
+			if (check_legal && verify_legal_move(b, type, bishop, move, is_black) == FALSE) { break ; }
 
             /* Add the move to the attacks */
             attacks |= move;
@@ -216,13 +217,15 @@ Bitboard get_rook_moves(ChessBoard *b, Bitboard rook, ChessPiece type, s8 is_bla
 			if (occupied_tile == ALLY_TILE) { break ; }
 
 			/* Check if is a legal move */
-			if (check_legal && verify_legal_move(b, type, rook, move, is_black) == FALSE) { continue ; }
+			// if (check_legal && verify_legal_move(b, type, rook, move, is_black) == FALSE) { continue ; }
+			if (check_legal && verify_legal_move(b, type, rook, move, is_black) == FALSE) { break ; }
 
 			/* Add the move to the attacks */
 			attacks |= move;
 
 			/* If the move is blocked by an enemy piece, stop the travel in this direction */
 			if (occupied_tile == ENEMY_TILE) { break ; }
+
 		}
 	}
 	return (attacks);
