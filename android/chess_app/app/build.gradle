@@ -35,7 +35,7 @@ android {
         targetSdkVersion 34
         versionCode 1
         versionName getVersionFromHeader()
-		// buildConfigField "String", "VERSION_NAME", versionName
+        // versionName "1.0.32"
         externalNativeBuild {
             ndkBuild {
                 arguments "APP_PLATFORM=android-21"

@@ -53,6 +53,8 @@ import android.widget.Toast;
 // Asset manager for rsc
 import android.content.res.AssetManager;
 
+// import manifest
+import android.Manifest;
 
 // download manager
 import android.app.DownloadManager;
@@ -108,12 +110,28 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
 
 	// Versionning for update
 
+	// private static final int REQUEST_CODE_PERMISSIONS = 1001;
+
+	// private void checkPermissions() {
+	// 	Log.v(TAG, "Chess: Entering checkPermissions");
+	// 	if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+	// 		try {
+	// 			requestPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE, REQUEST_CODE_PERMISSIONS);
+	// 			requestPermission(Manifest.permission.READ_EXTERNAL_STORAGE, REQUEST_CODE_PERMISSIONS);
+	// 		} catch (Exception e) {
+	// 			Log.e(TAG, "Chess: Exception in checkPermissions" + e.getMessage());
+	// 		}
+	// 	}
+	// 	Log.v(TAG, "Chess: Exiting checkPermissions");
+	// }
+
 	private void checkForUpdate() {
 		OkHttpClient client = new OkHttpClient();
 		Request request = new Request.Builder().url(githubApiUrl).build();
 
-		Log.v(TAG, "Chess: Checking for update, current version: " + currentVersion);
-		Log.v(TAG, "Chess: Checking for update, url: " + githubApiUrl);
+		Log.v(TAG, "Chess: Checking for update, current version: " + currentVersion + ", url: " + githubApiUrl);
+
+		// checkPermissions();
 
 		new Thread(new Runnable() {
 			@Override
@@ -152,7 +170,7 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
 	private void showUpdateDialog(String apkUrl) {
     new AlertDialog.Builder(this)
         .setTitle("Update Available")
-        .setMessage("A new version of Chess is available. Do you want to download and install it?")
+        .setMessage("A new version of Chess is available. Do you want to download it?")
         .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -184,19 +202,24 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
 				.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "Chess_update.apk")
 				.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
 
-		DownloadManager downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-		long downloadId = downloadManager.enqueue(request);
 
-		BroadcastReceiver onComplete = new BroadcastReceiver() {
-			@Override
-			public void onReceive(Context context, Intent intent) {
-				Uri uri = downloadManager.getUriForDownloadedFile(downloadId);
-				showInstallDialog(uri);
-				unregisterReceiver(this);
-			}
-		};
-
-		registerReceiver(onComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+		Log.v(TAG, "Chess: Downloading apk from " + apkUrl);
+		try {
+			DownloadManager downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+			long downloadId = downloadManager.enqueue(request);
+			BroadcastReceiver onComplete = new BroadcastReceiver() {
+				@Override
+				public void onReceive(Context context, Intent intent) {
+					Uri uri = downloadManager.getUriForDownloadedFile(downloadId);
+					showInstallDialog(uri);
+					unregisterReceiver(this);
+				}
+			};
+			registerReceiver(onComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE), Context.RECEIVER_NOT_EXPORTED);
+			// registerReceiver(onComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+		} catch (Exception e) {
+			Log.e(TAG, "Chess: Exception in downloadAndInstallApk" + e.getMessage());
+		}
 	}
 
 	private void installApk(Uri uri) {
@@ -467,9 +490,6 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
         Log.v(TAG, "onCreate()");
         super.onCreate(savedInstanceState);
 
-		// Check for update release available on github
-		checkForUpdate();
-
         try {
             Thread.currentThread().setName("SDLActivity");
         } catch (Exception e) {
@@ -503,6 +523,7 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
 		Log.v(TAG, "nativeInit() Begin");
         nativeInit(assetManager);
 		Log.v(TAG, "nativeInit() Asset Manager done");
+
 
         if (!mBrokenLibraries) {
             String expected_version = String.valueOf(SDL_MAJOR_VERSION) + "." +
@@ -647,7 +668,7 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
 		// My own on resume reinit the game
 		if (!is_first_init) {
 			SDLActivity.chessOnResume();
-		} 
+		}
 		is_first_init = false;
     }
 
@@ -667,6 +688,7 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
         if (mHasMultiWindow) {
             resumeNativeThread();
         }
+		// checkForUpdate();
     }
 
     public static int getCurrentOrientation() {
