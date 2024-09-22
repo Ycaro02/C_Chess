@@ -7,7 +7,6 @@ source rsc/sh/color.sh
 
 # Variables
 REPO="Ycaro02/C_Chess"
-# RELEASE_TAG="AndroidRelease"
 RELEASE_NAME="C_Chess_Android"
 GITHUB_TOKEN=$(cat ~/.tok_C_chess)
 APK_PATH="android/chess_app/apk_release/chess_app.apk"
@@ -43,28 +42,28 @@ function get_release_by_name() {
 
 function update_release {
 
-	RELEASE_ID=$(get_release_by_name "${RELEASE_NAME}")
+	local release_id=$(get_release_by_name "${RELEASE_NAME}")
 
-	if [ "${RELEASE_ID}" == "null" ]; then
+	if [ "${release_id}" == "null" ]; then
 		# Create a new release
 		display_color_msg ${LIGHT_BLUE} "Creating a new release..."
 		RESPONSE=$(curl -s -X POST -H "Authorization: token ${GITHUB_TOKEN}" \
 			-H "Content-Type: application/json" \
 			-d "{\"tag_name\": \"${RELEASE_TAG}\", \"name\": \"${RELEASE_NAME}\", \"body\": \"Release of ${RELEASE_NAME}\", \"draft\": false, \"prerelease\": false}" \
 			"https://api.github.com/repos/${REPO}/releases")
-		RELEASE_ID=$(echo "${RESPONSE}" | jq -r '.id')
+		release_id=$(echo "${RESPONSE}" | jq -r '.id')
 	else
 		# Update the existing release
-		display_color_msg ${LIGHT_BLUE} "Updating the existing release : ID: ${RELEASE_ID}, TAG: ${RELEASE_TAG}"
+		display_color_msg ${LIGHT_BLUE} "Updating the existing release : ID: ${release_id}, TAG: ${RELEASE_TAG}"
 		RESPONSE=$(curl -s -X PATCH -H "Authorization: token ${GITHUB_TOKEN}" \
 			-H "Content-Type: application/json" \
 			-d "{\"tag_name\": \"${RELEASE_TAG}\", \"name\": \"$RELEASE_NAME\", \"body\": \"Updated release of ${RELEASE_NAME}: Version ${VERSION}\", \"draft\": false, \"prerelease\": false}" \
-			"https://api.github.com/repos/${REPO}/releases/${RELEASE_ID}")
+			"https://api.github.com/repos/${REPO}/releases/${release_id}")
 	fi
 
 	# Get the asset ID of the existing APK file
 	ASSET_ID=$(curl -s -H "Authorization: token ${GITHUB_TOKEN}" \
-		"https://api.github.com/repos/${REPO}/releases/${RELEASE_ID}/assets" | jq -r ".[] | select(.name == \"${APK_NAME}\") | .id")
+		"https://api.github.com/repos/${REPO}/releases/${release_id}/assets" | jq -r ".[] | select(.name == \"${APK_NAME}\") | .id")
 
 	# Delete the existing APK file if it exists
 	if [ "${ASSET_ID}" != "" ]; then
@@ -78,15 +77,31 @@ function update_release {
 	curl -s -X POST -H "Authorization: token ${GITHUB_TOKEN}" \
 		-H "Content-Type: application/vnd.android.package-archive" \
 		--data-binary @"${APK_PATH}" \
-		"https://uploads.github.com/repos/${REPO}/releases/${RELEASE_ID}/assets?name=${APK_NAME}"
+		"https://uploads.github.com/repos/${REPO}/releases/${release_id}/assets?name=${APK_NAME}"
 
 	display_color_msg ${GREEN} "\nAndroid release APK uploaded to GitHub!"
 
 }
 
+function remove_old_release_tags {
+	local tag_name="${1}"
+	# List all tags and delete those starting with ${tag_name}
+	TAGS=$(curl -s -H "Authorization: token ${GITHUB_TOKEN}" \
+		"https://api.github.com/repos/${REPO}/git/refs/tags")
+
+	ALL_TAGS=$(echo "${TAGS}" | jq -r ".[] | select(.ref | startswith(\"refs/tags/${tag_name}\")) | .ref")
+
+	for TAG_NAME in ${ALL_TAGS}; do
+		display_color_msg ${LIGHT_BLUE} "Deleting tag: ${TAG_NAME}"
+		curl -s -X DELETE -H "Authorization: token ${GITHUB_TOKEN}" \
+			"https://api.github.com/repos/${REPO}/git/${TAG_NAME}"
+	done
+}
+
 VERSION=$(get_version)
 display_color_msg ${YELLOW} "Version: ${VERSION}"
 RELEASE_TAG="AndroidRelease_${VERSION}"
+
 
 compile_apk
 
@@ -96,5 +111,6 @@ if [ ! -f "${APK_PATH}" ]; then
     exit 1
 fi
 
+remove_old_release_tags "AndroidRelease_"
 
 update_release
