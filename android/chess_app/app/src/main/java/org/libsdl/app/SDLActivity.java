@@ -52,8 +52,29 @@ import android.widget.Toast;
 
 // Asset manager for rsc
 import android.content.res.AssetManager;
-// handle input method
-import android.view.inputmethod.InputMethodManager;
+
+
+// download manager
+import android.app.DownloadManager;
+import android.content.BroadcastReceiver;
+import android.content.IntentFilter;
+import android.os.Environment;
+import android.net.Uri;
+// import android.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatActivity;
+// http request
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+
+
+// json	parser
+import org.json.JSONArray;
+import org.json.JSONObject;
+import java.io.IOException;
+
+// import buildConfig 
+import org.libsdl.app.BuildConfig;
 
 
 import java.util.Hashtable;
@@ -69,6 +90,8 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
     private static final int SDL_MICRO_VERSION = 5;
 
 	private static boolean is_first_init = true;
+ 	private String currentVersion = BuildConfig.VERSION_NAME;
+    private String githubApiUrl = "https://api.github.com/repos/Ycaro02/C_Chess/releases/latest";
 
 
 	public static void showKeyboard() {
@@ -82,6 +105,78 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
         InputMethodManager imm = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(activity.getWindow().getDecorView().getWindowToken(), 0);
     }
+
+	// Versionning for update
+
+	private void checkForUpdate() {
+		OkHttpClient client = new OkHttpClient();
+		Request request = new Request.Builder().url(githubApiUrl).build();
+
+		Log.v(TAG, "Chess: Checking for update, current version: " + currentVersion);
+		Log.v(TAG, "Chess: Checking for update, url: " + githubApiUrl);
+
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				try (Response response = client.newCall(request).execute()) {
+					if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+
+					String responseData = response.body().string();
+					JSONObject json = new JSONObject(responseData);
+					String latestVersion = json.getString("tag_name").split("_")[1];
+					JSONArray assets = json.getJSONArray("assets");
+					String apkUrl = assets.getJSONObject(0).getString("browser_download_url");
+
+					Log.v(TAG, "Chess: Checking for update, latest version: " + latestVersion);
+
+					if (isNewVersionAvailable(currentVersion, latestVersion)) {
+						runOnUiThread(new Runnable() {
+							@Override
+							public void run() {
+								downloadAndInstallApk(apkUrl);
+							}
+						});
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}).start();
+	}
+
+	private boolean isNewVersionAvailable(String currentVersion, String latestVersion) {
+		return !currentVersion.equals(latestVersion);
+	}
+
+	private void downloadAndInstallApk(String apkUrl) {
+		DownloadManager.Request request = new DownloadManager.Request(Uri.parse(apkUrl))
+				.setTitle("Downloading update")
+				.setDescription("Downloading the latest version of the app")
+				.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "update.apk")
+				.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+
+		DownloadManager downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+		long downloadId = downloadManager.enqueue(request);
+
+		BroadcastReceiver onComplete = new BroadcastReceiver() {
+			@Override
+			public void onReceive(Context context, Intent intent) {
+				Uri uri = downloadManager.getUriForDownloadedFile(downloadId);
+				installApk(uri);
+				unregisterReceiver(this);
+			}
+		};
+
+		registerReceiver(onComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+	}
+
+	private void installApk(Uri uri) {
+		Intent intent = new Intent(Intent.ACTION_VIEW);
+		intent.setDataAndType(uri, "application/vnd.android.package-archive");
+		intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+		startActivity(intent);
+	}
+
 /*
     // Display InputType.SOURCE/CLASS of events and devices
     //
@@ -342,6 +437,8 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
         Log.v(TAG, "Model: " + Build.MODEL);
         Log.v(TAG, "onCreate()");
         super.onCreate(savedInstanceState);
+
+		// checkForUpdate();
 
         try {
             Thread.currentThread().setName("SDLActivity");
