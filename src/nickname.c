@@ -3,13 +3,27 @@
 #include "../include/network.h"
 
 /** File data format:
- * keyword: Nickanme,		max_size: 8, 	idx: 0
+ * keyword: Nickame,		max_size: 8, 	idx: 0
  * keyword: Server,			max_size: 15,	idx: 1
  * keyword: NetworkPause,	max_size: 1,	idx: 2
  */
 
+typedef struct s_file_data {
+	char	*keyword;
+	s32		data_size;
+	u32		line_idx;
+} FileData;
+
+#define FILE_DATA_ARRAY { \
+	{"Nickname", 8, 0}, \
+	{"Server", 15, 1}, \
+	{"NetworkPause", 1, 2}, \
+	} \
+
+
 char *get_file_data(char *path, char *keyword, u32 line_idx, int max_size) {
-	    char		*data = NULL, *data_file = NULL, **split_file_line = NULL, **split_line = NULL;
+	// static const FileData file_data[] = FILE_DATA_ARRAY;
+	char		*data = NULL, *data_file = NULL, **split_file_line = NULL, **split_line = NULL;
     SDL_RWops	*rw = NULL;
     s64 		size = 0;
 

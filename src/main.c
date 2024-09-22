@@ -150,7 +150,6 @@ SDLHandle *get_SDL_handle() {
 	}
 
 	JNIEXPORT void JNICALL Java_org_libsdl_app_SDLActivity_chessOnResume(JNIEnv* env, jobject obj) {
-		SDLHandle *h = get_SDL_handle();
 		CHESS_LOG(LOG_INFO, "Call chessOnResume()\n");
 		chess_start_program();
 	}
@@ -162,7 +161,10 @@ void chess_game(SDLHandle *h) {
 	struct timeval	timeout = {0, 10000}; /* 10000 microseconds = 0.01 seconds */
 	
 	INIT_SIGNAL_HANDLER(chess_signal_handler);
-	// update_graphic_board(h);
+
+	/* Set local info and local chess routine func */
+	set_local_info(h);
+	h->routine_func = local_chess_routine;
 
 	if (has_flag(h->flag, FLAG_NETWORK)) {
 		CHESS_LOG(LOG_INFO, ORANGE"Try to connect to Server at : %s:%d\n"RESET, h->player_info.dest_ip, SERVER_PORT);
@@ -174,14 +176,11 @@ void chess_game(SDLHandle *h) {
 		
 		
 		/* Wait for player */
-		if (!wait_player_handling(h)) {
-			return ;
+		if (wait_player_handling(h)) {
+			start_network_game(h);
 		}
-		start_network_game(h);
-	} else {
-		set_local_info(h);
-		h->routine_func = local_chess_routine;
-	}
+
+	} 
 
 	while (1) {
 		h->routine_func();
@@ -191,6 +190,8 @@ void chess_game(SDLHandle *h) {
 }
 
 void update_data_from_file(SDLHandle *h) {
+	
+	/* handle nickname */
 	char *nickname = get_file_data(DATA_SAVE_FILE, "Nickname", 0, 8);
 	if (nickname) {
 		h->player_info.name = nickname;
@@ -198,18 +199,23 @@ void update_data_from_file(SDLHandle *h) {
 		h->player_info.name = ft_strdup("Default");
 	}
 	if (h->menu.profile->tf[PFT_NAME]->text) {
+		fast_bzero(h->menu.profile->tf[PFT_NAME]->text, NICKNAME_MAX_LEN);
 		ft_memcpy(h->menu.profile->tf[PFT_NAME]->text, h->player_info.name, fast_strlen(h->player_info.name));
 	}
+
+	/* handle server ip */
 	char *ip = get_file_data(DATA_SAVE_FILE, "Server", 1, 15);
 	if (ip) {
 		CHESS_LOG(LOG_INFO, "Get In File Server IP: %s\n", ip);
 		h->player_info.dest_ip = ip;
 		if (h->menu.ip_field->text) {
+			fast_bzero(h->menu.profile->tf[PFT_NAME]->text, IP_INPUT_SIZE);
 			ft_memcpy(h->menu.ip_field->text, h->player_info.dest_ip, fast_strlen(h->player_info.dest_ip));
 		}
 	} else {
 		h->player_info.dest_ip = ft_strdup("127.0.0.1");
 	}
+	/* handle auto reconnect */
 	char *network_pause = get_file_data(DATA_SAVE_FILE, "NetworkPause", 2, 2);
 	if (network_pause && network_pause[0] == '1') {
 		CHESS_LOG(LOG_INFO, CYAN"NetworkPause: %s\n"RESET, network_pause);
