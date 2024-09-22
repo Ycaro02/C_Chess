@@ -104,7 +104,7 @@ function remove_old_release_tags {
 	ALL_TAGS=$(echo "${TAGS}" | jq -r ".[] | select(.ref | startswith(\"refs/tags/${tag_name}\")) | .ref")
 
 	for TAG_NAME in ${ALL_TAGS}; do
-		display_color_msg ${LIGHT_BLUE} "Deleting tag: ${TAG_NAME}"
+		display_color_msg ${RED} "Deleting tag: ${TAG_NAME}"
 		curl -s -X DELETE -H "Authorization: token ${GITHUB_TOKEN}" \
 			"https://api.github.com/repos/${REPO}/git/${TAG_NAME}"
 	done
@@ -116,9 +116,9 @@ function remove_old_release_name {
 	local release_name="${1}"
 	local release_id=$(get_release_by_name "${release_name}")
 
-	if [ "${release_id}" != "" ]; then
-		display_color_msg ${LIGHT_BLUE} "Deleting the existing release with ID: ${release_id}"
+	for id in ${release_id}; do
+		display_color_msg ${RED} "Deleting the existing release with ID: ${id}"
 		curl -s -X DELETE -H "Authorization: token ${GITHUB_TOKEN}" \
-			"https://api.github.com/repos/${REPO}/releases/${release_id}"
-	fi
+			"https://api.github.com/repos/${REPO}/releases/${id}"
+	done
 }

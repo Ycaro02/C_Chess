@@ -99,8 +99,8 @@ function release_create {
 	# compile_apk
 	${compile_func} ${data_path}
 
-	remove_old_release_tags ${start_tag}
 	remove_old_release_name ${release_name}
+	remove_old_release_tags ${start_tag}
 
 	update_release ${release_name} ${release_tag} ${data_path}
 
@@ -116,7 +116,6 @@ function release_create {
 display_color_msg ${YELLOW} "Updating the Android release..."
 release_create "C_Chess_Android" "AndroidRelease_" "android/chess_app/apk_release/chess_app.apk" "compile_apk"
 display_color_msg ${GREEN} "Android release updated!"
-
 
 display_color_msg ${YELLOW} "Updating the Windows release ..."
 release_create "C_Chess_Win" "WindowsRelease_" "C_Chess_Win.zip" "compile_window_version"
