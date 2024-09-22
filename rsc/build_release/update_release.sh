@@ -8,7 +8,7 @@ source rsc/sh/color.sh
 # Global Variables
 REPO="Ycaro02/C_Chess"
 GITHUB_TOKEN=$(cat ~/.tok_C_chess)
-RELEASE_LOG_FILE="rsc/log/release_log.txt"
+# RELEASE_LOG_FILE="rsc/log/release_log.txt"
 
 source rsc/build_release/release_utils.sh
 
@@ -114,14 +114,14 @@ function release_create {
 
 
 display_color_msg ${YELLOW} "Updating the Android release..."
-release_create "C_Chess_Android" "AndroidRelease_" "android/chess_app/apk_release/chess_app.apk" "compile_apk" > ${RELEASE_LOG_FILE} 2>&1
+release_create "C_Chess_Android" "AndroidRelease_" "android/chess_app/apk_release/chess_app.apk" "compile_apk"
 display_color_msg ${GREEN} "Android release updated!"
 
 
 display_color_msg ${YELLOW} "Updating the Windows release ..."
-release_create "C_Chess_Win" "WindowsRelease_" "C_Chess_Win.zip" "compile_window_version" > ${RELEASE_LOG_FILE} 2>&1
+release_create "C_Chess_Win" "WindowsRelease_" "C_Chess_Win.zip" "compile_window_version"
 display_color_msg ${GREEN} "Windows release updated!"
 
 display_color_msg ${YELLOW} "Updating the Linux release ..."
-release_create "C_Chess_Linux" "LinuxRelease_" "C_Chess.tar.gz" "compile_linux_version" > ${RELEASE_LOG_FILE} 2>&1
+release_create "C_Chess_Linux" "LinuxRelease_" "C_Chess.tar.gz" "compile_linux_version"
 display_color_msg ${GREEN} "Linux release updated!"
