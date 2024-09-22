@@ -13,7 +13,7 @@ GITHUB_TOKEN=$(cat ~/.tok_C_chess)
 APK_PATH="android/chess_app/apk_release/chess_app.apk"
 APK_NAME="chess_app.apk"
 
-
+# Get the version from the version file
 function get_version {
 	local version_file="rsc/version/version.h"
 	if [ ! -f "${version_file}" ]; then
@@ -23,11 +23,7 @@ function get_version {
 	echo $(grep -oP '(?<=#define CHESS_VERSION ")[^"]*' ${version_file})
 }
 
-VERSION=$(get_version)
-display_color_msg ${YELLOW} "Version: ${VERSION}"
-RELEASE_TAG="AndroidRelease_${VERSION}"
-
-
+# Compile the APK
 function compile_apk {
 	display_color_msg ${LIGHT_BLUE} "Preparing the APK for release..."
 	display_color_msg ${YELLOW} "From dir is $(pwd)"
@@ -37,6 +33,61 @@ function compile_apk {
 	cd ../..
 }
 
+# List all releases and filter by name, to update the release if it already exists
+function get_release_by_name() {
+	local release_name="${1}"
+	local release_id=$(curl -s -H "Authorization: token ${GITHUB_TOKEN}" \
+		"https://api.github.com/repos/${REPO}/releases" | jq -r ".[] | select(.name == \"${release_name}\") | .id")
+	echo "${release_id}"
+}
+
+function update_release {
+
+	RELEASE_ID=$(get_release_by_name "${RELEASE_NAME}")
+
+	if [ "${RELEASE_ID}" == "null" ]; then
+		# Create a new release
+		display_color_msg ${LIGHT_BLUE} "Creating a new release..."
+		RESPONSE=$(curl -s -X POST -H "Authorization: token ${GITHUB_TOKEN}" \
+			-H "Content-Type: application/json" \
+			-d "{\"tag_name\": \"${RELEASE_TAG}\", \"name\": \"${RELEASE_NAME}\", \"body\": \"Release of ${RELEASE_NAME}\", \"draft\": false, \"prerelease\": false}" \
+			"https://api.github.com/repos/${REPO}/releases")
+		RELEASE_ID=$(echo "${RESPONSE}" | jq -r '.id')
+	else
+		# Update the existing release
+		display_color_msg ${LIGHT_BLUE} "Updating the existing release : ID: ${RELEASE_ID}, TAG: ${RELEASE_TAG}"
+		RESPONSE=$(curl -s -X PATCH -H "Authorization: token ${GITHUB_TOKEN}" \
+			-H "Content-Type: application/json" \
+			-d "{\"tag_name\": \"${RELEASE_TAG}\", \"name\": \"$RELEASE_NAME\", \"body\": \"Updated release of ${RELEASE_NAME}: Version ${VERSION}\", \"draft\": false, \"prerelease\": false}" \
+			"https://api.github.com/repos/${REPO}/releases/${RELEASE_ID}")
+	fi
+
+	# Get the asset ID of the existing APK file
+	ASSET_ID=$(curl -s -H "Authorization: token ${GITHUB_TOKEN}" \
+		"https://api.github.com/repos/${REPO}/releases/${RELEASE_ID}/assets" | jq -r ".[] | select(.name == \"${APK_NAME}\") | .id")
+
+	# Delete the existing APK file if it exists
+	if [ "${ASSET_ID}" != "" ]; then
+		display_color_msg ${LIGHT_BLUE} "Deleting the existing asset with ID: ${ASSET_ID}"
+		curl -s -X DELETE -H "Authorization: token ${GITHUB_TOKEN}" \
+			"https://api.github.com/repos/${REPO}/releases/assets/${ASSET_ID}"
+	fi
+
+	# Upload the new APK file to the release
+	display_color_msg ${LIGHT_BLUE} "Uploading the new APK file..."
+	curl -s -X POST -H "Authorization: token ${GITHUB_TOKEN}" \
+		-H "Content-Type: application/vnd.android.package-archive" \
+		--data-binary @"${APK_PATH}" \
+		"https://uploads.github.com/repos/${REPO}/releases/${RELEASE_ID}/assets?name=${APK_NAME}"
+
+	display_color_msg ${GREEN} "\nAndroid release APK uploaded to GitHub!"
+
+}
+
+VERSION=$(get_version)
+display_color_msg ${YELLOW} "Version: ${VERSION}"
+RELEASE_TAG="AndroidRelease_${VERSION}"
+
 compile_apk
 
 # Check if the APK exists
@@ -45,48 +96,5 @@ if [ ! -f "${APK_PATH}" ]; then
     exit 1
 fi
 
-# Create or update the release on GitHub
-# RELEASE_ID=$(curl -s -H "Authorization: token ${GITHUB_TOKEN}" \
-#     "https://api.github.com/repos/${REPO}/releases/tags/${RELEASE_TAG}" | jq -r '.id')
 
-# List all releases and filter by name, to update the release if it already exists
-RELEASE_ID=$(curl -s -H "Authorization: token ${GITHUB_TOKEN}" \
-    "https://api.github.com/repos/${REPO}/releases" | jq -r ".[] | select(.name == \"${RELEASE_NAME}\") | .id")
-
-if [ "${RELEASE_ID}" == "null" ]; then
-    # Create a new release
-    display_color_msg ${LIGHT_BLUE} "Creating a new release..."
-    RESPONSE=$(curl -s -X POST -H "Authorization: token ${GITHUB_TOKEN}" \
-        -H "Content-Type: application/json" \
-        -d "{\"tag_name\": \"${RELEASE_TAG}\", \"name\": \"${RELEASE_NAME}\", \"body\": \"Release of ${RELEASE_NAME}\", \"draft\": false, \"prerelease\": false}" \
-        "https://api.github.com/repos/${REPO}/releases")
-    RELEASE_ID=$(echo "${RESPONSE}" | jq -r '.id')
-else
-    # Update the existing release
-    display_color_msg ${LIGHT_BLUE} "Updating the existing release : ID: ${RELEASE_ID}, TAG: ${RELEASE_TAG}"
-    RESPONSE=$(curl -s -X PATCH -H "Authorization: token ${GITHUB_TOKEN}" \
-        -H "Content-Type: application/json" \
-        -d "{\"tag_name\": \"${RELEASE_TAG}\", \"name\": \"$RELEASE_NAME\", \"body\": \"Updated release of ${RELEASE_NAME}\", \"draft\": false, \"prerelease\": false}" \
-        "https://api.github.com/repos/${REPO}/releases/${RELEASE_ID}")
-fi
-
-# Get the asset ID of the existing APK file
-ASSET_ID=$(curl -s -H "Authorization: token ${GITHUB_TOKEN}" \
-    "https://api.github.com/repos/${REPO}/releases/${RELEASE_ID}/assets" | jq -r ".[] | select(.name == \"${APK_NAME}\") | .id")
-
-# Delete the existing APK file if it exists
-if [ "${ASSET_ID}" != "" ]; then
-    display_color_msg ${LIGHT_BLUE} "Deleting the existing asset with ID: ${ASSET_ID}"
-    curl -s -X DELETE -H "Authorization: token ${GITHUB_TOKEN}" \
-        "https://api.github.com/repos/${REPO}/releases/assets/${ASSET_ID}"
-fi
-
-# Upload the new APK file to the release
-display_color_msg ${LIGHT_BLUE} "Uploading the new APK file..."
-curl -s -X POST -H "Authorization: token ${GITHUB_TOKEN}" \
-    -H "Content-Type: application/vnd.android.package-archive" \
-    --data-binary @"${APK_PATH}" \
-    "https://uploads.github.com/repos/${REPO}/releases/${RELEASE_ID}/assets?name=${APK_NAME}"
-
-display_color_msg ${GREEN} "\nAndroid release APK uploaded to GitHub!"
-
+update_release
