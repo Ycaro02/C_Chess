@@ -252,7 +252,7 @@ s8 chess_msg_send(NetworkInfo *info, char *msg, u16 msg_len) {
 			buffer[rcv_len] = '\0';
 			if (check_magic_value(buffer) == TRUE && ft_memcmp(buffer + MAGIC_SIZE, ACK_STR, 3) == 0) {
 				if (*(u16 *)&buffer[MAGIC_SIZE + ACK_LEN] == message_id) {
-					CHESS_LOG(LOG_INFO, CYAN"ACK rcv ID: [%u]: "YELLOW"[%llu] ms\n"RESET, *(u16 *)&buffer[MAGIC_SIZE + ACK_LEN], tick_receive - tick_send);
+					CHESS_LOG(LOG_INFO, CYAN"ACK rcv ID: [%u]: "YELLOW"[%lu] ms\n"RESET, *(u16 *)&buffer[MAGIC_SIZE + ACK_LEN], tick_receive - tick_send);
 					ack_received = 1;
 					break ;
 				} 
