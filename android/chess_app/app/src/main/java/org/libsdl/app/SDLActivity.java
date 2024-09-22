@@ -133,7 +133,8 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
 						runOnUiThread(new Runnable() {
 							@Override
 							public void run() {
-								downloadAndInstallApk(apkUrl);
+								// downloadAndInstallApk(apkUrl);
+								showUpdateDialog(apkUrl);
 							}
 						});
 					}
@@ -148,11 +149,39 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
 		return !currentVersion.equals(latestVersion);
 	}
 
+	private void showUpdateDialog(String apkUrl) {
+    new AlertDialog.Builder(this)
+        .setTitle("Update Available")
+        .setMessage("A new version of Chess is available. Do you want to download and install it?")
+        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                downloadAndInstallApk(apkUrl);
+            }
+        })
+        .setNegativeButton("No", null)
+        .show();
+	}
+
+	private void showInstallDialog(Uri uri) {
+		new AlertDialog.Builder(this)
+			.setTitle("Install Update")
+			.setMessage("The update has been downloaded. Do you want to install it now?")
+			.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					installApk(uri);
+				}
+			})
+			.setNegativeButton("No", null)
+			.show();
+	}
+
 	private void downloadAndInstallApk(String apkUrl) {
 		DownloadManager.Request request = new DownloadManager.Request(Uri.parse(apkUrl))
-				.setTitle("Downloading update")
-				.setDescription("Downloading the latest version of the app")
-				.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "update.apk")
+				.setTitle("Chess APK Update")
+				.setDescription("Downloading the latest version of Chess")
+				.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "Chess_update.apk")
 				.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
 
 		DownloadManager downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
@@ -162,7 +191,7 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
 			@Override
 			public void onReceive(Context context, Intent intent) {
 				Uri uri = downloadManager.getUriForDownloadedFile(downloadId);
-				installApk(uri);
+				showInstallDialog(uri);
 				unregisterReceiver(this);
 			}
 		};
