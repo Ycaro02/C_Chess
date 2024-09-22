@@ -7,6 +7,13 @@ else {
     apply plugin: 'com.android.library'
 }
 
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+	implementation 'com.squareup.okhttp3:okhttp:4.9.1'
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.9.1'
+}
+
+
 def getVersionFromHeader() {
     def versionFile = file('../../../rsc/version/version.h')
     def versionLine = versionFile.readLines().find { it.contains('CHESS_VERSION') }
@@ -91,8 +98,3 @@ android {
 // tasks.withType(JavaCompile) {
 // 	options.compilerArgs << "-Xlint:deprecation"
 // }
-
-
-dependencies {
-    implementation fileTree(include: ['*.jar'], dir: 'libs')
-}

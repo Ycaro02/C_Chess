@@ -492,6 +492,8 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
         Log.v(TAG, "onPause()");
         super.onPause();
 
+		Log.v(TAG, "Chess onPause() called by SDLActivity");
+
         if (mHIDDeviceManager != null) {
             mHIDDeviceManager.setFrozen(true);
         }
