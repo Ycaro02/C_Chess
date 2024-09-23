@@ -19,6 +19,22 @@ FT_INLINE s8 piece_in_range(SDLHandle *h, ChessPiece piece) {
 	return (piece >= h->player_info.piece_start && piece <= h->player_info.piece_end);
 }
 
+FT_INLINE s8 is_locale_mode(u32 flag) {
+	return (!has_flag(flag, FLAG_NETWORK));
+}
+
+FT_INLINE void handle_locale_turn(SDLHandle *h) {
+	if (h->player_info.piece_start == WHITE_PAWN) {
+		h->player_info.piece_start = BLACK_PAWN;
+		h->player_info.piece_end = BLACK_KING;
+		// h->player_info.color = IS_BLACK;
+	} else {
+		h->player_info.piece_start = WHITE_PAWN;
+		h->player_info.piece_end = WHITE_KING;
+		// h->player_info.color = IS_WHITE;
+	}
+}
+
 /**
  * @brief Detect click tile on the board
  * @param handle The SDLHandle pointer
@@ -129,18 +145,84 @@ void button_event_handling(SDLHandle *h, SDL_Event event, s32 btn_start, s32 btn
 	}
 }
 
-void game_event_handling(SDLHandle *h, SDL_Event event, s8 player_color) {
+s32 call_move_piece_handling(SDLHandle *h, ChessBoard *b) {
+	s32 ret = move_piece(h, b->selected_tile, b->last_clicked_tile, b->selected_piece);
+	b->possible_moves = 0;
+	h->over_piece_select = EMPTY;
+	return (ret);
+}
+
+void game_click_handling(SDLHandle *h, ChessBoard *b) {
+	// CHESS_LOG(LOG_INFO, "game click: last_clicked_tile: %s\n", ChessTile_to_str(b->last_clicked_tile));
+	s32			ret = FALSE;
+	
+	if (b->last_clicked_tile != INVALID_TILE) {
+		if (is_selected_possible_move(b->possible_moves, b->last_clicked_tile)) {
+			if (is_locale_mode(h->flag)) {
+				call_move_piece_handling(h, b);
+				handle_locale_turn(h);
+			} else {
+				/* Build move message to the other player if is not pawn promotion or chess quit */
+				if (h->player_info.turn == TRUE) {
+					ret = call_move_piece_handling(h, b);
+					update_graphic_board(h);
+					if (ret != PAWN_PROMOTION) {
+						h->player_info.turn = FALSE;
+						build_message(h, h->player_info.msg_tosend, MSG_TYPE_MOVE, b->selected_tile, b->last_clicked_tile, b->selected_piece);
+						safe_msg_send(h);
+					}
+				}
+			}
+		} 
+		else { /* Update piece possible move and selected tile */
+			b->selected_piece = get_piece_from_tile(b, b->last_clicked_tile);
+			if (!piece_in_range(h, b->selected_piece)) {
+				reset_selected_tile(h);
+				return ;
+			}
+			b->selected_tile = b->last_clicked_tile;
+			b->possible_moves = get_piece_move(b, (1ULL << b->selected_tile), b->selected_piece, TRUE);
+			if (b->possible_moves == 0) { h->over_piece_select = EMPTY ; }
+		}
+	} else { // if invalid tile clicked
+		reset_selected_tile(h);
+	}
+}
+
+void game_handle_left_click_down(SDLHandle *h, s32 x, s32 y, s8 player_color) {
+	ChessBoard *b = h->board;
 	ChessPiece piece_select = EMPTY;
+
+	b->last_clicked_tile = detect_tile_click(x, y, h->tile_size.x, h->band_size, player_color);
+	piece_select = get_piece_from_tile(b, b->last_clicked_tile);
+
+	if (!promotion_enable(h->flag) && piece_in_range(h, piece_select)) {
+		h->over_piece_select = piece_select;
+	}
+	game_click_handling(h, b);
+}
+
+void game_handle_left_click_up(SDLHandle *h, s32 x, s32 y, s8 player_color) {
 	Bitboard aly_pos = h->over_piece_select >= BLACK_PAWN ? h->board->black : h->board->white;;
+	
+	if (!promotion_enable(h->flag) && h->over_piece_select != EMPTY) {
+		h->board->last_clicked_tile = detect_tile_click(x, y, h->tile_size.x, h->band_size, player_color);
+		if (h->board->last_clicked_tile == h->board->selected_tile && h->over_piece_select != EMPTY) {
+			h->over_piece_select = EMPTY;
+		} else if (h->board->last_clicked_tile == INVALID_TILE \
+			|| ((1ULL << h->board->last_clicked_tile) & aly_pos) != 0) {
+			reset_selected_tile(h);
+			h->board->last_clicked_tile = INVALID_TILE;
+		}
+		game_click_handling(h, h->board);
+	}
+}
+
+void game_event_handling(SDLHandle *h, SDL_Event event, s8 player_color) {
 	s32 x = 0, y = 0;
 
-	
-	/* For local mode, aly is all occupied tile */
-	if (!has_flag(h->flag, FLAG_NETWORK)) {
-		aly_pos = h->board->occupied;
-	}
-
-	if (event.type == SDL_KEYDOWN && (event.key.keysym.sym == SDLK_p || ESCAPE_KEY(event.key.keysym.sym))) {
+	if (event.type == SDL_KEYDOWN \
+		&& (event.key.keysym.sym == SDLK_p || ESCAPE_KEY(event.key.keysym.sym))) {
 		h->menu.is_open = TRUE;
 	}
 
@@ -152,23 +234,9 @@ void game_event_handling(SDLHandle *h, SDL_Event event, s8 player_color) {
 	if (h->player_info.turn == FALSE) { return ; }
 	SDL_GetMouseState(&x, &y);
 	if (is_left_click_down(event)) {
-		h->board->last_clicked_tile = detect_tile_click(x, y, h->tile_size.x, h->band_size, player_color);
-		piece_select = get_piece_from_tile(h->board, h->board->last_clicked_tile);
-		if (!promotion_enable(h->flag) && piece_in_range(h, piece_select)) {
-			h->over_piece_select = piece_select;
-		}
+		game_handle_left_click_down(h, x, y, player_color);
 	} else if (is_left_click_up(event)) {
-		if (!promotion_enable(h->flag) && h->over_piece_select != EMPTY) {
-			h->board->last_clicked_tile = detect_tile_click(x, y, h->tile_size.x, h->band_size, player_color);
-			
-			if (h->board->last_clicked_tile == INVALID_TILE) {
-				h->over_piece_select = EMPTY;
-				h->board->possible_moves = 0;
-			} 
-			else if (h->board->last_clicked_tile == INVALID_TILE || h->board->last_clicked_tile == h->board->selected_tile || ((1ULL << h->board->last_clicked_tile) & aly_pos) != 0) {
-				h->over_piece_select = EMPTY;
-			} 
-		}
+		game_handle_left_click_up(h, x, y, player_color);
 	} else if (event.type == SDL_MOUSEMOTION) {
 		update_mouse_pos(h, x, y);
 	}

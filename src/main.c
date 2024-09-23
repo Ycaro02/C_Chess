@@ -24,7 +24,7 @@ void set_local_info(SDLHandle *h) {
 	h->game_start = TRUE;
 	h->player_info.color = IS_WHITE;
 	h->player_info.piece_start = WHITE_PAWN;
-	h->player_info.piece_end = BLACK_KING;
+	h->player_info.piece_end = WHITE_KING;
 }
 
 
@@ -66,7 +66,7 @@ SDLHandle *init_game() {
 */
 void local_chess_routine() {
 	SDLHandle	*h = get_SDL_handle();
-	ChessBoard	*b = h->board;
+	// ChessBoard	*b = h->board;
 	s32			event = 0;
 	
 	event = event_handler(h, h->player_info.color);
@@ -75,24 +75,25 @@ void local_chess_routine() {
 	
 	if (has_flag(h->flag, FLAG_PROMOTION_SELECTION)) {
 		pawn_selection_event(h);
-	} else if (b->last_clicked_tile != INVALID_TILE) {
-		/* If a piece is selected and the tile selected is a possible move */
-		if (is_selected_possible_move(b->possible_moves, b->last_clicked_tile)) {
-			move_piece(h, b->selected_tile, b->last_clicked_tile, b->selected_piece);
-			b->possible_moves = 0;
-			h->over_piece_select = EMPTY;
-		} 
-		else { /* Update piece possible move and selected tile */
-			if (h->over_piece_select != EMPTY) {
-				b->selected_piece = get_piece_from_tile(b, b->last_clicked_tile);
-				b->selected_tile = b->last_clicked_tile;
-				b->possible_moves = get_piece_move(b, (1ULL << b->selected_tile), b->selected_piece, TRUE);
-				if (b->possible_moves == 0) { h->over_piece_select = EMPTY ; }
-			} else { /* if over piece select is empty */
-				reset_selected_tile(h);
-			}
-		}
-	} /* End if not invalid tile */
+	} 
+	// else if (b->last_clicked_tile != INVALID_TILE) {
+	// 	/* If a piece is selected and the tile selected is a possible move */
+	// 	if (is_selected_possible_move(b->possible_moves, b->last_clicked_tile)) {
+	// 		move_piece(h, b->selected_tile, b->last_clicked_tile, b->selected_piece);
+	// 		b->possible_moves = 0;
+	// 		h->over_piece_select = EMPTY;
+	// 	} 
+	// 	else { /* Update piece possible move and selected tile */
+	// 		if (h->over_piece_select != EMPTY) {
+	// 			b->selected_piece = get_piece_from_tile(b, b->last_clicked_tile);
+	// 			b->selected_tile = b->last_clicked_tile;
+	// 			b->possible_moves = get_piece_move(b, (1ULL << b->selected_tile), b->selected_piece, TRUE);
+	// 			if (b->possible_moves == 0) { h->over_piece_select = EMPTY ; }
+	// 		} else { /* if over piece select is empty */
+	// 			reset_selected_tile(h);
+	// 		}
+	// 	}
+	// } /* End if not invalid tile */
 
 	/* Draw logic */
 	update_graphic_board(h);
