@@ -3,6 +3,22 @@
 #include "../include/network.h"
 #include "../include/chess_log.h"
 
+FT_INLINE s8 is_left_click_down(SDL_Event event) {
+	return (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT);
+}
+
+FT_INLINE s8 is_left_click_up(SDL_Event event) {
+	return (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT);
+}
+
+FT_INLINE s8 promotion_enable(u32 flag) {
+	return (has_flag(flag, FLAG_PROMOTION_SELECTION));
+}
+
+FT_INLINE s8 piece_in_range(SDLHandle *h, ChessPiece piece) {
+	return (piece >= h->player_info.piece_start && piece <= h->player_info.piece_end);
+}
+
 /**
  * @brief Detect click tile on the board
  * @param handle The SDLHandle pointer
@@ -47,13 +63,13 @@ void profile_button_handling(SDLHandle *h, SDL_Event event) {
 
 
 	SDL_GetMouseState(&pos.x, &pos.y);
-	if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+	if (is_left_click_down(event)) {
 		btn_click = detect_button_click(p->btn, 0, p->nb_field, pos);
 		if (btn_click != PFT_INVALID && p->btn[btn_click].state != BTN_STATE_DISABLED) {
 			p->btn[btn_click].state = BTN_STATE_PRESSED;
 			p->current_btn_clicked = btn_click;
 		}
-	} else if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {
+	} else if (is_left_click_up(event)) {
 		btn_click = detect_button_click(p->btn, 0, p->nb_field, pos);
 		if (p->current_btn_clicked != PFT_INVALID) {
 			p->btn[p->current_btn_clicked].state = BTN_STATE_RELEASED;
@@ -84,13 +100,13 @@ void button_event_handling(SDLHandle *h, SDL_Event event, s32 btn_start, s32 btn
 	BtnType btn_click = BTN_INVALID;
 
 	SDL_GetMouseState(&pos.x, &pos.y);
-	if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+	if (is_left_click_down(event)) {
 		btn_click = detect_button_click(h->menu.btn, btn_start, btn_nb, pos);
 		if (btn_click != BTN_INVALID && h->menu.btn[btn_click].state != BTN_STATE_DISABLED) {
 			h->menu.btn[btn_click].state = BTN_STATE_PRESSED;
 			h->menu.current_btn_clicked = btn_click;
 		}
-	} else if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {
+	} else if (is_left_click_up(event)) {
 		btn_click = detect_button_click(h->menu.btn, btn_start, btn_nb, pos);
 		if (h->menu.current_btn_clicked != BTN_INVALID) {
 			h->menu.btn[h->menu.current_btn_clicked].state = BTN_STATE_RELEASED;
@@ -135,22 +151,21 @@ void game_event_handling(SDLHandle *h, SDL_Event event, s8 player_color) {
 
 	if (h->player_info.turn == FALSE) { return ; }
 	SDL_GetMouseState(&x, &y);
-	if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+	if (is_left_click_down(event)) {
 		h->board->last_clicked_tile = detect_tile_click(x, y, h->tile_size.x, h->band_size, player_color);
 		piece_select = get_piece_from_tile(h->board, h->board->last_clicked_tile);
-		if (!has_flag(h->flag, FLAG_PROMOTION_SELECTION) \
-			&& (piece_select >= h->player_info.piece_start && piece_select <= h->player_info.piece_end)) {
+		if (!promotion_enable(h->flag) && piece_in_range(h, piece_select)) {
 			h->over_piece_select = piece_select;
 		}
-	} else if (event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT) {
-		if (!has_flag(h->flag, FLAG_PROMOTION_SELECTION) && h->over_piece_select != EMPTY) {
+	} else if (is_left_click_up(event)) {
+		if (!promotion_enable(h->flag) && h->over_piece_select != EMPTY) {
 			h->board->last_clicked_tile = detect_tile_click(x, y, h->tile_size.x, h->band_size, player_color);
 			
 			if (h->board->last_clicked_tile == INVALID_TILE) {
 				h->over_piece_select = EMPTY;
 				h->board->possible_moves = 0;
 			} 
-			else if (h->board->last_clicked_tile == h->board->selected_tile || ((1ULL << h->board->last_clicked_tile) & aly_pos) != 0) {
+			else if (h->board->last_clicked_tile == INVALID_TILE || h->board->last_clicked_tile == h->board->selected_tile || ((1ULL << h->board->last_clicked_tile) & aly_pos) != 0) {
 				h->over_piece_select = EMPTY;
 			} 
 		}
