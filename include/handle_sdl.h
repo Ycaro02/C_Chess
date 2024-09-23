@@ -24,6 +24,8 @@
 
 #define ESCAPE_KEY(_sym_) ((_sym_) == SDLK_ESCAPE || (_sym_) == SDLK_AC_BACK)
 
+#define ESCAPE_PRESSED(_event_) ((_event_).type == SDL_KEYDOWN && ESCAPE_KEY((_event_).key.keysym.sym))
+
 /* Texture path */
 #define BLACK_KING_TEXTURE "rsc/texture/piece/black_king.bmp"
 #define BLACK_QUEEN_TEXTURE "rsc/texture/piece/black_queen.bmp"

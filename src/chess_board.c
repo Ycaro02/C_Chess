@@ -130,7 +130,9 @@ void replay_func(SDLHandle *h) {
 	s8 network_flag = FALSE;
 
 	CHESS_LOG(LOG_INFO, "Replay game\n");
-	init_board(h->board, &h->flag);
+	// init_board(h->board, &h->flag);
+	reset_board(h);
+
 
 	if (has_flag(h->flag, FLAG_NETWORK)) {
 		network_flag = TRUE;

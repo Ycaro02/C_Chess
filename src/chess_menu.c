@@ -3,12 +3,18 @@
 #include "../include/chess_log.h"
 #include "../include/android_macro.h"
 
+/**
+ * @brief Close the menu and his text field
+ * @param h The SDLHandle
+*/
 void menu_close(ChessMenu *menu) {
+	SDLHandle *h = get_SDL_handle();
+	
 	menu->is_open = FALSE;
 	menu->btn_hover = BTN_INVALID;
 
 	if (menu->ip_field->is_active) {
-		// menu->ip_field->is_active = FALSE;
+		menu->ip_field->update_data(h, menu->ip_field);
 		DISABLE_TEXTFIELD(&menu->ip_field->is_active );
 	}
 }

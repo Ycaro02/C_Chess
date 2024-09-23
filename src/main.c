@@ -28,7 +28,7 @@ void set_local_info(SDLHandle *h) {
 }
 
 
-void reset_local_board(SDLHandle *h) {
+void reset_board(SDLHandle *h) {
 	set_local_info(h);
 	init_board(h->board, &h->flag);
 }

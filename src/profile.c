@@ -1,8 +1,17 @@
+/**
+ * @file profile.c
+ * @brief This file handle the profile page of the chess game
+ */
+
 #include "../include/chess.h"
 #include "../include/handle_sdl.h"
 #include "../include/chess_log.h"
 #include "../include/android_macro.h"
 
+/**
+ * @brief Handle the keyboard show
+ * @param is_active pointer to the active field
+ */
 void handle_keyboard_show(s8 *is_active) {
 	if (!(*is_active)) {
 		ENABLE_TEXFIELD(is_active);
@@ -11,16 +20,24 @@ void handle_keyboard_show(s8 *is_active) {
 	}
 }
 
+/**
+ * @brief Disable the active field in profile page
+ * @param h The SDLHandle
+ * @param profile The profile
+ */
 void disable_active_field(SDLHandle *h, Profile *profile) {
 	for (s32 i = 0; i < profile->nb_field; i++) {
 		if (profile->tf[i]->is_active) {
 			profile->tf[i]->update_data(h, profile->tf[i]);
-			// profile->tf[i]->is_active = FALSE;
 			DISABLE_TEXTFIELD(&profile->tf[i]->is_active);
 		}
 	}
 }
 
+/**
+ * @brief Edit the name function
+ * @param h The SDLHandle
+ */
 void edit_name_func(SDLHandle *h) {
 	if (h->menu.profile->tf[PFT_NAME]->is_active) {
 		h->menu.profile->tf[PFT_NAME]->update_data(h, h->menu.profile->tf[PFT_NAME]);
@@ -32,6 +49,10 @@ void edit_name_func(SDLHandle *h) {
 
 }
 
+/**
+ * @brief Edit the timer function
+ * @param h The SDLHandle
+ */
 void edit_timer_func(SDLHandle *h) {
 	if (h->menu.profile->tf[PFT_TIMER]->is_active) {
 		h->menu.profile->tf[PFT_TIMER]->update_data(h, h->menu.profile->tf[PFT_TIMER]);
@@ -42,6 +63,12 @@ void edit_timer_func(SDLHandle *h) {
 	handle_keyboard_show(&h->menu.profile->tf[PFT_TIMER]->is_active);
 }
 
+/**
+ * @brief Set the profile button text and function
+ * @param profile The profile
+ * @param idx The index of the button
+ * @param type The type of the field
+ */
 static void set_profile_btn_text_func(Profile *profile, s32 idx, ProfileFieldType type) {
 	if (type == PFT_NAME) {
 		profile->btn[idx].text = ft_strdup("Edit");
@@ -52,17 +79,27 @@ static void set_profile_btn_text_func(Profile *profile, s32 idx, ProfileFieldTyp
 	}
 }
 
+/**
+ * @brief Profile field type
+ */
 typedef struct s_profile_field_info {
-	char *opt_name;
-	char *text;
-	AcceptedCharFunc	accept_char_func;
-	UpdateFunc 			update_func;
-	s32		height;
-	s32		width;
-	s32		height_pad;
+	char				*opt_name;			/* The option name */
+	char				*text;				/* The default text */
+	AcceptedCharFunc	accept_char_func;	/* The accepted char function */
+	UpdateFunc 			update_func;		/* The update function */
+	s32					height;				/* The height of the field */
+	s32					width;				/* The width of the field */
+	s32					height_pad;			/* The height padding of the field */
 } ProfileFieldInfo;
 
-
+/**
+ * @brief Initialize the profile text field
+ * @param font The font
+ * @param profile_rect The profile rect
+ * @param info The profile field info
+ * @param i The index of the field
+ * @return The text field
+ */
 TextField * init_profile_text_field(TTF_Font *font, SDL_Rect profile_rect, ProfileFieldInfo info, s32 i) {
 	TextField *tf = NULL;
 	SDL_Rect rect;
@@ -79,6 +116,14 @@ TextField * init_profile_text_field(TTF_Font *font, SDL_Rect profile_rect, Profi
 	return (tf);
 }
 
+/**
+ * @brief Initialize the profile button
+ * @param tf The text field
+ * @param font The font
+ * @param btn_text_width The button text width
+ * @param btn_text_height The button text height
+ * @return The button
+ */
 Button init_pofile_button(TextField *tf, TTF_Font *font, s32 btn_text_width, s32 btn_text_height) {
 	Button btn = {0};
 
@@ -94,6 +139,11 @@ Button init_pofile_button(TextField *tf, TTF_Font *font, s32 btn_text_width, s32
 	return (btn);
 }
 
+/**
+ * @brief Check if the char is accepted for the nickname
+ * @param code The code
+ * @return TRUE if the char is accepted, FALSE otherwise
+ */
 s8 is_nickname_accepted_char(SDL_Keycode code) {
 	u8 mod = 0;
 
@@ -109,6 +159,11 @@ s8 is_nickname_accepted_char(SDL_Keycode code) {
 	return (FALSE);
 }
 
+/**
+ * @brief Check if the char is accepted for the timer
+ * @param code The code
+ * @return TRUE if the char is accepted, FALSE otherwise
+ */
 s8 is_timer_accepted_char(SDL_Keycode code) {
 	(void)code;
 	if ((code >= SDLK_0 && code <= SDLK_9) || (code >= SDLK_KP_1 && code <= SDLK_KP_0)) {
@@ -117,20 +172,34 @@ s8 is_timer_accepted_char(SDL_Keycode code) {
 	return (FALSE);
 }
 
+/**
+ * @brief Update the nickname
+ * @param h The SDLHandle
+ * @param tf The text field
+ */
 void update_nickname(SDLHandle *h, TextField *tf) {
-	(void)h;
-	(void)tf;
 	if (fast_strlen(tf->text) == 0) { return ; }
 	free(h->player_info.name);
 	h->player_info.name = ft_strdup(tf->text);
 }
 
+/**
+ * @brief Dummy function to update the timer
+ * @todo need to implement this
+ * @param h The SDLHandle
+ * @param tf The text field
+ */
 void update_timer(SDLHandle *h, TextField *tf) {
 	(void)h;
-	(void)tf;
 	if (fast_strlen(tf->text) == 0) { return ; }
 }
 
+/**
+ * @brief Initialize the profile page
+ * @param h The SDLHandle
+ * @param nb_field The number of field
+ * @return The profile
+ */
 Profile *init_profile_page(SDLHandle *h, s32 nb_field) {
 	Profile *profile = ft_calloc(sizeof(Profile), 1);
 
@@ -213,6 +282,10 @@ Profile *init_profile_page(SDLHandle *h, s32 nb_field) {
 	return (profile);
 }
 
+/**
+ * @brief Destroy the profile page
+ * @param profile The profile
+ */
 void destroy_profile_page(Profile *profile) {
 	for (s32 i = 0; i < profile->nb_field; i++) {
 		if (profile->describe_field[i]) {
@@ -229,6 +302,11 @@ void destroy_profile_page(Profile *profile) {
 	free(profile);
 }
 
+/**
+ * @brief Draw the profile page
+ * @param h The SDLHandle
+ * @param profile The profile
+ */
 void draw_profile_page(SDLHandle *h, Profile *profile) {
 	SDL_Rect	rect = {0,0,0,0};
 
@@ -241,7 +319,7 @@ void draw_profile_page(SDLHandle *h, Profile *profile) {
 	SDL_RenderFillRect(h->renderer, &rect);
 
 
-	// Display profile in the top center of the rect
+	/* Display profile in the top center of the rect */
 	write_text_in_rect(h, h->name_font, profile->rect, "Profile", TOP_CENTER, U32_WHITE_COLOR);
 
 	/* Draw profile field */

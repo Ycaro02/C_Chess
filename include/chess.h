@@ -261,7 +261,7 @@ typedef struct s_sdl_handle SDLHandle;
 /* Singleton to get the sdl pointer */
 SDLHandle	*get_SDL_handle();
 void		local_chess_routine();
-void		reset_local_board(SDLHandle *h);
+void		reset_board(SDLHandle *h);
 void		chess_destroy(SDLHandle *h);
 
 /* src/chess_flag.c */

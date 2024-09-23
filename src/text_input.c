@@ -149,14 +149,10 @@ void handle_text_input(SDLHandle *h, SDL_Event *event, TextField *tf) {
 			tf->text[tf->cursor] = '\0';
 			tf->last_cursor_time = SDL_GetTicks64();
         } else if (event->key.keysym.sym == SDLK_RETURN) {
-			// ip_server_update_data(h, tf);
 			tf->update_data(h, tf);
-			// tf->is_active = FALSE;
 			DISABLE_TEXTFIELD(&tf->is_active);
 		} else if (ESCAPE_KEY(event->key.keysym.sym)) {
-			// ip_server_update_data(h, tf);
 			tf->update_data(h, tf);
-			// tf->is_active = FALSE;
 			DISABLE_TEXTFIELD(&tf->is_active);
 		}
 

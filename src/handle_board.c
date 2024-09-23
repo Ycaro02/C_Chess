@@ -41,14 +41,14 @@ FT_INLINE void handle_locale_turn(SDLHandle *h) {
  * @param x The x position of the mouse
  * @param y The y position of the mouse
 */
-ChessTile detect_tile_click(s32 x, s32 y, s32 tile_size, WinBand wb, s8 player_color) {
+static ChessTile detect_tile_click(s32 x, s32 y, s32 tile_size, WinBand wb, s8 player_color) {
 	ChessTile	tile = player_color == IS_BLACK ? H8 : A1;
 	s32 		column = 7;
 
 	while (column >= 0) {
 		for (s32 raw = 0; raw < 8; raw++) {
 			if (is_in_x_range(x, raw, tile_size, wb) && is_in_y_range(y, column, tile_size, wb)) {
-				CHESS_LOG(LOG_INFO, "Click on "ORANGE"[%s]"RESET" -> "PINK"|%d|\n"RESET, ChessTile_to_str(tile), tile);
+				CHESS_LOG(LOG_DEBUG, "Click on "ORANGE"[%s]"RESET" -> "PINK"|%d|\n"RESET, ChessTile_to_str(tile), tile);
 				return (tile);
 			}
 			/* Increment or decrement tile */
@@ -67,12 +67,12 @@ void reset_selected_tile(SDLHandle *h) {
 }
 
 
-void update_mouse_pos(SDLHandle *h, s32 x, s32 y) {
+static void update_mouse_pos(SDLHandle *h, s32 x, s32 y) {
 	h->mouse_pos.x = x;
 	h->mouse_pos.y = y;
 }
 
-void profile_button_handling(SDLHandle *h, SDL_Event event) {
+static void profile_button_handling(SDLHandle *h, SDL_Event event) {
 	iVec2 				pos = {0, 0};
 	ProfileFieldType	btn_click = PFT_INVALID;
 	Profile				*p = h->menu.profile;
@@ -99,7 +99,7 @@ void profile_button_handling(SDLHandle *h, SDL_Event event) {
 	} else if (event.type == SDL_MOUSEMOTION) {
 		update_mouse_pos(h, pos.x, pos.y);
 		p->btn_hover = detect_button_click(p->btn, 0, p->nb_field, pos);
-	} else if (event.type == SDL_KEYDOWN && ESCAPE_KEY(event.key.keysym.sym)) {
+	} else if (ESCAPE_PRESSED(event)) {
 		CHESS_LOG(LOG_INFO, "Close profile menu\n");
 		unset_flag(&h->flag, FLAG_EDIT_PROFILE);
 	}
@@ -111,7 +111,7 @@ void profile_button_handling(SDLHandle *h, SDL_Event event) {
 	}
 }
 
-void button_event_handling(SDLHandle *h, SDL_Event event, s32 btn_start, s32 btn_nb) {
+static void button_event_handling(SDLHandle *h, SDL_Event event, s32 btn_start, s32 btn_nb) {
 	iVec2 pos = {0, 0};
 	BtnType btn_click = BTN_INVALID;
 
@@ -137,7 +137,7 @@ void button_event_handling(SDLHandle *h, SDL_Event event, s32 btn_start, s32 btn
 				menu_close(&h->menu);
 			}
 		}
-	} else if (btn_start == BTN_RESUME && event.type == SDL_KEYDOWN && (event.key.keysym.sym == SDLK_p || ESCAPE_KEY(event.key.keysym.sym))) {
+	} else if (btn_start == BTN_RESUME && ESCAPE_PRESSED(event)) {
 		menu_close(&h->menu);
 	} else if (event.type == SDL_MOUSEMOTION) {
 		update_mouse_pos(h, pos.x, pos.y);
@@ -145,41 +145,42 @@ void button_event_handling(SDLHandle *h, SDL_Event event, s32 btn_start, s32 btn
 	}
 }
 
-s32 call_move_piece_handling(SDLHandle *h, ChessBoard *b) {
+static s32 call_move_piece_handling(SDLHandle *h, ChessBoard *b) {
 	s32 ret = move_piece(h, b->selected_tile, b->last_clicked_tile, b->selected_piece);
 	b->possible_moves = 0;
 	h->over_piece_select = EMPTY;
 	return (ret);
 }
 
-void game_click_handling(SDLHandle *h, ChessBoard *b) {
-	// CHESS_LOG(LOG_INFO, "game click: last_clicked_tile: %s\n", ChessTile_to_str(b->last_clicked_tile));
-	s32			ret = FALSE;
+static void handle_move_piece_call(SDLHandle *h, ChessBoard *b) {
+	s32	ret = FALSE;
+	
+	if (is_locale_mode(h->flag)) {
+		call_move_piece_handling(h, b);
+		handle_locale_turn(h);
+	} else { /* Network mode */
+		/* Build move message to the other player if is not pawn promotion or chess quit */
+		if (h->player_info.turn == TRUE) {
+			ret = call_move_piece_handling(h, b);
+			update_graphic_board(h);
+			if (ret != PAWN_PROMOTION) {
+				h->player_info.turn = FALSE;
+				build_message(h, h->player_info.msg_tosend, MSG_TYPE_MOVE, b->selected_tile, b->last_clicked_tile, b->selected_piece);
+				safe_msg_send(h);
+			}
+		}
+	}
+}
+
+static void game_click_handling(SDLHandle *h, ChessBoard *b) {
 	
 	if (b->last_clicked_tile != INVALID_TILE) {
 		if (is_selected_possible_move(b->possible_moves, b->last_clicked_tile)) {
-			if (is_locale_mode(h->flag)) {
-				call_move_piece_handling(h, b);
-				handle_locale_turn(h);
-			} else {
-				/* Build move message to the other player if is not pawn promotion or chess quit */
-				if (h->player_info.turn == TRUE) {
-					ret = call_move_piece_handling(h, b);
-					update_graphic_board(h);
-					if (ret != PAWN_PROMOTION) {
-						h->player_info.turn = FALSE;
-						build_message(h, h->player_info.msg_tosend, MSG_TYPE_MOVE, b->selected_tile, b->last_clicked_tile, b->selected_piece);
-						safe_msg_send(h);
-					}
-				}
-			}
-		} 
-		else { /* Update piece possible move and selected tile */
+			handle_move_piece_call(h, b);
+		} else { /* if not possible move */
 			b->selected_piece = get_piece_from_tile(b, b->last_clicked_tile);
-			if (!piece_in_range(h, b->selected_piece)) {
-				reset_selected_tile(h);
-				return ;
-			}
+			/* if peace is not in range reset and return */
+			if (!piece_in_range(h, b->selected_piece)) { return (reset_selected_tile(h)); }
 			b->selected_tile = b->last_clicked_tile;
 			b->possible_moves = get_piece_move(b, (1ULL << b->selected_tile), b->selected_piece, TRUE);
 			if (b->possible_moves == 0) { h->over_piece_select = EMPTY ; }
@@ -189,7 +190,7 @@ void game_click_handling(SDLHandle *h, ChessBoard *b) {
 	}
 }
 
-void game_handle_left_click_down(SDLHandle *h, s32 x, s32 y, s8 player_color) {
+static void game_handle_left_click_down(SDLHandle *h, s32 x, s32 y, s8 player_color) {
 	ChessBoard *b = h->board;
 	ChessPiece piece_select = EMPTY;
 
@@ -202,7 +203,7 @@ void game_handle_left_click_down(SDLHandle *h, s32 x, s32 y, s8 player_color) {
 	game_click_handling(h, b);
 }
 
-void game_handle_left_click_up(SDLHandle *h, s32 x, s32 y, s8 player_color) {
+static void game_handle_left_click_up(SDLHandle *h, s32 x, s32 y, s8 player_color) {
 	Bitboard aly_pos = h->over_piece_select >= BLACK_PAWN ? h->board->black : h->board->white;;
 	
 	if (!promotion_enable(h->flag) && h->over_piece_select != EMPTY) {
@@ -218,18 +219,12 @@ void game_handle_left_click_up(SDLHandle *h, s32 x, s32 y, s8 player_color) {
 	}
 }
 
-void game_event_handling(SDLHandle *h, SDL_Event event, s8 player_color) {
+static void game_event_handling(SDLHandle *h, SDL_Event event, s8 player_color) {
 	s32 x = 0, y = 0;
 
-	if (event.type == SDL_KEYDOWN \
-		&& (event.key.keysym.sym == SDLK_p || ESCAPE_KEY(event.key.keysym.sym))) {
+	if (ESCAPE_PRESSED(event)) {
 		h->menu.is_open = TRUE;
 	}
-
-	// if (!has_flag(h->flag, FLAG_NETWORK) && event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_r) {
-	// 	h->player_info.color = !h->player_info.color;
-	// 	return ;
-	// }
 
 	if (h->player_info.turn == FALSE) { return ; }
 	SDL_GetMouseState(&x, &y);
