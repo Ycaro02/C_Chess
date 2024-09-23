@@ -181,8 +181,8 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
     private void downloadNewApk(String apkUrl) {
 
         DownloadManager.Request request = new DownloadManager.Request(Uri.parse(apkUrl))
-                .setTitle("Chess APK Update")
-                .setDescription("Downloading the latest version of Chess")
+                .setTitle("Chess APK Update" + newAPKVersion)
+                .setDescription("Latest Chess version : " + newAPKVersion)
                 .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "Chess_Update" + newAPKVersion + ".apk")
                 .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
 
