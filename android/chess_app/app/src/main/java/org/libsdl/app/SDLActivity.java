@@ -181,6 +181,20 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
 				.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, APKFileNameUpt)
 				.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
 
+		Intent intent = new Intent(Intent.ACTION_VIEW);
+		intent.setDataAndType(Uri.parse("file://" + Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/" + APKFileNameUpt), "application/vnd.android.package-archive");
+		intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+		PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+		request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+			.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, APKFileNameUpt)
+			.setTitle("Chess APK Update")
+			.setDescription("Downloading the latest version of Chess")
+			.setVisibleInDownloadsUi(true)
+			.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+			.setIntent(pendingIntent);
+
 		Log.v(TAG, "Chess: Downloading apk from " + apkUrl);
 
 		try {
