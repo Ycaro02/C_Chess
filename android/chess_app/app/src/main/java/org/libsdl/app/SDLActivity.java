@@ -205,12 +205,16 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
                         Log.v(TAG, "Chess: Download complete, id: " + id + ", APKFileNameUpt: " + APKFileNameUpt);
                         unregisterReceiver(this);
 
-                        // Lancer l'intention d'ouverture du gestionnaire de fichiers
-                        Intent fileIntent = new Intent(Intent.ACTION_VIEW);
-                        Uri uri = Uri.parse("file://" + Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/" + APKFileNameUpt);
-                        fileIntent.setDataAndType(uri, "*/*");
-                        fileIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                        startActivity(fileIntent);
+						Intent fileIntent = new Intent(Intent.ACTION_GET_CONTENT);
+						fileIntent.setType("*/*");
+						fileIntent.addCategory(Intent.CATEGORY_OPENABLE);
+						fileIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+						if (fileIntent.resolveActivity(getPackageManager()) != null) {
+							startActivity(fileIntent);
+						} else {
+							Toast.makeText(context, "No file manager found to open the file", Toast.LENGTH_SHORT).show();
+						}
                     }
                 }
             };
