@@ -77,6 +77,12 @@ import org.libsdl.app.BuildConfig;
 // pending indent for apk notif open
 import android.app.PendingIntent;
 
+// File provider
+import androidx.core.content.FileProvider;
+
+// File
+import java.io.File;
+
 import java.util.Hashtable;
 import java.util.Locale;
 
@@ -174,7 +180,7 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
     	return "Chess_update_" + System.currentTimeMillis() + ".apk";
 	}
 
-	private void downloadNewApk(String apkUrl) {
+    private void downloadNewApk(String apkUrl) {
         String APKFileNameUpt = generateApkFileName();
 
         DownloadManager.Request request = new DownloadManager.Request(Uri.parse(apkUrl))
@@ -199,8 +205,11 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
                         Log.v(TAG, "Chess: Download complete, id: " + id + ", APKFileNameUpt: " + APKFileNameUpt);
                         unregisterReceiver(this);
 
+                        File apkFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), APKFileNameUpt);
+                        Uri apkUri = FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID + ".provider", apkFile);
+
                         Intent installIntent = new Intent(Intent.ACTION_VIEW);
-                        installIntent.setDataAndType(Uri.parse("file://" + Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/" + APKFileNameUpt), "application/vnd.android.package-archive");
+                        installIntent.setDataAndType(apkUri, "application/vnd.android.package-archive");
                         installIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
                         startActivity(installIntent);
                     }
@@ -208,8 +217,9 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
             };
             registerReceiver(onComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE), Context.RECEIVER_NOT_EXPORTED);
 
-            finish();
-            System.exit(0);
+            // Quitter l'application après avoir démarré le téléchargement
+            // finish();
+            // System.exit(0);
         } catch (Exception e) {
             Log.e(TAG, "Chess: Exception in downloadNewApk: " + e.getMessage());
         }
