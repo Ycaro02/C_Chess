@@ -60,9 +60,6 @@ void pawn_selection_event(SDLHandle *h) {
 
 	ChessTile tile_to = h->board->last_tile_to;
 
-	CHESS_LOG(LOG_INFO, "In pawn select event: Tile clicked: %s\n", ChessTile_to_str(last_click));
-
-
 	if (last_click >= tile_start && last_click <= tile_end) {
 		piece_idx = !is_black ? last_click - tile_start : tile_end - last_click;
 		CHESS_LOG(LOG_INFO, "Tile clicked: %s\n", ChessTile_to_str(last_click));

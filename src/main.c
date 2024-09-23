@@ -66,7 +66,6 @@ SDLHandle *init_game() {
 */
 void local_chess_routine() {
 	SDLHandle	*h = get_SDL_handle();
-	// ChessBoard	*b = h->board;
 	s32			event = 0;
 	
 	event = event_handler(h, h->player_info.color);
@@ -76,25 +75,6 @@ void local_chess_routine() {
 	if (has_flag(h->flag, FLAG_PROMOTION_SELECTION)) {
 		pawn_selection_event(h);
 	} 
-	// else if (b->last_clicked_tile != INVALID_TILE) {
-	// 	/* If a piece is selected and the tile selected is a possible move */
-	// 	if (is_selected_possible_move(b->possible_moves, b->last_clicked_tile)) {
-	// 		move_piece(h, b->selected_tile, b->last_clicked_tile, b->selected_piece);
-	// 		b->possible_moves = 0;
-	// 		h->over_piece_select = EMPTY;
-	// 	} 
-	// 	else { /* Update piece possible move and selected tile */
-	// 		if (h->over_piece_select != EMPTY) {
-	// 			b->selected_piece = get_piece_from_tile(b, b->last_clicked_tile);
-	// 			b->selected_tile = b->last_clicked_tile;
-	// 			b->possible_moves = get_piece_move(b, (1ULL << b->selected_tile), b->selected_piece, TRUE);
-	// 			if (b->possible_moves == 0) { h->over_piece_select = EMPTY ; }
-	// 		} else { /* if over piece select is empty */
-	// 			reset_selected_tile(h);
-	// 		}
-	// 	}
-	// } /* End if not invalid tile */
-
 	/* Draw logic */
 	update_graphic_board(h);
 }
@@ -104,7 +84,6 @@ void local_chess_routine() {
 void chess_destroy(SDLHandle *h) {
 	CHESS_LOG(LOG_INFO, RED"Destroy chess game%s\n", RESET);
 
-	// print_call_stack();
 	register_data(h, DATA_SAVE_FILE);
 
 	if (h->board->lst) {
@@ -129,35 +108,6 @@ SDLHandle *get_SDL_handle() {
 	return (stat);
 }
 
-#ifdef __ANDROID__
-	JNIEXPORT void JNICALL Java_org_libsdl_app_SDLActivity_chessOnDestroy(JNIEnv* env, jobject obj) {
-		// CHESS_LOG(LOG_INFO, "chessOnDestroy() Call\n");
-		SDLHandle *h = get_SDL_handle();
-		register_data(h, DATA_SAVE_FILE);
-		if (h->player_info.nt_info) {
-			send_disconnect_to_server(h->player_info.nt_info->sockfd, h->player_info.nt_info->servaddr, h->my_remaining_time);
-		}
-	}
-
-	/**
-	 * For the auto reconection 
-	 * We store the flag in a file and check in this file if the game is running or not
-	 */
-
-	JNIEXPORT void JNICALL Java_org_libsdl_app_SDLActivity_chessOnPause(JNIEnv* env, jobject obj) {
-		SDLHandle *h = get_SDL_handle();
-		CHESS_LOG(LOG_INFO, "Call chessOnPause()\n");
-		chess_destroy(h);
-	}
-
-	JNIEXPORT void JNICALL Java_org_libsdl_app_SDLActivity_chessOnResume(JNIEnv* env, jobject obj) {
-		CHESS_LOG(LOG_INFO, "Call chessOnResume()\n");
-		chess_start_program();
-	}
-
-#endif
-
-
 void chess_game(SDLHandle *h) {
 	struct timeval	timeout = {0, 10000}; /* 10000 microseconds = 0.01 seconds */
 	
@@ -169,18 +119,13 @@ void chess_game(SDLHandle *h) {
 
 	if (has_flag(h->flag, FLAG_NETWORK)) {
 		CHESS_LOG(LOG_INFO, ORANGE"Try to connect to Server at : %s:%d\n"RESET, h->player_info.dest_ip, SERVER_PORT);
-		
 		center_text_string_set(h, "Reconnect game on:", h->player_info.dest_ip);
-		
 		/* Init network and player state */
 		h->player_info.nt_info = init_network(h->player_info.dest_ip, h->player_info.name, timeout);
-		
-		
 		/* Wait for player */
 		if (wait_player_handling(h)) {
 			start_network_game(h);
 		}
-
 	} 
 
 	while (1) {
@@ -249,9 +194,7 @@ void chess_start_program() {
 	#else
 		chess_game(h);	
 	#endif
-	
 
-	/* Free memory */
 	chess_destroy(h);
 }
 

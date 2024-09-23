@@ -263,6 +263,8 @@ SDLHandle	*get_SDL_handle();
 void		local_chess_routine();
 void		reset_board(SDLHandle *h);
 void		chess_destroy(SDLHandle *h);
+void		chess_start_program();
+
 
 /* src/chess_flag.c */
 u32			handle_chess_flag(int argc, char **argv, s8 *error, PlayerInfo *player_info);

@@ -19,6 +19,35 @@
 
 #ifdef __ANDROID__
 
+	/**
+	 * @brief JNI function to call when the activity is destroyed
+	 */
+	JNIEXPORT void JNICALL Java_org_libsdl_app_SDLActivity_chessOnDestroy(JNIEnv* env, jobject obj) {
+		SDLHandle *h = get_SDL_handle();
+		chess_destroy(h);
+		// register_data(h, DATA_SAVE_FILE);
+		// if (h->player_info.nt_info) {
+		// 	send_disconnect_to_server(h->player_info.nt_info->sockfd, h->player_info.nt_info->servaddr, h->my_remaining_time);
+		// }
+	}
+
+	/**
+	 * @brief JNI function to call when the activity is paused
+	 */
+	JNIEXPORT void JNICALL Java_org_libsdl_app_SDLActivity_chessOnPause(JNIEnv* env, jobject obj) {
+		SDLHandle *h = get_SDL_handle();
+		CHESS_LOG(LOG_INFO, "Call chessOnPause()\n");
+		chess_destroy(h);
+	}
+
+	/**
+	 * @brief JNI function to call when the activity is resumed
+	 */
+	JNIEXPORT void JNICALL Java_org_libsdl_app_SDLActivity_chessOnResume(JNIEnv* env, jobject obj) {
+		CHESS_LOG(LOG_INFO, "Call chessOnResume()\n");
+		chess_start_program();
+	}
+
 	/* src/handle_textfield_keyboard.c */
 	void android_show_keyboard(s8 *is_active);
 	void android_hide_keyboard(s8 *is_active);
