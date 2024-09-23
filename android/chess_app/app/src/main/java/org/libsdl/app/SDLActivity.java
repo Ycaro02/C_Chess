@@ -53,17 +53,13 @@ import android.widget.Toast;
 // Asset manager for rsc
 import android.content.res.AssetManager;
 
-// import manifest
-import android.Manifest;
-
 // download manager
 import android.app.DownloadManager;
 import android.content.BroadcastReceiver;
 import android.content.IntentFilter;
 import android.os.Environment;
 import android.net.Uri;
-// import android.appcompat.app.AppCompatActivity;
-import androidx.appcompat.app.AppCompatActivity;
+
 // http request
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -94,8 +90,10 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
 	private static boolean is_first_init = true;
  	private String currentVersion = BuildConfig.VERSION_NAME;
     private String githubApiUrl = "https://api.github.com/repos/Ycaro02/C_Chess/releases/latest";
+	private static final int REQUEST_CODE_UNKNOWN_APP = 12345;
+	private String APKFileNameUpt;
 
-
+	// My show/hide keyboard
 	public static void showKeyboard() {
         Activity activity = (Activity) SDL.getContext();
         InputMethodManager imm = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -108,54 +106,34 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
         imm.hideSoftInputFromWindow(activity.getWindow().getDecorView().getWindowToken(), 0);
     }
 
-	// Versionning for update
-
-	// private static final int REQUEST_CODE_PERMISSIONS = 1001;
-
-	// private void checkPermissions() {
-	// 	Log.v(TAG, "Chess: Entering checkPermissions");
-	// 	if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-	// 		try {
-	// 			requestPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE, REQUEST_CODE_PERMISSIONS);
-	// 			requestPermission(Manifest.permission.READ_EXTERNAL_STORAGE, REQUEST_CODE_PERMISSIONS);
-	// 		} catch (Exception e) {
-	// 			Log.e(TAG, "Chess: Exception in checkPermissions" + e.getMessage());
-	// 		}
-	// 	}
-	// 	Log.v(TAG, "Chess: Exiting checkPermissions");
-	// }
-
+	// Check update logic
 	private void checkForUpdate() {
 		OkHttpClient client = new OkHttpClient();
 		Request request = new Request.Builder().url(githubApiUrl).build();
 
 		Log.v(TAG, "Chess: Checking for update, current version: " + currentVersion + ", url: " + githubApiUrl);
 
-		// checkPermissions();
-
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
 				try (Response response = client.newCall(request).execute()) {
 					if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+						String responseData = response.body().string();
+						JSONObject json = new JSONObject(responseData);
+						String latestVersion = json.getString("tag_name").split("_")[1];
+						JSONArray assets = json.getJSONArray("assets");
+						String apkUrl = assets.getJSONObject(0).getString("browser_download_url");
 
-					String responseData = response.body().string();
-					JSONObject json = new JSONObject(responseData);
-					String latestVersion = json.getString("tag_name").split("_")[1];
-					JSONArray assets = json.getJSONArray("assets");
-					String apkUrl = assets.getJSONObject(0).getString("browser_download_url");
+						Log.v(TAG, "Chess: Checking for update, latest version: " + latestVersion);
 
-					Log.v(TAG, "Chess: Checking for update, latest version: " + latestVersion);
-
-					if (isNewVersionAvailable(currentVersion, latestVersion)) {
-						runOnUiThread(new Runnable() {
-							@Override
-							public void run() {
-								// downloadAndInstallApk(apkUrl);
-								showUpdateDialog(apkUrl);
-							}
-						});
-					}
+						if (isNewVersionAvailable(currentVersion, latestVersion)) {
+							runOnUiThread(new Runnable() {
+								@Override
+								public void run() {
+									showUpdateDialog(apkUrl);
+								}
+							});
+						}
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -167,66 +145,57 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
 		return !currentVersion.equals(latestVersion);
 	}
 
+	// Show update dialog
 	private void showUpdateDialog(String apkUrl) {
-    new AlertDialog.Builder(this)
-        .setTitle("Update Available")
-        .setMessage("A new version of Chess is available. Do you want to download it?")
-        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                downloadAndInstallApk(apkUrl);
-            }
-        })
-        .setNegativeButton("No", null)
-        .show();
-	}
-
-	private void showInstallDialog(Uri uri) {
-		new AlertDialog.Builder(this)
-			.setTitle("Install Update")
-			.setMessage("The update has been downloaded. Do you want to install it now?")
+		AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomAlertDialog);
+		builder.setTitle("Update Available")
+			.setMessage("A new version of Chess is available. Do you want to download it?")
 			.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
-					installApk(uri);
+					downloadNewApk(apkUrl);
 				}
 			})
 			.setNegativeButton("No", null)
 			.show();
 	}
 
-	private void downloadAndInstallApk(String apkUrl) {
+	private String generateApkFileName() {
+    	return "Chess_update_" + System.currentTimeMillis() + ".apk";
+	}
+
+	private void downloadNewApk(String apkUrl) {
+		APKFileNameUpt = generateApkFileName();
+
 		DownloadManager.Request request = new DownloadManager.Request(Uri.parse(apkUrl))
 				.setTitle("Chess APK Update")
 				.setDescription("Downloading the latest version of Chess")
-				.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "Chess_update.apk")
+				.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, APKFileNameUpt)
 				.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
 
-
 		Log.v(TAG, "Chess: Downloading apk from " + apkUrl);
+
 		try {
 			DownloadManager downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
 			long downloadId = downloadManager.enqueue(request);
+
+			Log.v(TAG, "Chess: Download started, id: " + downloadId + ", APKFileNameUpt: " + APKFileNameUpt);
+
 			BroadcastReceiver onComplete = new BroadcastReceiver() {
 				@Override
 				public void onReceive(Context context, Intent intent) {
-					Uri uri = downloadManager.getUriForDownloadedFile(downloadId);
-					showInstallDialog(uri);
-					unregisterReceiver(this);
+					long id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
+					if (id == downloadId) {
+						Log.v(TAG, "Chess: Download complete, id: " + id + ", APKFileNameUpt: " + APKFileNameUpt);
+						unregisterReceiver(this);
+					}
 				}
+			
 			};
 			registerReceiver(onComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE), Context.RECEIVER_NOT_EXPORTED);
-			// registerReceiver(onComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
 		} catch (Exception e) {
-			Log.e(TAG, "Chess: Exception in downloadAndInstallApk" + e.getMessage());
+			Log.e(TAG, "Chess: Exception in downloadNewApk: " + e.getMessage());
 		}
-	}
-
-	private void installApk(Uri uri) {
-		Intent intent = new Intent(Intent.ACTION_VIEW);
-		intent.setDataAndType(uri, "application/vnd.android.package-archive");
-		intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
-		startActivity(intent);
 	}
 
 /*
@@ -688,7 +657,7 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
         if (mHasMultiWindow) {
             resumeNativeThread();
         }
-		// checkForUpdate();
+		checkForUpdate();
     }
 
     public static int getCurrentOrientation() {

@@ -4,4 +4,17 @@
     <style name="AppTheme" parent="android:Theme.NoTitleBar.Fullscreen">
         <!-- Customize your theme here. -->
     </style>
+
+
+    <style name="CustomAlertDialog" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="colorAccent">#FFFFFF</item> <!-- Couleur du bouton positif -->
+        <item name="android:textColorPrimary">#FFFFFF</item> <!-- Couleur du texte principal -->
+        <item name="android:windowBackground">@drawable/dialog_background</item> <!-- Couleur de fond de la boîte de dialogue -->
+        <item name="buttonStyle">@style/CustomButton</item> <!-- Style personnalisé pour les boutons -->
+    </style>
+
+    <style name="CustomButton" parent="Widget.AppCompat.Button">
+        <item name="android:background">@drawable/button_background</item> <!-- Utiliser le drawable personnalisé -->
+        <item name="android:textColor">#FFFFFF</item> <!-- Couleur du texte des boutons -->
+    </style>
 </resources>
