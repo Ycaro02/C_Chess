@@ -120,7 +120,15 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
 					if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
 						String responseData = response.body().string();
 						JSONObject json = new JSONObject(responseData);
-						String latestVersion = json.getString("tag_name").split("_")[1];
+						String tagName = json.getString("tag_name");
+						String verifyRelease = tagName.split("_")[0];
+						
+						if (!verifyRelease.equals("AndroidRelease")) {
+							Log.v(TAG, "Chess: Not a AndroidRelease, skipping update check");
+							return;
+						}
+						
+						String latestVersion = tagName.split("_")[1];
 						JSONArray assets = json.getJSONArray("assets");
 						String apkUrl = assets.getJSONObject(0).getString("browser_download_url");
 
@@ -150,7 +158,7 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
 		AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomAlertDialog);
 		builder.setTitle("Update Available")
 			.setMessage("A new version of Chess is available. Do you want to download it?")
-			.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+			.setPositiveButton("Download", new DialogInterface.OnClickListener() {
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
 					downloadNewApk(apkUrl);
@@ -193,6 +201,8 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
 			
 			};
 			registerReceiver(onComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE), Context.RECEIVER_NOT_EXPORTED);
+	        finish();
+        	System.exit(0);
 		} catch (Exception e) {
 			Log.e(TAG, "Chess: Exception in downloadNewApk: " + e.getMessage());
 		}
