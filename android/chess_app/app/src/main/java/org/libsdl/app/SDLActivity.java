@@ -97,7 +97,9 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
 
 	private static boolean is_first_init = true;
  	private String currentVersion = BuildConfig.VERSION_NAME;
-    private String githubApiUrl = "https://api.github.com/repos/Ycaro02/C_Chess/releases/latest";
+    private String newAPKVersion = "";
+	private String githubApiUrl = "https://api.github.com/repos/Ycaro02/C_Chess/releases/latest";
+
 
 	// My show/hide keyboard
 	public static void showKeyboard() {
@@ -140,6 +142,8 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
 
 						Log.v(TAG, "Chess: Checking for update, latest version: " + latestVersion);
 
+						newAPKVersion = latestVersion;
+
 						if (isNewVersionAvailable(currentVersion, latestVersion)) {
 							runOnUiThread(new Runnable() {
 								@Override
@@ -179,7 +183,7 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
         DownloadManager.Request request = new DownloadManager.Request(Uri.parse(apkUrl))
                 .setTitle("Chess APK Update")
                 .setDescription("Downloading the latest version of Chess")
-                .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "Chess_Update.apk")
+                .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "Chess_Update" + newAPKVersion + ".apk")
                 .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
 
         Log.v(TAG, "Chess: Downloading apk from " + apkUrl);
