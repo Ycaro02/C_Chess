@@ -74,6 +74,8 @@ import java.io.IOException;
 // import buildConfig 
 import org.libsdl.app.BuildConfig;
 
+// pending indent for apk notif open
+import android.app.PendingIntent;
 
 import java.util.Hashtable;
 import java.util.Locale;
@@ -173,54 +175,45 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
 	}
 
 	private void downloadNewApk(String apkUrl) {
-		APKFileNameUpt = generateApkFileName();
+        String APKFileNameUpt = generateApkFileName();
 
-		DownloadManager.Request request = new DownloadManager.Request(Uri.parse(apkUrl))
-				.setTitle("Chess APK Update")
-				.setDescription("Downloading the latest version of Chess")
-				.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, APKFileNameUpt)
-				.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+        DownloadManager.Request request = new DownloadManager.Request(Uri.parse(apkUrl))
+                .setTitle("Chess APK Update")
+                .setDescription("Downloading the latest version of Chess")
+                .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, APKFileNameUpt)
+                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
 
-		Intent intent = new Intent(Intent.ACTION_VIEW);
-		intent.setDataAndType(Uri.parse("file://" + Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/" + APKFileNameUpt), "application/vnd.android.package-archive");
-		intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        Log.v(TAG, "Chess: Downloading apk from " + apkUrl);
 
-		PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        try {
+            DownloadManager downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+            long downloadId = downloadManager.enqueue(request);
 
-		request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-			.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, APKFileNameUpt)
-			.setTitle("Chess APK Update")
-			.setDescription("Downloading the latest version of Chess")
-			.setVisibleInDownloadsUi(true)
-			.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-			.setIntent(pendingIntent);
+            Log.v(TAG, "Chess: Download started, id: " + downloadId + ", APKFileNameUpt: " + APKFileNameUpt);
 
-		Log.v(TAG, "Chess: Downloading apk from " + apkUrl);
+            BroadcastReceiver onComplete = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    long id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
+                    if (id == downloadId) {
+                        Log.v(TAG, "Chess: Download complete, id: " + id + ", APKFileNameUpt: " + APKFileNameUpt);
+                        unregisterReceiver(this);
 
-		try {
-			DownloadManager downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-			long downloadId = downloadManager.enqueue(request);
+                        Intent installIntent = new Intent(Intent.ACTION_VIEW);
+                        installIntent.setDataAndType(Uri.parse("file://" + Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/" + APKFileNameUpt), "application/vnd.android.package-archive");
+                        installIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                        startActivity(installIntent);
+                    }
+                }
+            };
+            registerReceiver(onComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE), Context.RECEIVER_NOT_EXPORTED);
 
-			Log.v(TAG, "Chess: Download started, id: " + downloadId + ", APKFileNameUpt: " + APKFileNameUpt);
-
-			BroadcastReceiver onComplete = new BroadcastReceiver() {
-				@Override
-				public void onReceive(Context context, Intent intent) {
-					long id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
-					if (id == downloadId) {
-						Log.v(TAG, "Chess: Download complete, id: " + id + ", APKFileNameUpt: " + APKFileNameUpt);
-						unregisterReceiver(this);
-					}
-				}
-			
-			};
-			registerReceiver(onComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE), Context.RECEIVER_NOT_EXPORTED);
-	        finish();
-        	System.exit(0);
-		} catch (Exception e) {
-			Log.e(TAG, "Chess: Exception in downloadNewApk: " + e.getMessage());
-		}
-	}
+            finish();
+            System.exit(0);
+        } catch (Exception e) {
+            Log.e(TAG, "Chess: Exception in downloadNewApk: " + e.getMessage());
+        }
+    }
 
 /*
     // Display InputType.SOURCE/CLASS of events and devices
