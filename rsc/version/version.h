@@ -1,1 +1,1 @@
-#define CHESS_VERSION "1.0.35"
+#define CHESS_VERSION "1.0.36"
