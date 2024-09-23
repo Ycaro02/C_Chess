@@ -77,11 +77,11 @@ import org.libsdl.app.BuildConfig;
 // pending indent for apk notif open
 import android.app.PendingIntent;
 
-// File provider
-import androidx.core.content.FileProvider;
+// // File provider
+// import androidx.core.content.FileProvider;
 
-// File
-import java.io.File;
+// // File
+// import java.io.File;
 
 import java.util.Hashtable;
 import java.util.Locale;
@@ -205,13 +205,12 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
                         Log.v(TAG, "Chess: Download complete, id: " + id + ", APKFileNameUpt: " + APKFileNameUpt);
                         unregisterReceiver(this);
 
-                        File apkFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), APKFileNameUpt);
-                        Uri apkUri = FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID + ".provider", apkFile);
-
-                        Intent installIntent = new Intent(Intent.ACTION_VIEW);
-                        installIntent.setDataAndType(apkUri, "application/vnd.android.package-archive");
-                        installIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                        startActivity(installIntent);
+                        // Lancer l'intention d'ouverture du gestionnaire de fichiers
+                        Intent fileIntent = new Intent(Intent.ACTION_VIEW);
+                        Uri uri = Uri.parse("file://" + Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/" + APKFileNameUpt);
+                        fileIntent.setDataAndType(uri, "*/*");
+                        fileIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                        startActivity(fileIntent);
                     }
                 }
             };
