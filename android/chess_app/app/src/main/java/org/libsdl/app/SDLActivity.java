@@ -98,8 +98,6 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
 	private static boolean is_first_init = true;
  	private String currentVersion = BuildConfig.VERSION_NAME;
     private String githubApiUrl = "https://api.github.com/repos/Ycaro02/C_Chess/releases/latest";
-	private static final int REQUEST_CODE_UNKNOWN_APP = 12345;
-	private String APKFileNameUpt;
 
 	// My show/hide keyboard
 	public static void showKeyboard() {
@@ -176,17 +174,12 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
 			.show();
 	}
 
-	private String generateApkFileName() {
-    	return "Chess_update_" + System.currentTimeMillis() + ".apk";
-	}
-
     private void downloadNewApk(String apkUrl) {
-        String APKFileNameUpt = generateApkFileName();
 
         DownloadManager.Request request = new DownloadManager.Request(Uri.parse(apkUrl))
                 .setTitle("Chess APK Update")
                 .setDescription("Downloading the latest version of Chess")
-                .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, APKFileNameUpt)
+                .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "Chess_Update.apk")
                 .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
 
         Log.v(TAG, "Chess: Downloading apk from " + apkUrl);
@@ -195,34 +188,29 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
             DownloadManager downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
             long downloadId = downloadManager.enqueue(request);
 
-            Log.v(TAG, "Chess: Download started, id: " + downloadId + ", APKFileNameUpt: " + APKFileNameUpt);
+            Log.v(TAG, "Chess: Download started, id: " + downloadId);
 
             BroadcastReceiver onComplete = new BroadcastReceiver() {
                 @Override
                 public void onReceive(Context context, Intent intent) {
                     long id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
                     if (id == downloadId) {
-                        Log.v(TAG, "Chess: Download complete, id: " + id + ", APKFileNameUpt: " + APKFileNameUpt);
+                        Log.v(TAG, "Chess: Download complete, id: " + id);
                         unregisterReceiver(this);
 
 						Intent fileIntent = new Intent(Intent.ACTION_GET_CONTENT);
 						fileIntent.setType("*/*");
 						fileIntent.addCategory(Intent.CATEGORY_OPENABLE);
 						fileIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
-
 						if (fileIntent.resolveActivity(getPackageManager()) != null) {
 							startActivity(fileIntent);
 						} else {
-							Toast.makeText(context, "No file manager found to open the file", Toast.LENGTH_SHORT).show();
+							Toast.makeText(context, "No file manager found to open", Toast.LENGTH_SHORT).show();
 						}
                     }
                 }
             };
             registerReceiver(onComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE), Context.RECEIVER_NOT_EXPORTED);
-
-            // Quitter l'application après avoir démarré le téléchargement
-            // finish();
-            // System.exit(0);
         } catch (Exception e) {
             Log.e(TAG, "Chess: Exception in downloadNewApk: " + e.getMessage());
         }
