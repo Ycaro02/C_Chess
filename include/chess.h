@@ -113,7 +113,7 @@ typedef struct s_chess_board {
 
 	/* Special Bitboard for 'en passant' rule */
 	Bitboard	en_passant;			/* Bitboard for en passant possible moves */
-	ChessTile	en_passant_tile;	/* Tile of the pawn can be atatcked by en passant move */
+	ChessTile	en_passant_tile;	/* Tile of the pawn can be attacked by en passant move */
 
 	/* Bitboard for white and black control */
 	Bitboard	white_control;		/* Bitboard for white control tile */

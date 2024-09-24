@@ -2,6 +2,7 @@
 #include "../include/handle_sdl.h"
 #include "../include/network.h"
 #include "../include/chess_log.h"
+#include "../include/FEN_notation.h"
 
 FT_INLINE s8 is_left_click_down(SDL_Event event) {
 	return (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT);
@@ -21,6 +22,10 @@ FT_INLINE s8 piece_in_range(SDLHandle *h, ChessPiece piece) {
 
 FT_INLINE s8 is_locale_mode(u32 flag) {
 	return (!has_flag(flag, FLAG_NETWORK));
+}
+
+FT_INLINE s8 is_key_pressed(SDL_Event event, s32 key) {
+	return (event.type == SDL_KEYDOWN && event.key.keysym.sym == key);
 }
 
 FT_INLINE void handle_locale_turn(SDLHandle *h) {
@@ -224,6 +229,10 @@ static void game_event_handling(SDLHandle *h, SDL_Event event, s8 player_color) 
 
 	if (ESCAPE_PRESSED(event)) {
 		h->menu.is_open = TRUE;
+	}
+
+	if (is_key_pressed(event, SDLK_p)) {
+		build_FEN_notation(h);
 	}
 
 	if (h->player_info.turn == FALSE) { return ; }

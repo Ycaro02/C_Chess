@@ -29,46 +29,46 @@ char *get_file_data(char *path, char *keyword, u32 line_idx, int max_size) {
 
     size = get_file_size_sdl(path);
     if (size < 0) {
-        CHESS_LOG(LOG_ERROR, "Getting file size\n");
+        CHESS_LOG(LOG_DEBUG, "Getting file size\n");
 		return (NULL);
     }
 
     rw = sdl_open(path, "r");
     if (!rw) {
-        CHESS_LOG(LOG_ERROR, "Opening data file\n");
+        CHESS_LOG(LOG_DEBUG, "Opening data file\n");
 		return (NULL);
     }
 
     data_file = ft_calloc(size + 1, sizeof(char));
     if (!data_file) {
-        CHESS_LOG(LOG_ERROR, "Allocating memory for data file\n");
+        CHESS_LOG(LOG_DEBUG, "Allocating memory for data file\n");
         goto close_rw;
     }
 
     if (sdl_read_complete_file(rw, data_file, size) != (size_t)size) {
-        CHESS_LOG(LOG_ERROR, "Reading data file\n");
+        CHESS_LOG(LOG_DEBUG, "Reading data file\n");
         goto free_file;
     }
     data_file[size] = '\0';
 
     split_file_line = ft_split(data_file, '\n');
     if (!split_file_line) {
-        CHESS_LOG(LOG_ERROR, "No first line\n");
+        CHESS_LOG(LOG_DEBUG, "No first line\n");
         goto free_file;
     } else if (double_char_size(split_file_line) < line_idx + 1) {
-        CHESS_LOG(LOG_ERROR, "Missing line need at least %d line\n", line_idx + 1);
+        CHESS_LOG(LOG_DEBUG, "Missing line need at least %d line\n", line_idx + 1);
         goto free_first_split;
     }
 
     split_line = ft_split(split_file_line[line_idx], ':');
     if (!split_line) {
-        CHESS_LOG(LOG_ERROR, "First line error\n");
+        CHESS_LOG(LOG_DEBUG, "First line error\n");
         goto free_first_split;
     } else if (double_char_size(split_line) != 2) {
-        CHESS_LOG(LOG_ERROR, "Missing separator ':' or too many separator format is 'keyword:value'\n");
+        CHESS_LOG(LOG_DEBUG, "Missing separator ':' or too many separator format is 'keyword:value'\n");
         goto free_second_split;
     } else if (ft_strncmp(split_line[0], keyword, ft_strlen(keyword)) != 0) {
-        CHESS_LOG(LOG_ERROR, "Wrong keyword need '%s', got: |%s|\n"RESET, keyword, split_line[0]);
+        CHESS_LOG(LOG_DEBUG, "Wrong keyword need '%s', got: |%s|\n"RESET, keyword, split_line[0]);
         goto free_second_split;
     }
 
@@ -76,7 +76,7 @@ char *get_file_data(char *path, char *keyword, u32 line_idx, int max_size) {
     data = ft_strtrim(split_line[1], " \t\n\r\v\f");
 
     if (fast_strlen(data) >= max_size) {
-        CHESS_LOG(LOG_ERROR, "Nickname too long max is 7 character\n");
+        CHESS_LOG(LOG_DEBUG, "Nickname too long max is 7 character\n");
         free(data);
         data = NULL;
     } else {
@@ -104,19 +104,19 @@ void register_file_data(char *path, char *keyword, char *data) {
 
 	new_data = ft_strjoin(keyword, data);
 	if (!new_data) {
-		CHESS_LOG(LOG_ERROR, "Malloc new data\n");
+		CHESS_LOG(LOG_DEBUG, "Malloc new data\n");
 		return;
 	}
 
 	// open in append mode
 	rw = sdl_open(path, "a");
 	if (!rw) {
-		CHESS_LOG(LOG_ERROR, "Opening file\n");
+		CHESS_LOG(LOG_DEBUG, "Opening file\n");
 	    free(new_data);
 	}
 
 	if (sdl_write(rw, new_data, sizeof(char), fast_strlen(new_data)) < 0) {
-		CHESS_LOG(LOG_ERROR, "Writing file\n");
+		CHESS_LOG(LOG_DEBUG, "Writing file\n");
 	}
 
 	CHESS_LOG(LOG_INFO, "Registering data: %s\n", new_data);
