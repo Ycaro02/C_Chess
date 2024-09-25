@@ -34,9 +34,9 @@ jobs:
       run: |
           git diff --quiet || (git commit -am "Update submodules" && git push)
 
-    - name: Install windows compiler x86_64-w64-mingw32-gcc and zip
+    - name: Install windows compiler x86_64-w64-mingw32-gcc and zip, get libtool to for curl compile
       run: |
-        sudo apt update && sudo apt install mingw-w64 zip -y
+        sudo apt update && sudo apt install mingw-w64 zip autoconf automake libtool -y
 
     - name: Run make
       run: make && make -C windows

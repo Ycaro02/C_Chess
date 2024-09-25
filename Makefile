@@ -6,9 +6,9 @@ CC              =   clang
 
 SDL_LIB			=	-L./rsc/lib/install/lib -rpath ./rsc/lib/install/lib -lSDL2 -lSDL2_ttf
 
-CURL_LIB		=	-lcurl -lz -lbrotlidec
+CURL_LIB		= 	-L./rsc/lib/curl_lib/lib -rpath ./rsc/lib/curl_lib/lib -lcurl
 
-CURL_INC		=	-I./rsc/lib/install/include/x86_64-linux-gnu
+CURL_INC		=	-I./rsc/lib/curl_lib/include/
 
 LIB_DEPS		=   rsc/lib
 

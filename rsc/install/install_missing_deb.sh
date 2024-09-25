@@ -52,7 +52,7 @@ function load_deb_package {
 	
 	local deb_file="${package_name}.deb"
 
-	display_color_msg ${MAGENTA} "Download deb package ${package_name}..."
+	display_color_msg ${MAGENTA} "[ LOADING ] ${package_name}..."
 
 	wget ${deb_url} -O ${deb_file} >> $FD_OUT 2>&1
 
@@ -65,7 +65,7 @@ function load_deb_package {
 	rm ${deb_file}
 	install_deb_package ${package_name} ${include_lib_dir}
 
-	display_color_msg ${GREEN} "Download deb package ${package_name}"
+	display_color_msg ${GREEN} "[ LOADED ]  ${package_name}"
 
 }
 
@@ -144,16 +144,20 @@ function load_missing_deb_package {
 	# curl
 	# load_deb_package ${ubuntu_url}/main/c/curl/libcurl4-openssl-dev_8.5.0-2ubuntu10.4_amd64.deb libcurl4-openssl-dev ${INC_AND_LIB}
 	load_deb_package http://security.ubuntu.com/ubuntu/pool/main/c/curl/libcurl4-openssl-dev_7.81.0-1_amd64.deb libcurl4-openssl-dev ${INC_AND_LIB}
-	load_deb_package ${ubuntu_url}/main/c/curl/libcurl4t64_8.5.0-2ubuntu10.4_amd64.deb libcurl4t64 ${ONLY_LIB}
-	load_deb_package ${ubuntu_url}/main/o/openldap/libldap2_2.6.7+dfsg-1~exp1ubuntu8_amd64.deb libldap2 ${ONLY_LIB} 
+	# load_deb_package ${ubuntu_url}/main/c/curl/libcurl4t64_8.5.0-2ubuntu10.4_amd64.deb libcurl4t64 ${ONLY_LIB}
+	# load_deb_package ${ubuntu_url}/main/o/openldap/libldap2_2.6.7+dfsg-1~exp1ubuntu8_amd64.deb libldap2 ${ONLY_LIB} 
 
-	# zlib for curl
-	load_deb_package http://security.ubuntu.com/ubuntu/pool/main/z/zlib/zlib1g-dev_1.3.dfsg-3.1ubuntu2_amd64.deb zlib1g-dev ${INC_AND_LIB}
-	load_deb_package http://security.ubuntu.com/ubuntu/pool/main/z/zlib/zlib1g_1.3.dfsg-3.1ubuntu2_amd64.deb zlib1g ${ONLY_LIB}
+	# # zlib for curl
+	# load_deb_package http://security.ubuntu.com/ubuntu/pool/main/z/zlib/zlib1g-dev_1.3.dfsg-3.1ubuntu2_amd64.deb zlib1g-dev ${INC_AND_LIB}
+	# load_deb_package http://security.ubuntu.com/ubuntu/pool/main/z/zlib/zlib1g_1.3.dfsg-3.1ubuntu2_amd64.deb zlib1g ${ONLY_LIB}
 
-	# brotli for curl too
-	load_deb_package http://security.ubuntu.com/ubuntu/pool/main/b/brotli/libbrotli-dev_1.0.9-2build6_amd64.deb libbrotli-dev ${INC_AND_LIB}
-	load_deb_package http://security.ubuntu.com/ubuntu/pool/main/b/brotli/libbrotli1_1.0.9-2build6_amd64.deb libbrotli1 ${ONLY_LIB}
+	# # brotli for curl too
+	# load_deb_package http://security.ubuntu.com/ubuntu/pool/main/b/brotli/libbrotli-dev_1.0.9-2build6_amd64.deb libbrotli-dev ${INC_AND_LIB}
+	# load_deb_package http://security.ubuntu.com/ubuntu/pool/main/b/brotli/libbrotli1_1.0.9-2build6_amd64.deb libbrotli1 ${ONLY_LIB}
+
+	# # nghttp2 for curl
+	# load_deb_package http://security.ubuntu.com/ubuntu/pool/main/n/nghttp2/libnghttp2-dev_1.59.0-1build4_amd64.deb libnghttp2-dev ${INC_AND_LIB}
+	# load_deb_package http://security.ubuntu.com/ubuntu/pool/main/n/nghttp2/libnghttp2-14_1.59.0-1build4_amd64.deb libnghttp2-14 ${ONLY_LIB}
 }
 
 # load_missing_deb_package

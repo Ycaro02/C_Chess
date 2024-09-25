@@ -14,10 +14,6 @@ INSTALL_PATH=$1
 
 mkdir -p ${INSTALL_PATH}
 
-PWD=($(pwd))
-
-INSTALL_PATH=${PWD}/${INSTALL_PATH}
-
 echo "Installing curl in ${INSTALL_PATH}"
 
 cd ${INSTALL_PATH}
