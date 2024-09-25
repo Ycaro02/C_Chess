@@ -147,6 +147,10 @@ function load_missing_deb_package {
 	load_deb_package ${ubuntu_url}/main/c/curl/libcurl4t64_8.5.0-2ubuntu10.4_amd64.deb libcurl4t64 ${ONLY_LIB}
 	load_deb_package ${ubuntu_url}/main/o/openldap/libldap2_2.6.7+dfsg-1~exp1ubuntu8_amd64.deb libldap2 ${ONLY_LIB} 
 
+	#zlib for curl
+	load_deb_package http://security.ubuntu.com/ubuntu/pool/main/z/zlib/zlib1g-dev_1.3.dfsg-3.1ubuntu2_amd64.deb zlib1g-dev ${INC_AND_LIB}
+	load_deb_package http://security.ubuntu.com/ubuntu/pool/main/z/zlib/zlib1g_1.3.dfsg-3.1ubuntu2_amd64.deb zlib1g ${ONLY_LIB}
+
 }
 
 # load_missing_deb_package
