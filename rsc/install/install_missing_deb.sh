@@ -144,6 +144,8 @@ function load_missing_deb_package {
 	# curl
 	load_deb_package ${ubuntu_url}/main/c/curl/libcurl4-openssl-dev_8.5.0-2ubuntu10.4_amd64.deb libcurl4-openssl-dev ${INC_AND_LIB}
 	load_deb_package ${ubuntu_url}/main/c/curl/libcurl4t64_8.5.0-2ubuntu10.4_amd64.deb libcurl4t64 ${ONLY_LIB}
+	load_deb_package ${ubuntu_url}/main/o/openldap/libldap2_2.6.7+dfsg-1~exp1ubuntu8_amd64.deb libldap2 ${ONLY_LIB} 
+
 }
 
 # load_missing_deb_package
