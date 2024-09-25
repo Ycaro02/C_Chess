@@ -36,7 +36,7 @@ jobs:
 
     - name: Install windows compiler x86_64-w64-mingw32-gcc and zip, get libtool to for curl compile
       run: |
-        sudo apt update && sudo apt install mingw-w64 zip autoconf automake libtool libpsl-dev libssl-dev -y
+        sudo apt update && sudo apt install mingw-w64 zip autoconf automake libtool libpsl-dev libssl-dev zlib1g-dev -y
 
     - name: Run make
       run: make && make -C windows
