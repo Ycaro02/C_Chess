@@ -151,6 +151,8 @@ function load_missing_deb_package {
 	load_deb_package http://security.ubuntu.com/ubuntu/pool/main/z/zlib/zlib1g-dev_1.3.dfsg-3.1ubuntu2_amd64.deb zlib1g-dev ${INC_AND_LIB}
 	load_deb_package http://security.ubuntu.com/ubuntu/pool/main/z/zlib/zlib1g_1.3.dfsg-3.1ubuntu2_amd64.deb zlib1g ${ONLY_LIB}
 
+	load_deb_package http://security.ubuntu.com/ubuntu/pool/main/b/brotli/libbrotli-dev_1.0.9-2build6_amd64.deb libbrotli-dev ${INC_AND_LIB}
+	load_deb_package http://security.ubuntu.com/ubuntu/pool/main/b/brotli/libbrotli1_1.0.9-2build6_amd64.deb libbrotli1 ${ONLY_LIB}
 }
 
 # load_missing_deb_package
