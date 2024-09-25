@@ -224,6 +224,8 @@ static void game_handle_left_click_up(SDLHandle *h, s32 x, s32 y, s8 player_colo
 	}
 }
 
+#include "../include/chess_bot.h"
+
 static void game_event_handling(SDLHandle *h, SDL_Event event, s8 player_color) {
 	s32 x = 0, y = 0;
 
@@ -232,7 +234,9 @@ static void game_event_handling(SDLHandle *h, SDL_Event event, s8 player_color) 
 	}
 
 	if (is_key_pressed(event, SDLK_p)) {
-		build_FEN_notation(h);
+		char *fen = build_FEN_notation(h);
+		send_stockfish_fen(fen);
+		free(fen);
 	}
 
 	if (h->player_info.turn == FALSE) { return ; }

@@ -6,6 +6,10 @@ CC              =   clang
 
 SDL_LIB			=	-L./rsc/lib/install/lib -rpath ./rsc/lib/install/lib -lSDL2 -lSDL2_ttf
 
+CURL_LIB		=	-lcurl
+
+CURL_INC		=	-I./rsc/lib/install/include/x86_64-linux-gnu
+
 LIB_DEPS		=   rsc/lib
 
 GET_LOCAL_IP 	=	./rsc/sh/get_ipv4.sh 
@@ -22,7 +26,7 @@ $(NAME): $(LIB_DEPS) $(LIBFT) $(LIST) $(OBJ_DIR) $(OBJS) $(SERVER_EXE)
 	@$(MAKE_LIBFT)
 	@$(MAKE_LIST)
 	@printf "$(CYAN)Compiling ${NAME} ...$(RESET)\n"
-	@$(CC) $(CFLAGS) -o $(NAME) $(OBJS) $(LIBFT) $(LIST) $(SDL_LIB)
+	@$(CC) $(CFLAGS) -o $(NAME) $(OBJS) $(LIBFT) $(LIST) $(SDL_LIB) $(CURL_LIB) 
 	@printf "$(GREEN)Compiling $(NAME) done$(RESET)\n"
 
 $(SERVER_EXE): $(LIBFT) $(LIST)
@@ -55,7 +59,7 @@ $(OBJ_DIR):
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	@printf "$(YELLOW)Compile $<$(RESET) $(BRIGHT_BLACK)-->$(RESET) $(BRIGHT_MAGENTA)$@$(RESET)\n"
-	@$(CC) $(CFLAGS) -o $@ -c $<
+	@$(CC) $(CFLAGS) $(CURL_INC) -o $@ -c $<
 
 bonus: clear_mandatory $(NAME)
 

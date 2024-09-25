@@ -19,6 +19,6 @@ typedef struct s_fen_format {
 #define UNKOWN_PIECE	'?'
 #define EMPTY_PIECE		' '
 
-void build_FEN_notation(SDLHandle *h);
+char *build_FEN_notation(SDLHandle *h);
 
 #endif

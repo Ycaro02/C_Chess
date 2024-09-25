@@ -126,33 +126,30 @@ static char chess_piece_to_fen(ChessPiece piece, int *empty_count) {
 static char *concat_FEN(FenFormat *fen) {
 	char *str_fen = NULL;
 
-	char *slash = "/";
-	char *space = " ";
-
 	/* Concat the board */
 	for (int i = 7; i >= 0; i--) {
 		str_fen = ft_strjoin_free(str_fen, fen->board[i], 'f');
 		if (i > 0) {
-			str_fen = ft_strjoin_free(str_fen, slash, 'f');
+			str_fen = ft_strjoin_free(str_fen, "/", 'f');
 		}
 	}
 
 	/* Concat the color turn */
-	str_fen = ft_strjoin_free(str_fen, space, 'f');
+	str_fen = ft_strjoin_free(str_fen, " ", 'f');
 	str_fen = ft_strjoin_free(str_fen, fen->color_turn, 'f');
 
 	/* Concat the castling */
-	str_fen = ft_strjoin_free(str_fen, space, 'f');
+	str_fen = ft_strjoin_free(str_fen, " ", 'f');
 	str_fen = ft_strjoin_free(str_fen, fen->castling, 'f');
 
 	/* Concat the en passant */
-	str_fen = ft_strjoin_free(str_fen, space, 'f');
+	str_fen = ft_strjoin_free(str_fen, " ", 'f');
 	str_fen = ft_strjoin_free(str_fen, fen->en_passant, 'f');
 
 	/* Concat the halfmove */
-	str_fen = ft_strjoin_free(str_fen, space, 'f');
+	str_fen = ft_strjoin_free(str_fen, " ", 'f');
 	str_fen = ft_strjoin_free(str_fen, (char[2]){fen->halfmove, '\0'}, 'f');
-	str_fen = ft_strjoin_free(str_fen, space, 'f');
+	str_fen = ft_strjoin_free(str_fen, " ", 'f');
 
 	/* Concat the fullmove */
 	str_fen = ft_strjoin_free(str_fen, fen->fullmove, 'f');
@@ -175,9 +172,7 @@ static void display_FEN_notation(FenFormat *fen) {
 	printf (" %s", fen->en_passant);
 	printf (" %c %s", fen->halfmove, fen->fullmove);
 	printf("\n"RESET);
-	char *str_fen = concat_FEN(fen);
-	CHESS_LOG(LOG_INFO, "FEN Notation: %s\n", str_fen);
-	free(str_fen);
+
 }
 
 /**
@@ -207,7 +202,7 @@ ChessTile find_enable_tile(u64 value) {
  * @brief Build the FEN notation
  * @param h The SDLHandle pointer
  */
-void build_FEN_notation(SDLHandle *h) {
+char *build_FEN_notation(SDLHandle *h) {
 	ChessPiece	piece = EMPTY;
 	FenFormat	*fen = ft_calloc(1, sizeof(FenFormat));
 	char		fen_char = EMPTY_PIECE;
@@ -267,8 +262,14 @@ void build_FEN_notation(SDLHandle *h) {
 	/* Print the FEN notation */
 	display_FEN_notation(fen);
 
+	char *str_fen = concat_FEN(fen);
+	CHESS_LOG(LOG_INFO, "FEN Notation: "ORANGE"%s\n"RESET, str_fen);
+	// free(str_fen);
+
 	/* Free the memory */
 	free(fen->fullmove);
 	free(fen);
+
+	return (str_fen);
 
 } 

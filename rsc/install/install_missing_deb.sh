@@ -27,7 +27,6 @@ INC_AND_LIB="2"
 
 mkdir -p ${TMP_DIR} ${TMP_LIB_DIR} ${TMP_INCLUDE_DIR} && cd ${TMP_DIR}
 
-
 function install_deb_package {
 	local package_name="${1}"
 	local include_lib_dir="${2}"
@@ -70,10 +69,8 @@ function load_deb_package {
 
 }
 
-
-
 function load_missing_deb_package {
-	# search on https://www.ubuntuupdates.org/ for the deb packages
+	# search on https://www.ubuntuupdates.org/ for the deb packages, we can use the ./rsc/sh/searh_apt-file.sh script to search where is a specific file
 	local ubuntu_url="http://security.ubuntu.com/ubuntu/pool"
 
 	display_color_msg ${YELLOW} "Installing missing deb packages from ${ubuntu_url} "
@@ -89,8 +86,6 @@ function load_missing_deb_package {
 	load_deb_package ${ubuntu_url}/main/libg/libglvnd/libgl1_1.7.0-1build1_amd64.deb libgl1 ${ONLY_LIB}
 
 	# Lib glx and his dependencies
-	# load_deb_package ${ubuntu_url}/main/libg/libglvnd/libglx-dev_1.7.0-1build1_amd64.deb libglx-dev ${INC_AND_LIB}
-	# load_deb_package ${ubuntu_url}/main/libg/libglvnd/libglx0_1.7.0-1build1_amd64.deb libglx0 ${ONLY_LIB}
 	load_deb_package ${ubuntu_url}/main/libg/libglvnd/libglx-dev_1.6.0-1_amd64.deb libglx-dev ${INC_AND_LIB}
 	load_deb_package ${ubuntu_url}/main/libg/libglvnd/libglx0_1.6.0-1_amd64.deb libglx0 ${ONLY_LIB}
 
@@ -111,8 +106,6 @@ function load_missing_deb_package {
 	load_deb_package ${ubuntu_url}/main/s/systemd/libudev1_255.4-1ubuntu8.4_amd64.deb libudev1 ${ONLY_LIB}
 
 	# x11 
-	# load_deb_package ${ubuntu_url}/main/libx/libx11/libx11-dev_1.8.7-1build1_amd64.deb libx11-dev ${INC_AND_LIB}
-	# load_deb_package ${ubuntu_url}/main/libx/libx11/libx11-6_1.8.7-1build1_amd64.deb libx11-6 ${ONLY_LIB}
 	load_deb_package ${ubuntu_url}/main/libx/libx11/libx11-dev_1.7.5-1ubuntu0.3_amd64.deb libx11-dev ${INC_AND_LIB}
 	load_deb_package ${ubuntu_url}/main/libx/libx11/libx11-6_1.7.5-1ubuntu0.3_amd64.deb libx11-6 ${ONLY_LIB}
 
@@ -147,6 +140,10 @@ function load_missing_deb_package {
 	# freeglut
 	load_deb_package ${ubuntu_url}/universe/f/freeglut/libglut-dev_3.4.0-1build1_amd64.deb libglut-dev ${INC_AND_LIB}
 	load_deb_package ${ubuntu_url}/universe/f/freeglut/libglut3.12_3.4.0-1build1_amd64.deb libglut3.12 ${ONLY_LIB}
+
+	# curl
+	load_deb_package ${ubuntu_url}/main/c/curl/libcurl4-openssl-dev_8.5.0-2ubuntu10.4_amd64.deb libcurl4-openssl-dev ${INC_AND_LIB}
+	load_deb_package ${ubuntu_url}/main/c/curl/libcurl4t64_8.5.0-2ubuntu10.4_amd64.deb libcurl4t64 ${ONLY_LIB}
 }
 
 # load_missing_deb_package

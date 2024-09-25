@@ -38,6 +38,7 @@ SRCS			=	chess_board.c \
 					compute_win_elem_size.c \
 					android_asset_manager.c \
 					build_FEN_notation.c \
+					stockfish.c \
 
 MAKE_LIBFT		=	make -s -C libft -j
 
