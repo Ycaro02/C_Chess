@@ -170,7 +170,7 @@ FD_OUT="/dev/stdout"
 handle_quiet_opt "${@}"
 
 # Setup deb packages (openGL lib and libudev)
-# setup_deb_packages
+setup_deb_packages
 
 # Set environment variables for dependencies
 export PKG_CONFIG_PATH="${INSTALL_DIR}/lib/pkgconfig"
@@ -182,12 +182,12 @@ export LDFLAGS="-L${INSTALL_DIR}/lib"
 set -e 
 
 # load_dependencies
-# load_SDL2 "https://github.com/libsdl-org/SDL/releases/download/release-2.30.5/SDL2-2.30.5.tar.gz" "SDL2-2.30.5"
-# # Load FreeType for SDL2_ttf for text rendering
-# load_lib "https://sourceforge.net/projects/freetype/files/freetype2/2.11.0/freetype-2.11.0.tar.gz/download"
-# load_SDL2_TTF "https://github.com/libsdl-org/SDL_ttf/releases/download/release-2.22.0/SDL2_ttf-2.22.0.tar.gz" "2.22.0"
+load_SDL2 "https://github.com/libsdl-org/SDL/releases/download/release-2.30.5/SDL2-2.30.5.tar.gz" "SDL2-2.30.5"
+# Load FreeType for SDL2_ttf for text rendering
+load_lib "https://sourceforge.net/projects/freetype/files/freetype2/2.11.0/freetype-2.11.0.tar.gz/download"
+load_SDL2_TTF "https://github.com/libsdl-org/SDL_ttf/releases/download/release-2.22.0/SDL2_ttf-2.22.0.tar.gz" "2.22.0"
 
 
 load_curl_lib
 
-# load_windows_lib
+load_windows_lib
