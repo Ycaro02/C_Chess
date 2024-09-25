@@ -6,9 +6,9 @@ CC              =   clang
 
 SDL_LIB			=	-L./rsc/lib/install/lib -rpath ./rsc/lib/install/lib -lSDL2 -lSDL2_ttf
 
-CURL_deps		= 	-lz -lbrotlidec -lssl -lcrypto -lnghttp2 -lpsl -lssh -lzstd -lldap -lrtmp -lgssapi_krb5 -lidn2 -lber
+CURL_DEPS		= 	-lz -lbrotlidec -lssl -lcrypto -lnghttp2 -lpsl -lssh -lzstd -lldap -lrtmp -lgssapi_krb5 -lidn2 -lber
 
-CURL_LIB		= 	-L./rsc/lib/curl_lib/lib -rpath ./rsc/lib/curl_lib/lib -lcurl $(CURL_FLAG)
+CURL_LIB		= 	-L./rsc/lib/curl_lib/lib -rpath ./rsc/lib/curl_lib/lib -lcurl $(CURL_DEPS)
 
 CURL_INC		=	-I./rsc/lib/curl_lib/include/
 
