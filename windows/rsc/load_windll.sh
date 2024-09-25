@@ -10,3 +10,9 @@ unzip SDL2_ttf-2.22.0-win32-x64.zip
 rm SDL2_ttf-2.22.0-win32-x64.zip README.txt
 mkdir -p license
 mv LICENSE.* license
+
+# load curl dll
+CURL_LIB_PATH="../rsc/lib/win_lib/curl_lib"
+cp ${CURL_LIB_PATH}/COPYING.txt license/license_curl.txt
+cp ${CURL_LIB_PATH}/bin/libcurl-x64.dll .
+cp ../rsc/lib/win_lib/curl_lib/bin/curl-ca-bundle.crt rsc

@@ -263,6 +263,10 @@ void send_stockfish_fen(char *fen_str) {
 
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, response_data);
 
+		#ifdef CHESS_WINDOWS_VERSION
+			curl_easy_setopt(curl, CURLOPT_CAINFO, "./rsc/curl-ca-bundle.crt");
+		#endif
+
 
         // Perform the request, res will get the return code
         res = curl_easy_perform(curl);

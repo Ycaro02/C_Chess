@@ -127,9 +127,25 @@ function get_SDL2_tff_windows {
 }
 
 
-function load_SDL2_windows {
+function get_curl_lib {
+	cd ${BASE_DIR}
+	cd win_lib
+
+	# Download the libcurl DLL for Windows
+	wget https://curl.se/windows/dl-8.10.1_1/curl-8.10.1_1-win64-mingw.zip
+	# Unzip the downloaded file
+	unzip curl-8.10.1_1-win64-mingw.zip
+	# Remove the downloaded zip file and unnecessary files
+	rm curl-8.10.1_1-win64-mingw.zip
+	mv curl-8.10.1_1-win64-mingw curl_lib
+}
+
+
+
+function load_windows_lib {
 	get_SDL2_windows
 	get_SDL2_tff_windows
+	get_curl_lib
 }
 
 # Get the current directory
@@ -166,4 +182,4 @@ load_SDL2 "https://github.com/libsdl-org/SDL/releases/download/release-2.30.5/SD
 # Load FreeType for SDL2_ttf for text rendering
 load_lib "https://sourceforge.net/projects/freetype/files/freetype2/2.11.0/freetype-2.11.0.tar.gz/download"
 load_SDL2_TTF "https://github.com/libsdl-org/SDL_ttf/releases/download/release-2.22.0/SDL2_ttf-2.22.0.tar.gz" "2.22.0"
-load_SDL2_windows
+load_windows_lib

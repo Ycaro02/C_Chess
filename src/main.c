@@ -199,9 +199,6 @@ void chess_start_program() {
 	chess_destroy(h);
 }
 
-#include "../include/chess_bot.h"
-
-// int SDL_main(int argc, char **argv) {
 int main(int argc, char **argv) {
 	// s8			error = 0;
 	// u32			flag = 0;

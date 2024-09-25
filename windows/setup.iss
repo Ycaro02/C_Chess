@@ -22,6 +22,7 @@ Source: "WinChessServer.exe"; DestDir: "{app}";
 Source: "WinCchess.exe"; DestDir: "{app}";
 Source: "SDL2.dll"; DestDir: "{app}";
 Source: "SDL2_ttf.dll"; DestDir: "{app}";
+Source: "libcurl-x64.dll"; DestDir: "{app}";
 Source: "rsc\*"; DestDir: "{app}\rsc"; Flags: recursesubdirs createallsubdirs
 
 [Icons]
