@@ -91,11 +91,19 @@ typedef struct s_move_save {
 typedef t_list ChessMoveList;
 typedef t_list ChessPieceList;
 
+typedef struct s_fen_format FenFormat;
+
 /* ChessBoard struct */
 typedef struct s_chess_board {
+
+	/* List of taken piece and move */
 	ChessMoveList	*lst;				/* List of MoveSave struct */
 	ChessPieceList	*white_kill_lst;	/* List of white killed pieces */
 	ChessPieceList	*black_kill_lst;	/* List of black killed pieces */
+
+	/* Fen notation structure */
+	FenFormat		*fen;				/* FEN format notation */
+
 	/* 64 bitboard for each piece */
 	Bitboard	piece[PIECE_MAX];
 
@@ -125,6 +133,10 @@ typedef struct s_chess_board {
 
 	/* Last clicked tile */
 	ChessTile	last_clicked_tile;		/* Last clicked tile */
+
+	/* Turn count */
+	u16			fullmove_count;		/* Turn count white + black == 1 */
+	u8			halfmove_count;		/* Half turn count, for the 50 moves rule */
 
 	/* Value of white and black pieces taken */
 	s8			white_piece_val;		/* White piece value */
@@ -277,6 +289,7 @@ s8			is_selected_possible_move(Bitboard possible_moves, ChessTile tile);
 s8			is_en_passant_move(ChessBoard *b, ChessTile tile);
 ChessPiece	get_piece_from_tile(ChessBoard *b, ChessTile tile);
 ChessPiece	get_piece_from_mask(ChessBoard *b, Bitboard mask);
+void		handle_turn_count(ChessBoard *b, ChessPiece piece_type, s8 kill);
 
 /* src/chess_piece_moves.c */
 Bitboard	get_pawn_moves(ChessBoard *b, Bitboard pawn, ChessPiece type, s8 is_black, s8 check_legal);
@@ -290,7 +303,7 @@ Bitboard	get_knight_moves(ChessBoard *b, Bitboard knight, ChessPiece type, s8 is
 /* src/generic_piece_move.c */
 Bitboard 	get_piece_move(ChessBoard *board, Bitboard piece, ChessPiece piece_type, s8 check_legal);
 s32			move_piece(SDLHandle *handle, ChessTile tile_from, ChessTile tile_to, ChessPiece type);
-void		handle_enemy_piece_kill(ChessBoard *b, ChessPiece type, Bitboard mask_to);
+s8			handle_enemy_piece_kill(ChessBoard *b, ChessPiece type, Bitboard mask_to);
 
 /* src/handle_board.c */
 s32			event_handler(SDLHandle *h, s8 player_color);

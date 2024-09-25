@@ -354,6 +354,9 @@ void destroy_sdl_handle(SDLHandle *handle) {
 	if (handle->name_font) {
 		unload_font(handle->name_font);
 	}
+	if (handle->piece_diff_font) {
+		unload_font(handle->piece_diff_font);
+	}
 
 	/* free center_text */
 	center_text_destroy(handle->center_text);

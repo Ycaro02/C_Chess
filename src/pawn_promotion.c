@@ -118,12 +118,13 @@ void do_promotion_move(SDLHandle *h, ChessTile tile_from, ChessTile tile_to, Che
 	/* If the message is a promotion message, promote the pawn */
 	ChessPiece	opponent_pawn = new_piece_type >= BLACK_KNIGHT ? BLACK_PAWN : WHITE_PAWN;
 	ChessPiece	piece_to_remove = get_piece_from_tile(h->board, tile_to);
+	s8			kill = FALSE;
 
 	/* Remove the opponent pawn */
 	h->board->piece[opponent_pawn] &= ~(1ULL << tile_from);
 
 	/* Remove the piece if there is one on the tile */
-	handle_enemy_piece_kill(h->board, piece_to_remove, (1ULL << tile_to));
+	kill = handle_enemy_piece_kill(h->board, piece_to_remove, (1ULL << tile_to));
 
 	/* Add the new piece */
 	h->board->piece[new_piece_type] |= (1ULL << tile_to);
@@ -135,6 +136,9 @@ void do_promotion_move(SDLHandle *h, ChessTile tile_from, ChessTile tile_to, Che
 	if (add_list) {
 		move_save_add(&h->board->lst, tile_from, tile_to, opponent_pawn, new_piece_type);
 	}
+
+	handle_turn_count(h->board, new_piece_type, kill);
+
 
 	update_piece_state(h->board);
 }

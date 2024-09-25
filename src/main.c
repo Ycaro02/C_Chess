@@ -167,6 +167,7 @@ void update_data_from_file(SDLHandle *h) {
 		set_flag(&h->flag, FLAG_NETWORK);
 		set_flag(&h->flag, FLAG_RECONNECT);
 	}
+	free(network_pause);
 }
 
 void chess_start_program() {

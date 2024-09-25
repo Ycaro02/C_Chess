@@ -53,6 +53,7 @@ void init_board(ChessBoard *b, u32 *app_flag) {
 
 	/* Set all pieces to 0 */
 	fast_bzero(b, sizeof(ChessBoard));
+	CHESS_LOG(LOG_INFO, ORANGE"sizeof(ChessBoard) = %lu\n"RESET, sizeof(ChessBoard));
 
 	/* Set start for white and black piece */
 	b->piece[WHITE_PAWN] = START_WHITE_PAWNS;
@@ -73,7 +74,10 @@ void init_board(ChessBoard *b, u32 *app_flag) {
 	b->selected_tile = INVALID_TILE;
 	b->last_tile_from = INVALID_TILE;
 	b->last_tile_to = INVALID_TILE;
-	b->possible_moves = 0;
+	// b->fen = NULL;
+	// b->possible_moves = 0;
+	// b->half_turn_count = 0;
+	b->fullmove_count = 1;
 
 	/* Update occupied and control bitboard */
 	update_piece_state(b);

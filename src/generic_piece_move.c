@@ -94,19 +94,22 @@ ChessTile get_tile_from_mask(Bitboard mask) {
  * @param tile_to	ChessTile enum
  * @param mask_to	Bitboard of the destination tile
 */
-void handle_enemy_piece_kill(ChessBoard *b, ChessPiece type, Bitboard mask_to) {
+s8 handle_enemy_piece_kill(ChessBoard *b, ChessPiece type, Bitboard mask_to) {
 	ChessPiece	enemy_piece = get_piece_from_mask(b, mask_to);
 	
 	if (enemy_piece != EMPTY) {
 		add_kill_lst(b, enemy_piece);
 		b->piece[enemy_piece] &= ~mask_to;
+		return (TRUE);
 	} else if ((type == WHITE_PAWN || type == BLACK_PAWN) && mask_to == b->en_passant) {
 		mask_to = (1ULL << b->en_passant_tile);
 		enemy_piece = (type == WHITE_PAWN) ? BLACK_PAWN : WHITE_PAWN;
 		CHESS_LOG(LOG_DEBUG, "En passant kill\n");
 		add_kill_lst(b, enemy_piece);
 		b->piece[enemy_piece] &= ~mask_to;
+		return (TRUE);
 	}
+	return (FALSE);
 }
 
 /* @brief	Get piece move function
@@ -152,7 +155,22 @@ Bitboard get_piece_move(ChessBoard *board, Bitboard piece, ChessPiece piece_type
 	return (get_move_func(board, piece, piece_type, is_black, check_legal));
 }
 
-
+/**
+ * @brief Handle turn count variable
+ * @param b				ChessBoard struct
+ * @param piece_type	ChessPiece enumm the piece type just moved
+ * @param kill			TRUE if a piece is killed, FALSE otherwise
+ */
+void handle_turn_count(ChessBoard *b, ChessPiece piece_type, s8 kill) {
+	if (kill == TRUE || (piece_type == BLACK_PAWN || piece_type == WHITE_PAWN)) {
+		b->halfmove_count = 0;
+	} else {
+		b->halfmove_count++;
+	}
+	if (piece_type >= BLACK_PAWN) {
+		b->fullmove_count++;
+	}
+}
 
 
 /* @brief Move a piece from a tile to another and update the board state
@@ -162,22 +180,23 @@ Bitboard get_piece_move(ChessBoard *board, Bitboard piece, ChessPiece piece_type
  * @param type		ChessPiece enum
  * @return PAWN_PROMOTION if the move is a pawn promotion, CHESS_QUIT if the move is a quit move, TRUE otherwise
 */
-s32 move_piece(SDLHandle *handle, ChessTile tile_from, ChessTile tile_to, ChessPiece type) {
+s32 move_piece(SDLHandle *handle, ChessTile tile_from, ChessTile tile_to, ChessPiece piece_type) {
 	Bitboard	mask_from = 1ULL << tile_from;
 	Bitboard	mask_to = 1ULL << tile_to;
 	s32			ret = TRUE;
+	s8			kill = FALSE;
 
 	/* Check if the enemy piece need to be kill, handle 'en passant' kill too */
-	handle_enemy_piece_kill(handle->board, type, mask_to);
+	kill = handle_enemy_piece_kill(handle->board, piece_type, mask_to);
 
 	/* Check if the move is a castle move and move rook if needed */
-	handle_castle_move(handle, type, tile_from, tile_to);
+	handle_castle_move(handle, piece_type, tile_from, tile_to);
 
 	/* Remove the piece from the from tile */
-	handle->board->piece[type] &= ~mask_from;
+	handle->board->piece[piece_type] &= ~mask_from;
 	
 	/* Add the piece to the to tile */
-	handle->board->piece[type] |= mask_to;
+	handle->board->piece[piece_type] |= mask_to;
 
 	/* Update the piece state */
 	update_piece_state(handle->board);
@@ -185,31 +204,32 @@ s32 move_piece(SDLHandle *handle, ChessTile tile_from, ChessTile tile_to, ChessP
 	// s32 pawn_ret = check_pawn_promot;
 	// if (pawn_ret == CHESS_QUIT) { return (CHESS_QUIT); } // toremove
 	/* Check if the pawn need to be promoted */
-	if (check_pawn_promotion(handle, type, tile_to) == TRUE) { ret = PAWN_PROMOTION; }
+	if (check_pawn_promotion(handle, piece_type, tile_to) == TRUE) { ret = PAWN_PROMOTION; }
 
 	/* Check if the enemy king is check and mat or PAT */
-	verify_check_and_mat(handle->board, !(type >= BLACK_PAWN));
+	verify_check_and_mat(handle->board, !(piece_type >= BLACK_PAWN));
 
 	/* Set special info for the king and rook */
-	board_special_info_handler(handle->board, type, tile_from);
+	board_special_info_handler(handle->board, piece_type, tile_from);
 
 	/* Update 'en passant' Bitboard if needed */
-	update_en_passant_bitboard(handle->board, type, tile_from, tile_to);
+	update_en_passant_bitboard(handle->board, piece_type, tile_from, tile_to);
 
+	/* Update the last move variable */
 	handle->board->last_tile_from = tile_from;
 	handle->board->last_tile_to = tile_to;
 
+	/* Add the move to the move list */
 	if (ret != PAWN_PROMOTION) {
-		move_save_add(&handle->board->lst, tile_from, tile_to, type, get_piece_from_tile(handle->board, tile_to));
+		move_save_add(&handle->board->lst, tile_from, tile_to, piece_type, get_piece_from_tile(handle->board, tile_to));
 	}
-
-	// if (!handle->first_move_played) {
-	// 	handle->first_move_played = TRUE;
-	// }
 
 	if (!has_flag(handle->flag, FLAG_FIRST_MOVE_PLAYED)) {
 		set_flag(&handle->flag, FLAG_FIRST_MOVE_PLAYED);
 	}
+
+	/* Handle turn count */
+	handle_turn_count(handle->board, piece_type, kill);
 
 	// display_move_list(handle->board->lst);
 	return (ret);

@@ -69,12 +69,10 @@ void edit_timer_func(SDLHandle *h) {
  * @param idx The index of the button
  * @param type The type of the field
  */
-static void set_profile_btn_text_func(Profile *profile, s32 idx, ProfileFieldType type) {
+static void set_profile_btn_func(Profile *profile, s32 idx, ProfileFieldType type) {
 	if (type == PFT_NAME) {
-		profile->btn[idx].text = ft_strdup("Edit");
 		profile->btn[idx].func = edit_name_func;
 	} else if (type == PFT_TIMER) {
-		profile->btn[idx].text = ft_strdup("Edit");
 		profile->btn[idx].func = edit_timer_func;
 	}
 }
@@ -271,11 +269,11 @@ Profile *init_profile_page(SDLHandle *h, s32 nb_field) {
 	};
 
 	/* Set profile field */
-	for (s32 i = 0; i < nb_field; i++) {
+	for (s32 i = 0; i < profile->nb_field; i++) {
 		profile->describe_field[i] = ft_strdup(profile_field_info[i].opt_name);
 		profile->tf[i] = init_profile_text_field(profile->font, profile->rect, profile_field_info[i], i);
 		profile->btn[i] = init_pofile_button(profile->tf[i], profile->font,  btn_text_width, btn_text_height);
-		set_profile_btn_text_func(profile, i, i);
+		set_profile_btn_func(profile, i, i);
 	}
 
 
@@ -295,9 +293,21 @@ void destroy_profile_page(Profile *profile) {
 			destroy_text_field(profile->tf[i]);
 		}
 	}
+
+	for (s32 i = 0; i < profile->nb_field; i++) {
+		if (profile->btn[i].text) {
+			CHESS_LOG(LOG_INFO, "free btn text: %s\n", profile->btn[i].text);
+			free(profile->btn[i].text);
+		}
+	}
+	free(profile->btn);
+	free(profile->describe_field);
 	free(profile->tf);
 	if (profile->font) {
 		unload_font(profile->font);
+	}
+	if (profile->describe_font) {
+		unload_font(profile->describe_font);
 	}
 	free(profile);
 }

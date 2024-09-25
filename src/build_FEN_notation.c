@@ -123,6 +123,42 @@ static char chess_piece_to_fen(ChessPiece piece, int *empty_count) {
 	return (array[piece].fen);
 }
 
+static char *concat_FEN(FenFormat *fen) {
+	char *str_fen = NULL;
+
+	char *slash = "/";
+	char *space = " ";
+
+	/* Concat the board */
+	for (int i = 7; i >= 0; i--) {
+		str_fen = ft_strjoin_free(str_fen, fen->board[i], 'f');
+		if (i > 0) {
+			str_fen = ft_strjoin_free(str_fen, slash, 'f');
+		}
+	}
+
+	/* Concat the color turn */
+	str_fen = ft_strjoin_free(str_fen, space, 'f');
+	str_fen = ft_strjoin_free(str_fen, fen->color_turn, 'f');
+
+	/* Concat the castling */
+	str_fen = ft_strjoin_free(str_fen, space, 'f');
+	str_fen = ft_strjoin_free(str_fen, fen->castling, 'f');
+
+	/* Concat the en passant */
+	str_fen = ft_strjoin_free(str_fen, space, 'f');
+	str_fen = ft_strjoin_free(str_fen, fen->en_passant, 'f');
+
+	/* Concat the halfmove */
+	str_fen = ft_strjoin_free(str_fen, space, 'f');
+	str_fen = ft_strjoin_free(str_fen, (char[2]){fen->halfmove, '\0'}, 'f');
+	str_fen = ft_strjoin_free(str_fen, space, 'f');
+
+	/* Concat the fullmove */
+	str_fen = ft_strjoin_free(str_fen, fen->fullmove, 'f');
+	return (str_fen);
+}
+
 /**
  * @brief Display the FEN notation
  * @param fen The FenFormat pointer
@@ -137,8 +173,11 @@ static void display_FEN_notation(FenFormat *fen) {
 	printf (" %s", fen->color_turn);
 	printf (" %s", fen->castling);
 	printf (" %s", fen->en_passant);
-	printf (" %c %c", fen->halfmove, fen->fullmove);
+	printf (" %c %s", fen->halfmove, fen->fullmove);
 	printf("\n"RESET);
+	char *str_fen = concat_FEN(fen);
+	CHESS_LOG(LOG_INFO, "FEN Notation: %s\n", str_fen);
+	free(str_fen);
 }
 
 /**
@@ -220,17 +259,16 @@ void build_FEN_notation(SDLHandle *h) {
 	}
 
 	/* Set the halfmove */
-	// fen->halfmove = h->board->halfmove;
-	fen->halfmove = '0';
+	fen->halfmove = h->board->halfmove_count + '0';
 
 	/* Set the fullmove */
-	// fen->fullmove = h->board->fullmove;
-	fen->fullmove = '1';
+	fen->fullmove = ft_itoa(h->board->fullmove_count);
 
 	/* Print the FEN notation */
 	display_FEN_notation(fen);
 
-
+	/* Free the memory */
+	free(fen->fullmove);
 	free(fen);
 
 } 
