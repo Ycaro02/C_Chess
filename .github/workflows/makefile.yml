@@ -36,7 +36,7 @@ jobs:
 
     - name: Install windows compiler x86_64-w64-mingw32-gcc and zip, get libtool to for curl compile
       run: |
-        sudo apt update && sudo apt install mingw-w64 libpsl-dev libssl-dev libnghttp2-dev -y
+        sudo apt update && sudo apt install mingw-w64 libpsl-dev libssl-dev libldap2-dev libnghttp2-dev libssh-dev libzstd-dev libkrb5-dev librtmp-dev -y
 
     - name: Run make
       run: make && make -C windows
