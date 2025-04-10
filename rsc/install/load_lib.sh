@@ -149,7 +149,7 @@ function load_curl_lib {
 function load_windows_lib {
 	get_SDL2_windows
 	get_SDL2_tff_windows
-	get_curl_lib_windows
+	# get_curl_lib_windows
 }
 
 # Get the current directory
@@ -187,7 +187,5 @@ load_SDL2 "https://github.com/libsdl-org/SDL/releases/download/release-2.30.5/SD
 load_lib "https://sourceforge.net/projects/freetype/files/freetype2/2.11.0/freetype-2.11.0.tar.gz/download"
 load_SDL2_TTF "https://github.com/libsdl-org/SDL_ttf/releases/download/release-2.22.0/SDL2_ttf-2.22.0.tar.gz" "2.22.0"
 
-
-load_curl_lib
-
+# load_curl_lib
 load_windows_lib
