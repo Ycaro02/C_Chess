@@ -82,12 +82,12 @@ function load_missing_deb_package {
 	load_deb_package ${ubuntu_url}/main/libg/libglu/libglu1-mesa_9.0.2-1.1build1_amd64.deb libglu1-mesa ${ONLY_LIB}
 
 	# Lib gl and his dependencies
-	load_deb_package ${ubuntu_url}/main/libg/libglvnd/libgl-dev_1.6.0-1_amd64.deb libgl-dev ${INC_AND_LIB}
+	load_deb_package http://security.ubuntu.com/ubuntu/pool/main/libg/libglvnd/libgl-dev_1.7.0-1build1_amd64.deb libgl-dev ${INC_AND_LIB}
 	load_deb_package ${ubuntu_url}/main/libg/libglvnd/libgl1_1.7.0-1build1_amd64.deb libgl1 ${ONLY_LIB}
 
 	# Lib glx and his dependencies
-	load_deb_package ${ubuntu_url}/main/libg/libglvnd/libglx-dev_1.6.0-1_amd64.deb libglx-dev ${INC_AND_LIB}
-	load_deb_package ${ubuntu_url}/main/libg/libglvnd/libglx0_1.6.0-1_amd64.deb libglx0 ${ONLY_LIB}
+	load_deb_package http://security.ubuntu.com/ubuntu/pool/main/libg/libglvnd/libglx-dev_1.7.0-1build1_amd64.deb libglx-dev ${INC_AND_LIB}
+	load_deb_package http://security.ubuntu.com/ubuntu/pool/main/libg/libglvnd/libglx0_1.7.0-1build1_amd64.deb libglx0 ${ONLY_LIB}
 
 	# Lib drm and his dependencies
 	load_deb_package ${ubuntu_url}/main/libd/libdrm/libdrm-dev_2.4.101-2_amd64.deb libdrm-dev ${INC_AND_LIB}
@@ -102,8 +102,8 @@ function load_missing_deb_package {
 	load_deb_package ${ubuntu_url}/main/libp/libpciaccess/libpciaccess0_0.17-3build1_amd64.deb libpciaccess0 ${ONLY_LIB}
 	
 	# Lib udev and his dependencies
-	load_deb_package ${ubuntu_url}/main/s/systemd/libudev-dev_255.4-1ubuntu8.4_amd64.deb libudev-dev ${INC_AND_LIB}
-	load_deb_package ${ubuntu_url}/main/s/systemd/libudev1_255.4-1ubuntu8.4_amd64.deb libudev1 ${ONLY_LIB}
+	load_deb_package http://security.ubuntu.com/ubuntu/pool//main/s/systemd/libudev-dev_255.4-1ubuntu8_amd64.deb libudev-dev ${INC_AND_LIB}
+	load_deb_package http://security.ubuntu.com/ubuntu/pool//main/s/systemd/libudev1_255.4-1ubuntu8_amd64.deb libudev1 ${ONLY_LIB}
 
 	# x11 
 	load_deb_package ${ubuntu_url}/main/libx/libx11/libx11-dev_1.7.5-1ubuntu0.3_amd64.deb libx11-dev ${INC_AND_LIB}
