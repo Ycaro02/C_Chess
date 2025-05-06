@@ -132,9 +132,11 @@ static inline s8 handle_occupied_tile(Bitboard move, Bitboard occupied, Bitboard
 
 
 /* @brief	Get possible moves for bishop
-	*	@param	bishop		Bitboard of the selected bishop
-	*	@param	occupied	Bitboard of the occupied squares
-	*	@param	enemy		Bitboard of the enemy pieces
+	*	@param	ChessBoard Board pointer
+	*	@param	Bitboard of the selected bishop
+	*	@param	type the chess type selected
+	*	@param	is_black, is black boolean
+	*	@param	check_legal, boolean need to check legal move or nor
 	*	@return	Bitboard of the possible moves
 */
 Bitboard get_bishop_moves(ChessBoard *b, Bitboard bishop, ChessPiece type, s8 is_black, s8 check_legal) {
@@ -171,8 +173,8 @@ Bitboard get_bishop_moves(ChessBoard *b, Bitboard bishop, ChessPiece type, s8 is
 			if (occupied_tile == ALLY_TILE) { break ; }
 
 			/* Check if is a legal move */
-			// if (check_legal && verify_legal_move(b, type, bishop, move, is_black) == FALSE) { continue ; }
-			if (check_legal && verify_legal_move(b, type, bishop, move, is_black) == FALSE) { break ; }
+			if (check_legal && verify_legal_move(b, type, bishop, move, is_black) == FALSE) { continue ; }
+			// if (check_legal && verify_legal_move(b, type, bishop, move, is_black) == FALSE) { break ; }
 
             /* Add the move to the attacks */
             attacks |= move;
@@ -184,10 +186,12 @@ Bitboard get_bishop_moves(ChessBoard *b, Bitboard bishop, ChessPiece type, s8 is
     return attacks;
 }
 
-/*	@brief	Get possible moves for rook
-	*	@param	rook		Bitboard of the selected rook
-	*	@param	occupied	Bitboard of the occupied squares
-	*	@param	enemy		Bitboard of the enemy pieces
+/* @brief	Get possible moves for rook
+	*	@param	ChessBoard Board pointer
+	*	@param	Bitboard of the selected rook
+	*	@param	type the chess type selected
+	*	@param	is_black, is black boolean
+	*	@param	check_legal, boolean need to check legal move or nor
 	*	@return	Bitboard of the possible moves
 */
 Bitboard get_rook_moves(ChessBoard *b, Bitboard rook, ChessPiece type, s8 is_black, s8 check_legal) {
@@ -232,10 +236,12 @@ Bitboard get_rook_moves(ChessBoard *b, Bitboard rook, ChessPiece type, s8 is_bla
 }
 
 
-/*	@brief	Get possible moves for queen
-	*	@param	queen		Bitboard of the selected queen
-	*	@param	occupied	Bitboard of the occupied squares
-	*	@param	enemy		Bitboard of the enemy pieces
+/* @brief	Get possible moves for queen
+	*	@param	ChessBoard Board pointer
+	*	@param	Bitboard of the selected queen
+	*	@param	type the chess type selected
+	*	@param	is_black, is black boolean
+	*	@param	check_legal, boolean need to check legal move or nor
 	*	@return	Bitboard of the possible moves
 */
 Bitboard get_queen_moves(ChessBoard *b, Bitboard queen, ChessPiece type, s8 is_black, s8 check_legal) {
@@ -304,10 +310,12 @@ static Bitboard verify_castle_move(ChessBoard *b, Bitboard king, s8 is_black){
 	return (move);
 }
 
-/*	@brief	Get possible moves for king
-	*	@param	king		Bitboard of the selected king
-	*	@param	occupied	Bitboard of the occupied squares
-	*	@param	enemy		Bitboard of the enemy pieces
+/* @brief	Get possible moves for king
+	*	@param	ChessBoard Board pointer
+	*	@param	Bitboard of the selected king
+	*	@param	type the chess type selected
+	*	@param	is_black, is black boolean
+	*	@param	check_legal, boolean need to check legal move or nor
 	*	@return	Bitboard of the possible moves
 */
 Bitboard get_king_moves(ChessBoard *b, Bitboard king, ChessPiece type, s8 is_black, s8 check_legal) {
@@ -357,10 +365,12 @@ Bitboard get_king_moves(ChessBoard *b, Bitboard king, ChessPiece type, s8 is_bla
 	return (attacks);
 }
 
-/*	@brief	Get possible moves for knight
-	*	@param	knight		Bitboard of the selected knight
-	*	@param	occupied	Bitboard of the occupied squares
-	*	@param	enemy		Bitboard of the enemy pieces
+/* @brief	Get possible moves for knight
+	*	@param	ChessBoard Board pointer
+	*	@param	Bitboard of the selected knight
+	*	@param	type the chess type selected
+	*	@param	is_black, is black boolean
+	*	@param	check_legal, boolean need to check legal move or nor
 	*	@return	Bitboard of the possible moves
 */
 Bitboard get_knight_moves(ChessBoard *b, Bitboard knight, ChessPiece type, s8 is_black, s8 check_legal) {
