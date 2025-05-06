@@ -217,8 +217,8 @@ Bitboard get_rook_moves(ChessBoard *b, Bitboard rook, ChessPiece type, s8 is_bla
 			if (occupied_tile == ALLY_TILE) { break ; }
 
 			/* Check if is a legal move */
-			// if (check_legal && verify_legal_move(b, type, rook, move, is_black) == FALSE) { continue ; }
-			if (check_legal && verify_legal_move(b, type, rook, move, is_black) == FALSE) { break ; }
+			if (check_legal && verify_legal_move(b, type, rook, move, is_black) == FALSE) { continue ; }
+			// if (check_legal && verify_legal_move(b, type, rook, move, is_black) == FALSE) { break ; }
 
 			/* Add the move to the attacks */
 			attacks |= move;
