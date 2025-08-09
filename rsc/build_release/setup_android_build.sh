@@ -10,6 +10,11 @@
 #     bash
 #   '
 
+# With the docker image:
+
+# docker build -t android-chess-build -f rsc/build_release/Dockerfile .
+# docker run --rm -it -v ./:/app/chess/C_Chess --workdir /app/chess/C_Chess chess-android-build ./rsc/build_release/setup_android_build.sh
+
 export ANDROID_HOME=/Android-tools
 export ANDROID_CMDLINE_TOOLS=$ANDROID_HOME/cmdline-tools/latest
 
