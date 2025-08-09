@@ -172,9 +172,14 @@ Bitboard get_bishop_moves(ChessBoard *b, Bitboard bishop, ChessPiece type, s8 is
 			occupied_tile = handle_occupied_tile(move, occupied, enemy);
 			if (occupied_tile == ALLY_TILE) { break ; }
 
-			/* Check if is a legal move */
-			if (check_legal && verify_legal_move(b, type, bishop, move, is_black) == FALSE) { continue ; }
-			// if (check_legal && verify_legal_move(b, type, bishop, move, is_black) == FALSE) { break ; }
+			/* If we check for legal move, and the move is not legal */
+			if (check_legal && verify_legal_move(b, type, bishop, move, is_black) == FALSE) { 
+                /* If the move is blocked by an enemy piece, stop the travel in this direction */
+                if (occupied_tile == ENEMY_TILE) {
+                    break;
+                }
+                continue ; 
+            }
 
             /* Add the move to the attacks */
             attacks |= move;
@@ -220,8 +225,16 @@ Bitboard get_rook_moves(ChessBoard *b, Bitboard rook, ChessPiece type, s8 is_bla
 			occupied_tile = handle_occupied_tile(move, occupied, enemy);
 			if (occupied_tile == ALLY_TILE) { break ; }
 
-			/* Check if is a legal move */
-			if (check_legal && verify_legal_move(b, type, rook, move, is_black) == FALSE) { continue ; }
+            /* If we check for legal move, and the move is not legal */
+			if (check_legal && verify_legal_move(b, type, rook, move, is_black) == FALSE) { 
+                /* If the move is blocked by an enemy piece, stop the travel in this direction */
+                if (occupied_tile == ENEMY_TILE) {
+                    break;
+                }
+                continue ; 
+            }
+
+			// if (check_legal && verify_legal_move(b, type, rook, move, is_black) == FALSE) { continue ; }
 			// if (check_legal && verify_legal_move(b, type, rook, move, is_black) == FALSE) { break ; }
 
 			/* Add the move to the attacks */
