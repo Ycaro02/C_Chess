@@ -155,14 +155,10 @@ function load_windows_lib {
 # Get the current directory
 PWD=$(pwd)
 
-
 # Variables
 BASE_DIR="$PWD/rsc/lib"
 DEPS_DIR="$BASE_DIR/deps"
 INSTALL_DIR="$BASE_DIR/install"
-
-mkdir -p ${BASE_DIR} ${DEPS_DIR} ${INSTALL_DIR}
-
 
 # Load the color script and utils functions
 # Need to declare PWD and DEPS/INSTALL_DIR before loading the script
@@ -171,17 +167,16 @@ source ${PWD}/rsc/install/install_utils.sh
 FD_OUT="/dev/stdout"
 
 # Update FD_OUT if -q option is passed
-# handle_quiet_opt "${@}"
+handle_quiet_opt "${@}"
 
 # Setup deb packages (openGL lib and libudev)
-# setup_deb_packages
+setup_deb_packages
 
 # Set environment variables for dependencies
 export PKG_CONFIG_PATH="${INSTALL_DIR}/lib/pkgconfig"
 export CFLAGS="-I${INSTALL_DIR}/include"
 export CXXFLAGS="-I${INSTALL_DIR}/include -L${INSTALL_DIR}/lib"
 export LDFLAGS="-L${INSTALL_DIR}/lib"
-
 
 # Cut script execution if any command fails
 set -e 
@@ -193,4 +188,4 @@ load_lib "https://sourceforge.net/projects/freetype/files/freetype2/2.11.0/freet
 load_SDL2_TTF "https://github.com/libsdl-org/SDL_ttf/releases/download/release-2.22.0/SDL2_ttf-2.22.0.tar.gz" "2.22.0"
 
 # load_curl_lib
-# load_windows_lib
+load_windows_lib

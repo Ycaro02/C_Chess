@@ -42,7 +42,7 @@ SDL_Window* create_sdl_windows(SDLHandle *h, const char* title) {
 		SDL_ERR_FUNC();
 		return (NULL);
 	}
-	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+	renderer = SDL_CreateRenderer(window, -1, 0);
 	if (!renderer) {
 		SDL_ERR_FUNC();
 		SDL_DestroyWindow(window);
