@@ -16,27 +16,26 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
-char hostname[1024] = {};
-char url[1024] = {};
-char endpoint[1024] = {};
+typedef struct HttpRequest {
+    char hostname[1024];
+    char url[1024];
+    char endpoint[1024];
+} HttpRequest;
 
-// Variables globales pour la connexion HTTPS active
+
 static SSL *global_ssl = NULL;
 static SSL_CTX *global_ctx = NULL;
 static int global_socket = -1;
 
-// Fonction pour initialiser OpenSSL
 void init_openssl() {
     SSL_load_error_strings();
     OpenSSL_add_ssl_algorithms();
 }
 
-// Fonction pour nettoyer OpenSSL
 void cleanup_openssl() {
     EVP_cleanup();
 }
 
-// Fonction pour créer le contexte SSL
 SSL_CTX *create_ssl_context() {
     const SSL_METHOD *method = TLS_client_method();
     SSL_CTX *ctx = SSL_CTX_new(method);
@@ -47,27 +46,25 @@ SSL_CTX *create_ssl_context() {
         return NULL;
     }
     
-    // Configurer les options SSL pour améliorer la compatibilité
-    SSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, NULL); // Désactiver la vérification des certificats
-    SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3); // Désactiver les anciens protocoles
+    // Configure SSL options for better compatibility
+    SSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, NULL); // Disable certificate verification (curl -k)
+    SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3); // Disable old protocols
     
-    // Définir les suites de chiffrement compatibles
+    // define compatible cipher suites
     SSL_CTX_set_cipher_list(ctx, "HIGH:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!SRP:!CAMELLIA");
     
     return ctx;
 }
 
-int send_https_packet(const char *url, const char *method, const char *data) {
+int send_https_packet(HttpRequest *http_request, const char *method, const char *data) {
     init_openssl();
     
-    // Créer le contexte SSL
     SSL_CTX *ctx = create_ssl_context();
     if (!ctx) {
         cleanup_openssl();
         return -1;
     }
     
-    // Créer le socket TCP
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0) {
         perror("Socket creation failed");
@@ -76,7 +73,7 @@ int send_https_packet(const char *url, const char *method, const char *data) {
         return -1;
     }
 
-    struct hostent *server = gethostbyname(hostname);
+    struct hostent *server = gethostbyname(http_request->hostname);
     if (server == NULL) {
         fprintf(stderr, "No such host\n");
         close(sock);
@@ -102,8 +99,8 @@ int send_https_packet(const char *url, const char *method, const char *data) {
     SSL *ssl = SSL_new(ctx);
     SSL_set_fd(ssl, sock);
     
-    // Activer SNI (Server Name Indication) - requis par beaucoup de serveurs modernes
-    SSL_set_tlsext_host_name(ssl, hostname);
+    // Active SNI (Server Name Indication) - required by many modern servers
+    SSL_set_tlsext_host_name(ssl, http_request->hostname);
 
     if (SSL_connect(ssl) <= 0) {
         fprintf(stderr, "SSL connection failed\n");
@@ -123,7 +120,7 @@ int send_https_packet(const char *url, const char *method, const char *data) {
                 "User-Agent: curl/7.81.0\r\n"
                 "Accept: */*\r\n"
                 "Connection: close\r\n"
-                "\r\n", endpoint, hostname);
+                "\r\n", http_request->endpoint, http_request->hostname);
     }
 
     if (SSL_write(ssl, request, strlen(request)) <= 0) {
@@ -140,17 +137,17 @@ int send_https_packet(const char *url, const char *method, const char *data) {
     global_ctx = ctx;
     global_socket = sock;
     
-    return 1; // Succès
+    return 1; // Success
 }
 
-int send_http_packet(const char *url, const char *method, const char *data) {
+int send_http_packet(HttpRequest *http_request, const char *method, const char *data) {
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0) {
         perror("Socket creation failed");
         return -1;
     }
 
-    struct hostent *server = gethostbyname(hostname);
+    struct hostent *server = gethostbyname(http_request->hostname);
     if (server == NULL) {
         fprintf(stderr, "No such host\n");
         close(sock);
@@ -173,12 +170,12 @@ int send_http_packet(const char *url, const char *method, const char *data) {
 
     if (strcmp(method, "GET") == 0) {
         snprintf(request, sizeof(request),
-                "GET / HTTP/1.1\r\n"
+                "GET %s HTTP/1.1\r\n"
                 "Host: %s\r\n"
                 "User-Agent: curl/7.81.0\r\n"
                 "Accept: */*\r\n"
                 "Connection: close\r\n"
-                 "\r\n", hostname);
+                "\r\n", http_request->endpoint, http_request->hostname);
     }
 
 
@@ -224,43 +221,137 @@ void listen_https_response() {
         ERR_print_errors_fp(stderr);
     }
     
-    // Nettoyer les ressources
+    // clean up resources
     SSL_shutdown(global_ssl);
     SSL_free(global_ssl);
     close(global_socket);
     SSL_CTX_free(global_ctx);
     cleanup_openssl();
     
-    // Remettre à zéro les variables globales
+    // Reset ssl global variables
     global_ssl = NULL;
     global_ctx = NULL;
     global_socket = -1;
 }
 
+
+void extract_url_scheme(char *url, char *scheme) {
+    int i = 0;
+    while (url[i] && url[i] != ':') {
+        scheme[i] = url[i];
+        i++;
+    }
+    scheme[i] = '\0';
+} 
+
+void extract_url_host(char *url, char *host) {
+    int i = 0;
+    int j = 0;
+
+    // Skip the scheme
+    while (url[i] && url[i] != ':') {
+        i++;
+    }
+
+    if (strlen(url) < i + 3) {
+        printf("Invalid URL format\n");
+        host[0] = '\0';
+        return;
+    }
+
+    i += 3; // Skip "://"
+
+    // Extract the host
+    while (url[i] && url[i] != '/' && url[i] != ':') {
+        host[j++] = url[i++];
+    }
+    host[j] = '\0';
+}
+
+void extract_url_endpoint(char *url, char *endpoint) {
+    int i = 0;
+    int j = 0;
+
+    // Skip the scheme
+    while (url[i] && url[i] != ':') {
+        i++;
+    }
+
+    i += 3; // Skip "://"
+
+    // Skip the host
+    while (url[i] && url[i] != '/') {
+        i++;
+    }
+
+    // Extract the endpoint
+    while (url[i]) {
+        endpoint[j++] = url[i++];
+    }
+    endpoint[j] = '\0';
+}
+
+int is_https_url(char *url) {
+    char scheme[16] = {};
+
+    extract_url_scheme(url, scheme);
+    printf("URL scheme: %s\n", url);
+
+    printf("URL scheme extracted: %s\n", scheme);
+
+    int is_http = strcmp(scheme, "http") == 0;
+    if (is_http) {
+        return (0);
+    }
+    int is_https = strcmp(scheme, "https") == 0;
+    if (is_https) {
+        return (1);
+    }
+    return (-1);
+}
+
 int main(int argc, char **argv) {
 
-    if (argc < 4) {
-        fprintf(stderr, "Usage: %s <URL> <hostname> <endpoint> [https]\n", argv[0]);
+    HttpRequest http_request = {
+        .hostname = "",
+        .url = "",
+        .endpoint = ""
+    };
+
+    if (argc < 2) {
+        fprintf(stderr, "Usage: %s <URL>\n", argv[0]);
         return 1;
     }
 
-    strncpy(url, argv[1], sizeof(url) - 1);
-    strncpy(hostname, argv[2], sizeof(hostname) - 1);
-    strncpy(endpoint, argv[3], sizeof(endpoint) - 1);
+    strncpy(http_request.url, argv[1], 1024 - 1);
 
+    int use_https = is_https_url(http_request.url);
 
-    // Vérifier si HTTPS est demandé
-    int use_https = (argc > 4 && strcmp(argv[4], "https") == 0);
-    
+    if (use_https == -1) {
+        fprintf(stderr, "Invalid URL scheme. Use http:// or https://\n");
+        return 1;
+    }
+
+    extract_url_host(http_request.url, http_request.hostname);
+    printf("Extracted host: %s\n", http_request.hostname);
+
+    extract_url_endpoint(http_request.url, http_request.endpoint);
+    printf("Extracted endpoint: %s\n", http_request.endpoint);
+
+    if (strlen(http_request.endpoint) == 0) {
+        strcpy(http_request.endpoint, "/");
+        printf("Defaulting endpoint to: %s\n", http_request.endpoint);
+    }
+
     if (use_https) {
         printf("Using HTTPS connection...\n");
-        int result = send_https_packet(url, "GET", NULL);
+        int result = send_https_packet(&http_request, "GET", NULL);
         if (result > 0) {
             listen_https_response();
         }
     } else {
         printf("Using HTTP connection...\n");
-        int sock = send_http_packet(url, "GET", NULL);
+        int sock = send_http_packet(&http_request, "GET", NULL);
         if (sock >= 0) {
             listen_http_response(sock);
             close(sock);
@@ -268,3 +359,5 @@ int main(int argc, char **argv) {
     }
     return 0;
 }
+
+
