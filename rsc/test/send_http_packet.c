@@ -16,16 +16,18 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
+typedef struct SSLConnection {
+    SSL     *ssl;
+    SSL_CTX *ctx;
+    int     socket;
+} SSLConnection;
+
 typedef struct HttpRequest {
-    char hostname[1024];
-    char url[1024];
-    char endpoint[1024];
+    char            hostname[1024];
+    char            url[1024];
+    char            endpoint[1024];
+    SSLConnection   ssl_conn;
 } HttpRequest;
-
-
-static SSL *global_ssl = NULL;
-static SSL_CTX *global_ctx = NULL;
-static int global_socket = -1;
 
 void init_openssl() {
     SSL_load_error_strings();
@@ -133,9 +135,9 @@ int send_https_packet(HttpRequest *http_request, const char *method, const char 
         return -1;
     }
 
-    global_ssl = ssl;
-    global_ctx = ctx;
-    global_socket = sock;
+    http_request->ssl_conn.ssl = ssl;
+    http_request->ssl_conn.ctx = ctx;
+    http_request->ssl_conn.socket = sock;
     
     return 1; // Success
 }
@@ -202,8 +204,8 @@ void listen_http_response(int sock) {
     }
 }
 
-void listen_https_response() {
-    if (!global_ssl) {
+void listen_https_response(HttpRequest *http_request) {
+    if (!http_request->ssl_conn.ssl) {
         fprintf(stderr, "No active HTTPS connection\n");
         return;
     }
@@ -211,7 +213,7 @@ void listen_https_response() {
     char buffer[4096];
     int bytes_received;
 
-    while ((bytes_received = SSL_read(global_ssl, buffer, sizeof(buffer) - 1)) > 0) {
+    while ((bytes_received = SSL_read(http_request->ssl_conn.ssl, buffer, sizeof(buffer) - 1)) > 0) {
         buffer[bytes_received] = '\0';
         printf("%s", buffer);
     }
@@ -222,16 +224,16 @@ void listen_https_response() {
     }
     
     // clean up resources
-    SSL_shutdown(global_ssl);
-    SSL_free(global_ssl);
-    close(global_socket);
-    SSL_CTX_free(global_ctx);
+    SSL_shutdown(http_request->ssl_conn.ssl);
+    SSL_free(http_request->ssl_conn.ssl);
+    close(http_request->ssl_conn.socket);
+    SSL_CTX_free(http_request->ssl_conn.ctx);
     cleanup_openssl();
     
     // Reset ssl global variables
-    global_ssl = NULL;
-    global_ctx = NULL;
-    global_socket = -1;
+    http_request->ssl_conn.ssl = NULL;
+    http_request->ssl_conn.ctx = NULL;
+    http_request->ssl_conn.socket = -1;
 }
 
 
@@ -347,7 +349,7 @@ int main(int argc, char **argv) {
         printf("Using HTTPS connection...\n");
         int result = send_https_packet(&http_request, "GET", NULL);
         if (result > 0) {
-            listen_https_response();
+            listen_https_response(&http_request);
         }
     } else {
         printf("Using HTTP connection...\n");

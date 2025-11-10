@@ -6,11 +6,7 @@ CC              =   clang
 
 SDL_LIB			=	-L./rsc/lib/install/lib -rpath ./rsc/lib/install/lib -lSDL2 -lSDL2_ttf
 
-# CURL_DEPS		= 	-lz -lbrotlidec -lssl -lcrypto -lnghttp2 -lpsl -lssh -lzstd -lldap -lrtmp -lgssapi_krb5 -lidn2 -llber
-
-# CURL_LIB		= 	-L./rsc/lib/curl_lib/lib -rpath ./rsc/lib/curl_lib/lib -lcurl $(CURL_DEPS)
-
-# CURL_INC		=	-I./rsc/lib/curl_lib/include/
+OPENSSL_LIB		=	-lssl -lcrypto
 
 LIB_DEPS		=   rsc/lib
 
@@ -28,7 +24,7 @@ $(NAME): $(LIB_DEPS) $(LIBFT) $(LIST) $(OBJ_DIR) $(OBJS) $(SERVER_EXE)
 	@$(MAKE_LIBFT)
 	@$(MAKE_LIST)
 	@printf "$(CYAN)Compiling ${NAME} ...$(RESET)\n"
-	@$(CC) $(CFLAGS) -o $(NAME) $(OBJS) $(LIBFT) $(LIST) $(SDL_LIB) $(CURL_LIB) 
+	@$(CC) $(CFLAGS) -o $(NAME) $(OBJS) $(LIBFT) $(LIST) $(SDL_LIB) $(OPENSSL_LIB)
 	@printf "$(GREEN)Compiling $(NAME) done$(RESET)\n"
 
 $(SERVER_EXE): $(LIBFT) $(LIST)
@@ -61,7 +57,7 @@ $(OBJ_DIR):
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	@printf "$(YELLOW)Compile $<$(RESET) $(BRIGHT_BLACK)-->$(RESET) $(BRIGHT_MAGENTA)$@$(RESET)\n"
-	@$(CC) $(CFLAGS) $(CURL_INC) -o $@ -c $<
+	@$(CC) $(CFLAGS) -o $@ -c $<
 
 bonus: clear_mandatory $(NAME)
 
@@ -113,6 +109,8 @@ test_listen: $(NAME)
 test_local: $(NAME)
 	@./rsc/sh/chess_local_test.sh
 
+run:
+	./run.sh
 
 # @ulimit -c unlimited
 leak thread debug: clean $(NAME)
