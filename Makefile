@@ -110,7 +110,10 @@ test_local: $(NAME)
 	@./rsc/sh/chess_local_test.sh
 
 run:
-	./run.sh
+	@./run.sh
+
+dev:
+	@./run.sh dev
 
 # @ulimit -c unlimited
 leak thread debug: clean $(NAME)

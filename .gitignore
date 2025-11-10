@@ -1,6 +1,7 @@
 rsc/lib
 rsc/log
 C_Chess
+chess_server
 obj
 .vscode
 windows/*.dll
@@ -13,3 +14,5 @@ android/chess_app/.gradle
 android/chess_app/apk_release/*.apk
 android/chess_app/log
 android/chess_app/app/build/
+*.a
+*.o

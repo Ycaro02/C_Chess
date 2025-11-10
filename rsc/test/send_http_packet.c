@@ -2,7 +2,7 @@
 // #define URL "http://ifconfig.me"
 // #define HOSTNAME "ifconfig.me"
 
-// #define URL "http://stockfish.online/api/s/v2.php"
+// #define URL "http://stockfish.online/api/s/v2.php?fen="
 // #define HOSTNAME "stockfish.online"
 
 
