@@ -102,6 +102,15 @@
 	X(PIECE_MAX, ) \
 
 
+#define CHESS_GENERIC_PIECE_LETTER_ENUM \
+    X(LETTER_INVALID, ='i') \
+    X(LETTER_PAWN, ='p') \
+    X(LETTER_KNIGHT, ='n') \
+    X(LETTER_BISHOP, ='b') \
+    X(LETTER_ROOK, ='r') \
+    X(LETTER_QUEEN, ='q') \
+    X(LETTER_KING, ='k') \
+
 #define CHESS_BOOL_INFO_ENUM \
 	X(WHITE_CHECK, =0) \
 	X(BLACK_CHECK, ) \

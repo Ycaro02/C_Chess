@@ -211,6 +211,10 @@ int main(int argc, char **argv) {
 
 	(void)argc, (void)argv;
 	chess_start_program();
-    // send_http_request("https://ifconfig.me");
-	return (0);
+
+    // set_log_level(LOG_DEBUG);
+    // set_log_level(LOG_INFO);
+    // char *response = send_http_request(argv[1]);
+	// CHESS_LOG(LOG_INFO, "Response:\n%s\n", response ? response : "NULL");
+    return (0);
 }

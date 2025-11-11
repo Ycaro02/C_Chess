@@ -9,7 +9,7 @@
  * @param new_piece The new piece to promote
  * @param pawn_type The pawn type to remove
 */
-static void promote_pawn(ChessBoard *board, ChessTile tile, ChessPiece new_piece, ChessPiece pawn_type) {
+void promote_pawn(ChessBoard *board, ChessTile tile, ChessPiece new_piece, ChessPiece pawn_type) {
 	Bitboard mask = 1ULL << tile;
 	/* Remove the pawn */
 	board->piece[pawn_type] &= ~mask;
@@ -165,6 +165,11 @@ s8 check_pawn_promotion(SDLHandle *handle, ChessPiece type, ChessTile tile_to) {
 		return (FALSE);
 	}
 
+
+    /* If bot is playing, no promotion selection to display */
+    if (handle->board->is_bot_playing) {
+        return (FALSE);
+    }
 
 	/* Check if the pawn need to be promoted */
 	if ((is_pawn && is_white && tile_to >= A8 && tile_to <= H8)

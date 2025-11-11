@@ -39,7 +39,7 @@ SRCS			=	chess_board.c \
 					android_asset_manager.c \
 					build_FEN_notation.c \
 					http_request.c \
-					# stockfish.c \
+					stockfish.c \
 
 MAKE_LIBFT		=	make -s -C libft -j
 

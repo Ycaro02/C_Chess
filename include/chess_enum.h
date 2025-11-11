@@ -16,6 +16,7 @@ typedef enum { ROOM_STATE_ENUM } RoomState;
 typedef enum { MSG_TYPE_ENUM } MsgType;
 typedef enum { MSG_IDX_ENUM } MsgIdx;
 typedef enum { CHESS_FLAG_ENUM } ChessFlag;
+typedef enum { CHESS_GENERIC_PIECE_LETTER_ENUM } ChessGenericPieceLetter;
 #undef X
 
 /* Create the switch cases automatically */
@@ -40,6 +41,7 @@ ENUM_TO_STRING_FUNC(RoomState, ROOM_STATE_ENUM)
 ENUM_TO_STRING_FUNC(MsgType, MSG_TYPE_ENUM)
 ENUM_TO_STRING_FUNC(MsgIdx, MSG_IDX_ENUM)
 ENUM_TO_STRING_FUNC(ChessFlag, CHESS_FLAG_ENUM)
+ENUM_TO_STRING_FUNC(ChessGenericPieceLetter, CHESS_GENERIC_PIECE_LETTER_ENUM)
 #undef X
 
 #endif /* _CHESS_ENUM_H */

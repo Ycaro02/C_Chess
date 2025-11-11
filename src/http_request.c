@@ -17,6 +17,7 @@
 #include "../include/chess.h"
 #include "../include/chess_bot.h"
 #include "../include/network.h"
+#include "../include/chess_log.h"
 
 typedef struct SSLConnection {
     SSL     *ssl;
@@ -83,7 +84,7 @@ int send_https_packet(HttpRequest *http_request, const char *method, const char 
 
     struct hostent *server = gethostbyname(http_request->hostname);
     if (server == NULL) {
-        fprintf(stderr, "No such host\n");
+        CHESS_LOG(LOG_ERROR, "No such host\n");
         close(sock);
         SSL_CTX_free(ctx);
         cleanup_openssl();
@@ -111,7 +112,7 @@ int send_https_packet(HttpRequest *http_request, const char *method, const char 
     SSL_set_tlsext_host_name(ssl, http_request->hostname);
 
     if (SSL_connect(ssl) <= 0) {
-        fprintf(stderr, "SSL connection failed\n");
+        CHESS_LOG(LOG_ERROR, "SSL connection failed\n");
         ERR_print_errors_fp(stderr);
         SSL_free(ssl);
         close(sock);
@@ -132,7 +133,7 @@ int send_https_packet(HttpRequest *http_request, const char *method, const char 
     }
 
     if (SSL_write(ssl, request, ft_strlen(request)) <= 0) {
-        fprintf(stderr, "SSL write failed\n");
+        CHESS_LOG(LOG_ERROR, "SSL write failed\n");
         ERR_print_errors_fp(stderr);
         SSL_free(ssl);
         close(sock);
@@ -160,7 +161,7 @@ int send_http_packet(HttpRequest *http_request, const char *method, const char *
 
     struct hostent *server = gethostbyname(http_request->hostname);
     if (server == NULL) {
-        fprintf(stderr, "No such host\n");
+        CHESS_LOG(LOG_ERROR, "No such host\n");
         close(sock);
         return -1;
     }
@@ -209,29 +210,92 @@ void listen_http_response(int sock) {
     }
 
     if (bytes_received < 0) {
-        perror("Receive failed");
+        CHESS_LOG(LOG_ERROR, "Receive failed\n");
     }
 }
 
-void listen_https_response(HttpRequest *http_request) {
+int ft_isprintable(char c) {
+    return (c >= 32 && c <= 126);
+}
+
+void hexa_dump_response(char *complete_response, size_t total_received) {
+    CHESS_LOG(LOG_DEBUG, "Total bytes received: %zu\n", total_received);
+    CHESS_LOG(LOG_DEBUG, "Hexa dump of response:\n");
+    if (*get_chess_log_level() >= LOG_DEBUG) {
+        for (size_t i = 0; i < total_received; i++) {
+            char *color = GREEN;
+            if ((unsigned char)complete_response[i] == '\n') {
+                color = YELLOW;
+            } else if ((unsigned char)complete_response[i] == '\r') {
+                color = RED;
+            }
+            printf("%s%02x%s", color, (unsigned char)complete_response[i], RESET);
+            if ((i + 1) % 16 == 0) {
+                printf("\n");
+            }
+        }
+        printf("\n");
+    }
+
+}
+
+char *get_body(char *response, size_t response_len) {
+    char *body_start = ft_strnstr(response, "\r\n\r\n", response_len) + 4;
+    if (body_start) {
+        size_t body_size = response_len - (body_start - response) + 1;
+        
+        CHESS_LOG(LOG_DEBUG, "Response length: %zu, Body size: %zu\n", response_len, body_size);
+        CHESS_LOG(LOG_DEBUG, "Body starts: |%s|\n", body_start);
+        
+        char *body = ft_calloc(1, body_size);
+        if (!body) {
+            CHESS_LOG(LOG_ERROR, "Failed to allocate memory for body\n");
+            return (NULL);
+        }
+        ft_memcpy(body, body_start, body_size);
+        CHESS_LOG(LOG_DEBUG, "Extracted Body: |%s|\n", body);
+        return (body);
+    }
+    return (NULL);
+}
+
+char *listen_https_response(HttpRequest *http_request) {
     if (!http_request->ssl_conn.ssl) {
-        fprintf(stderr, "No active HTTPS connection\n");
-        return;
+        CHESS_LOG(LOG_ERROR, "No active HTTPS connection\n");
+        return (NULL);
     }
     
-    char buffer[4096];
-    int bytes_received;
+    char buffer[4096] = {};
+    int bytes_received = 0;
+
+
+    char complete_response[8192] = {};
+    size_t total_received = 0;
 
     while ((bytes_received = SSL_read(http_request->ssl_conn.ssl, buffer, sizeof(buffer) - 1)) > 0) {
         buffer[bytes_received] = '\0';
-        printf("%s", buffer);
+        // printf("%s", buffer);
+        if (total_received + bytes_received < sizeof(complete_response) - 1) {
+            memcpy(complete_response + total_received, buffer, bytes_received);
+            total_received += bytes_received;
+        } else {
+            CHESS_LOG(LOG_ERROR, "Response buffer overflow\n");
+            break;
+        }
+        fast_bzero(buffer, sizeof(buffer));
     }
 
-    if (bytes_received < 0) {
-        fprintf(stderr, "SSL read failed\n");
+    if (total_received < 0) {
+        CHESS_LOG(LOG_ERROR, "SSL read failed\n");
         ERR_print_errors_fp(stderr);
     }
     
+    
+    CHESS_LOG(LOG_INFO, "Complete HTTPS Response:\n%s\n", complete_response);
+    hexa_dump_response(complete_response, total_received);
+
+    char *body = get_body(complete_response, total_received);
+
     // clean up resources
     SSL_shutdown(http_request->ssl_conn.ssl);
     SSL_free(http_request->ssl_conn.ssl);
@@ -243,6 +307,8 @@ void listen_https_response(HttpRequest *http_request) {
     http_request->ssl_conn.ssl = NULL;
     http_request->ssl_conn.ctx = NULL;
     http_request->ssl_conn.socket = -1;
+
+    return (body);
 }
 
 
@@ -306,9 +372,9 @@ int is_https_url(char *url) {
     char scheme[16] = {};
 
     extract_url_scheme(url, scheme);
-    printf("URL scheme: %s\n", url);
+    CHESS_LOG(LOG_INFO, "URL scheme: %s\n", url);
 
-    printf("URL scheme extracted: %s\n", scheme);
+    CHESS_LOG(LOG_INFO, "URL scheme extracted: %s\n", scheme);
 
     int is_http = fast_strcmp(scheme, "http") == 0;
     if (is_http) {
@@ -321,7 +387,7 @@ int is_https_url(char *url) {
     return (-1);
 }
 
-int send_http_request(char *url) {
+char *send_http_request(char *url) {
 
     HttpRequest http_request = {
         .hostname = "",
@@ -331,11 +397,11 @@ int send_http_request(char *url) {
 
 
     if (!url) {
-        fprintf(stderr, "No URL provided\n");
-        return 1;
+        CHESS_LOG(LOG_ERROR, "No URL provided\n");
+        return (NULL);
     } else if (ft_strlen(url) >= 1024 || ft_strlen(url) == 0) {
-        fprintf(stderr, "URL too long or empty %zu\n", ft_strlen(url));
-        return 1;
+        CHESS_LOG(LOG_ERROR, "URL too long or empty %zu\n", ft_strlen(url));
+        return (NULL);
     }
 
     fast_strcpy(http_request.url, url);
@@ -343,36 +409,32 @@ int send_http_request(char *url) {
     int use_https = is_https_url(http_request.url);
 
     if (use_https == -1) {
-        fprintf(stderr, "Invalid URL scheme. Use http:// or https://\n");
-        return 1;
+        CHESS_LOG(LOG_ERROR, "Invalid URL scheme. Use http:// or https://\n");
+        return (NULL);
+    } else if (use_https == 0) {
+        CHESS_LOG(LOG_ERROR, "HTTP connection disabled\n");
+        return (NULL);
     }
 
     extract_url_host(http_request.url, http_request.hostname);
-    printf("Extracted host: %s\n", http_request.hostname);
+    CHESS_LOG(LOG_INFO, "Extracted host: %s\n", http_request.hostname);
 
     extract_url_endpoint(http_request.url, http_request.endpoint);
-    printf("Extracted endpoint: %s\n", http_request.endpoint);
+    CHESS_LOG(LOG_INFO, "Extracted endpoint: %s\n", http_request.endpoint);
 
     if (ft_strlen(http_request.endpoint) == 0) {
-        strcpy(http_request.endpoint, "/");
-        printf("Defaulting endpoint to: %s\n", http_request.endpoint);
+        fast_strcpy(http_request.endpoint, "/");
+        CHESS_LOG(LOG_INFO, "Defaulting endpoint to: %s\n", http_request.endpoint);
     }
 
-    if (use_https) {
-        printf("Using HTTPS connection...\n");
-        int result = send_https_packet(&http_request, "GET", NULL);
-        if (result > 0) {
-            listen_https_response(&http_request);
-        }
-    } else {
-        printf("Using HTTP connection...\n");
-        int sock = send_http_packet(&http_request, "GET", NULL);
-        if (sock >= 0) {
-            listen_http_response(sock);
-            close(sock);
-        }
+    CHESS_LOG(LOG_INFO, "Using HTTPS connection...\n");
+    int result = send_https_packet(&http_request, "GET", NULL);
+    if (result > 0) {
+        char *body = listen_https_response(&http_request);
+        return (body);
     }
-    return 0;
+    CHESS_LOG(LOG_ERROR, "HTTP connection disabled\n");
+    return (NULL);
 }
 
 

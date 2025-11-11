@@ -142,6 +142,8 @@ typedef struct s_chess_board {
 	s8			white_piece_val;		/* White piece value */
 	s8			black_piece_val;		/* Black piece value */
 
+    s8          is_bot_playing;         /* 1 if a bot is playing, 0 otherwise */
+
 	/* u8 used as 8 boolean info used as follow
 	 * 0: white check
 	 * 1: black check
@@ -322,6 +324,8 @@ s8			check_pawn_promotion(SDLHandle *handle, ChessPiece type, ChessTile tile_to)
 void		do_promotion_move(SDLHandle *h, ChessTile tile_from, ChessTile tile_to, ChessPiece new_piece_type, s8 add_list);
 void		display_promotion_selection(SDLHandle *h);
 void		pawn_selection_event(SDLHandle *h);
+void        promote_pawn(ChessBoard *board, ChessTile tile, ChessPiece new_piece, ChessPiece pawn_type);
+
 
 /* src/move_save.c */
 s8			move_save_add(ChessMoveList **lst, ChessTile tile_from, ChessTile tile_to, ChessPiece piece_from, ChessPiece piece_to);
