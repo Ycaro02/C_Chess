@@ -148,7 +148,9 @@ static char *concat_FEN(FenFormat *fen) {
 
 	/* Concat the halfmove */
 	str_fen = ft_strjoin_free(str_fen, " ", 'f');
-	str_fen = ft_strjoin_free(str_fen, (char[2]){fen->halfmove, '\0'}, 'f');
+	// str_fen = ft_strjoin_free(str_fen, (char[2]){fen->halfmove, '\0'}, 'f');
+	str_fen = ft_strjoin_free(str_fen, fen->halfmove, 'f');
+
 	str_fen = ft_strjoin_free(str_fen, " ", 'f');
 
 	/* Concat the fullmove */
@@ -170,7 +172,7 @@ static void display_FEN_notation(FenFormat *fen) {
 	printf (" %s", fen->color_turn);
 	printf (" %s", fen->castling);
 	printf (" %s", fen->en_passant);
-	printf (" %c %s", fen->halfmove, fen->fullmove);
+	printf (" %s %s", fen->halfmove, fen->fullmove);
 	printf("\n"RESET);
 
 }
@@ -254,7 +256,9 @@ char *build_FEN_notation(SDLHandle *h) {
 	}
 
 	/* Set the halfmove */
-	fen->halfmove = h->board->halfmove_count + '0';
+	// fen->halfmove = h->board->halfmove_count + '0';
+
+    fen->halfmove = ft_itoa(h->board->halfmove_count);
 
 	/* Set the fullmove */
 	fen->fullmove = ft_itoa(h->board->fullmove_count);
@@ -267,6 +271,7 @@ char *build_FEN_notation(SDLHandle *h) {
 	// free(str_fen);
 
 	/* Free the memory */
+	free(fen->halfmove);
 	free(fen->fullmove);
 	free(fen);
 

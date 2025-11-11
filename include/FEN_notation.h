@@ -12,7 +12,8 @@ typedef struct s_fen_format {
 	char	color_turn[2];		// W or B
 	char	castling[5];		// KQkq
 	char	en_passant[3];		// Square of the en passant target, or "-" for none
-	u8		halfmove;			// Number of halfmoves since the last capture or pawn advance
+	// u8		halfmove;		// Number of halfmoves since the last capture or pawn advance
+	char    *halfmove;  		// Number of halfmoves since the last capture or pawn advance
 	char	*fullmove;			// The number of the full move
 } FenFormat;
 
