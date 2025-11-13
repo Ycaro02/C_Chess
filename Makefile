@@ -85,9 +85,13 @@ fclean:	clean_android clean_lib clean
 	@$(RM) $(NAME) $(SERVER_EXE) $(SERVER_EXE) 
 	@printf "$(RED)Clean $(NAME) $(SERVER_EXE)$(RESET)\n"
 
+
+build_android:
+	@docker run --rm -it -v ./:/app/chess/C_Chess --workdir /app/chess/C_Chess android-build bash -c "cd ./android/chess_app && ./build_android.sh"
+
 clean_android:
 ifeq ($(shell [ -d "android/chess_app/app/build" ] && echo 0 || echo 1), 0)
-	@cd android/chess_app && ./build_android.sh clean && cd ../..
+	@docker run --rm -it -v ./:/app/chess/C_Chess --workdir /app/chess/C_Chess android-build bash -c "cd ./android/chess_app && ./build_android.sh clean"
 	@printf "$(RED)Remove android/chess_app/app/build$(RESET)\n"
 endif
 

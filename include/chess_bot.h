@@ -2,8 +2,14 @@
 #define CHESS_BOT_H
 
 // #include oppenssl for https send module
+// #ifdef __ANDROID__
+//     #include "/openssl-lib/include/openssl/ssl.h"
+//     #include "/openssl-lib/include/openssl/err.h"
+// #else
 #include <openssl/ssl.h>
 #include <openssl/err.h>
+// #endif
+
 
 #define STOCKFISH_URL "https://stockfish.online/api/s/v2.php?fen="
 
