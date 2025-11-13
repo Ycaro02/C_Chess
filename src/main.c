@@ -60,6 +60,8 @@ SDLHandle *init_game() {
 	return (handle);
 }
 
+#include "../include/chess_bot.h"
+
 /*
  * @brief Main chess routine
  * @note This function is called in a loop
@@ -68,13 +70,26 @@ void local_chess_routine() {
 	SDLHandle	*h = get_SDL_handle();
 	s32			event = 0;
 	
-	event = event_handler(h, h->player_info.color);
-	/* If the quit button is pressed */
+    if (has_flag(h->flag, FLAG_STOCKFISH_BOT) && h->player_info.piece_start != WHITE_PAWN) {
+        play_stockfish_move(h);
+    } else {
+        event = event_handler(h, h->player_info.color);
+        // event = event_handler(h, h->display_board_color);
+    }
+
+    // CHESS_LOG(LOG_INFO, "Player Color %s, Start Piece: %s, End Piece: %s\n,",
+    //     h->player_info.color == IS_WHITE ? "White" : "Black",
+    //     h->player_info.piece_start == WHITE_PAWN ? "WHITE_PAWN" : "BLACK_PAWN",
+    //     h->player_info.piece_end == WHITE_KING ? "White King" : "Black King"
+    // );
+
+    /* If the quit button is pressed */
 	if (event == CHESS_QUIT) { chess_destroy(h) ; }
 	
 	if (has_flag(h->flag, FLAG_PROMOTION_SELECTION)) {
 		pawn_selection_event(h);
 	} 
+    
 	/* Draw logic */
 	update_graphic_board(h);
 }

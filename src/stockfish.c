@@ -225,7 +225,8 @@ s8 is_valid_move_struct(MoveStruct move) {
 MoveStruct send_stockfish_fen(char *fen_str) {
 	char *url = NULL;
 	
-    url = build_stockfish_request(fen_str, get_random_depth(1, 2));
+    // url = build_stockfish_request(fen_str, get_random_depth(1, 2));
+    url = build_stockfish_request(fen_str, 8);
 	if (!url) {
 		CHESS_LOG(LOG_ERROR, "Failed to build the URL\n");
 		return (invalid_move_struct());
@@ -239,4 +240,66 @@ MoveStruct send_stockfish_fen(char *fen_str) {
 	free(url);
 
     return (move);
+}
+
+static ChessPiece promotion_letter_to_piece(ChessGenericPieceLetter letter, s8 is_black) {
+    switch (letter) {
+        case LETTER_QUEEN:
+            return is_black ? BLACK_QUEEN : WHITE_QUEEN;
+        case LETTER_ROOK:
+            return is_black ? BLACK_ROOK : WHITE_ROOK;
+        case LETTER_BISHOP:
+            return is_black ? BLACK_BISHOP : WHITE_BISHOP;
+        case LETTER_KNIGHT:
+            return is_black ? BLACK_KNIGHT : WHITE_KNIGHT;
+        default:
+            return EMPTY; // Invalid letter
+    }
+    return EMPTY;
+}
+
+
+void play_stockfish_move(SDLHandle *h) {
+    char *fen = build_FEN_notation(h);
+    MoveStruct move = send_stockfish_fen(fen);
+    free(fen);
+
+    if (is_valid_move_struct(move)) {
+        CHESS_LOG(LOG_INFO, "Stockfish suggests move from %s to %s\n", ChessTile_to_str(move.from), ChessTile_to_str(move.to));
+        
+        h->board->selected_tile = move.from;
+        h->board->last_clicked_tile = move.to;
+        h->board->selected_piece = get_piece_from_tile(h->board, h->board->selected_tile);
+        h->board->is_bot_playing = TRUE;
+
+        call_move_piece_handling(h, h->board);
+        
+        s8 is_black = h->board->selected_piece >= BLACK_PAWN;
+
+        if (move.promotion_piece_letter != LETTER_INVALID) {
+            ChessPiece promotion_piece = promotion_letter_to_piece(move.promotion_piece_letter, h->board->selected_piece);
+            CHESS_LOG(LOG_INFO, "Promoting pawn to %s\n", ChessPiece_to_str(promotion_piece));
+            promote_pawn(h->board, move.to, promotion_piece, is_black ? BLACK_PAWN : WHITE_PAWN);
+        }
+        
+        handle_locale_turn(h);
+        h->board->is_bot_playing = FALSE;
+        
+    } else {
+        CHESS_LOG(LOG_INFO, "Stockfish did not return a valid move\n");
+    }
+    // (void)fen;
+    return ;
+}
+
+
+void stockfish_enable(SDLHandle *h) {
+    if (!has_flag(h->flag, FLAG_NETWORK)) {
+        CHESS_LOG(LOG_INFO, "Enabling/Disabling Stockfish bot mode.\n");
+        if (has_flag(h->flag, FLAG_STOCKFISH_BOT)) {
+            unset_flag(&h->flag, FLAG_STOCKFISH_BOT);
+        } else {
+            set_flag(&h->flag, FLAG_STOCKFISH_BOT);
+        }
+    }
 }

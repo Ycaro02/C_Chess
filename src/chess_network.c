@@ -43,6 +43,7 @@ void handle_network_client_state(SDLHandle *handle, u32 flag, PlayerInfo *player
 		update_graphic_board(handle);
 		return ;
 	}
+    // handle->display_board_color = player_info->color == IS_WHITE ? IS_WHITE : IS_BLACK;
 	player_color_set_info(player_info);
 	update_graphic_board(handle);
 }

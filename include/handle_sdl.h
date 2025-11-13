@@ -229,7 +229,25 @@ typedef struct s_sdl_handle {
 	u32				my_remaining_time;		/* Current player ramaining time */
 	u32				enemy_remaining_time;	/* Enemy player ramaining time */
 	PlayerInfo		player_info;			/* Player info */
-	u32				flag;					/* App Flag */
+
+    // s8 display_board_color; /* IS_BLACK or IS_WHITE for board display color */
+
+    /**
+     * Flag Values:
+     *  FLAG_LISTEN : Listening for incoming connection
+     *  FLAG_JOIN : Joining a server
+     *  FLAG_RECONNECT : Reconnecting to a server
+     *  FLAG_SERVER_IP : Edit server ip
+     *  FLAG_NETWORK : Network mode enabled
+     *  FLAG_HELP : Help menu enabled
+     *  FLAG_CENTER_TEXT_INPUT : Center text input enabled (error message ...)
+     *  FLAG_PROMOTION_SELECTION
+     *  FLAG_EDIT_PROFILE
+     *  FLAG_FIRST_MOVE_PLAYED
+     */
+    
+    
+    u32				flag;					/* App Flag */
 	u16				msg_id;					/* Over flag */
 	s8				game_start;				/* Game start flag */
 	s8				first_move_played;		/* First move played flag */

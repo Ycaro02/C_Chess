@@ -46,6 +46,7 @@ typedef struct s_move_struct {
 char        *send_http_request(char *url);
 MoveStruct  send_stockfish_fen(char *fen_str);
 s8          is_valid_move_struct(MoveStruct move);
-
+void        play_stockfish_move(SDLHandle *h);
+void        stockfish_enable(SDLHandle *h);
 
 #endif

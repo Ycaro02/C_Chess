@@ -310,8 +310,10 @@ s8			handle_enemy_piece_kill(ChessBoard *b, ChessPiece type, Bitboard mask_to);
 /* src/handle_board.c */
 s32			event_handler(SDLHandle *h, s8 player_color);
 void		reset_selected_tile(SDLHandle *h);
+s32         call_move_piece_handling(SDLHandle *h, ChessBoard *b);
+void        handle_locale_turn(SDLHandle *h);
 
-/* src/draw_baord.c */
+/* src/draw_board.c */
 s8			is_selected_possible_move(Bitboard possible_moves, ChessTile tile);
 s8			is_en_passant_move(ChessBoard *b, ChessTile tile);
 ChessTile	handle_tile(ChessTile tile, s32 player_color);

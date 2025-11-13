@@ -2,6 +2,7 @@
 #include "../include/handle_sdl.h"
 #include "../include/chess_log.h"
 #include "../include/android_macro.h"
+#include "../include/chess_bot.h"
 
 /**
  * @brief Detect if a button is clicked
@@ -161,7 +162,10 @@ void set_btn_text_func(SDLHandle *h, s32 idx, BtnType type) {
 	} else if (type == BTN_QUIT) {
 		h->menu.btn[idx].text = ft_strdup("Quit");
 		h->menu.btn[idx].func = quit_game;
-	}
+	} else if (type == BTN_STOCKFISH) {
+        h->menu.btn[idx].text = ft_strdup("Stockfish");
+        h->menu.btn[idx].func = stockfish_enable; // No function for now
+    }
 }
 
 /**
@@ -222,7 +226,11 @@ void draw_button(SDLHandle *h, TTF_Font *font, Button btn, SDL_Color c) {
 
 	SDL_SetRenderDrawColor(h->renderer, c.r, c.g, c.b, c.a);
 	SDL_RenderFillRect(h->renderer, &rect);
+
+
 	write_text(h, btn.text, font, btn.text_pos, RGBA_TO_UINT32(255, 255, 255, 255));
+
+
 }
 
 
