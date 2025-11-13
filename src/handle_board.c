@@ -249,46 +249,46 @@ static void game_event_handling(SDLHandle *h, SDL_Event event, s8 player_color) 
 		h->menu.is_open = TRUE;
 	}
 
-	if (is_key_pressed(event, SDLK_p)) {
-		char *fen = build_FEN_notation(h);
-		MoveStruct move = send_stockfish_fen(fen);
-		free(fen);
-
-        if (is_valid_move_struct(move)) {
-            CHESS_LOG(LOG_INFO, "Stockfish suggests move from %s to %s\n", ChessTile_to_str(move.from), ChessTile_to_str(move.to));
-            
-            h->board->selected_tile = move.from;
-            h->board->last_clicked_tile = move.to;
-            h->board->selected_piece = get_piece_from_tile(h->board, h->board->selected_tile);
-            h->board->is_bot_playing = TRUE;
-
-            call_move_piece_handling(h, h->board);
-            
-            s8 is_black = h->board->selected_piece >= BLACK_PAWN;
-
-            if (move.promotion_piece_letter != LETTER_INVALID) {
-                ChessPiece promotion_piece = promotion_letter_to_piece(move.promotion_piece_letter, h->board->selected_piece);
-                CHESS_LOG(LOG_INFO, "Promoting pawn to %s\n", ChessPiece_to_str(promotion_piece));
-                promote_pawn(h->board, move.to, promotion_piece, is_black ? BLACK_PAWN : WHITE_PAWN);
+    /* Stockfish AI move suggestion (Only in local mode) */
+    if (!has_flag(h->flag, FLAG_NETWORK) && is_key_pressed(event, SDLK_p)) {
+            char *fen = build_FEN_notation(h);
+            MoveStruct move = send_stockfish_fen(fen);
+            free(fen);
+    
+            if (is_valid_move_struct(move)) {
+                CHESS_LOG(LOG_INFO, "Stockfish suggests move from %s to %s\n", ChessTile_to_str(move.from), ChessTile_to_str(move.to));
+                
+                h->board->selected_tile = move.from;
+                h->board->last_clicked_tile = move.to;
+                h->board->selected_piece = get_piece_from_tile(h->board, h->board->selected_tile);
+                h->board->is_bot_playing = TRUE;
+    
+                call_move_piece_handling(h, h->board);
+                
+                s8 is_black = h->board->selected_piece >= BLACK_PAWN;
+    
+                if (move.promotion_piece_letter != LETTER_INVALID) {
+                    ChessPiece promotion_piece = promotion_letter_to_piece(move.promotion_piece_letter, h->board->selected_piece);
+                    CHESS_LOG(LOG_INFO, "Promoting pawn to %s\n", ChessPiece_to_str(promotion_piece));
+                    promote_pawn(h->board, move.to, promotion_piece, is_black ? BLACK_PAWN : WHITE_PAWN);
+                }
+                
+                handle_locale_turn(h);
+                h->board->is_bot_playing = FALSE;
+                
+            } else {
+                CHESS_LOG(LOG_INFO, "Stockfish did not return a valid move\n");
             }
-            
-            handle_locale_turn(h);
-            h->board->is_bot_playing = FALSE;
-            
-            // In the handler context we need to had a bot response bolean, if this is true, not enable the flag
+            // (void)fen;
+            return ;
+    }
 
-            // we need to call this and not set the FLAG_PROMOTION_SELECTION
-		    // promote_pawn(h->board, tile_to, piece_selected, is_black ? BLACK_PAWN : WHITE_PAWN);
+    if (has_flag(h->flag, FLAG_NETWORK) && is_key_pressed(event, SDLK_p)) {
+        CHESS_LOG(LOG_INFO, "You cannot use the bot in network mode.\n");
+        return ;
+    }
 
-            
-            // s32 ret = move_piece(h, b->selected_tile, b->last_clicked_tile, b->selected_piece);
-        
-        } else {
-            CHESS_LOG(LOG_INFO, "Stockfish did not return a valid move\n");
-        }
-		// (void)fen;
-		return ;
-	}
+
 
 	if (h->player_info.turn == FALSE) { return ; }
 	SDL_GetMouseState(&x, &y);
