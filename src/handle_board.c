@@ -160,7 +160,9 @@ static void handle_move_piece_call(SDLHandle *h, ChessBoard *b) {
 	
 	if (is_locale_mode(h->flag)) {
 		call_move_piece_handling(h, b);
-		handle_locale_turn(h);
+        if (!has_flag(h->flag, FLAG_STOCKFISH_BOT)) {
+            handle_locale_turn(h);
+        }
 	} else { /* Network mode */
 		/* Build move message to the other player if is not pawn promotion or chess quit */
 		if (h->player_info.turn == TRUE) {
@@ -232,6 +234,24 @@ static void game_event_handling(SDLHandle *h, SDL_Event event, s8 player_color) 
 		h->menu.is_open = TRUE;
 	}
 
+    if (!has_flag(h->flag, FLAG_NETWORK) && is_key_pressed(event, SDLK_r)) {
+        s8 last_color = h->player_info.color;
+        CHESS_LOG(LOG_INFO, "Resetting the board last color was: %s\n", last_color == IS_WHITE ? "White" : "Black");
+        reset_board(h);
+        unset_flag(&h->flag, FLAG_STOCKFISH_BOT);
+        h->player_info.color = !last_color;
+        // h->player_info.piece_start = h->player_info.color == IS_WHITE ? WHITE_PAWN : BLACK_PAWN;
+        // h->player_info.piece_end = h->player_info.color == IS_WHITE ? WHITE_KING : BLACK_KING;
+        h->player_info.piece_start =  WHITE_PAWN;
+        h->player_info.piece_end =  WHITE_KING;
+        // h->player_info.turn = h->player_info.color == IS_WHITE ? TRUE : FALSE;
+        h->player_info.turn = TRUE;
+        update_graphic_board(h);
+        CHESS_LOG(LOG_INFO, "Board reset done. New color is: %s\n", h->player_info.color == IS_WHITE ? "White" : "Black");
+        return ;
+    }
+
+
     if (h->player_info.turn == FALSE) { return ; }
 
     
@@ -242,6 +262,7 @@ static void game_event_handling(SDLHandle *h, SDL_Event event, s8 player_color) 
         CHESS_LOG(LOG_INFO, "You cannot use the bot in network mode.\n");
         return ;
     }
+
 
 
 

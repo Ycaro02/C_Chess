@@ -282,7 +282,7 @@ void play_stockfish_move(SDLHandle *h) {
             promote_pawn(h->board, move.to, promotion_piece, is_black ? BLACK_PAWN : WHITE_PAWN);
         }
         
-        handle_locale_turn(h);
+        // handle_locale_turn(h);
         h->board->is_bot_playing = FALSE;
         
     } else {
@@ -298,8 +298,25 @@ void stockfish_enable(SDLHandle *h) {
         CHESS_LOG(LOG_INFO, "Enabling/Disabling Stockfish bot mode.\n");
         if (has_flag(h->flag, FLAG_STOCKFISH_BOT)) {
             unset_flag(&h->flag, FLAG_STOCKFISH_BOT);
+            s8 is_black = (h->player_info.color == IS_BLACK);
+            h->player_info.turn = (is_black && h->board->halfmove_count % 2 == 0) || (!is_black && h->board->halfmove_count % 2 != 0) ? FALSE : TRUE;
         } else {
+            init_board(h->board, &h->flag);
             set_flag(&h->flag, FLAG_STOCKFISH_BOT);
+            s8 is_black = (h->player_info.color == IS_BLACK);
+            s8 color_turn = (h->board->halfmove_count % 2 == 0) ? IS_WHITE : IS_BLACK;
+            CHESS_LOG(LOG_INFO, "Color turn: %s\n", color_turn == IS_WHITE ? "White" : "Black");
+            h->player_info.turn = (is_black && color_turn == IS_BLACK) || (!is_black && color_turn == IS_WHITE) ? TRUE : FALSE;
+            h->player_info.piece_start = is_black ? BLACK_PAWN : WHITE_PAWN;
+            h->player_info.piece_end = is_black ? BLACK_KING : WHITE_KING;
         }
+        CHESS_LOG(LOG_INFO, "Stockfish bot mode %s.\n", has_flag(h->flag, FLAG_STOCKFISH_BOT) ? "enabled" : "disabled");
+        CHESS_LOG(LOG_INFO, "HALF MOVE COUNT: %d\n", h->board->halfmove_count);
+        CHESS_LOG(LOG_INFO, "TURN: %s, Player Color: %s, Start Piece: %s, End Piece: %s\n",
+            h->player_info.turn ? "TRUE" : "FALSE",
+            h->player_info.color == IS_WHITE ? "White" : "Black",
+            h->player_info.piece_start == WHITE_PAWN ? "WHITE_PAWN" : "BLACK_PAWN",
+            h->player_info.piece_end == WHITE_KING ? "White King" : "Black King"
+        );
     }
 }

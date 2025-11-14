@@ -98,7 +98,6 @@ void pawn_selection_event(SDLHandle *h) {
  */
 void display_promotion_selection(SDLHandle *h) {
 	iVec2 start_pos = {2, 1}; // x, y
-	// s8 is_black = (h->player_info.color == IS_BLACK);
 
     ChessPiece p = get_piece_from_tile(h->board, h->board->last_tile_to);
     s8 is_black = (p >= BLACK_PAWN);

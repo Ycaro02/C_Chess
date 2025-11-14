@@ -70,11 +70,26 @@ void local_chess_routine() {
 	SDLHandle	*h = get_SDL_handle();
 	s32			event = 0;
 	
-    if (has_flag(h->flag, FLAG_STOCKFISH_BOT) && h->player_info.piece_start != WHITE_PAWN) {
+    ChessTile piece_from = h->board->last_tile_from;
+    ChessTile piece_to = h->board->last_tile_to;
+
+
+    static s8 last_turn_info = -1;
+
+    if (last_turn_info != h->player_info.turn) {
+        CHESS_LOG(LOG_INFO, YELLOW"Player turn changed to: %s\n"
+            RESET, h->player_info.turn ? "TRUE" : "FALSE");
+        last_turn_info = h->player_info.turn;
+    }
+
+    // if (has_flag(h->flag, FLAG_STOCKFISH_BOT) && h->player_info.piece_start != WHITE_PAWN) {
+    if (has_flag(h->flag, FLAG_STOCKFISH_BOT) && h->player_info.turn == FALSE) {
         play_stockfish_move(h);
+        h->player_info.turn = TRUE;
+        piece_from = h->board->last_tile_from;
+        piece_to = h->board->last_tile_to;
     } else {
         event = event_handler(h, h->player_info.color);
-        // event = event_handler(h, h->display_board_color);
     }
 
     // CHESS_LOG(LOG_INFO, "Player Color %s, Start Piece: %s, End Piece: %s\n,",
@@ -89,6 +104,17 @@ void local_chess_routine() {
 	if (has_flag(h->flag, FLAG_PROMOTION_SELECTION)) {
 		pawn_selection_event(h);
 	} 
+
+    if (has_flag(h->flag, FLAG_STOCKFISH_BOT) &&\
+        h->player_info.turn == TRUE &&\
+        has_flag(h->flag, FLAG_FIRST_MOVE_PLAYED) &&\
+        (piece_from != h->board->last_tile_from || piece_to != h->board->last_tile_to)) {
+        h->player_info.turn = FALSE;
+        CHESS_LOG(LOG_INFO, "Player made a move, now Stockfish turn.\n");   
+        // play_stockfish_move(h);
+    }
+
+    // CHESS_LOG(LOG_INFO, "Routine End: Player Turn: %d\n", h->player_info.turn);
     
 	/* Draw logic */
 	update_graphic_board(h);
@@ -119,7 +145,6 @@ SDLHandle *get_SDL_handle() {
 	if (!stat) {
 		stat = init_game();
 	}
-
 	return (stat);
 }
 

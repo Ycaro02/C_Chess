@@ -292,6 +292,7 @@ s8			is_en_passant_move(ChessBoard *b, ChessTile tile);
 ChessPiece	get_piece_from_tile(ChessBoard *b, ChessTile tile);
 ChessPiece	get_piece_from_mask(ChessBoard *b, Bitboard mask);
 void		handle_turn_count(ChessBoard *b, ChessPiece piece_type, s8 kill);
+void        init_board(ChessBoard *b, u32 *app_flag);
 
 /* src/chess_piece_moves.c */
 Bitboard	get_pawn_moves(ChessBoard *b, Bitboard pawn, ChessPiece type, s8 is_black, s8 check_legal);

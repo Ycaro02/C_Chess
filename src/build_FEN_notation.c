@@ -241,7 +241,8 @@ char *build_FEN_notation(SDLHandle *h) {
 	}
 
 	/* Set the color turn */
-	fen->color_turn[0] = h->player_info.piece_start == WHITE_PAWN ? 'w' : 'b';
+	// fen->color_turn[0] = h->player_info.piece_start == WHITE_PAWN ? 'w' : 'b';
+	fen->color_turn[0] = h->player_info.color == IS_WHITE ? 'b' : 'w';
 
 	/* Set the castling permission */
 	compute_castling_perm(h->board, fen, h->board->info);
