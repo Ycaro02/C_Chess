@@ -241,6 +241,8 @@ void chess_start_program() {
 
 #include "../include/chess_bot.h"
 
+void init_board_from_FEN(SDLHandle *h, const char *fen_str);
+
 int main(int argc, char **argv) {
 	// s8			error = 0;
 	// u32			flag = 0;
@@ -251,10 +253,6 @@ int main(int argc, char **argv) {
 
 	(void)argc, (void)argv;
 	chess_start_program();
-
-    // set_log_level(LOG_DEBUG);
-    // set_log_level(LOG_INFO);
-    // char *response = send_http_request(argv[1]);
-	// CHESS_LOG(LOG_INFO, "Response:\n%s\n", response ? response : "NULL");
+    
     return (0);
 }

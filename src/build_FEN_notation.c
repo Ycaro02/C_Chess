@@ -177,6 +177,76 @@ static void display_FEN_notation(FenFormat *fen) {
 
 }
 
+
+void cut_last_fen_line(char *last_line) {
+    int idx = 0;
+
+    while (last_line[idx] != '\0') {
+        if (last_line[idx] == ' ') {
+            last_line[idx] = '\0';
+            break ;
+        }
+        idx++;
+    }
+}
+
+FenFormat *FEN_str_to_FEN_struct(SDLHandle *h, const char *fen_str) {
+    (void)h;
+    (void)fen_str;
+    char **board_line = NULL;
+
+    board_line = ft_split(fen_str, '/');
+    
+    if (double_char_size(board_line) != 8) {
+        CHESS_LOG(LOG_ERROR, "Invalid FEN string: %s\n", fen_str);
+        return (NULL);
+    }
+
+    FenFormat *fen = ft_calloc(1, sizeof(FenFormat));
+
+    char save_last_line[256] = {0};
+    fast_strcpy(save_last_line, board_line[7]);
+    cut_last_fen_line(board_line[7]);
+
+    
+    for (int i = 0; board_line[i] != NULL; i++) {
+        fast_bzero(fen->board[i], 9);
+        fast_strcpy(fen->board[i], board_line[i]);
+        printf("Line %d: %s\n", i + 1, fen->board[i]);
+    }
+
+    free_double_char(board_line);
+
+
+    char **info = ft_split(save_last_line, ' ');
+    if (double_char_size(info) != 6) {
+        CHESS_LOG(LOG_ERROR, "Invalid FEN string info: %s\n", save_last_line);
+        free_double_char(info);
+        return (NULL);
+    }
+
+    for (int i = 1; info[i] != NULL; i++) {
+        CHESS_LOG(LOG_INFO, "Info %d: %s\n", i + 1, info[i]);
+    }
+
+    fast_bzero(fen->color_turn, 2);
+    fast_bzero(fen->castling, 5);
+    fast_bzero(fen->en_passant, 3);
+
+    CHESS_LOG(LOG_INFO, "Last line before cut: %s\n", save_last_line);
+    fast_strcpy(fen->color_turn, info[1]);
+    fast_strcpy(fen->castling, info[2]);
+    fast_strcpy(fen->en_passant, info[3]);
+    fen->halfmove = ft_strdup(info[4]);
+    fen->fullmove = ft_strdup(info[5]);
+
+    display_FEN_notation(fen);
+
+    return(fen);
+}
+
+
+
 /**
  * @brief call the __builtin_ctzll function is a built-in function provided by GCC (GNU Compiler Collection) and Clang compilers. 
  * It stands for "Count Trailing Zeros Long Long" and is used to count

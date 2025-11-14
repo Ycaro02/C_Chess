@@ -252,6 +252,12 @@ static void game_event_handling(SDLHandle *h, SDL_Event event, s8 player_color) 
     }
 
 
+    if (!has_flag(h->flag, FLAG_NETWORK) && is_key_pressed(event, SDLK_f)) {
+        init_board_from_FEN(h, "r3k2r/pppbqppp/2np4/4p3/1BB1Pn2/1P3N2/P1PPQPPP/2KR3R b k - 2 13");
+        return ;
+    }
+    
+    
     if (h->player_info.turn == FALSE) { return ; }
 
     
@@ -262,6 +268,8 @@ static void game_event_handling(SDLHandle *h, SDL_Event event, s8 player_color) 
         CHESS_LOG(LOG_INFO, "You cannot use the bot in network mode.\n");
         return ;
     }
+
+
 
 
 

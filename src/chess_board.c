@@ -2,6 +2,7 @@
 #include "../include/handle_sdl.h"
 #include "../include/chess_log.h"
 #include "../include/network.h"
+#include "../include/FEN_notation.h"
 
 /* Update control bitboard */
 void update_piece_control(ChessBoard *b) {
@@ -53,7 +54,7 @@ void init_board(ChessBoard *b, u32 *app_flag) {
 
 	/* Set all pieces to 0 */
 	fast_bzero(b, sizeof(ChessBoard));
-	CHESS_LOG(LOG_INFO, ORANGE"sizeof(ChessBoard) = %lu\n"RESET, sizeof(ChessBoard));
+	// CHESS_LOG(LOG_INFO, ORANGE"sizeof(ChessBoard) = %lu\n"RESET, sizeof(ChessBoard));
 
 	/* Set start for white and black piece */
 	b->piece[WHITE_PAWN] = START_WHITE_PAWNS;
@@ -254,6 +255,137 @@ Bitboard get_piece_color_control(ChessBoard *b, s8 is_black) {
 	return (control);
 }
 
+
+ChessPiece fen_to_chess_piece(char fen_char) {
+    switch (fen_char) {
+        case 'P': return (WHITE_PAWN);
+        case 'N': return (WHITE_KNIGHT);
+        case 'B': return (WHITE_BISHOP);
+        case 'R': return (WHITE_ROOK);
+        case 'Q': return (WHITE_QUEEN);
+        case 'K': return (WHITE_KING);
+        case 'p': return (BLACK_PAWN);
+        case 'n': return (BLACK_KNIGHT);
+        case 'b': return (BLACK_BISHOP);
+        case 'r': return (BLACK_ROOK);
+        case 'q': return (BLACK_QUEEN);
+        case 'k': return (BLACK_KING);
+        default:  return (EMPTY);
+    }
+}
+
+void init_board_from_FEN_data(SDLHandle *h, FenFormat *fen) {
+    init_board(h->board, &h->flag);
+
+    if (has_flag(h->flag, FLAG_STOCKFISH_BOT)) {
+        unset_flag(&h->flag, FLAG_STOCKFISH_BOT);
+        h->board->is_bot_playing = FALSE;
+    }
+
+    for (s32 i = 0; i < PIECE_MAX; i++) {
+        h->board->piece[i] = 0;
+    }
+
+    ChessTile tile = 0;
+    for (s32 row = 7; row >= 0; row--) {
+        for (size_t col = 0; col < ft_strlen(fen->board[row]); col++) {
+            char fen_char = fen->board[row][col];
+            if (fen_char >= '1' && fen_char <= '8') {
+                s32 empty_count = fen_char - '0';
+                tile += empty_count;
+            } else {
+                ChessPiece piece = fen_to_chess_piece(fen_char);
+                if (piece != EMPTY) {
+                    h->board->piece[piece] |= (1ULL << tile);
+                    tile++;
+                } else {
+                    CHESS_LOG(LOG_ERROR, "Invalid FEN character: %c\n", fen_char);
+                    tile++;
+                }
+            }
+        }
+    }
+
+    s8 color_turn = (fen->color_turn[0] == 'b') ? IS_BLACK  : IS_WHITE;
+
+    if (has_flag(h->flag, FLAG_NETWORK)) {
+        h->player_info.turn = (color_turn == h->player_info.color);
+    } else {
+        h->player_info.color = color_turn;
+        h->player_info.piece_start = (color_turn == IS_WHITE) ? WHITE_PAWN : BLACK_PAWN;
+        h->player_info.piece_end = (color_turn == IS_WHITE) ? WHITE_KING : BLACK_KING;
+        h->player_info.turn = TRUE;
+    }
+
+    // s8 player_is_black = h->player_info.color == IS_BLACK;
+    // if (is_black_turn == player_is_black) {
+    //     h->player_info.turn = TRUE;
+    // } else {
+    //     h->player_info.turn = FALSE;
+    // }
+
+    // handle castling
+    h->board->info = u8ValueSet(h->board->info, WHITE_KING_ROOK_MOVED, TRUE);
+    h->board->info = u8ValueSet(h->board->info, WHITE_QUEEN_ROOK_MOVED, TRUE);
+    h->board->info = u8ValueSet(h->board->info, BLACK_KING_ROOK_MOVED, TRUE);
+    h->board->info = u8ValueSet(h->board->info, BLACK_QUEEN_ROOK_MOVED, TRUE);
+    for (size_t i = 0; i < ft_strlen(fen->castling); i++) {
+        char c = fen->castling[i];
+        switch (c) {
+            case 'K':
+                h->board->info = u8ValueSet(h->board->info, WHITE_KING_ROOK_MOVED, FALSE);
+                break;
+            case 'Q':
+                h->board->info = u8ValueSet(h->board->info, WHITE_QUEEN_ROOK_MOVED, FALSE);
+                break;
+            case 'k':
+                h->board->info = u8ValueSet(h->board->info, BLACK_KING_ROOK_MOVED, FALSE);
+                break;
+            case 'q':
+                h->board->info = u8ValueSet(h->board->info, BLACK_QUEEN_ROOK_MOVED, FALSE);
+                break;
+            default:
+                break;
+        }
+    }
+
+
+    h->board->halfmove_count = (u8)ft_atoi(fen->halfmove);
+    h->board->fullmove_count = (u16)ft_atoi(fen->fullmove);
+
+    // handle en passant
+    ChessTile en_passant_tile = INVALID_TILE;
+    if (fen->en_passant[0] != '-') {
+        char letter = fen->en_passant[0];
+        char number = fen->en_passant[1];
+        s32 letter_idx = letter - 'a';
+        s32 number_idx = number - '1';
+        en_passant_tile = (ChessTile)(number_idx * 8 + letter_idx);
+        h->board->en_passant = (1ULL << en_passant_tile);
+        h->board->en_passant_tile = en_passant_tile;
+        CHESS_LOG(LOG_INFO, "En passant tile: %s\n", ChessTile_to_str(en_passant_tile));
+    } else {
+        h->board->en_passant = 0;
+        h->board->en_passant_tile = INVALID_TILE;
+    }
+
+    /* Update occupied and control bitboard */
+    update_piece_state(h->board);
+}
+
+void init_board_from_FEN(SDLHandle *h, const char *fen_str) {
+    init_board(h->board, &h->flag);
+
+    FenFormat *fen = FEN_str_to_FEN_struct(h, fen_str);
+    if (!fen) {
+        CHESS_LOG(LOG_ERROR, "FEN_str_to_FEN_struct failed\n");
+        return;
+    }
+
+    // Initialize the board with the FEN data
+    init_board_from_FEN_data(h, fen);
+    free(fen);
+}
 
 
 

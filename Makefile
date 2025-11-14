@@ -2,7 +2,7 @@ include libft/rsc/mk/color.mk
 include rsc/mk/source.mk
 
 NAME            =   C_Chess
-CC              =   clang
+CC              =   clang -g3 -gdwarf-4
 
 SDL_LIB			=	-L./rsc/lib/install/lib -rpath ./rsc/lib/install/lib -lSDL2 -lSDL2_ttf
 

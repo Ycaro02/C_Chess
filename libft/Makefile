@@ -6,7 +6,7 @@
 #    By: nfour <nfour@student.42angouleme.fr>       +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/04/11 16:07:03 by nfour             #+#    #+#              #
-#    Updated: 2024/07/08 11:15:00 by nfour            ###   ########.fr        #
+#    Updated: 2025/11/14 13:44:30 by nfour            ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -16,9 +16,8 @@ include rsc/mk/color.mk
 
 CREATE_LIB	= ar rcs
 NAME		= libft.a
-# CC			= gcc
-CC			= clang
-CFLAGS		= -Wall -Wextra -Werror -g3
+CC			= clang 
+CFLAGS		= -Wall -Wextra -Werror -g3 -gdwarf-4
 # CFLAGS		= -Wall -Wextra -Werror -g3 -fsanitize=address
 
 all : $(NAME)

@@ -20,6 +20,7 @@ typedef struct s_fen_format {
 #define UNKOWN_PIECE	'?'
 #define EMPTY_PIECE		' '
 
-char *build_FEN_notation(SDLHandle *h);
+char        *build_FEN_notation(SDLHandle *h);
+FenFormat   *FEN_str_to_FEN_struct(SDLHandle *h, const char *fen_str);
 
 #endif
