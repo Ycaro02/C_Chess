@@ -240,6 +240,8 @@ void update_btn_disabled(SDLHandle *h, Button *btn) {
 	if (has_flag(flag, FLAG_NETWORK)) {
 		btn[BTN_SEARCH].state = BTN_STATE_DISABLED;
 		btn[BTN_RECONNECT].state = BTN_STATE_DISABLED;
+        btn[BTN_STOCKFISH].state = BTN_STATE_DISABLED;
+        btn[BTN_SERVER_IP].state = BTN_STATE_DISABLED;
 	} 
 }
 
