@@ -30,6 +30,8 @@ void promote_pawn(ChessBoard *board, ChessTile tile, ChessPiece new_piece, Chess
 static ChessPiece get_promot_selected_piece(s32 idx, s8 is_black) {
 	ChessPiece selected = EMPTY;
 	
+
+    CHESS_LOG(LOG_INFO, "Get promotion selected piece idx: %d, is_black: %d\n", idx, is_black);
 	if (is_black) {
 		selected = BLACK_KNIGHT + idx;
 		if (selected > BLACK_QUEEN || selected < BLACK_KNIGHT) {
@@ -50,18 +52,30 @@ void pawn_selection_event(SDLHandle *h) {
 	ChessTile tile_end = F7;
 	ChessPiece piece_selected = EMPTY;
 	s32 piece_idx = 0;
-	s8 is_black = (h->player_info.color == IS_BLACK);
-	ChessTile last_click = h->board->last_clicked_tile;
+
+	// s8 is_black = (h->player_info.color == IS_BLACK);
 	
-	if (is_black) {
-		tile_start = C2;
-		tile_end = F2;
-	}
+    ChessPiece p = get_piece_from_tile(h->board, h->board->last_tile_to);
+    s8 is_black = (p >= BLACK_PAWN);
+
+    
+    ChessTile last_click = h->board->last_clicked_tile;
+	
+    if (has_flag(h->flag, FLAG_NETWORK)) {
+        if (is_black) {
+            tile_start = C2;
+            tile_end = F2;
+        }
+    }
 
 	ChessTile tile_to = h->board->last_tile_to;
 
 	if (last_click >= tile_start && last_click <= tile_end) {
-		piece_idx = !is_black ? last_click - tile_start : tile_end - last_click;
+        if (has_flag(h->flag, FLAG_NETWORK)) {
+            piece_idx = !is_black ? last_click - tile_start : tile_end - last_click;
+        } else {
+            piece_idx = last_click - tile_start;
+        }
 		CHESS_LOG(LOG_INFO, "Tile clicked: %s\n", ChessTile_to_str(last_click));
 		piece_selected = get_promot_selected_piece(piece_idx, is_black);
 		if (piece_selected == EMPTY) { return ; }  
@@ -84,7 +98,11 @@ void pawn_selection_event(SDLHandle *h) {
  */
 void display_promotion_selection(SDLHandle *h) {
 	iVec2 start_pos = {2, 1}; // x, y
-	s8 is_black = (h->player_info.color == IS_BLACK);
+	// s8 is_black = (h->player_info.color == IS_BLACK);
+
+    ChessPiece p = get_piece_from_tile(h->board, h->board->last_tile_to);
+    s8 is_black = (p >= BLACK_PAWN);
+
 
 	/* Update board move (mandatory ? ) */
 	h->board->possible_moves = 0;
@@ -159,11 +177,11 @@ s8 check_pawn_promotion(SDLHandle *handle, ChessPiece type, ChessTile tile_to) {
 
 
 	/* Check if is the player control pawn or opponent (no mandatory in network version) */
-	if (handle->player_info.color == IS_WHITE && is_black) {
-		return (FALSE);
-	} else if (handle->player_info.color == IS_BLACK && is_white) {
-		return (FALSE);
-	}
+	// if (handle->player_info.color == IS_WHITE && is_black) {
+	// 	return (FALSE);
+	// } else if (handle->player_info.color == IS_BLACK && is_white) {
+	// 	return (FALSE);
+	// }
 
 
     /* If bot is playing, no promotion selection to display */
