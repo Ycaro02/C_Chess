@@ -7,7 +7,7 @@ docker build -t c-chess .
 if [[ ${1} == "dev" ]]; then
     echo "Starting in development mode..."
     docker run -d -it --rm -e DISPLAY=$DISPLAY \
-        --name c-chess-app -v ~/.ssh:/home/root/.ssh -v ./:/app --workdir /app \
+        --name c-chess-app -v ~/.ssh:/root/.ssh -v ./:/app --workdir /app \
         -v /tmp/.X11-unix:/tmp/.X11-unix --network host c-chess sleep infinity
     # Set up git user configuration
     GIT_EMAIL=$(git config user.email)

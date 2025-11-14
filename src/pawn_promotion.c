@@ -3,6 +3,10 @@
 #include "../include/handle_sdl.h"
 #include "../include/chess_log.h"
 
+s8 local_board_is_reversed(SDLHandle *h) {
+    return (!has_flag(h->flag, FLAG_NETWORK) && h->player_info.color == IS_BLACK);
+}
+
 /* @brief Promot the pawn
  * @param board The ChessBoard structure
  * @param tile The tile to promote
@@ -61,11 +65,12 @@ void pawn_selection_event(SDLHandle *h) {
     
     ChessTile last_click = h->board->last_clicked_tile;
 	
-    if (has_flag(h->flag, FLAG_NETWORK)) {
-        if (is_black) {
-            tile_start = C2;
-            tile_end = F2;
-        }
+    /* Handle promotion selection with board reverse or not */
+    if ((has_flag(h->flag, FLAG_NETWORK) && is_black) || \
+        (local_board_is_reversed(h) && is_black) || \
+        (!local_board_is_reversed(h) && !has_flag(h->flag, FLAG_NETWORK) && is_black)) {
+        tile_start = C2;
+        tile_end = F2;
     }
 
 	ChessTile tile_to = h->board->last_tile_to;
@@ -73,6 +78,9 @@ void pawn_selection_event(SDLHandle *h) {
 	if (last_click >= tile_start && last_click <= tile_end) {
         if (has_flag(h->flag, FLAG_NETWORK)) {
             piece_idx = !is_black ? last_click - tile_start : tile_end - last_click;
+        } else if (local_board_is_reversed(h)) {
+            // piece_idx = is_black ? last_click - tile_start : tile_end - last_click;
+            piece_idx = tile_end - last_click;
         } else {
             piece_idx = last_click - tile_start;
         }
@@ -101,6 +109,12 @@ void display_promotion_selection(SDLHandle *h) {
 
     ChessPiece p = get_piece_from_tile(h->board, h->board->last_tile_to);
     s8 is_black = (p >= BLACK_PAWN);
+
+    /* Handle promotion selection with board reverse or not */
+    if ((local_board_is_reversed(h) && !is_black) || \
+        (!local_board_is_reversed(h) && !has_flag(h->flag, FLAG_NETWORK) && is_black)) {
+        start_pos.y = 6;
+    }
 
 
 	/* Update board move (mandatory ? ) */
@@ -173,15 +187,6 @@ s8 check_pawn_promotion(SDLHandle *handle, ChessPiece type, ChessTile tile_to) {
 	s8 is_pawn = (type == WHITE_PAWN || type == BLACK_PAWN);
 	s8 is_black = (type >= BLACK_PAWN);
 	s8 is_white = !is_black;
-
-
-	/* Check if is the player control pawn or opponent (no mandatory in network version) */
-	// if (handle->player_info.color == IS_WHITE && is_black) {
-	// 	return (FALSE);
-	// } else if (handle->player_info.color == IS_BLACK && is_white) {
-	// 	return (FALSE);
-	// }
-
 
     /* If bot is playing, no promotion selection to display */
     if (handle->board->is_bot_playing) {

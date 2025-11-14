@@ -1,6 +1,7 @@
 rsc/lib
 rsc/log
 C_Chess
+*core*
 chess_server
 obj
 .vscode
