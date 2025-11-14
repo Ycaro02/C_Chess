@@ -60,6 +60,8 @@ SDLHandle *init_game() {
 	return (handle);
 }
 
+#include "../include/chess_bot.h"
+
 /*
  * @brief Main chess routine
  * @note This function is called in a loop
@@ -68,13 +70,52 @@ void local_chess_routine() {
 	SDLHandle	*h = get_SDL_handle();
 	s32			event = 0;
 	
-	event = event_handler(h, h->player_info.color);
-	/* If the quit button is pressed */
+    ChessTile piece_from = h->board->last_tile_from;
+    ChessTile piece_to = h->board->last_tile_to;
+
+
+    static s8 last_turn_info = -1;
+
+    if (last_turn_info != h->player_info.turn) {
+        CHESS_LOG(LOG_INFO, YELLOW"Player turn changed to: %s\n"
+            RESET, h->player_info.turn ? "TRUE" : "FALSE");
+        last_turn_info = h->player_info.turn;
+    }
+
+    // if (has_flag(h->flag, FLAG_STOCKFISH_BOT) && h->player_info.piece_start != WHITE_PAWN) {
+    if (has_flag(h->flag, FLAG_STOCKFISH_BOT) && h->player_info.turn == FALSE) {
+        play_stockfish_move(h);
+        h->player_info.turn = TRUE;
+        piece_from = h->board->last_tile_from;
+        piece_to = h->board->last_tile_to;
+    } else {
+        event = event_handler(h, h->player_info.color);
+    }
+
+    // CHESS_LOG(LOG_INFO, "Player Color %s, Start Piece: %s, End Piece: %s\n,",
+    //     h->player_info.color == IS_WHITE ? "White" : "Black",
+    //     h->player_info.piece_start == WHITE_PAWN ? "WHITE_PAWN" : "BLACK_PAWN",
+    //     h->player_info.piece_end == WHITE_KING ? "White King" : "Black King"
+    // );
+
+    /* If the quit button is pressed */
 	if (event == CHESS_QUIT) { chess_destroy(h) ; }
 	
 	if (has_flag(h->flag, FLAG_PROMOTION_SELECTION)) {
 		pawn_selection_event(h);
 	} 
+
+    if (has_flag(h->flag, FLAG_STOCKFISH_BOT) &&\
+        h->player_info.turn == TRUE &&\
+        has_flag(h->flag, FLAG_FIRST_MOVE_PLAYED) &&\
+        (piece_from != h->board->last_tile_from || piece_to != h->board->last_tile_to)) {
+        h->player_info.turn = FALSE;
+        CHESS_LOG(LOG_INFO, "Player made a move, now Stockfish turn.\n");   
+        // play_stockfish_move(h);
+    }
+
+    // CHESS_LOG(LOG_INFO, "Routine End: Player Turn: %d\n", h->player_info.turn);
+    
 	/* Draw logic */
 	update_graphic_board(h);
 }
@@ -104,7 +145,6 @@ SDLHandle *get_SDL_handle() {
 	if (!stat) {
 		stat = init_game();
 	}
-
 	return (stat);
 }
 
@@ -199,6 +239,8 @@ void chess_start_program() {
 	chess_destroy(h);
 }
 
+#include "../include/chess_bot.h"
+
 int main(int argc, char **argv) {
 	// s8			error = 0;
 	// u32			flag = 0;
@@ -209,5 +251,10 @@ int main(int argc, char **argv) {
 
 	(void)argc, (void)argv;
 	chess_start_program();
-	return (0);
+
+    // set_log_level(LOG_DEBUG);
+    // set_log_level(LOG_INFO);
+    // char *response = send_http_request(argv[1]);
+	// CHESS_LOG(LOG_INFO, "Response:\n%s\n", response ? response : "NULL");
+    return (0);
 }

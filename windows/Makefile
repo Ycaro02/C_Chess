@@ -6,9 +6,9 @@ W_SDL2      = -L../rsc/lib/win_lib/SDL2-2.30.5/x86_64-w64-mingw32/lib -I../rsc/l
 
 W_SDL2_TTF = -L../rsc/lib/win_lib/SDL2_ttf-2.22.0/x86_64-w64-mingw32/lib -I../rsc/lib/win_lib/SDL2_ttf-2.22.0/x86_64-w64-mingw32/include
 
-W_CURL		= -L../rsc/lib/win_lib/curl_lib/lib -I../rsc/lib/win_lib/curl_lib/include 
+# W_CURL		= -L../rsc/lib/win_lib/curl_lib/lib -I../rsc/lib/win_lib/curl_lib/include 
 
-W_FLAGS     = -Wall -lmingw32 -lSDL2main -lSDL2 -lSDL2_ttf -lws2_32 -lcurl
+# W_FLAGS     = -Wall -lmingw32 -lSDL2main -lSDL2 -lSDL2_ttf -lws2_32 -lcurl
 
 # NO_TERMINAL = -mwindows
 NO_TERMINAL =
@@ -36,18 +36,19 @@ RESOURCE_OBJ = resource.o
 
 all:	$(NAME)
 
-CACERT_URL = https://curl.se/ca/cacert.pem
-CACERT_FILE = ./rsc/cacert.pem
+# CACERT_URL = https://curl.se/ca/cacert.pem
+# CACERT_FILE = ./rsc/cacert.pem
 
-$(CACERT_FILE):
-	@echo "Downloading cacert.pem..."
-	@wget $(CACERT_URL) -O $(CACERT_FILE)
+# $(CACERT_FILE):
+# 	@echo "Downloading cacert.pem..."
+# 	@wget $(CACERT_URL) -O $(CACERT_FILE)
 
 $(NAME): $(SERVER_EXE) $(CACERT_FILE) $(RESOURCE_OBJ)
 ifeq ($(shell [ -f ${NAME} ] && echo 0 || echo 1), 1)
 	@printf "$(CYAN)Compiling ${NAME} ...$(RESET)\n"
 	@${UPDATE_BIN_DIR}
-	@${WCC} $(SRCS) $(W_SDL2) $(W_SDL2_TTF) $(W_FLAGS) $(W_CURL) -DCHESS_WINDOWS_VERSION -o $(NAME) $(NO_TERMINAL) $(RESOURCE_OBJ)
+# 	@${WCC} $(SRCS) $(W_SDL2) $(W_SDL2_TTF) $(W_FLAGS) $(W_CURL) -DCHESS_WINDOWS_VERSION -o $(NAME) $(NO_TERMINAL) $(RESOURCE_OBJ)
+	@${WCC} $(SRCS) $(W_SDL2) $(W_SDL2_TTF) -DCHESS_WINDOWS_VERSION -o $(NAME) $(NO_TERMINAL) $(RESOURCE_OBJ)
 	@printf "$(GREEN)Compiling $(NAME) done$(RESET)\n"
 endif
 

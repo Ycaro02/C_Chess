@@ -16,9 +16,15 @@ RUN apt update \
     libxext-dev \
     cmake \
     x11-apps \
-    libx11-dev \
-    && rm -rf /var/lib/apt/lists/*
+    libssl-dev \
+    libx11-dev
 
 # Get oh-my-zsh for a better terminal experience
 RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
+ENV TZ=Europe/Paris
+ENV EDITOR=/bin/vim
+
+RUN git config --global --add safe.directory /app
+
+RUN echo 'alias add_all="git add . && git commit -m"' >> /root/.zshrc

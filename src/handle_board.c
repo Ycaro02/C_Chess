@@ -28,15 +28,13 @@ FT_INLINE s8 is_key_pressed(SDL_Event event, s32 key) {
 	return (event.type == SDL_KEYDOWN && event.key.keysym.sym == key);
 }
 
-FT_INLINE void handle_locale_turn(SDLHandle *h) {
+void handle_locale_turn(SDLHandle *h) {
 	if (h->player_info.piece_start == WHITE_PAWN) {
 		h->player_info.piece_start = BLACK_PAWN;
 		h->player_info.piece_end = BLACK_KING;
-		// h->player_info.color = IS_BLACK;
 	} else {
 		h->player_info.piece_start = WHITE_PAWN;
 		h->player_info.piece_end = WHITE_KING;
-		// h->player_info.color = IS_WHITE;
 	}
 }
 
@@ -150,7 +148,7 @@ static void button_event_handling(SDLHandle *h, SDL_Event event, s32 btn_start, 
 	}
 }
 
-static s32 call_move_piece_handling(SDLHandle *h, ChessBoard *b) {
+s32 call_move_piece_handling(SDLHandle *h, ChessBoard *b) {
 	s32 ret = move_piece(h, b->selected_tile, b->last_clicked_tile, b->selected_piece);
 	b->possible_moves = 0;
 	h->over_piece_select = EMPTY;
@@ -162,7 +160,9 @@ static void handle_move_piece_call(SDLHandle *h, ChessBoard *b) {
 	
 	if (is_locale_mode(h->flag)) {
 		call_move_piece_handling(h, b);
-		handle_locale_turn(h);
+        if (!has_flag(h->flag, FLAG_STOCKFISH_BOT)) {
+            handle_locale_turn(h);
+        }
 	} else { /* Network mode */
 		/* Build move message to the other player if is not pawn promotion or chess quit */
 		if (h->player_info.turn == TRUE) {
@@ -224,7 +224,8 @@ static void game_handle_left_click_up(SDLHandle *h, s32 x, s32 y, s8 player_colo
 	}
 }
 
-// #include "../include/chess_bot.h"
+#include "../include/chess_bot.h"
+
 
 static void game_event_handling(SDLHandle *h, SDL_Event event, s8 player_color) {
 	s32 x = 0, y = 0;
@@ -233,15 +234,38 @@ static void game_event_handling(SDLHandle *h, SDL_Event event, s8 player_color) 
 		h->menu.is_open = TRUE;
 	}
 
-	if (is_key_pressed(event, SDLK_p)) {
-		// char *fen = build_FEN_notation(h);
-		// send_stockfish_fen(fen);
-		// free(fen);
-		// (void)fen;
-		return ;
-	}
+    if (!has_flag(h->flag, FLAG_NETWORK) && is_key_pressed(event, SDLK_r)) {
+        s8 last_color = h->player_info.color;
+        CHESS_LOG(LOG_INFO, "Resetting the board last color was: %s\n", last_color == IS_WHITE ? "White" : "Black");
+        reset_board(h);
+        unset_flag(&h->flag, FLAG_STOCKFISH_BOT);
+        h->player_info.color = !last_color;
+        // h->player_info.piece_start = h->player_info.color == IS_WHITE ? WHITE_PAWN : BLACK_PAWN;
+        // h->player_info.piece_end = h->player_info.color == IS_WHITE ? WHITE_KING : BLACK_KING;
+        h->player_info.piece_start =  WHITE_PAWN;
+        h->player_info.piece_end =  WHITE_KING;
+        // h->player_info.turn = h->player_info.color == IS_WHITE ? TRUE : FALSE;
+        h->player_info.turn = TRUE;
+        update_graphic_board(h);
+        CHESS_LOG(LOG_INFO, "Board reset done. New color is: %s\n", h->player_info.color == IS_WHITE ? "White" : "Black");
+        return ;
+    }
 
-	if (h->player_info.turn == FALSE) { return ; }
+
+    if (h->player_info.turn == FALSE) { return ; }
+
+    
+    /* Stockfish AI move suggestion (Only in local mode) */
+    if (!has_flag(h->flag, FLAG_NETWORK) && is_key_pressed(event, SDLK_p)) {
+        play_stockfish_move(h);
+    } else if (has_flag(h->flag, FLAG_NETWORK) && is_key_pressed(event, SDLK_p)) {
+        CHESS_LOG(LOG_INFO, "You cannot use the bot in network mode.\n");
+        return ;
+    }
+
+
+
+
 	SDL_GetMouseState(&x, &y);
 	if (is_left_click_down(event)) {
 		game_handle_left_click_down(h, x, y, player_color);

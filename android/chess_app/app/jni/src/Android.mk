@@ -36,6 +36,7 @@ $(info SRC_DIRS is $(SRC_DIRS))
 $(info LOCAL_SRC_FILES is $(LOCAL_SRC_FILES))
 
 LOCAL_SHARED_LIBRARIES := SDL2 SDL2_ttf
+LOCAL_STATIC_LIBRARIES := ssl_static crypto_static
 
 LOCAL_LDLIBS := -lGLESv1_CM -lGLESv2 -lOpenSLES -llog -landroid
 
@@ -52,3 +53,15 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := SDL2_ttf
 LOCAL_SRC_FILES := $(LOCAL_PATH)/../../src/main/jniLibs/$(TARGET_ARCH_ABI)/libSDL2_ttf.so
 include $(PREBUILT_SHARED_LIBRARY)
+
+# Include OpenSSL ssl (static library)
+include $(CLEAR_VARS)
+LOCAL_MODULE := ssl_static
+LOCAL_SRC_FILES := $(LOCAL_PATH)/../../src/main/jniLibs/$(TARGET_ARCH_ABI)/libssl.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+# Include OpenSSL crypto (static library)
+include $(CLEAR_VARS)
+LOCAL_MODULE := crypto_static
+LOCAL_SRC_FILES := $(LOCAL_PATH)/../../src/main/jniLibs/$(TARGET_ARCH_ABI)/libcrypto.a
+include $(PREBUILT_STATIC_LIBRARY)

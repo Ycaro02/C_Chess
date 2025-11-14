@@ -142,6 +142,8 @@ typedef struct s_chess_board {
 	s8			white_piece_val;		/* White piece value */
 	s8			black_piece_val;		/* Black piece value */
 
+    s8          is_bot_playing;         /* 1 if a bot is playing, 0 otherwise */
+
 	/* u8 used as 8 boolean info used as follow
 	 * 0: white check
 	 * 1: black check
@@ -290,6 +292,7 @@ s8			is_en_passant_move(ChessBoard *b, ChessTile tile);
 ChessPiece	get_piece_from_tile(ChessBoard *b, ChessTile tile);
 ChessPiece	get_piece_from_mask(ChessBoard *b, Bitboard mask);
 void		handle_turn_count(ChessBoard *b, ChessPiece piece_type, s8 kill);
+void        init_board(ChessBoard *b, u32 *app_flag);
 
 /* src/chess_piece_moves.c */
 Bitboard	get_pawn_moves(ChessBoard *b, Bitboard pawn, ChessPiece type, s8 is_black, s8 check_legal);
@@ -308,8 +311,10 @@ s8			handle_enemy_piece_kill(ChessBoard *b, ChessPiece type, Bitboard mask_to);
 /* src/handle_board.c */
 s32			event_handler(SDLHandle *h, s8 player_color);
 void		reset_selected_tile(SDLHandle *h);
+s32         call_move_piece_handling(SDLHandle *h, ChessBoard *b);
+void        handle_locale_turn(SDLHandle *h);
 
-/* src/draw_baord.c */
+/* src/draw_board.c */
 s8			is_selected_possible_move(Bitboard possible_moves, ChessTile tile);
 s8			is_en_passant_move(ChessBoard *b, ChessTile tile);
 ChessTile	handle_tile(ChessTile tile, s32 player_color);
@@ -322,6 +327,8 @@ s8			check_pawn_promotion(SDLHandle *handle, ChessPiece type, ChessTile tile_to)
 void		do_promotion_move(SDLHandle *h, ChessTile tile_from, ChessTile tile_to, ChessPiece new_piece_type, s8 add_list);
 void		display_promotion_selection(SDLHandle *h);
 void		pawn_selection_event(SDLHandle *h);
+void        promote_pawn(ChessBoard *board, ChessTile tile, ChessPiece new_piece, ChessPiece pawn_type);
+
 
 /* src/move_save.c */
 s8			move_save_add(ChessMoveList **lst, ChessTile tile_from, ChessTile tile_to, ChessPiece piece_from, ChessPiece piece_to);

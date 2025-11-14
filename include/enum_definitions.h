@@ -102,6 +102,15 @@
 	X(PIECE_MAX, ) \
 
 
+#define CHESS_GENERIC_PIECE_LETTER_ENUM \
+    X(LETTER_INVALID, ='i') \
+    X(LETTER_PAWN, ='p') \
+    X(LETTER_KNIGHT, ='n') \
+    X(LETTER_BISHOP, ='b') \
+    X(LETTER_ROOK, ='r') \
+    X(LETTER_QUEEN, ='q') \
+    X(LETTER_KING, ='k') \
+
 #define CHESS_BOOL_INFO_ENUM \
 	X(WHITE_CHECK, =0) \
 	X(BLACK_CHECK, ) \
@@ -122,6 +131,7 @@
 #define BTN_TYPE_ENUM \
 	X(BTN_INVALID, =-1) \
 	X(BTN_RESUME, ) \
+    X(BTN_STOCKFISH, ) \
 	X(BTN_PROFILE, ) \
 	X(BTN_SEARCH, ) \
 	X(BTN_RECONNECT, ) \
@@ -178,6 +188,7 @@
 	X(FLAG_PROMOTION_SELECTION, =1<<7) \
 	X(FLAG_EDIT_PROFILE, =1<<8) \
 	X(FLAG_FIRST_MOVE_PLAYED, =1<<9) \
+    X(FLAG_STOCKFISH_BOT, =1<<10) \
 
 
 #endif /* CHESS_ENUM_DEFINITIONS_H */

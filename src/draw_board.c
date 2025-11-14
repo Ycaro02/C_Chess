@@ -183,5 +183,6 @@ void draw_board(SDLHandle *handle, s8 player_color) {
 void update_graphic_board(SDLHandle *h) {
 	window_clear(h->renderer);
 	draw_board(h, h->player_info.color);
+	// draw_board(h, h->display_board_color);
 	SDL_RenderPresent(h->renderer);
 }
